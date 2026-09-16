@@ -2,7 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Ban, Crown, Flag, MessageCircle, UserPlus } from "lucide-react";
+import { ArrowRight, Ban, Crown, Flag, HeartHandshake, MessageCircle, UserPlus } from "lucide-react";
+import {
+  RELATION_LABELS,
+  RELATION_STYLES,
+  RELATION_TYPES,
+  requestRelationship,
+  type RelationType,
+} from "@/lib/relationships";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
