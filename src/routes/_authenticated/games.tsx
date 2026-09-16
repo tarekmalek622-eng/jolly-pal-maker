@@ -7,6 +7,7 @@ import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DominoGame } from "@/components/DominoGame";
+import { LiveWheel } from "@/components/LiveWheel";
 import { supabase } from "@/integrations/supabase/client";
 import { playDice, spinWheel, playCards, startQuiz, answerQuiz, playChallenge } from "@/lib/games.functions";
 import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-session";
