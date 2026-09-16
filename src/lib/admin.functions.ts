@@ -616,3 +616,64 @@ export const adminSetPaymentAccounts = createServerFn({ method: "POST" })
     await log(context.userId, "payment_accounts", "update_payment_accounts", "", JSON.stringify(data));
     return { ok: true };
   });
+
+/* ---------------- تعديل هوية المستخدم (الاسم / ID) ---------------- */
+
+export const adminUpdateUserIdentity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        publicId: z
+          .string()
+          .trim()
+          .regex(/^[0-9]{4,12}$/, "الـID يجب أن يكون أرقامًا من 4 إلى 12 خانة")
+          .optional(),
+        displayName: z.string().trim().min(2).max(30).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: current, error: readError } = await supabaseAdmin
+      .from("profiles")
+      .select("public_id, display_name")
+      .eq("id", data.userId)
+      .maybeSingle();
+    if (readError) throw new Error(readError.message);
+    if (!current) throw new Error("المستخدم غير موجود");
+
+    const patch: Record<string, unknown> = {};
+    if (data.publicId && data.publicId !== current.public_id) {
+      const { data: taken, error: takenError } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("public_id", data.publicId)
+        .maybeSingle();
+      if (takenError) throw new Error(takenError.message);
+      if (taken) throw new Error("هذا الـID مستخدم بالفعل");
+      patch['public_id'] = data.publicId;
+    }
+    if (data.displayName && data.displayName !== current.display_name) {
+      patch['display_name'] = data.displayName;
+    }
+    if (Object.keys(patch).length === 0) return { ok: true, changed: false };
+
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ ...patch, updated_at: new Date().toISOString() } as never)
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+
+    await log(
+      context.userId,
+      data.userId,
+      "update_user_identity",
+      JSON.stringify({ public_id: current.public_id, display_name: current.display_name }),
+      JSON.stringify(patch),
+    );
+    return { ok: true, changed: true };
+  });

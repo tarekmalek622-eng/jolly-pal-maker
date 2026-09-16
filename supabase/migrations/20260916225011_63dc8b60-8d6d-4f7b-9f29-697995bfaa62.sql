@@ -1,0 +1,12 @@
+UPDATE public.gifts SET image_url = 'gifts/image/rose.webp', thumb_url = 'gifts/image/rose.webp', duration_ms = 3000, display_scale = 100 WHERE name = 'وردة';
+UPDATE public.gifts SET image_url = 'gifts/image/heart.webp', thumb_url = 'gifts/image/heart.webp', duration_ms = 3000, display_scale = 100 WHERE name = 'قلب';
+UPDATE public.gifts SET image_url = 'gifts/image/balloon.webp', thumb_url = 'gifts/image/balloon.webp', duration_ms = 3000, display_scale = 110 WHERE name = 'بالون';
+UPDATE public.gifts SET image_url = 'gifts/image/cake.webp', thumb_url = 'gifts/image/cake.webp', duration_ms = 3000, display_scale = 110 WHERE name = 'كيك';
+UPDATE public.gifts SET image_url = 'gifts/image/teddy.webp', thumb_url = 'gifts/image/teddy.webp', duration_ms = 3000, display_scale = 110 WHERE name = 'دبدوب';
+UPDATE public.gifts SET image_url = 'gifts/image/perfume.webp', thumb_url = 'gifts/image/perfume.webp', duration_ms = 3000, display_scale = 110 WHERE name = 'عطر';
+UPDATE public.gifts SET image_url = 'gifts/image/ring.webp', thumb_url = 'gifts/image/ring.webp', duration_ms = 3500, display_scale = 120 WHERE name = 'خاتم';
+UPDATE public.gifts SET image_url = 'gifts/image/crown.webp', thumb_url = 'gifts/image/crown.webp', duration_ms = 3500, display_scale = 130 WHERE name = 'تاج';
+UPDATE public.gifts SET image_url = 'gifts/image/car.webp', thumb_url = 'gifts/image/car.webp', duration_ms = 4000, display_scale = 140 WHERE name = 'سيارة';
+UPDATE public.gifts SET image_url = 'gifts/image/yacht.webp', thumb_url = 'gifts/image/yacht.webp', duration_ms = 4000, display_scale = 150 WHERE name = 'يخت';
+UPDATE public.gifts SET image_url = 'gifts/image/jet.webp', thumb_url = 'gifts/image/jet.webp', duration_ms = 4500, display_scale = 160 WHERE name = 'طائرة خاصة';
+UPDATE public.gifts SET image_url = 'gifts/image/palace.webp', thumb_url = 'gifts/image/palace.webp', duration_ms = 5000, display_scale = 170 WHERE name = 'قصر';
