@@ -123,6 +123,10 @@ export const adminResolveReport = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+function clean<T extends Record<string, unknown>>(input: T) {
+  return Object.fromEntries(Object.entries(input).filter(([, v]) => v !== undefined)) as never;
+}
+
 /* ---------------- المتجر والهدايا و VIP والكوينز ---------------- */
 
 const giftSchema = z.object({
@@ -145,7 +149,7 @@ export const adminUpsertGift = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("gifts")
-      .upsert({ ...data, id: data.id ?? undefined })
+      .upsert(clean(data))
       .select("id")
       .single();
     if (error) throw new Error(error.message);
@@ -174,7 +178,7 @@ export const adminUpsertStoreItem = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("store_items")
-      .upsert({ ...data, id: data.id ?? undefined })
+      .upsert(clean(data))
       .select("id")
       .single();
     if (error) throw new Error(error.message);
@@ -196,11 +200,11 @@ export const adminSetActive = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const key = data.table === "vip_levels" ? "level" : "id";
-    const { error } = await supabaseAdmin
-      .from(data.table)
-      .update({ is_active: data.active })
-      .eq(key, data.id as never);
+    const query = supabaseAdmin.from(data.table).update({ is_active: data.active } as never);
+    const { error } =
+      data.table === "vip_levels"
+        ? await query.eq("level", Number(data.id))
+        : await query.eq("id", String(data.id));
     if (error) throw new Error(error.message);
     await log(context.userId, String(data.id), `set_active_${data.table}`, String(!data.active), String(data.active));
     return { ok: true };
@@ -228,7 +232,7 @@ export const adminUpsertCoinPackage = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("coin_packages")
-      .upsert({ ...data, id: data.id ?? undefined })
+      .upsert(clean(data))
       .select("id")
       .single();
     if (error) throw new Error(error.message);
@@ -280,7 +284,7 @@ export const adminSetGameSettings = createServerFn({ method: "POST" })
       .upsert([
         { key: "games", value: data.games },
         { key: "limits", value: data.limits },
-      ]);
+      ] as never);
     if (error) throw new Error(error.message);
     await log(context.userId, "settings", "update_game_settings", "", JSON.stringify(data));
     return { ok: true };
