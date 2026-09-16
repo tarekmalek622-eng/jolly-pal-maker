@@ -189,6 +189,42 @@ function RoomPage() {
     };
   }, [roomId, userId]);
 
+  // طبقة عرض تأثيرات الهدايا لجميع الحاضرين
+  const [giftQueue, setGiftQueue] = useState<GiftShowEvent[]>([]);
+  const enqueueGift = useCallback(
+    async (row: { id?: string; gift_id?: string; sender_id?: string; receiver_id?: string; quantity?: number }) => {
+      if (!row.gift_id) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const anyDb = supabase as any;
+      const [{ data: gift }, { data: names }] = await Promise.all([
+        anyDb
+          .from("gifts")
+          .select(
+            "id, name, image_url, thumb_url, animation_url, video_url, sound_url, sound_enabled, duration_ms, display_scale, rarity",
+          )
+          .eq("id", row.gift_id)
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("id, display_name")
+          .in("id", [row.sender_id, row.receiver_id].filter(Boolean) as string[]),
+      ]);
+      if (!gift) return;
+      const nameOf = (id?: string) => (names ?? []).find((p) => p.id === id)?.display_name ?? "مستخدم";
+      setGiftQueue((prev) => [
+        ...prev,
+        {
+          key: row.id ?? `${row.gift_id}-${Date.now()}`,
+          gift: gift as GiftMediaRow,
+          senderName: nameOf(row.sender_id),
+          receiverName: nameOf(row.receiver_id),
+          quantity: row.quantity ?? 1,
+        },
+      ]);
+    },
+    [],
+  );
+
   // realtime
   useEffect(() => {
     const channel = supabase
