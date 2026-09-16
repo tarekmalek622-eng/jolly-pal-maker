@@ -360,6 +360,8 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
               )}
             </div>
 
+            {st && row.status !== "waiting" && <RoundPanel state={st} seat={seat} />}
+
             {row.status === "waiting" ? (
               <Button
                 variant="destructive"
