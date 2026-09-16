@@ -9,6 +9,7 @@ import {
   Check,
   Gift,
   Hand,
+  LayoutGrid,
   Lock,
   LogOut,
   Mic,
@@ -349,6 +350,13 @@ function RoomPage() {
                           : "غير متصل"}
               </p>
             </div>
+            <button
+              onClick={() => void navigate({ to: "/games", search: { room: roomId } })}
+              className="p-1"
+              aria-label="لعبة الدومينو"
+            >
+              <LayoutGrid className="h-5 w-5" />
+            </button>
             {canManage && (
               <>
                 <button onClick={() => setRequestsOpen(true)} className="relative p-1" aria-label="طلبات المايك">

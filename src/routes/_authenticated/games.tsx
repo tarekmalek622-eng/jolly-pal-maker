@@ -2,33 +2,40 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Dices, Loader2, Sparkles, Spade, HelpCircle, Flame } from "lucide-react";
+import { Dices, Loader2, Sparkles, Spade, HelpCircle, Flame, LayoutGrid } from "lucide-react";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DominoGame } from "@/components/DominoGame";
 import { supabase } from "@/integrations/supabase/client";
 import { playDice, spinWheel, playCards, startQuiz, answerQuiz, playChallenge } from "@/lib/games.functions";
 import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/games")({
+  validateSearch: (search: Record<string, unknown>): { room?: string } => {
+    const room = search["room"];
+    return typeof room === "string" ? { room } : {};
+  },
   head: () => ({
     meta: [
       { title: "الألعاب — صوتك" },
       {
         name: "description",
-        content: "النرد وعجلة الحظ والورق والأسئلة والتحديات بالكوينز الافتراضية داخل التطبيق — للترفيه فقط بدون أموال حقيقية.",
+        content:
+          "الدومينو الجماعي والنرد وعجلة الحظ والورق والأسئلة والتحديات بالكوينز الافتراضية — للترفيه فقط بدون أموال حقيقية.",
       },
       { property: "og:title", content: "الألعاب — صوتك" },
-      { property: "og:description", content: "خمس ألعاب بالكوينز الافتراضية، للترفيه فقط." },
+      { property: "og:description", content: "ستة ألعاب بالكوينز الافتراضية، للترفيه فقط." },
     ],
   }),
   component: GamesPage,
 });
 
-type GameKey = "dice" | "wheel" | "cards" | "quiz" | "challenge";
+type GameKey = "domino" | "dice" | "wheel" | "cards" | "quiz" | "challenge";
 
 const GAME_TABS: { key: GameKey; label: string; icon: typeof Dices; flag: string }[] = [
+  { key: "domino", label: "دومينو", icon: LayoutGrid, flag: "domino" },
   { key: "dice", label: "النرد", icon: Dices, flag: "dice" },
   { key: "wheel", label: "العجلة", icon: Sparkles, flag: "wheel" },
   { key: "cards", label: "الورق", icon: Spade, flag: "cards" },
@@ -43,10 +50,11 @@ const CHALLENGES = [
 ] as const;
 
 function GamesPage() {
+  const search = Route.useSearch();
   const { userId } = useSupabaseSession();
   const wallet = useWallet(userId);
   const refresh = useRefreshMoney();
-  const [game, setGame] = useState<GameKey>("dice");
+  const [game, setGame] = useState<GameKey>("domino");
   const [bet, setBet] = useState(100);
   const [guess, setGuess] = useState(6);
   const [challenge, setChallenge] = useState<"reflex" | "memory" | "luck">("reflex");
@@ -201,7 +209,9 @@ function GamesPage() {
             ))}
           </div>
 
-          <div className="surface-card p-5">
+          {active === "domino" && <DominoGame roomId={search.room ?? null} />}
+
+          <div className={cn("surface-card p-5", active === "domino" && "hidden")}>
             <p className="text-sm font-bold">
               مبلغ الرهان (بين {limits.min_bet.toLocaleString("en-US")} و {limits.max_bet.toLocaleString("en-US")})
             </p>
@@ -334,15 +344,17 @@ function GamesPage() {
               <div key={s.id} className="surface-card flex items-center gap-3 p-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold">
-                    {s.game === "dice"
-                      ? "النرد"
-                      : s.game === "wheel"
-                        ? "عجلة الحظ"
-                        : s.game === "cards"
-                          ? "الورق"
-                          : s.game === "quiz"
-                            ? "الأسئلة"
-                            : "التحديات"}
+                    {s.game === "domino"
+                      ? "دومينو"
+                      : s.game === "dice"
+                        ? "النرد"
+                        : s.game === "wheel"
+                          ? "عجلة الحظ"
+                          : s.game === "cards"
+                            ? "الورق"
+                            : s.game === "quiz"
+                              ? "الأسئلة"
+                              : "التحديات"}
                   </p>
                   <p className="text-[10px] text-muted-foreground">
                     {new Date(s.created_at).toLocaleString("ar")}
