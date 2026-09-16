@@ -80,10 +80,21 @@ function HomePage() {
   });
 
   const list = rooms.data ?? [];
-  const trending = [...list].sort((a, b) => b.member_count - a.member_count).slice(0, 6);
-  const fresh = [...list]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 6);
+  const trending = [...list].sort((a, b) => b.member_count - a.member_count).slice(0, 12);
+
+  const ownerIds = [...new Set(list.map((r) => r.owner_id))].sort();
+  const owners = useQuery({
+    queryKey: ["room-owners", ownerIds],
+    enabled: ownerIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", ownerIds);
+      if (error) throw error;
+      return Object.fromEntries((data ?? []).map((p) => [p.id, p.display_name])) as Record<string, string>;
+    },
+  });
 
   return (
     <AppShell
@@ -149,7 +160,7 @@ function HomePage() {
       ) : (
         <div className="space-y-7">
           <section>
-            <SectionTitle icon={Flame} title="الغرف المشهورة" />
+            <SectionTitle icon={Flame} title="الغرف" />
             {trending.length === 0 ? (
               <EmptyState
                 title="لا توجد غرف بعد"
@@ -161,18 +172,14 @@ function HomePage() {
                 }
               />
             ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {trending.map((r) => <RoomCard key={r.id} room={r} compact />)}
+              <div className="space-y-4">
+                {trending.map((r) => (
+                  <RoomCard key={r.id} room={r} ownerName={owners.data?.[r.owner_id]} />
+                ))}
               </div>
             )}
           </section>
 
-          <section>
-            <SectionTitle icon={Sparkles} title="غرف جديدة" />
-            <div className="space-y-3">
-              {fresh.map((r) => <RoomCard key={r.id} room={r} />)}
-            </div>
-          </section>
 
           <section>
             <SectionTitle icon={Users} title="مستخدمون نشطون" />
