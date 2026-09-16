@@ -1138,6 +1138,148 @@ type RelationFlags = { couple: boolean; soulmate: boolean; favorite_friend: bool
 
 const RELATION_DEFAULTS: RelationFlags = { couple: true, soulmate: true, favorite_friend: true, close_friend: true };
 
+type WheelSlotDraft = { key: string; label: string; emoji: string; multiplier: number; weight: number };
+type WheelDraft = {
+  enabled: boolean;
+  duration_seconds: number;
+  result_seconds: number;
+  min_bet: number;
+  max_bet: number;
+  slots: WheelSlotDraft[];
+};
+
+const WHEEL_DEFAULTS: WheelDraft = {
+  enabled: true,
+  duration_seconds: 10,
+  result_seconds: 3,
+  min_bet: 100,
+  max_bet: 100000,
+  slots: [],
+};
+
+function WheelSettings() {
+  const query = useQuery({
+    queryKey: ["admin-wheel-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("app_settings").select("value").eq("key", "wheel").maybeSingle();
+      if (error) throw error;
+      return { ...WHEEL_DEFAULTS, ...((data?.value as object) ?? {}) } as WheelDraft;
+    },
+  });
+  const [draft, setDraft] = useState<WheelDraft | null>(null);
+  const state = draft ?? query.data ?? null;
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!state) return;
+      await adminSetWheelSettings({ data: state });
+    },
+    onSuccess: () => {
+      toast.success("تم حفظ إعدادات العجلة");
+      setDraft(null);
+      void query.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  if (!state) return null;
+
+  const setSlot = (i: number, patch: Partial<WheelSlotDraft>) =>
+    setDraft({ ...state, slots: state.slots.map((s, idx) => (idx === i ? { ...s, ...patch } : s)) });
+
+  return (
+    <div className="rounded-2xl border border-border p-3">
+      <p className="mb-2 text-sm font-bold">عجلة الحظ المباشرة</p>
+      <button
+        onClick={() => setDraft({ ...state, enabled: !state.enabled })}
+        className={cn(
+          "w-full rounded-xl border px-3 py-2 text-xs",
+          state.enabled ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+        )}
+      >
+        {state.enabled ? "اللعبة مفعّلة" : "اللعبة موقوفة"}
+      </button>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <Field
+          label="مدة الجولة (ثانية)"
+          type="number"
+          value={String(state.duration_seconds)}
+          onChange={(v) => setDraft({ ...state, duration_seconds: Number(v) || 0 })}
+        />
+        <Field
+          label="مدة عرض النتيجة"
+          type="number"
+          value={String(state.result_seconds)}
+          onChange={(v) => setDraft({ ...state, result_seconds: Number(v) || 0 })}
+        />
+        <Field
+          label="أقل رهان"
+          type="number"
+          value={String(state.min_bet)}
+          onChange={(v) => setDraft({ ...state, min_bet: Number(v) || 0 })}
+        />
+        <Field
+          label="أعلى رهان"
+          type="number"
+          value={String(state.max_bet)}
+          onChange={(v) => setDraft({ ...state, max_bet: Number(v) || 0 })}
+        />
+      </div>
+
+      <p className="mt-3 text-xs font-bold">الخانات ({state.slots.length})</p>
+      <div className="mt-2 space-y-2">
+        {state.slots.map((s, i) => (
+          <div key={`${s.key}-${i}`} className="rounded-xl border border-border p-2">
+            <div className="grid grid-cols-4 gap-2">
+              <Field label="رمز" value={s.emoji} onChange={(v) => setSlot(i, { emoji: v })} />
+              <Field label="الاسم" value={s.label} onChange={(v) => setSlot(i, { label: v })} />
+              <Field
+                label="المعامل"
+                type="number"
+                value={String(s.multiplier)}
+                onChange={(v) => setSlot(i, { multiplier: Number(v) || 0 })}
+              />
+              <Field
+                label="الوزن"
+                type="number"
+                value={String(s.weight)}
+                onChange={(v) => setSlot(i, { weight: Number(v) || 0.01 })}
+              />
+            </div>
+            <button
+              onClick={() => setDraft({ ...state, slots: state.slots.filter((_, idx) => idx !== i) })}
+              className="mt-2 text-[11px] text-destructive"
+            >
+              حذف الخانة
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={() =>
+          setDraft({
+            ...state,
+            slots: [
+              ...state.slots,
+              { key: `slot_${Date.now()}`, label: "خانة جديدة", emoji: "🍀", multiplier: 5, weight: 10 },
+            ],
+          })
+        }
+        className="mt-2 w-full rounded-xl border border-dashed border-border py-2 text-xs text-muted-foreground"
+      >
+        + إضافة خانة
+      </button>
+      <Button
+        disabled={save.isPending}
+        onClick={() => save.mutate()}
+        className="mt-3 h-10 w-full rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
+      >
+        حفظ إعدادات العجلة
+      </Button>
+    </div>
+  );
+}
+
 function RelationshipSettings() {
   const relationLabels: Record<keyof RelationFlags, string> = {
     couple: "ثنائي مميز",
