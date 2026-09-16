@@ -50,10 +50,11 @@ const CHALLENGES = [
 ] as const;
 
 function GamesPage() {
+  const search = Route.useSearch();
   const { userId } = useSupabaseSession();
   const wallet = useWallet(userId);
   const refresh = useRefreshMoney();
-  const [game, setGame] = useState<GameKey>("dice");
+  const [game, setGame] = useState<GameKey>("domino");
   const [bet, setBet] = useState(100);
   const [guess, setGuess] = useState(6);
   const [challenge, setChallenge] = useState<"reflex" | "memory" | "luck">("reflex");
