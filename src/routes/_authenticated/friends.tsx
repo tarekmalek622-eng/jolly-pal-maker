@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Check, Clock3, Loader2, MessageCircle, UserMinus, X } from "lucide-react";
+import { Check, Clock3, HeartHandshake, Loader2, MessageCircle, UserMinus, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
@@ -10,6 +10,15 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { useSupabaseSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
+import {
+  RELATION_LABELS,
+  RELATION_STYLES,
+  endRelationship,
+  fetchMyRelationships,
+  relationDurationLabel,
+  respondRelationship,
+  type RelationshipRow,
+} from "@/lib/relationships";
 
 export const Route = createFileRoute("/_authenticated/friends")({
   head: () => ({
