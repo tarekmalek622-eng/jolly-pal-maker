@@ -172,7 +172,7 @@ function RoomPage() {
   useEffect(() => {
     if (!userId) return;
     void supabase.from("room_members").upsert(
-      { room_id: roomId, user_id: userId, last_seen: new Date().toISOString() },
+      { room_id: roomId, user_id: userId, joined_at: new Date().toISOString() },
       { onConflict: "room_id,user_id" },
     );
     return () => {
