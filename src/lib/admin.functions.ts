@@ -2,11 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertAdmin(supabase: {
-  rpc: (fn: "is_admin", args?: Record<string, never>) => Promise<{ data: unknown; error: unknown }>;
-}) {
-  const { data, error } = await supabase.rpc("is_admin");
+type Rpc = {
+  rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+};
+
+async function assertAdmin(supabase: Rpc, userId?: string) {
+  const { data, error } = await supabase.rpc("is_admin", userId ? { _user_id: userId } : undefined);
   if (error || data !== true) throw new Error("هذه العملية للإدارة فقط");
+}
+
+async function assertSuperAdmin(supabase: Rpc, userId: string) {
+  const { data, error } = await supabase.rpc("is_super_admin", { _user_id: userId });
+  if (error || data !== true) throw new Error("هذه العملية للمدير العام فقط");
 }
 
 async function log(actorId: string, targetId: string, action: string, oldValue: string, newValue: string) {
