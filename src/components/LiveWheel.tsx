@@ -35,13 +35,20 @@ const db = supabase as unknown as {
   rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: any; error: { message: string } | null }>;
 };
 
-const BET_STEPS = [100, 500, 2000, 10000];
+const BET_STEPS = [100_000, 1_000_000, 10_000_000, 30_000_000];
+
+/** تسمية مختصرة للمستويات الكبيرة */
+function betLabel(n: number) {
+  if (n >= 1_000_000) return `${n / 1_000_000}M`;
+  if (n >= 1_000) return `${n / 1_000}K`;
+  return String(n);
+}
 
 export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const { userId } = useSupabaseSession();
   const wallet = useWallet(userId);
   const refreshMoney = useRefreshMoney();
-  const [amount, setAmount] = useState(100);
+  const [amount, setAmount] = useState(100_000);
   const [now, setNow] = useState(() => Date.now());
   const [highlight, setHighlight] = useState(0);
   const [spinning, setSpinning] = useState(false);
@@ -142,13 +149,6 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const finished = round.data?.status === "finished";
   const remaining = round.data ? Math.max(0, Math.ceil((new Date(round.data.ends_at).getTime() - now) / 1000)) : 0;
 
-  // مؤشر يلف على الفواكه أثناء المراهنة
-  useEffect(() => {
-    if (finished || slots.length === 0) return;
-    const t = window.setInterval(() => setHighlight((h) => (h + 1) % slots.length), 420);
-    return () => window.clearInterval(t);
-  }, [finished, slots.length]);
-
   // عند تسوية الجولة: المؤشر يلف على كل الفواكه 5 ثوانٍ ثم يتوقف على الفائزة
   useEffect(() => {
     const data = round.data;
@@ -159,10 +159,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     const target = Math.max(0, data.slots.findIndex((s) => s.key === data.winning_key));
     const laps = 3;
     const steps = count * laps + ((target - highlight + count) % count);
-    // توزيع زمني بتباطؤ تدريجي يجمع 5000 مللي ثانية بالضبط
+    // توزيع زمني بتباطؤ تدريجي يجمع 4000 مللي ثانية بالضبط
     const weights = Array.from({ length: steps }, (_, i) => 1 + Math.pow(i / Math.max(1, steps - 1), 2.6) * 9);
     const sum = weights.reduce((a, b) => a + b, 0);
-    const delays = weights.map((w) => (w / sum) * 5000);
+    const delays = weights.map((w) => (w / sum) * 4000);
     setSpinning(true);
     let step = 0;
     let timer = 0;
@@ -259,6 +259,18 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
           <span className="rounded-full bg-background/40 px-3 py-1 text-[11px] font-bold text-primary">
             اليوم الجولة {round.data?.round_no ?? "-"}
           </span>
+          <span
+            className={cn(
+              "rounded-full px-3 py-1 text-[11px] font-extrabold",
+              spinning
+                ? "bg-primary/25 text-primary"
+                : finished
+                  ? "bg-destructive/20 text-destructive"
+                  : "bg-success/20 text-success",
+            )}
+          >
+            {spinning ? "جاري إعلان النتيجة" : finished ? "الجولة مغلقة" : "الجولة مفتوحة للمشاركة"}
+          </span>
           <div className="flex items-center gap-1.5">
             <span className="flex h-8 items-center gap-1 rounded-full bg-background/40 px-2.5 text-[11px] font-bold">
               <Trophy className="h-3.5 w-3.5 text-primary" />
@@ -293,7 +305,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
               <button
                 key={s.key}
                 type="button"
-                disabled={finished || place.isPending}
+                disabled={finished || spinning || place.isPending}
                 onClick={() => place.mutate(s.key)}
                 style={{ left: `${left}%`, top: `${top}%` }}
                 className={cn(
@@ -346,7 +358,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
               )}
             >
               <Coins className="h-3.5 w-3.5 text-primary" />
-              {n >= 1000 ? `${n / 1000}K` : n}
+              {betLabel(n)}
             </button>
           ))}
         </div>
