@@ -9,7 +9,18 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsAdmin, useSupabaseSession } from "@/hooks/use-session";
-import { adminAdjustCoins, adminSetSuspended, adminSetRoomDisabled, adminResolveReport } from "@/lib/admin.functions";
+import {
+  adminAdjustCoins,
+  adminSetSuspended,
+  adminSetRoomDisabled,
+  adminResolveReport,
+  adminUpsertGift,
+  adminUpsertStoreItem,
+  adminUpsertVipLevel,
+  adminUpsertCoinPackage,
+  adminSetActive,
+  adminSetGameSettings,
+} from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -314,6 +325,571 @@ function LogsTab() {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+/* ---------------- أدوات مشتركة ---------------- */
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10px] text-muted-foreground">{label}</span>
+      <Input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-10 rounded-xl bg-surface-2 text-xs"
+      />
+    </label>
+  );
+}
+
+function ActiveButton({
+  active,
+  onToggle,
+  busy,
+}: {
+  active: boolean;
+  onToggle: () => void;
+  busy?: boolean;
+}) {
+  return (
+    <Button variant="outline" disabled={busy} onClick={onToggle} className="h-9 rounded-xl px-3 text-[11px]">
+      {active ? "إخفاء" : "تفعيل"}
+    </Button>
+  );
+}
+
+const RARITIES = ["common", "rare", "epic", "legendary"] as const;
+
+function RaritySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex gap-1">
+      {RARITIES.map((r) => (
+        <button
+          key={r}
+          onClick={() => onChange(r)}
+          className={cn(
+            "flex-1 rounded-xl border px-2 py-2 text-[10px]",
+            value === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+          )}
+        >
+          {r === "common" ? "عادي" : r === "rare" ? "نادر" : r === "epic" ? "أسطوري" : "خارق"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- الهدايا ---------------- */
+
+function GiftsTab() {
+  const [form, setForm] = useState({
+    name: "",
+    price: "1000",
+    category: "general",
+    rarity: "common",
+    image_url: "",
+    sort_order: "0",
+  });
+
+  const gifts = useQuery({
+    queryKey: ["admin-gifts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("gifts")
+        .select("id, name, price, rarity, category, is_active, sort_order")
+        .order("sort_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async () =>
+      adminUpsertGift({
+        data: {
+          name: form.name.trim(),
+          price: Number(form.price),
+          category: form.category.trim() || "general",
+          rarity: form.rarity as "common",
+          image_url: form.image_url.trim() || null,
+          is_active: true,
+          sort_order: Number(form.sort_order) || 0,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("تم حفظ الهدية");
+      setForm({ name: "", price: "1000", category: "general", rarity: "common", image_url: "", sort_order: "0" });
+      void gifts.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  const toggle = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) =>
+      adminSetActive({ data: { table: "gifts", id, active } }),
+    onSuccess: () => void gifts.refetch(),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="surface-card space-y-2 p-3">
+        <p className="text-sm font-bold">إضافة هدية</p>
+        <Field label="الاسم" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="السعر" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
+          <Field label="التصنيف" value={form.category} onChange={(v) => setForm({ ...form, category: v })} />
+        </div>
+        <Field label="رابط الصورة" value={form.image_url} onChange={(v) => setForm({ ...form, image_url: v })} />
+        <RaritySelect value={form.rarity} onChange={(v) => setForm({ ...form, rarity: v })} />
+        <Button
+          disabled={save.isPending || form.name.trim().length < 1}
+          onClick={() => save.mutate()}
+          className="h-10 w-full rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
+        >
+          حفظ
+        </Button>
+      </div>
+
+      {gifts.data?.map((g) => (
+        <div key={g.id} className="surface-card flex items-center gap-3 p-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{g.name}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {g.price} كوينز · {g.category} {g.is_active ? "" : "· مخفية"}
+            </p>
+          </div>
+          <ActiveButton
+            active={g.is_active}
+            busy={toggle.isPending}
+            onToggle={() => toggle.mutate({ id: g.id, active: !g.is_active })}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- المتجر ---------------- */
+
+const STORE_CATEGORIES = [
+  "profile_frame",
+  "profile_background",
+  "room_background",
+  "room_decoration",
+  "mic_decoration",
+  "badge",
+  "effect",
+  "profile_theme",
+] as const;
+
+function StoreTab() {
+  const [form, setForm] = useState({
+    name: "",
+    price: "2000",
+    category: "profile_frame",
+    rarity: "common",
+    image_url: "",
+    duration_days: "",
+    required_vip: "0",
+  });
+
+  const items = useQuery({
+    queryKey: ["admin-store"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_items")
+        .select("id, name, price, category, rarity, is_active, required_vip")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async () =>
+      adminUpsertStoreItem({
+        data: {
+          name: form.name.trim(),
+          price: Number(form.price),
+          category: form.category,
+          rarity: form.rarity as "common",
+          image_url: form.image_url.trim() || null,
+          duration_days: form.duration_days ? Number(form.duration_days) : null,
+          required_vip: Number(form.required_vip) || 0,
+          is_active: true,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("تم حفظ المنتج");
+      setForm({ ...form, name: "", image_url: "" });
+      void items.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  const toggle = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) =>
+      adminSetActive({ data: { table: "store_items", id, active } }),
+    onSuccess: () => void items.refetch(),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="surface-card space-y-2 p-3">
+        <p className="text-sm font-bold">إضافة منتج</p>
+        <Field label="الاسم" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+        <div className="flex flex-wrap gap-1">
+          {STORE_CATEGORIES.map((c) => (
+            <button
+              key={c}
+              onClick={() => setForm({ ...form, category: c })}
+              className={cn(
+                "rounded-full border px-2 py-1 text-[10px]",
+                form.category === c
+                  ? "border-primary bg-primary/15 text-primary"
+                  : "border-border bg-surface-2 text-muted-foreground",
+              )}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <Field label="السعر" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
+          <Field
+            label="أيام (اختياري)"
+            type="number"
+            value={form.duration_days}
+            onChange={(v) => setForm({ ...form, duration_days: v })}
+          />
+          <Field
+            label="VIP مطلوب"
+            type="number"
+            value={form.required_vip}
+            onChange={(v) => setForm({ ...form, required_vip: v })}
+          />
+        </div>
+        <Field label="رابط الصورة" value={form.image_url} onChange={(v) => setForm({ ...form, image_url: v })} />
+        <RaritySelect value={form.rarity} onChange={(v) => setForm({ ...form, rarity: v })} />
+        <Button
+          disabled={save.isPending || form.name.trim().length < 1}
+          onClick={() => save.mutate()}
+          className="h-10 w-full rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
+        >
+          حفظ
+        </Button>
+      </div>
+
+      {items.data?.map((i) => (
+        <div key={i.id} className="surface-card flex items-center gap-3 p-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{i.name}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {i.price} كوينز · {i.category} {i.required_vip > 0 ? `· VIP ${i.required_vip}` : ""}
+              {i.is_active ? "" : " · مخفي"}
+            </p>
+          </div>
+          <ActiveButton
+            active={i.is_active}
+            busy={toggle.isPending}
+            onToggle={() => toggle.mutate({ id: i.id, active: !i.is_active })}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- VIP ---------------- */
+
+function VipTab() {
+  const [form, setForm] = useState({ level: "1", name: "", price: "10000", duration_days: "30" });
+
+  const levels = useQuery({
+    queryKey: ["admin-vip"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vip_levels")
+        .select("level, name, price, duration_days, is_active")
+        .order("level");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async () =>
+      adminUpsertVipLevel({
+        data: {
+          level: Number(form.level),
+          name: form.name.trim(),
+          price: Number(form.price),
+          duration_days: Number(form.duration_days),
+          is_active: true,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("تم حفظ المستوى");
+      void levels.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  const toggle = useMutation({
+    mutationFn: async ({ level, active }: { level: number; active: boolean }) =>
+      adminSetActive({ data: { table: "vip_levels", id: level, active } }),
+    onSuccess: () => void levels.refetch(),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="surface-card space-y-2 p-3">
+        <p className="text-sm font-bold">إضافة / تعديل مستوى VIP</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="المستوى" type="number" value={form.level} onChange={(v) => setForm({ ...form, level: v })} />
+          <Field label="الاسم" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="السعر" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
+          <Field
+            label="المدة (يوم)"
+            type="number"
+            value={form.duration_days}
+            onChange={(v) => setForm({ ...form, duration_days: v })}
+          />
+        </div>
+        <Button
+          disabled={save.isPending || form.name.trim().length < 1}
+          onClick={() => save.mutate()}
+          className="h-10 w-full rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
+        >
+          حفظ
+        </Button>
+      </div>
+
+      {levels.data?.map((v) => (
+        <div key={v.level} className="surface-card flex items-center gap-3 p-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">
+              VIP {v.level} — {v.name}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              {v.price} كوينز · {v.duration_days} يوم {v.is_active ? "" : "· مخفي"}
+            </p>
+          </div>
+          <ActiveButton
+            active={v.is_active}
+            busy={toggle.isPending}
+            onToggle={() => toggle.mutate({ level: v.level, active: !v.is_active })}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- باقات الكوينز ---------------- */
+
+function CoinsTab() {
+  const [form, setForm] = useState({
+    name: "",
+    coins: "1000",
+    bonus_coins: "0",
+    price_cents: "999",
+    discount_percent: "0",
+    sort_order: "0",
+  });
+
+  const packages = useQuery({
+    queryKey: ["admin-packages"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("coin_packages")
+        .select("id, name, coins, bonus_coins, price_cents, currency, is_active, sort_order")
+        .order("sort_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async () =>
+      adminUpsertCoinPackage({
+        data: {
+          name: form.name.trim(),
+          coins: Number(form.coins),
+          bonus_coins: Number(form.bonus_coins) || 0,
+          price_cents: Number(form.price_cents),
+          currency: "USD",
+          discount_percent: Number(form.discount_percent) || 0,
+          is_active: true,
+          sort_order: Number(form.sort_order) || 0,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("تم حفظ الباقة");
+      setForm({ ...form, name: "" });
+      void packages.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  const toggle = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) =>
+      adminSetActive({ data: { table: "coin_packages", id, active } }),
+    onSuccess: () => void packages.refetch(),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="surface-card space-y-2 p-3">
+        <p className="text-sm font-bold">إضافة باقة كوينز</p>
+        <Field label="الاسم" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+        <div className="grid grid-cols-3 gap-2">
+          <Field label="الكوينز" type="number" value={form.coins} onChange={(v) => setForm({ ...form, coins: v })} />
+          <Field
+            label="مكافأة"
+            type="number"
+            value={form.bonus_coins}
+            onChange={(v) => setForm({ ...form, bonus_coins: v })}
+          />
+          <Field
+            label="السعر (سنت)"
+            type="number"
+            value={form.price_cents}
+            onChange={(v) => setForm({ ...form, price_cents: v })}
+          />
+        </div>
+        <Button
+          disabled={save.isPending || form.name.trim().length < 1}
+          onClick={() => save.mutate()}
+          className="h-10 w-full rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
+        >
+          حفظ
+        </Button>
+      </div>
+
+      {packages.data?.map((p) => (
+        <div key={p.id} className="surface-card flex items-center gap-3 p-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{p.name}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {p.coins.toLocaleString("ar")} كوينز {p.bonus_coins > 0 ? `+${p.bonus_coins}` : ""} ·{" "}
+              {(p.price_cents / 100).toFixed(2)} {p.currency} {p.is_active ? "" : "· مخفية"}
+            </p>
+          </div>
+          <ActiveButton
+            active={p.is_active}
+            busy={toggle.isPending}
+            onToggle={() => toggle.mutate({ id: p.id, active: !p.is_active })}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- إعدادات الألعاب ---------------- */
+
+type GameFlags = { dice: boolean; wheel: boolean; cards: boolean; quiz: boolean };
+type BetLimits = { min_bet: number; max_bet: number };
+
+function GamesTab() {
+  const settings = useQuery({
+    queryKey: ["admin-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("app_settings").select("key, value");
+      if (error) throw error;
+      const map = new Map((data ?? []).map((r) => [r.key, r.value]));
+      return {
+        games: (map.get("games") ?? { dice: true, wheel: true, cards: true, quiz: true }) as GameFlags,
+        limits: (map.get("limits") ?? { min_bet: 50, max_bet: 5000 }) as BetLimits,
+      };
+    },
+  });
+
+  const [draft, setDraft] = useState<{ games: GameFlags; limits: BetLimits } | null>(null);
+  const state = draft ?? settings.data ?? null;
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!state) return;
+      await adminSetGameSettings({ data: { games: state.games, limits: state.limits } });
+    },
+    onSuccess: () => {
+      toast.success("تم حفظ الإعدادات");
+      void settings.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  if (!state) return <EmptyState title="جارٍ التحميل" />;
+
+  const labels: Record<keyof GameFlags, string> = {
+    dice: "النرد",
+    wheel: "عجلة الحظ",
+    cards: "الورق",
+    quiz: "الأسئلة",
+  };
+
+  return (
+    <div className="surface-card space-y-3 p-3">
+      <p className="text-sm font-bold">تشغيل الألعاب</p>
+      <div className="grid grid-cols-2 gap-2">
+        {(Object.keys(labels) as (keyof GameFlags)[]).map((k) => (
+          <button
+            key={k}
+            onClick={() => setDraft({ ...state, games: { ...state.games, [k]: !state.games[k] } })}
+            className={cn(
+              "rounded-xl border px-3 py-2 text-xs",
+              state.games[k]
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-border bg-surface-2 text-muted-foreground",
+            )}
+          >
+            {labels[k]} {state.games[k] ? "· مفعّلة" : "· موقوفة"}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Field
+          label="أقل رهان"
+          type="number"
+          value={String(state.limits.min_bet)}
+          onChange={(v) => setDraft({ ...state, limits: { ...state.limits, min_bet: Number(v) || 0 } })}
+        />
+        <Field
+          label="أعلى رهان"
+          type="number"
+          value={String(state.limits.max_bet)}
+          onChange={(v) => setDraft({ ...state, limits: { ...state.limits, max_bet: Number(v) || 0 } })}
+        />
+      </div>
+      <Button
+        disabled={save.isPending}
+        onClick={() => save.mutate()}
+        className="h-10 w-full rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
+      >
+        حفظ الإعدادات
+      </Button>
     </div>
   );
 }
