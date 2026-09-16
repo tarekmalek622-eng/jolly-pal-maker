@@ -17,6 +17,7 @@ import {
   Music,
   Send,
   Settings,
+  Sparkles,
   Trophy,
   Volume2,
   VolumeX,
@@ -28,6 +29,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { GiftSheet, type GiftTarget } from "@/components/GiftSheet";
 import { GiftOverlay, type GiftMediaRow, type GiftShowEvent } from "@/components/GiftMedia";
 import { RoomSupporters } from "@/components/RoomSupporters";
+import { RoomCosmetics, CosmeticImage } from "@/components/RoomCosmetics";
 import { DominoGame } from "@/components/DominoGame";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Button } from "@/components/ui/button";
@@ -60,6 +62,7 @@ type MicSeat = {
   user_id: string | null;
   is_locked: boolean;
   is_muted: boolean;
+  decoration_url: string | null;
 };
 
 type Person = {
@@ -85,6 +88,7 @@ function RoomPage() {
   const [roomGame, setRoomGame] = useState<"wheel" | "domino">("wheel");
   const [seatSheet, setSeatSheet] = useState<string | null>(null);
   const [cupOpen, setCupOpen] = useState(false);
+  const [cosmeticsOpen, setCosmeticsOpen] = useState(false);
   const musicRef = useRef<HTMLInputElement>(null);
   const [giftTargetId, setGiftTargetId] = useState<string | null>(null);
 
@@ -102,7 +106,7 @@ function RoomPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("room_mics")
-        .select("id, seat_index, user_id, is_locked, is_muted")
+        .select("id, seat_index, user_id, is_locked, is_muted, decoration_url")
         .eq("room_id", roomId)
         .order("seat_index", { ascending: true });
       if (error) throw error;
@@ -432,6 +436,9 @@ function RoomPage() {
                           : "غير متصل"}
               </p>
             </div>
+            <button onClick={() => setCosmeticsOpen(true)} className="p-1" aria-label="تزيين الغرفة">
+              <Sparkles className="h-5 w-5" />
+            </button>
             <button onClick={() => setCupOpen(true)} className="p-1" aria-label="كأس الغرفة">
               <Trophy className="h-5 w-5" />
             </button>
@@ -464,6 +471,13 @@ function RoomPage() {
     >
       <RoomBackground url={room.data.background_url} />
 
+      {room.data.theme && (
+        <CosmeticImage
+          url={room.data.theme}
+          className="pointer-events-none mx-auto mb-1 max-h-16 w-full object-contain"
+        />
+      )}
+
       <div className="grid grid-cols-4 gap-3">
         {(mics.data ?? []).map((seat) => {
           const person = personOf(seat.user_id);
@@ -493,6 +507,12 @@ function RoomPage() {
                   <Lock className="h-5 w-5 text-muted-foreground" />
                 ) : (
                   <Mic className="h-5 w-5 text-muted-foreground" />
+                )}
+                {seat.decoration_url && (
+                  <CosmeticImage
+                    url={seat.decoration_url}
+                    className="pointer-events-none absolute -inset-2 h-[calc(100%+1rem)] w-[calc(100%+1rem)] object-contain"
+                  />
                 )}
                 {person && seat.is_muted && (
                   <span className="absolute -bottom-1 -end-1 rounded-full bg-destructive p-1">
@@ -604,6 +624,19 @@ function RoomPage() {
           </div>
         )}
       </div>
+
+      <RoomCosmetics
+        roomId={roomId}
+        userId={userId}
+        isOwner={isOwner}
+        open={cosmeticsOpen}
+        onOpenChange={setCosmeticsOpen}
+        onApplied={() => {
+          void room.refetch();
+          void mics.refetch();
+          setCosmeticsOpen(false);
+        }}
+      />
 
       <RoomSupporters roomId={roomId} open={cupOpen} onOpenChange={setCupOpen} />
 
