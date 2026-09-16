@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
+import { GiftPlayer, GiftThumb, type GiftMediaRow } from "@/components/GiftMedia";
+import { uploadGiftMedia, type GiftMediaKind } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsAdmin, useSupabaseSession } from "@/hooks/use-session";
@@ -15,6 +17,7 @@ import {
   adminSetRoomDisabled,
   adminResolveReport,
   adminUpsertGift,
+  adminDeleteGift,
   adminUpsertStoreItem,
   adminUpsertVipLevel,
   adminUpsertCvipPlan,
@@ -468,25 +471,77 @@ function RaritySelect({ value, onChange }: { value: string; onChange: (v: string
 
 /* ---------------- الهدايا ---------------- */
 
+const GIFT_CATEGORIES = [
+  "general",
+  "flowers",
+  "romantic",
+  "love",
+  "celebration",
+  "occasions",
+  "cars",
+  "gold",
+  "diamond",
+  "games",
+  "animated",
+  "vip",
+  "cvip",
+] as const;
+
+type GiftForm = {
+  id?: string;
+  name: string;
+  price: string;
+  category: string;
+  rarity: string;
+  sort_order: string;
+  duration_ms: string;
+  display_scale: string;
+  required_vip: string;
+  sound_enabled: boolean;
+  thumb_url: string;
+  animation_url: string;
+  video_url: string;
+  sound_url: string;
+};
+
+const EMPTY_GIFT: GiftForm = {
+  name: "",
+  price: "1000",
+  category: "general",
+  rarity: "common",
+  sort_order: "0",
+  duration_ms: "3000",
+  display_scale: "100",
+  required_vip: "0",
+  sound_enabled: true,
+  thumb_url: "",
+  animation_url: "",
+  video_url: "",
+  sound_url: "",
+};
+
 function GiftsTab() {
-  const [form, setForm] = useState({
-    name: "",
-    price: "1000",
-    category: "general",
-    rarity: "common",
-    image_url: "",
-    sort_order: "0",
-  });
+  const [form, setForm] = useState<GiftForm>(EMPTY_GIFT);
+  const set = (patch: Partial<GiftForm>) => setForm((f) => ({ ...f, ...patch }));
 
   const gifts = useQuery({
     queryKey: ["admin-gifts"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from("gifts")
-        .select("id, name, price, rarity, category, is_active, sort_order")
+        .select(
+          "id, name, price, rarity, category, is_active, sort_order, image_url, thumb_url, animation_url, video_url, sound_url, sound_enabled, duration_ms, display_scale, required_vip",
+        )
         .order("sort_order");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as (GiftMediaRow & {
+        price: number;
+        category: string;
+        is_active: boolean;
+        sort_order: number;
+        required_vip: number;
+      })[];
     },
   });
 
@@ -494,18 +549,27 @@ function GiftsTab() {
     mutationFn: async () =>
       adminUpsertGift({
         data: {
+          ...(form.id ? { id: form.id } : {}),
           name: form.name.trim(),
-          price: Number(form.price),
+          price: Number(form.price) || 0,
           category: form.category.trim() || "general",
           rarity: form.rarity as "common",
-          image_url: form.image_url.trim() || null,
+          thumb_url: form.thumb_url || null,
+          image_url: form.thumb_url || null,
+          animation_url: form.animation_url || null,
+          video_url: form.video_url || null,
+          sound_url: form.sound_url || null,
+          sound_enabled: form.sound_enabled,
+          duration_ms: Math.min(Math.max(Number(form.duration_ms) || 3000, 800), 12000),
+          display_scale: Math.min(Math.max(Number(form.display_scale) || 100, 20), 200),
+          required_vip: Math.min(Math.max(Number(form.required_vip) || 0, 0), 10),
           is_active: true,
           sort_order: Number(form.sort_order) || 0,
         },
       }),
     onSuccess: () => {
       toast.success("تم حفظ الهدية");
-      setForm({ name: "", price: "1000", category: "general", rarity: "common", image_url: "", sort_order: "0" });
+      setForm(EMPTY_GIFT);
       void gifts.refetch();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
@@ -518,39 +582,336 @@ function GiftsTab() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
   });
 
+  const remove = useMutation({
+    mutationFn: async (id: string) => adminDeleteGift({ data: { id } }),
+    onSuccess: (r) => {
+      toast.success(r.hidden ? "تم إخفاء الهدية (لها سجل إرسال)" : "تم حذف الهدية");
+      void gifts.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحذف"),
+  });
+
+  const preview: GiftMediaRow = {
+    id: form.id ?? "preview",
+    name: form.name || "معاينة",
+    image_url: form.thumb_url || null,
+    thumb_url: form.thumb_url || null,
+    animation_url: form.animation_url || null,
+    video_url: form.video_url || null,
+    sound_url: form.sound_url || null,
+    sound_enabled: form.sound_enabled,
+    duration_ms: Number(form.duration_ms) || 3000,
+    display_scale: Number(form.display_scale) || 100,
+    rarity: form.rarity,
+  };
+
   return (
     <div className="space-y-3">
+      <GiftStats />
+
       <div className="surface-card space-y-2 p-3">
-        <p className="text-sm font-bold">إضافة هدية</p>
-        <Field label="الاسم" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="السعر" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
-          <Field label="التصنيف" value={form.category} onChange={(v) => setForm({ ...form, category: v })} />
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-bold">{form.id ? "تعديل هدية" : "إضافة هدية"}</p>
+          {form.id ? (
+            <button onClick={() => setForm(EMPTY_GIFT)} className="text-[11px] font-bold text-primary">
+              هدية جديدة
+            </button>
+          ) : null}
         </div>
-        <Field label="رابط الصورة" value={form.image_url} onChange={(v) => setForm({ ...form, image_url: v })} />
-        <RaritySelect value={form.rarity} onChange={(v) => setForm({ ...form, rarity: v })} />
+
+        <Field label="الاسم" value={form.name} onChange={(v) => set({ name: v })} />
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="السعر" type="number" value={form.price} onChange={(v) => set({ price: v })} />
+          <Field label="الترتيب" type="number" value={form.sort_order} onChange={(v) => set({ sort_order: v })} />
+        </div>
+
+        <p className="text-[11px] font-bold text-muted-foreground">التصنيف</p>
+        <div className="flex flex-wrap gap-1.5">
+          {GIFT_CATEGORIES.map((c) => (
+            <button
+              key={c}
+              onClick={() => set({ category: c })}
+              className={cn(
+                "h-7 rounded-full px-2.5 text-[10px] font-bold",
+                form.category === c ? "gradient-gold text-primary-foreground" : "border border-border bg-surface text-muted-foreground",
+              )}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+
+        <RaritySelect value={form.rarity} onChange={(v) => set({ rarity: v })} />
+
+        <div className="grid grid-cols-3 gap-2">
+          <Field label="المدة (ms)" type="number" value={form.duration_ms} onChange={(v) => set({ duration_ms: v })} />
+          <Field label="الحجم %" type="number" value={form.display_scale} onChange={(v) => set({ display_scale: v })} />
+          <Field label="VIP مطلوب" type="number" value={form.required_vip} onChange={(v) => set({ required_vip: v })} />
+        </div>
+
+        <button
+          onClick={() => set({ sound_enabled: !form.sound_enabled })}
+          className={cn(
+            "h-9 w-full rounded-xl text-[11px] font-bold",
+            form.sound_enabled ? "gradient-gold text-primary-foreground" : "border border-border bg-surface text-muted-foreground",
+          )}
+        >
+          {form.sound_enabled ? "الصوت مُشغّل" : "الصوت مُوقف"}
+        </button>
+
+        <MediaUpload
+          label="صورة الهدية (PNG/JPG/WebP)"
+          kind="image"
+          accept="image/png,image/jpeg,image/webp,image/avif"
+          value={form.thumb_url}
+          onChange={(v) => set({ thumb_url: v })}
+        />
+        <MediaUpload
+          label="صورة متحركة GIF"
+          kind="image"
+          accept="image/gif,image/webp"
+          value={form.animation_url}
+          onChange={(v) => set({ animation_url: v })}
+        />
+        <MediaUpload
+          label="فيديو التأثير (MP4/WebM)"
+          kind="video"
+          accept="video/mp4,video/webm"
+          value={form.video_url}
+          onChange={(v) => set({ video_url: v })}
+        />
+        <MediaUpload
+          label="صوت الهدية (اختياري)"
+          kind="audio"
+          accept="audio/mpeg,audio/wav,audio/ogg"
+          value={form.sound_url}
+          onChange={(v) => set({ sound_url: v })}
+        />
+
+        <div className="flex items-center gap-3 rounded-xl border border-border bg-surface p-2">
+          <GiftPlayer gift={preview} muted className="h-20 w-20" />
+          <p className="text-[11px] text-muted-foreground">معاينة التأثير كما سيظهر داخل الغرفة</p>
+        </div>
+
         <Button
           disabled={save.isPending || form.name.trim().length < 1}
           onClick={() => save.mutate()}
           className="h-10 w-full rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
         >
-          حفظ
+          {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ"}
         </Button>
       </div>
 
       {gifts.data?.map((g) => (
         <div key={g.id} className="surface-card flex items-center gap-3 p-3">
+          <GiftThumb gift={g} size={40} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{g.name}</p>
             <p className="text-[10px] text-muted-foreground">
-              {g.price} كوينز · {g.category} {g.is_active ? "" : "· مخفية"}
+              {g.price} كوينز · {g.category}
+              {g.video_url ? " · فيديو" : g.animation_url ? " · GIF" : ""}
+              {g.is_active ? "" : " · مخفية"}
             </p>
           </div>
+          <button
+            onClick={() =>
+              setForm({
+                id: g.id,
+                name: g.name,
+                price: String(g.price),
+                category: g.category,
+                rarity: g.rarity ?? "common",
+                sort_order: String(g.sort_order),
+                duration_ms: String(g.duration_ms ?? 3000),
+                display_scale: String(g.display_scale ?? 100),
+                required_vip: String(g.required_vip ?? 0),
+                sound_enabled: g.sound_enabled ?? true,
+                thumb_url: g.thumb_url ?? g.image_url ?? "",
+                animation_url: g.animation_url ?? "",
+                video_url: g.video_url ?? "",
+                sound_url: g.sound_url ?? "",
+              })
+            }
+            className="h-8 rounded-xl border border-border px-2 text-[10px] font-bold"
+          >
+            تعديل
+          </button>
           <ActiveButton
             active={g.is_active}
             busy={toggle.isPending}
             onToggle={() => toggle.mutate({ id: g.id, active: !g.is_active })}
           />
+          <button
+            onClick={() => remove.mutate(g.id)}
+            disabled={remove.isPending}
+            className="h-8 rounded-xl border border-destructive/40 px-2 text-[10px] font-bold text-destructive"
+          >
+            حذف
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MediaUpload({
+  label,
+  kind,
+  accept,
+  value,
+  onChange,
+}: {
+  label: string;
+  kind: GiftMediaKind;
+  accept: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [progress, setProgress] = useState<number | null>(null);
+  const [handle, setHandle] = useState<{ cancel: () => void } | null>(null);
+
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    setProgress(0);
+    const h = uploadGiftMedia(kind, file, setProgress);
+    setHandle(h);
+    try {
+      const path = await h.promise;
+      onChange(path);
+      toast.success("تم رفع الملف");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "تعذر الرفع");
+    } finally {
+      setProgress(null);
+      setHandle(null);
+    }
+  }
+
+  return (
+    <div className="space-y-1 rounded-xl border border-border bg-surface p-2">
+      <p className="text-[11px] font-bold text-muted-foreground">{label}</p>
+      <input
+        type="file"
+        accept={accept}
+        onChange={(e) => void pick(e.target.files?.[0])}
+        className="w-full text-[10px]"
+      />
+      {progress !== null ? (
+        <div className="flex items-center gap-2">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border">
+            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+          </div>
+          <span className="text-[10px] font-bold">{progress}%</span>
+          <button onClick={() => handle?.cancel()} className="text-[10px] font-bold text-destructive">
+            إلغاء
+          </button>
+        </div>
+      ) : null}
+      {value ? (
+        <div className="flex items-center justify-between">
+          <span className="truncate text-[10px] text-muted-foreground">{value}</span>
+          <button onClick={() => onChange("")} className="text-[10px] font-bold text-destructive">
+            إزالة
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+const STAT_PERIODS = [
+  { key: "day", label: "اليوم", hours: 24 },
+  { key: "week", label: "الأسبوع", hours: 24 * 7 },
+  { key: "month", label: "الشهر", hours: 24 * 30 },
+  { key: "all", label: "الكل", hours: 0 },
+] as const;
+
+type GiftStatsData = {
+  total_gifts: number;
+  total_coins: number;
+  top_gifts: { name: string; qty: number; coins: number }[];
+  top_senders: { display_name: string; public_id: string; coins: number }[];
+  top_receivers: { display_name: string; public_id: string; coins: number }[];
+};
+
+function GiftStats() {
+  const [period, setPeriod] = useState<(typeof STAT_PERIODS)[number]["key"]>("week");
+  const hours = STAT_PERIODS.find((p) => p.key === period)?.hours ?? 0;
+
+  const stats = useQuery<GiftStatsData>({
+    queryKey: ["gift-stats", period],
+    queryFn: async () => {
+      const since = hours > 0 ? new Date(Date.now() - hours * 3600_000).toISOString() : null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc("gift_stats", { _since: since });
+      if (error) throw error;
+      return data as GiftStatsData;
+    },
+  });
+
+  return (
+    <div className="surface-card space-y-2 p-3">
+      <p className="text-sm font-bold">إحصائيات الهدايا</p>
+      <div className="flex gap-1.5">
+        {STAT_PERIODS.map((p) => (
+          <button
+            key={p.key}
+            onClick={() => setPeriod(p.key)}
+            className={cn(
+              "h-7 flex-1 rounded-full text-[10px] font-bold",
+              period === p.key ? "gradient-gold text-primary-foreground" : "border border-border bg-surface text-muted-foreground",
+            )}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {stats.isLoading ? (
+        <div className="flex justify-center py-3">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <StatBox label="عدد الهدايا" value={(stats.data?.total_gifts ?? 0).toLocaleString("en-US")} />
+            <StatBox label="كوينز الهدايا" value={(stats.data?.total_coins ?? 0).toLocaleString("en-US")} />
+          </div>
+          <StatList title="أكثر الهدايا" rows={(stats.data?.top_gifts ?? []).map((r) => ({ label: r.name, value: r.coins }))} />
+          <StatList
+            title="أكثر المرسلين"
+            rows={(stats.data?.top_senders ?? []).map((r) => ({ label: r.display_name, value: r.coins }))}
+          />
+          <StatList
+            title="أكثر المستلمين"
+            rows={(stats.data?.top_receivers ?? []).map((r) => ({ label: r.display_name, value: r.coins }))}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+function StatBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-surface p-2 text-center">
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="text-sm font-bold text-primary">{value}</p>
+    </div>
+  );
+}
+
+function StatList({ title, rows }: { title: string; rows: { label: string; value: number }[] }) {
+  if (rows.length === 0) return null;
+  return (
+    <div className="space-y-1">
+      <p className="text-[11px] font-bold text-muted-foreground">{title}</p>
+      {rows.slice(0, 5).map((r, i) => (
+        <div key={`${r.label}-${i}`} className="flex items-center justify-between rounded-lg bg-surface px-2 py-1 text-[11px]">
+          <span className="truncate">
+            {i + 1}. {r.label}
+          </span>
+          <span className="font-bold text-primary">{r.value.toLocaleString("en-US")}</span>
         </div>
       ))}
     </div>

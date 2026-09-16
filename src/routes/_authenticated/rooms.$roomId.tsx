@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { resolveMediaUrl } from "@/lib/media";
 import { toast } from "sonner";
 import {
@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { GiftSheet, type GiftTarget } from "@/components/GiftSheet";
+import { GiftOverlay, type GiftMediaRow, type GiftShowEvent } from "@/components/GiftMedia";
 import { DominoGame } from "@/components/DominoGame";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Button } from "@/components/ui/button";
@@ -188,6 +189,42 @@ function RoomPage() {
     };
   }, [roomId, userId]);
 
+  // طبقة عرض تأثيرات الهدايا لجميع الحاضرين
+  const [giftQueue, setGiftQueue] = useState<GiftShowEvent[]>([]);
+  const enqueueGift = useCallback(
+    async (row: { id?: string; gift_id?: string; sender_id?: string; receiver_id?: string; quantity?: number }) => {
+      if (!row.gift_id) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const anyDb = supabase as any;
+      const [{ data: gift }, { data: names }] = await Promise.all([
+        anyDb
+          .from("gifts")
+          .select(
+            "id, name, image_url, thumb_url, animation_url, video_url, sound_url, sound_enabled, duration_ms, display_scale, rarity",
+          )
+          .eq("id", row.gift_id)
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("id, display_name")
+          .in("id", [row.sender_id, row.receiver_id].filter(Boolean) as string[]),
+      ]);
+      if (!gift) return;
+      const nameOf = (id?: string) => (names ?? []).find((p) => p.id === id)?.display_name ?? "مستخدم";
+      setGiftQueue((prev) => [
+        ...prev,
+        {
+          key: row.id ?? `${row.gift_id}-${Date.now()}`,
+          gift: gift as GiftMediaRow,
+          senderName: nameOf(row.sender_id),
+          receiverName: nameOf(row.receiver_id),
+          quantity: row.quantity ?? 1,
+        },
+      ]);
+    },
+    [],
+  );
+
   // realtime
   useEffect(() => {
     const channel = supabase
@@ -196,7 +233,18 @@ function RoomPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "room_mics" }, () => void mics.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "room_members" }, () => void members.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "mic_requests" }, () => void requests.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions" }, () => void messages.refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions" }, (payload) => {
+        void messages.refetch();
+        const row = payload.new as {
+          id?: string;
+          room_id?: string | null;
+          gift_id?: string;
+          sender_id?: string;
+          receiver_id?: string;
+          quantity?: number;
+        } | null;
+        if (payload.eventType === "INSERT" && row?.room_id === roomId) void enqueueGift(row);
+      })
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
@@ -319,6 +367,7 @@ function RoomPage() {
     display_name: p.display_name,
     avatar_url: p.avatar_url,
     vip_level: p.vip_level,
+    public_id: p.public_id,
   }));
 
   if (room.isLoading) return <AppShell hideNav>جارٍ تحميل الغرفة...</AppShell>;
@@ -506,6 +555,7 @@ function RoomPage() {
       </div>
 
       <GiftSheet open={giftOpen} onOpenChange={setGiftOpen} roomId={roomId} targets={giftTargets} />
+      <GiftOverlay event={giftQueue[0] ?? null} onDone={() => setGiftQueue((prev) => prev.slice(1))} />
 
       <Sheet open={dominoOpen} onOpenChange={setDominoOpen}>
         <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl">
