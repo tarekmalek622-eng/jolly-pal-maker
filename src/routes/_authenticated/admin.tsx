@@ -1050,7 +1050,7 @@ function GamesTab() {
       if (error) throw error;
       const map = new Map((data ?? []).map((r) => [r.key, r.value]));
       return {
-        games: (map.get("games") ?? { dice: true, wheel: true, cards: true, quiz: true }) as GameFlags,
+        games: { dice: true, wheel: true, cards: true, quiz: true, domino: true, ...(map.get("games") as object) } as GameFlags,
         limits: (map.get("limits") ?? { min_bet: 50, max_bet: 5000 }) as BetLimits,
       };
     },
