@@ -23,6 +23,8 @@ import {
   adminDeleteQuizQuestion,
   adminSetGameSettings,
   adminSetDominoSettings,
+  adminReviewCoinPurchase,
+  adminSetPaymentAccounts,
   adminUpsertQuizQuestion,
   adminSetUserRole,
 } from "@/lib/admin.functions";
@@ -48,6 +50,7 @@ const TABS = [
   { key: "vip", label: "VIP" },
   { key: "cvip", label: "CVIP" },
   { key: "coins", label: "الكوينز" },
+  { key: "topups", label: "طلبات الشحن" },
   { key: "games", label: "الألعاب" },
   { key: "quiz", label: "الأسئلة" },
   { key: "reports", label: "الإبلاغات" },
@@ -101,6 +104,7 @@ function AdminPage() {
       {tab === "vip" && <VipTab />}
       {tab === "cvip" && <CvipTab />}
       {tab === "coins" && <CoinsTab />}
+      {tab === "topups" && <TopupsTab />}
       {tab === "games" && <GamesTab />}
       {tab === "quiz" && <QuizTab />}
       {tab === "reports" && <ReportsTab />}
