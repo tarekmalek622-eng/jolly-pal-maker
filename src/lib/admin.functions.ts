@@ -191,7 +191,7 @@ export const adminSetActive = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        table: z.enum(["gifts", "store_items", "coin_packages", "vip_levels"]),
+        table: z.enum(["gifts", "store_items", "coin_packages", "vip_levels", "cvip_plans"]),
         id: z.union([z.string().uuid(), z.number().int()]),
         active: z.boolean(),
       })
@@ -272,7 +272,13 @@ export const adminSetGameSettings = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        games: z.object({ dice: z.boolean(), wheel: z.boolean(), cards: z.boolean(), quiz: z.boolean() }),
+        games: z.object({
+          dice: z.boolean(),
+          wheel: z.boolean(),
+          cards: z.boolean(),
+          quiz: z.boolean(),
+          domino: z.boolean(),
+        }),
         limits: z.object({
           min_bet: z.number().int().min(10).max(100_000),
           max_bet: z.number().int().min(10).max(100_000),
