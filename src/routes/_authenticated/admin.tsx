@@ -17,6 +17,7 @@ import {
   adminUpsertGift,
   adminUpsertStoreItem,
   adminUpsertVipLevel,
+  adminUpsertCvipPlan,
   adminUpsertCoinPackage,
   adminSetActive,
   adminDeleteQuizQuestion,
@@ -44,6 +45,7 @@ const TABS = [
   { key: "gifts", label: "الهدايا" },
   { key: "store", label: "المتجر" },
   { key: "vip", label: "VIP" },
+  { key: "cvip", label: "CVIP" },
   { key: "coins", label: "الكوينز" },
   { key: "games", label: "الألعاب" },
   { key: "quiz", label: "الأسئلة" },
@@ -96,6 +98,7 @@ function AdminPage() {
       {tab === "gifts" && <GiftsTab />}
       {tab === "store" && <StoreTab />}
       {tab === "vip" && <VipTab />}
+      {tab === "cvip" && <CvipTab />}
       {tab === "coins" && <CoinsTab />}
       {tab === "games" && <GamesTab />}
       {tab === "quiz" && <QuizTab />}
