@@ -53,11 +53,15 @@ export const applyRoomCosmetic = createServerFn({ method: "POST" })
       imageUrl = item.image_url;
     }
 
+    // التحقق من الملكية والصلاحية تم أعلاه — الكتابة نفسها تتم بصلاحية سيرفر موثوقة
+    // لأن جداول الغرف تمنع التعديل المباشر من المستخدمين
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     if (data.target === "background") {
-      const res = await supabase.from("rooms").update({ background_url: imageUrl }).eq("id", data.roomId);
+      const res = await supabaseAdmin.from("rooms").update({ background_url: imageUrl }).eq("id", data.roomId);
       if (res.error) throw new Error(res.error.message);
     } else if (data.target === "decoration") {
-      const res = await supabase.from("rooms").update({ theme: imageUrl }).eq("id", data.roomId);
+      const res = await supabaseAdmin.from("rooms").update({ theme: imageUrl }).eq("id", data.roomId);
       if (res.error) throw new Error(res.error.message);
     } else {
       const seat = await supabase
