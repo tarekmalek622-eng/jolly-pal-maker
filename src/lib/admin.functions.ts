@@ -191,7 +191,7 @@ export const adminSetActive = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        table: z.enum(["gifts", "store_items", "coin_packages", "vip_levels"]),
+        table: z.enum(["gifts", "store_items", "coin_packages", "vip_levels", "cvip_plans"]),
         id: z.union([z.string().uuid(), z.number().int()]),
         active: z.boolean(),
       })
@@ -267,12 +267,59 @@ export const adminUpsertVipLevel = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminUpsertCvipPlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        name: z.string().min(1).max(80),
+        description: z.string().max(500).optional(),
+        price: z.number().int().min(1).max(100_000_000),
+        duration_days: z.number().int().min(1).max(3650),
+        sort_order: z.number().int().min(0).max(1000),
+        badge_url: z.string().max(2000).optional(),
+        frame_url: z.string().max(2000).optional(),
+        background_url: z.string().max(2000).optional(),
+        name_effect: z.string().max(2000).optional(),
+        room_effect: z.string().max(2000).optional(),
+        is_active: z.boolean(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { id, ...rest } = data;
+    const row = {
+      ...rest,
+      description: rest.description || null,
+      badge_url: rest.badge_url || null,
+      frame_url: rest.frame_url || null,
+      background_url: rest.background_url || null,
+      name_effect: rest.name_effect || null,
+      room_effect: rest.room_effect || null,
+    };
+    const { error } = id
+      ? await supabaseAdmin.from("cvip_plans").update(row).eq("id", id)
+      : await supabaseAdmin.from("cvip_plans").insert(row);
+    if (error) throw new Error(error.message);
+    await log(context.userId, id ?? "new", "upsert_cvip_plan", "", data.name);
+    return { ok: true };
+  });
+
 export const adminSetGameSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
-        games: z.object({ dice: z.boolean(), wheel: z.boolean(), cards: z.boolean(), quiz: z.boolean() }),
+        games: z.object({
+          dice: z.boolean(),
+          wheel: z.boolean(),
+          cards: z.boolean(),
+          quiz: z.boolean(),
+          domino: z.boolean(),
+        }),
         limits: z.object({
           min_bet: z.number().int().min(10).max(100_000),
           max_bet: z.number().int().min(10).max(100_000),
