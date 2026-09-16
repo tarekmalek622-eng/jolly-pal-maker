@@ -573,6 +573,8 @@ function RoomPage() {
         </div>
       </div>
 
+      <RoomSupporters roomId={roomId} open={cupOpen} onOpenChange={setCupOpen} />
+
       <GiftSheet
         key={giftTargetId ?? "all"}
         open={giftOpen}
