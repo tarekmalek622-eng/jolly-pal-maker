@@ -16,6 +16,7 @@ import {
   MicOff,
   Send,
   Settings,
+  Trophy,
   Volume2,
   VolumeX,
   X,
