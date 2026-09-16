@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ConnectionState,
+  LocalAudioTrack,
   RoomEvent,
   Room as LiveKitRoom,
   type RemoteTrack,
