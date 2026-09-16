@@ -113,6 +113,43 @@ function FriendsPage() {
     onError: () => toast.error("تعذر حذف الصديق"),
   });
 
+  const relations = useQuery({
+    queryKey: ["relationships", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const rows = await fetchMyRelationships(userId!);
+      const ids = [...new Set(rows.map((r) => (r.requester_id === userId ? r.partner_id : r.requester_id)))];
+      let people: Profile[] = [];
+      if (ids.length > 0) {
+        const result = await supabase
+          .from("profiles")
+          .select("id, public_id, display_name, avatar_url, vip_level, is_online")
+          .in("id", ids);
+        if (result.error) throw result.error;
+        people = (result.data ?? []) as Profile[];
+      }
+      return { rows, people };
+    },
+  });
+
+  const relationAction = useMutation({
+    mutationFn: async (input: { id: string; action: "accept" | "reject" | "end" }) => {
+      if (input.action === "end") await endRelationship(input.id);
+      else await respondRelationship(input.id, input.action === "accept");
+    },
+    onSuccess: () => {
+      toast.success("تم تحديث العلاقة");
+      void relations.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر تحديث العلاقة"),
+  });
+
+  const relationPeople = useMemo(
+    () => new Map((relations.data?.people ?? []).map((p) => [p.id, p])),
+    [relations.data?.people],
+  );
+  const relationRows = relations.data?.rows ?? [];
+
   const profileById = useMemo(() => new Map((data.data?.profiles ?? []).map((p) => [p.id, p])), [data.data?.profiles]);
   const incoming = (data.data?.requests ?? []).filter((r) => r.addressee_id === userId && r.status === "pending");
   const sent = (data.data?.requests ?? []).filter((r) => r.requester_id === userId && r.status === "pending");
