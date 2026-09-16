@@ -38,11 +38,9 @@ interface ProfileLite {
 }
 
 /* الوصول لجدول domino_games عبر عميل مُوسع (غير مضمّن في الأنواع المولدة بعد) */
-function db() {
-  return (supabase as unknown as { from: (t: string) => ReturnType<typeof rawFrom> }).from("domino_games");
-}
-function rawFrom() {
-  return null as never;
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+function db(): any {
+  return (supabase as unknown as { from: (t: string) => any }).from("domino_games");
 }
 
 const PIPS: Record<number, number[]> = {
@@ -149,7 +147,7 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "domino_games", filter: `id=eq.${gameId}` },
-        (payload) => {
+        (payload: { new: DominoRow | null }) => {
           if (payload.new) {
             queryClient.setQueryData(["domino-game", gameId], payload.new);
           }
