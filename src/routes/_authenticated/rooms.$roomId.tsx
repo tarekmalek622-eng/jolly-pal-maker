@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { GiftSheet, type GiftTarget } from "@/components/GiftSheet";
+import { GiftOverlay, type GiftMediaRow, type GiftShowEvent } from "@/components/GiftMedia";
 import { DominoGame } from "@/components/DominoGame";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Button } from "@/components/ui/button";
