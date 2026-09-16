@@ -344,15 +344,17 @@ function GamesPage() {
               <div key={s.id} className="surface-card flex items-center gap-3 p-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold">
-                    {s.game === "dice"
-                      ? "النرد"
-                      : s.game === "wheel"
-                        ? "عجلة الحظ"
-                        : s.game === "cards"
-                          ? "الورق"
-                          : s.game === "quiz"
-                            ? "الأسئلة"
-                            : "التحديات"}
+                    {s.game === "domino"
+                      ? "دومينو"
+                      : s.game === "dice"
+                        ? "النرد"
+                        : s.game === "wheel"
+                          ? "عجلة الحظ"
+                          : s.game === "cards"
+                            ? "الورق"
+                            : s.game === "quiz"
+                              ? "الأسئلة"
+                              : "التحديات"}
                   </p>
                   <p className="text-[10px] text-muted-foreground">
                     {new Date(s.created_at).toLocaleString("ar")}
