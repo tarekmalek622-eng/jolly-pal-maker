@@ -568,23 +568,11 @@ function RegisterForm() {
 
         <div className="space-y-2">
           <Label>الدولة</Label>
-          <div className="flex flex-wrap gap-2">
-            {COUNTRIES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setCountry(c)}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs transition-colors",
-                  country === c
-                    ? "border-primary bg-primary/15 text-primary"
-                    : "border-border bg-surface text-muted-foreground",
-                )}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
+          <CountryPicker
+            value={COUNTRIES.find((c) => c.name === country)?.code ?? ""}
+            onSelect={(c) => setCountry(c.name)}
+            showDial={false}
+          />
         </div>
 
         <div className="space-y-2">
