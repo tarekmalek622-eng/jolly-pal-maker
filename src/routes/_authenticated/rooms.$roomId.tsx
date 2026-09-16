@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolveMediaUrl } from "@/lib/media";
 import { toast } from "sonner";
 import {
@@ -14,6 +14,7 @@ import {
   LogOut,
   Mic,
   MicOff,
+  Music,
   Send,
   Settings,
   Trophy,
@@ -84,6 +85,7 @@ function RoomPage() {
   const [roomGame, setRoomGame] = useState<"wheel" | "domino">("wheel");
   const [seatSheet, setSeatSheet] = useState<string | null>(null);
   const [cupOpen, setCupOpen] = useState(false);
+  const musicRef = useRef<HTMLInputElement>(null);
   const [giftTargetId, setGiftTargetId] = useState<string | null>(null);
 
   const room = useQuery({
@@ -571,6 +573,36 @@ function RoomPage() {
             <Gift className="me-1 h-4 w-4" /> هدية
           </Button>
         </div>
+        {/* تشغيل أغنية من ملفات الهاتف لكل الحاضرين — لمن هو على المايك */}
+        {mySeat && (
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              ref={musicRef}
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (!f) return;
+                voice
+                  .playMusic(f)
+                  .then(() => toast.success("جارٍ تشغيل الأغنية للجميع"))
+                  .catch((err: unknown) =>
+                    toast.error(err instanceof Error ? err.message : "تعذر تشغيل الأغنية"),
+                  );
+              }}
+            />
+            <Button
+              variant="outline"
+              onClick={() => (voice.musicPlaying ? voice.stopMusic() : musicRef.current?.click())}
+              className={cn("h-11 flex-1 rounded-2xl text-xs", voice.musicPlaying && "border-primary text-primary")}
+            >
+              <Music className="me-1 h-4 w-4" />
+              {voice.musicPlaying ? `إيقاف: ${voice.musicName ?? "الأغنية"}` : "تشغيل أغنية من الهاتف"}
+            </Button>
+          </div>
+        )}
       </div>
 
       <RoomSupporters roomId={roomId} open={cupOpen} onOpenChange={setCupOpen} />

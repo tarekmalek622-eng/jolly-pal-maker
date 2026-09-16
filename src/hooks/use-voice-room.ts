@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ConnectionState,
+  LocalAudioTrack,
   RoomEvent,
   Room as LiveKitRoom,
   type RemoteTrack,
@@ -20,6 +21,10 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
   const [speakerEnabled, setSpeakerEnabled] = useState(true);
   const [speakingIds, setSpeakingIds] = useState<string[]>([]);
   const [retryKey, setRetryKey] = useState(0);
+  const [musicPlaying, setMusicPlaying] = useState(false);
+  const [musicName, setMusicName] = useState<string | null>(null);
+  const musicElRef = useRef<HTMLAudioElement | null>(null);
+  const stopMusicRef = useRef<(() => void) | null>(null);
 
   /** Re-run the connection attempt after a failure. */
   const retry = useCallback(() => setRetryKey((k) => k + 1), []);
@@ -121,5 +126,72 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
     setSpeakerEnabled(next);
   }, [speakerEnabled]);
 
-  return { status, error, micEnabled, speakerEnabled, speakingIds, toggleMic, toggleSpeaker, retry };
+  /** تشغيل أغنية من ملفات الهاتف وبثّها لكل الحاضرين في الغرفة. */
+  const playMusic = useCallback(
+    async (file: File) => {
+      const room = roomRef.current;
+      if (!room || status !== "connected") throw new Error("الصوت غير متصل");
+      if (!canPublish) throw new Error("اصعد على المايك أولًا");
+
+      stopMusicRef.current?.();
+
+      const el = new Audio(URL.createObjectURL(file));
+      el.loop = false;
+      el.crossOrigin = "anonymous";
+      const ctx = new AudioContext();
+      const source = ctx.createMediaElementSource(el);
+      const dest = ctx.createMediaStreamDestination();
+      source.connect(dest);
+      source.connect(ctx.destination); // ليسمعها المشغّل أيضًا
+      await el.play();
+
+      const mediaTrack = dest.stream.getAudioTracks()[0];
+      if (!mediaTrack) throw new Error("تعذر قراءة الملف الصوتي");
+      const track = new LocalAudioTrack(mediaTrack);
+      const publication = await room.localParticipant.publishTrack(
+        // livekit types + exactOptionalPropertyTypes لا يتوافقان مع LocalAudioTrack مباشرة
+        track as unknown as MediaStreamTrack,
+        { name: "room-music" },
+      );
+
+      musicElRef.current = el;
+      setMusicName(file.name.replace(/\.[^.]+$/, ""));
+      setMusicPlaying(true);
+
+      stopMusicRef.current = () => {
+        try {
+          el.pause();
+          URL.revokeObjectURL(el.src);
+          if (publication?.track) void room.localParticipant.unpublishTrack(publication.track);
+          void ctx.close();
+        } catch {
+          /* تجاهل */
+        }
+        musicElRef.current = null;
+        stopMusicRef.current = null;
+        setMusicPlaying(false);
+        setMusicName(null);
+      };
+      el.onended = () => stopMusicRef.current?.();
+    },
+    [canPublish, status],
+  );
+
+  const stopMusic = useCallback(() => stopMusicRef.current?.(), []);
+
+  return {
+    status,
+    error,
+    micEnabled,
+    speakerEnabled,
+    speakingIds,
+    toggleMic,
+    toggleSpeaker,
+    retry,
+    playMusic,
+    stopMusic,
+    musicPlaying,
+    musicName,
+    musicEl: musicElRef,
+  };
 }
