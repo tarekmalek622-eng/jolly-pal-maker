@@ -511,7 +511,7 @@ function RoomPage() {
                 {seat.decoration_url && (
                   <CosmeticImage
                     url={seat.decoration_url}
-                    className="pointer-events-none absolute -inset-2 h-[calc(100%+1rem)] w-[calc(100%+1rem)] object-contain"
+                    className="pointer-events-none absolute left-1/2 top-1/2 h-[170%] w-[170%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain"
                   />
                 )}
                 {person && seat.is_muted && (
