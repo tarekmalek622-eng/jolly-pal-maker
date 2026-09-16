@@ -181,15 +181,36 @@ function RegisterForm() {
   }
 
   async function handleSubmit() {
-    if (name.trim().length < 2) return toast.error("اكتب اسمًا لا يقل عن حرفين");
-    if (!country) return toast.error("اختر دولتك");
-    if (!birthDate) return toast.error("أدخل تاريخ ميلادك");
-    if (!gender) return toast.error("اختر الجنس");
-    if (!photo) return toast.error("أضف صورتك الشخصية من ملفات هاتفك");
+    if (name.trim().length < 2) {
+      toast.error("اكتب اسمًا لا يقل عن حرفين");
+      return;
+    }
+    if (!country) {
+      toast.error("اختر دولتك");
+      return;
+    }
+    if (!birthDate) {
+      toast.error("أدخل تاريخ ميلادك");
+      return;
+    }
+    if (!gender) {
+      toast.error("اختر الجنس");
+      return;
+    }
+    if (!photo) {
+      toast.error("أضف صورتك الشخصية من ملفات هاتفك");
+      return;
+    }
 
     const age = (Date.now() - new Date(birthDate).getTime()) / (365.25 * 24 * 3600 * 1000);
-    if (age < 13) return toast.error("يجب أن يكون عمرك 13 عامًا أو أكثر");
-    if (age > 100) return toast.error("تاريخ الميلاد غير صحيح");
+    if (age < 13) {
+      toast.error("يجب أن يكون عمرك 13 عامًا أو أكثر");
+      return;
+    }
+    if (age > 100) {
+      toast.error("تاريخ الميلاد غير صحيح");
+      return;
+    }
 
     setSubmitting(true);
     try {
