@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
+import { VipName, VipId } from "@/components/VipName";
+import { VipCvipSheet } from "@/components/VipCvipSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
