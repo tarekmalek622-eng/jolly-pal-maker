@@ -19,6 +19,10 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
   const [micEnabled, setMicEnabled] = useState(false);
   const [speakerEnabled, setSpeakerEnabled] = useState(true);
   const [speakingIds, setSpeakingIds] = useState<string[]>([]);
+  const [retryKey, setRetryKey] = useState(0);
+
+  /** Re-run the connection attempt after a failure. */
+  const retry = useCallback(() => setRetryKey((k) => k + 1), []);
 
   const attach = useCallback((track: RemoteTrack, publication: RemoteTrackPublication) => {
     if (track.kind !== Track.Kind.Audio) return;
@@ -76,7 +80,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       void room.disconnect();
       roomRef.current = null;
     };
-  }, [roomId, attach]);
+  }, [roomId, attach, retryKey]);
 
   // Refresh publish permission when the user's mic seat changes.
   useEffect(() => {
@@ -117,5 +121,5 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
     setSpeakerEnabled(next);
   }, [speakerEnabled]);
 
-  return { status, error, micEnabled, speakerEnabled, speakingIds, toggleMic, toggleSpeaker };
+  return { status, error, micEnabled, speakerEnabled, speakingIds, toggleMic, toggleSpeaker, retry };
 }
