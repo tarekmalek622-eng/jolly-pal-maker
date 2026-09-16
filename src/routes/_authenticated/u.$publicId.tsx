@@ -17,6 +17,8 @@ export const Route = createFileRoute("/_authenticated/u/$publicId")({
       { name: "description", content: "استعرض ملف المستخدم: المستوى وVIP والمتابعين، وأرسل رسالة أو طلب صداقة." },
       { property: "og:title", content: "ملف مستخدم — صوتك" },
       { property: "og:description", content: "المستوى، VIP، المتابعون وخيارات التواصل." },
+      { property: "og:type", content: "profile" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: UserPage,
@@ -49,11 +51,12 @@ function UserPage() {
     queryKey: ["relation", userId, target?.id],
     enabled: Boolean(userId && target?.id && !isMe),
     queryFn: async () => {
-      const [follow, friend] = await Promise.all([
+      const [follow, friend, request] = await Promise.all([
         supabase.from("follows").select("id").eq("follower_id", userId!).eq("following_id", target!.id).maybeSingle(),
         supabase.from("friends").select("id").eq("user_id", userId!).eq("friend_id", target!.id).maybeSingle(),
+        supabase.from("friend_requests").select("id, status").eq("requester_id", userId!).eq("addressee_id", target!.id).eq("status", "pending").maybeSingle(),
       ]);
-      return { following: Boolean(follow.data), friend: Boolean(friend.data) };
+      return { following: Boolean(follow.data), friend: Boolean(friend.data), pending: Boolean(request.data) };
     },
   });
 
@@ -77,12 +80,13 @@ function UserPage() {
   const addFriend = useMutation({
     mutationFn: async () => {
       if (!userId || !target) return;
-      const { error } = await supabase
-        .from("friend_requests")
-        .insert({ requester_id: userId, addressee_id: target.id, status: "pending" });
+      const { error } = await supabase.rpc("send_friend_request", { _addressee_id: target.id });
       if (error) throw error;
     },
-    onSuccess: () => toast.success("تم إرسال طلب الصداقة"),
+    onSuccess: () => {
+      toast.success("تم إرسال طلب الصداقة");
+      void relation.refetch();
+    },
     onError: () => toast.error("تم إرسال الطلب مسبقًا أو حدث خطأ"),
   });
 
@@ -169,8 +173,8 @@ function UserPage() {
             >
               <MessageCircle className="me-2 h-4 w-4" /> رسالة
             </Button>
-            <Button variant="outline" onClick={() => addFriend.mutate()} className="h-12 rounded-2xl">
-              <UserPlus className="me-2 h-4 w-4" /> طلب صداقة
+            <Button variant="outline" disabled={relation.data?.friend || relation.data?.pending || addFriend.isPending} onClick={() => addFriend.mutate()} className="h-12 rounded-2xl">
+              <UserPlus className="me-2 h-4 w-4" /> {relation.data?.friend ? "صديق" : relation.data?.pending ? "الطلب مرسل" : "طلب صداقة"}
             </Button>
             <Button variant="outline" onClick={() => setReporting((v) => !v)} className="h-12 rounded-2xl">
               <Flag className="me-2 h-4 w-4" /> إبلاغ

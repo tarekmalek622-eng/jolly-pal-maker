@@ -190,6 +190,40 @@
   background: var(--gradient-vip);
 }
 
+@utility vip-tier-1 {
+  background: linear-gradient(145deg, oklch(0.27 0.04 275), oklch(0.32 0.07 85));
+  border-color: oklch(0.72 0.08 85 / 0.55);
+}
+
+@utility vip-tier-2 {
+  background: linear-gradient(145deg, oklch(0.24 0.05 250), oklch(0.37 0.11 220));
+  border-color: oklch(0.72 0.13 220 / 0.6);
+}
+
+@utility vip-tier-3 {
+  background: linear-gradient(145deg, oklch(0.25 0.06 310), oklch(0.4 0.15 330));
+  border-color: oklch(0.74 0.16 325 / 0.6);
+}
+
+@utility vip-tier-4 {
+  background: linear-gradient(145deg, oklch(0.25 0.05 35), oklch(0.43 0.14 60));
+  border-color: oklch(0.82 0.14 70 / 0.65);
+  box-shadow: var(--shadow-glow);
+}
+
+@utility vip-tier-5 {
+  background: linear-gradient(145deg, oklch(0.2 0.07 280), oklch(0.42 0.18 15), oklch(0.39 0.14 80));
+  border-color: oklch(0.88 0.14 83 / 0.7);
+  box-shadow: 0 0 25px oklch(0.72 0.18 35 / 0.28);
+}
+
+@utility cvip-showcase {
+  border: 1px solid oklch(0.74 0.17 190 / 0.55);
+  border-radius: var(--radius-2xl);
+  background: linear-gradient(135deg, oklch(0.2 0.06 275), oklch(0.32 0.13 190), oklch(0.28 0.12 325));
+  box-shadow: 0 12px 35px -15px oklch(0.72 0.16 195 / 0.55);
+}
+
 @utility text-gradient-gold {
   background: var(--gradient-gold);
   -webkit-background-clip: text;

@@ -223,6 +223,63 @@ export type Database = {
         }
         Relationships: []
       }
+      cvip_plans: {
+        Row: {
+          background_url: string | null
+          badge_url: string | null
+          created_at: string
+          decorations: Json
+          description: string | null
+          duration_days: number
+          frame_url: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_effect: string | null
+          perks: Json
+          price: number
+          room_effect: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          background_url?: string | null
+          badge_url?: string | null
+          created_at?: string
+          decorations?: Json
+          description?: string | null
+          duration_days: number
+          frame_url?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_effect?: string | null
+          perks?: Json
+          price: number
+          room_effect?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          background_url?: string | null
+          badge_url?: string | null
+          created_at?: string
+          decorations?: Json
+          description?: string | null
+          duration_days?: number
+          frame_url?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_effect?: string | null
+          perks?: Json
+          price?: number
+          room_effect?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       direct_messages: {
         Row: {
           body: string
@@ -1101,6 +1158,42 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      mark_direct_messages_read: {
+        Args: { _sender_id: string }
+        Returns: number
+      }
+      purchase_cvip: {
+        Args: { _plan_id: string }
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          cvip_expires_at: string | null
+          display_name: string
+          frame_url: string | null
+          gender: Database["public"]["Enums"]["gender_type"] | null
+          id: string
+          is_cvip: boolean
+          is_online: boolean
+          is_suspended: boolean
+          last_seen: string
+          level: number
+          profile_background_url: string | null
+          public_id: string
+          updated_at: string
+          vip_level: number
+          xp: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       purchase_item: {
         Args: { _item_id: string }
         Returns: {
@@ -1150,6 +1243,46 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      remove_friend: { Args: { _friend_id: string }; Returns: boolean }
+      respond_friend_request: {
+        Args: { _accept: boolean; _request_id: string }
+        Returns: boolean
+      }
+      send_direct_gift: {
+        Args: { _gift_id: string; _quantity?: number; _receiver_id: string }
+        Returns: {
+          created_at: string
+          gift_id: string
+          id: string
+          quantity: number
+          receiver_id: string
+          room_id: string | null
+          sender_id: string
+          total_price: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "gift_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      send_friend_request: {
+        Args: { _addressee_id: string }
+        Returns: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["friend_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "friend_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       send_gift: {
         Args: {
           _gift_id: string
@@ -1170,6 +1303,24 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "gift_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      send_room_message: {
+        Args: { _body: string; _room_id: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          metadata: Json | null
+          room_id: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "room_messages"
           isOneToOne: true
           isSetofReturn: false
         }

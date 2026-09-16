@@ -1,13 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Send } from "lucide-react";
+import { ArrowRight, Ban, Flag, Gift, Send, Smile, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { GiftSheet } from "@/components/GiftSheet";
 import { useSupabaseSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/_authenticated/messages/$userId")({
       { name: "description", content: "محادثة خاصة مباشرة داخل تطبيق صوتك." },
       { property: "og:title", content: "محادثة — صوتك" },
       { property: "og:description", content: "دردشة خاصة لحظية مع صديقك." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ChatPage,
@@ -28,6 +31,8 @@ function ChatPage() {
   const { userId } = useSupabaseSession();
   const navigate = useNavigate();
   const [text, setText] = useState("");
+  const [giftOpen, setGiftOpen] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const other = useQuery({
@@ -49,7 +54,7 @@ function ChatPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("direct_messages")
-        .select("id, sender_id, body, created_at")
+        .select("id, sender_id, receiver_id, body, kind, metadata, read_at, created_at")
         .or(
           `and(sender_id.eq.${userId!},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${userId!})`,
         )
@@ -76,6 +81,38 @@ function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.data?.length]);
+
+  useEffect(() => {
+    if (!userId) return;
+    void supabase.rpc("mark_direct_messages_read", { _sender_id: otherId });
+  }, [userId, otherId, messages.data?.length]);
+
+  const deleteMessage = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("direct_messages").delete().eq("id", id).eq("sender_id", userId!);
+      if (error) throw error;
+    },
+    onSuccess: () => void messages.refetch(),
+    onError: () => toast.error("تعذر حذف الرسالة"),
+  });
+
+  const blockUser = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("blocks").upsert({ blocker_id: userId!, blocked_id: otherId }, { onConflict: "blocker_id,blocked_id" });
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("تم حجب المستخدم"); void navigate({ to: "/messages" }); },
+    onError: () => toast.error("تعذر الحجب"),
+  });
+
+  const reportUser = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("reports").insert({ reporter_id: userId!, target_type: "user", target_id: otherId, reason: "إبلاغ من المحادثة الخاصة" });
+      if (error) throw error;
+    },
+    onSuccess: () => toast.success("تم إرسال البلاغ للإدارة"),
+    onError: () => toast.error("تعذر إرسال البلاغ"),
+  });
 
   async function send() {
     const body = text.trim();
@@ -104,12 +141,14 @@ function ChatPage() {
             <ArrowRight className="h-5 w-5" />
           </button>
           <UserAvatar src={other.data?.avatar_url} name={other.data?.display_name} size={40} vipLevel={other.data?.vip_level ?? 0} online={other.data?.is_online} />
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-bold">{other.data?.display_name ?? "..."}</p>
             <p className="text-[10px] text-muted-foreground">
               {other.data?.is_online ? "متصل الآن" : "غير متصل"}
             </p>
           </div>
+          <Button variant="ghost" onClick={() => reportUser.mutate()} className="h-9 w-9 p-0" aria-label="إبلاغ"><Flag className="h-4 w-4" /></Button>
+          <Button variant="ghost" onClick={() => blockUser.mutate()} className="h-9 w-9 p-0 text-destructive" aria-label="حجب"><Ban className="h-4 w-4" /></Button>
         </header>
       }
     >
@@ -124,10 +163,11 @@ function ChatPage() {
                   mine ? "gradient-gold text-primary-foreground" : "bg-surface",
                 )}
               >
-                <p>{m.body}</p>
+                <p>{m.kind === "gift" ? `🎁 ${m.body}` : m.body}</p>
                 <p className="mt-1 text-[10px] opacity-70">
                   {new Date(m.created_at).toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}
                 </p>
+                {mine && <button onClick={() => deleteMessage.mutate(m.id)} className="mt-1 opacity-70" aria-label="حذف الرسالة"><Trash2 className="h-3.5 w-3.5" /></button>}
               </div>
             </div>
           );
@@ -136,7 +176,10 @@ function ChatPage() {
       </div>
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-lg border-t border-border bg-background/95 p-3 backdrop-blur-xl">
+        {emojiOpen && <div className="mb-2 flex justify-around rounded-xl bg-surface p-2 text-xl">{["😀", "😂", "❤️", "👏", "🔥", "🎉"].map((emoji) => <button key={emoji} onClick={() => { setText((value) => `${value}${emoji}`); setEmojiOpen(false); }}>{emoji}</button>)}</div>}
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setEmojiOpen((value) => !value)} className="h-12 w-12 rounded-2xl p-0" aria-label="رموز تعبيرية"><Smile className="h-5 w-5" /></Button>
+          <Button variant="outline" onClick={() => setGiftOpen(true)} className="h-12 w-12 rounded-2xl p-0" aria-label="إرسال هدية"><Gift className="h-5 w-5" /></Button>
           <Input
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -151,6 +194,12 @@ function ChatPage() {
           </Button>
         </div>
       </div>
+      {other.data && <GiftSheet open={giftOpen} onOpenChange={setGiftOpen} roomId={null} initialReceiverId={otherId} targets={[{ id: otherId, display_name: other.data.display_name, avatar_url: other.data.avatar_url, vip_level: other.data.vip_level }]} onSent={async (giftName) => {
+        if (!userId) return;
+        const { error } = await supabase.from("direct_messages").insert({ sender_id: userId, receiver_id: otherId, body: giftName, kind: "gift" });
+        if (error) toast.error("وصلت الهدية لكن تعذر عرضها في المحادثة");
+        else void messages.refetch();
+      }} />}
     </AppShell>
   );
 }

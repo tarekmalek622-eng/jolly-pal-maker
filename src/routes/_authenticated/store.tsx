@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Crown, Loader2, ShoppingBag } from "lucide-react";
+import { Crown, Gem, Loader2, ShoppingBag, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ export const Route = createFileRoute("/_authenticated/store")({
       { name: "description", content: "اشترِ إطارات وخلفيات وشارات وتأثيرات ومستويات VIP بالكوينز داخل التطبيق." },
       { property: "og:title", content: "المتجر وVIP — صوتك" },
       { property: "og:description", content: "عناصر تزيين للملف والغرفة والمايك ومستويات VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: StorePage,
@@ -38,7 +40,7 @@ function StorePage() {
   const profile = useMyProfile(userId);
   const wallet = useWallet(userId);
   const refresh = useRefreshMoney();
-  const [tab, setTab] = useState<"items" | "vip">("items");
+  const [tab, setTab] = useState<"items" | "vip" | "cvip">("items");
   const [category, setCategory] = useState(CATEGORIES[0]!.key);
 
   const items = useQuery({
@@ -77,6 +79,15 @@ function StorePage() {
     },
   });
 
+  const cvip = useQuery({
+    queryKey: ["cvip-plans"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("cvip_plans").select("*").eq("is_active", true).order("sort_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const buyItem = useMutation({
     mutationFn: async (itemId: string) => {
       const { error } = await supabase.rpc("purchase_item", { _item_id: itemId });
@@ -102,6 +113,19 @@ function StorePage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر تفعيل VIP"),
   });
 
+  const buyCvip = useMutation({
+    mutationFn: async (planId: string) => {
+      const { error } = await supabase.rpc("purchase_cvip", { _plan_id: planId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم تفعيل CVIP ✨");
+      refresh();
+      void profile.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر تفعيل CVIP"),
+  });
+
   const owned = new Set((myItems.data ?? []).map((i) => i.item_id));
   const filtered = (items.data ?? []).filter((i) => i.category === category);
 
@@ -114,10 +138,11 @@ function StorePage() {
         />
       }
     >
-      <div className="mb-4 grid grid-cols-2 gap-2 rounded-2xl bg-surface p-1">
-        {([["items", "العناصر", ShoppingBag], ["vip", "VIP", Crown]] as const).map(([key, label, Icon]) => (
-          <button
+      <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-surface p-1">
+        {([["items", "العناصر", ShoppingBag], ["vip", "VIP", Crown], ["cvip", "CVIP", Gem]] as const).map(([key, label, Icon]) => (
+          <Button
             key={key}
+            variant="ghost"
             onClick={() => setTab(key)}
             className={cn(
               "flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-colors",
@@ -126,7 +151,7 @@ function StorePage() {
           >
             <Icon className="h-4 w-4" />
             {label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -167,12 +192,12 @@ function StorePage() {
             </div>
           )}
         </>
-      ) : (
+      ) : tab === "vip" ? (
         <div className="space-y-3">
           {(vip.data ?? []).map((v) => {
             const current = (profile.data?.vip_level ?? 0) >= v.level;
             return (
-              <div key={v.level} className="surface-card gradient-vip p-4">
+              <div key={v.level} className={cn("surface-card p-4", `vip-tier-${v.level}`)}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="flex items-center gap-2 text-base font-black">
@@ -193,6 +218,32 @@ function StorePage() {
                 {v.name_effect && (
                   <p className="mt-3 text-[11px] text-muted-foreground">تأثير الاسم: {v.name_effect}</p>
                 )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="cvip-showcase overflow-hidden p-5 text-center">
+            <Gem className="mx-auto h-8 w-8 text-accent" />
+            <h2 className="mt-2 text-xl font-black">عضوية CVIP</h2>
+            <p className="mt-1 text-xs text-muted-foreground">هوية مستقلة، متجر خاص، هدايا وتأثيرات حصرية.</p>
+          </div>
+          {(cvip.data ?? []).map((plan) => {
+            const perks = Array.isArray(plan.perks) ? plan.perks.filter((value): value is string => typeof value === "string") : [];
+            return (
+              <div key={plan.id} className="surface-card border-accent/40 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-2 font-black"><Sparkles className="h-4 w-4 text-accent" />{plan.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{plan.description}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-accent/15 px-2 py-1 text-[10px] text-accent">{plan.duration_days} يوم</span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">{perks.map((perk) => <span key={perk} className="rounded-full bg-surface-2 px-2 py-1 text-[10px]">{perk}</span>)}</div>
+                <Button disabled={buyCvip.isPending} onClick={() => buyCvip.mutate(plan.id)} className="mt-4 h-11 w-full rounded-2xl gradient-rose font-bold text-primary-foreground">
+                  <Gem className="me-2 h-4 w-4" /> {plan.price.toLocaleString("en-US")} كوينز
+                </Button>
               </div>
             );
           })}

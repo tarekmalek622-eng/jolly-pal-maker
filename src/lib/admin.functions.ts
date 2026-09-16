@@ -39,7 +39,7 @@ export const adminAdjustCoins = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never);
+    await assertAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: wallet, error: walletError } = await supabaseAdmin
@@ -78,7 +78,7 @@ export const adminSetSuspended = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), suspended: z.boolean() }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never);
+    await assertAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("profiles")
@@ -95,7 +95,7 @@ export const adminSetRoomDisabled = createServerFn({ method: "POST" })
     z.object({ roomId: z.string().uuid(), disabled: z.boolean() }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never);
+    await assertAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("rooms")
@@ -112,7 +112,7 @@ export const adminResolveReport = createServerFn({ method: "POST" })
     z.object({ reportId: z.string().uuid(), status: z.enum(["resolved", "rejected", "pending"]) }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never);
+    await assertAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("reports")

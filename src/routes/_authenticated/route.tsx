@@ -9,10 +9,10 @@ export const Route = createFileRoute("/_authenticated")({
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id")
+      .select("id, is_suspended")
       .eq("id", data.user.id)
       .maybeSingle();
-    if (!profile) throw redirect({ to: "/" });
+    if (!profile || profile.is_suspended) throw redirect({ to: "/" });
 
     return { user: data.user };
   },
