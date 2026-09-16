@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { GiftSheet, type GiftTarget } from "@/components/GiftSheet";
+import { DominoGame } from "@/components/DominoGame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -75,6 +76,7 @@ function RoomPage() {
   const [giftOpen, setGiftOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const [requestsOpen, setRequestsOpen] = useState(false);
+  const [dominoOpen, setDominoOpen] = useState(false);
 
   const room = useQuery({
     queryKey: ["room", roomId],
