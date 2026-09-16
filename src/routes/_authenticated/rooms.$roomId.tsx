@@ -440,22 +440,11 @@ function RoomPage() {
             <button
               key={seat.id}
               onClick={() => {
-                if (person) {
-                  if (canManage && person.id !== userId) {
-                    void seatAction.mutate({ seat, patch: { is_muted: !seat.is_muted } });
-                  } else if (person.id === userId) {
-                    leaveSeat.mutate();
-                  } else {
-                    void navigate({ to: "/u/$publicId", params: { publicId: person.public_id } });
-                  }
+                if (!person && !seat.is_locked && !canManage) {
+                  takeSeat.mutate(seat.seat_index);
                   return;
                 }
-                if (seat.is_locked) {
-                  toast.error("هذا المايك مغلق");
-                  return;
-                }
-                if (isOwner || canManage) takeSeat.mutate(seat.seat_index);
-                else takeSeat.mutate(seat.seat_index);
+                setSeatSheet(seat.id);
               }}
               className="flex flex-col items-center gap-1"
             >
