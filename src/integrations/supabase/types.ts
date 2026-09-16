@@ -574,43 +574,61 @@ export type Database = {
           animation_url: string | null
           category: string
           created_at: string
+          display_scale: number
+          duration_ms: number
           id: string
           image_url: string | null
           is_active: boolean
           name: string
           price: number
           rarity: string
+          required_vip: number
           sort_order: number
+          sound_enabled: boolean
           sound_url: string | null
+          thumb_url: string | null
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           animation_url?: string | null
           category?: string
           created_at?: string
+          display_scale?: number
+          duration_ms?: number
           id?: string
           image_url?: string | null
           is_active?: boolean
           name: string
           price: number
           rarity?: string
+          required_vip?: number
           sort_order?: number
+          sound_enabled?: boolean
           sound_url?: string | null
+          thumb_url?: string | null
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           animation_url?: string | null
           category?: string
           created_at?: string
+          display_scale?: number
+          duration_ms?: number
           id?: string
           image_url?: string | null
           is_active?: boolean
           name?: string
           price?: number
           rarity?: string
+          required_vip?: number
           sort_order?: number
+          sound_enabled?: boolean
           sound_url?: string | null
+          thumb_url?: string | null
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: []
       }
@@ -1407,6 +1425,7 @@ export type Database = {
       }
       gen_public_id: { Args: never; Returns: string }
       gen_room_code: { Args: never; Returns: string }
+      gift_stats: { Args: { _since?: string }; Returns: Json }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       mark_direct_messages_read: {
@@ -1602,6 +1621,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      send_gift_bulk: {
+        Args: {
+          _gift_id: string
+          _quantity?: number
+          _receiver_ids: string[]
+          _room_id?: string
+        }
+        Returns: Json
       }
       send_room_message: {
         Args: { _body: string; _room_id: string }
