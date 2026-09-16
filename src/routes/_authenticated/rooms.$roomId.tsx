@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolveMediaUrl } from "@/lib/media";
 import { toast } from "sonner";
 import {
@@ -14,6 +14,7 @@ import {
   LogOut,
   Mic,
   MicOff,
+  Music,
   Send,
   Settings,
   Trophy,
@@ -84,6 +85,7 @@ function RoomPage() {
   const [roomGame, setRoomGame] = useState<"wheel" | "domino">("wheel");
   const [seatSheet, setSeatSheet] = useState<string | null>(null);
   const [cupOpen, setCupOpen] = useState(false);
+  const musicRef = useRef<HTMLInputElement>(null);
   const [giftTargetId, setGiftTargetId] = useState<string | null>(null);
 
   const room = useQuery({
