@@ -209,7 +209,7 @@ function GamesPage() {
             ))}
           </div>
 
-          {active === "domino" && <DominoGame roomId={search.room} />}
+          {active === "domino" && <DominoGame roomId={search.room ?? null} />}
 
           <div className={cn("surface-card p-5", active === "domino" && "hidden")}>
             <p className="text-sm font-bold">
