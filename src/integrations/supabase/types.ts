@@ -313,6 +313,53 @@ export type Database = {
         }
         Relationships: []
       }
+      domino_games: {
+        Row: {
+          bet: number
+          created_at: string
+          id: string
+          player1_id: string
+          player2_id: string | null
+          room_id: string | null
+          state: Json
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          bet: number
+          created_at?: string
+          id?: string
+          player1_id: string
+          player2_id?: string | null
+          room_id?: string | null
+          state?: Json
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          bet?: number
+          created_at?: string
+          id?: string
+          player1_id?: string
+          player2_id?: string | null
+          room_id?: string | null
+          state?: Json
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domino_games_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
@@ -1115,6 +1162,35 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      domino_cancel: {
+        Args: { _game_id: string; _uid: string }
+        Returns: undefined
+      }
+      domino_credit: {
+        Args: { _amount: number; _ref: string; _user_id: string }
+        Returns: undefined
+      }
+      domino_deal: { Args: never; Returns: Json }
+      domino_forfeit: {
+        Args: { _game_id: string; _uid: string }
+        Returns: Json
+      }
+      domino_has_playable: {
+        Args: { seat: string; state: Json }
+        Returns: boolean
+      }
+      domino_join: {
+        Args: { _bet: number; _room_id?: string; _uid: string }
+        Returns: string
+      }
+      domino_move: {
+        Args: { _game_id: string; _side: string; _tile: number; _uid: string }
+        Returns: Json
+      }
+      domino_pass: { Args: { _game_id: string; _uid: string }; Returns: Json }
+      domino_pips: { Args: { seat: string; state: Json }; Returns: number }
+      domino_tile_a: { Args: { t: number }; Returns: number }
+      domino_tile_b: { Args: { t: number }; Returns: number }
       equip_item: {
         Args: { _equip: boolean; _user_item_id: string }
         Returns: {
