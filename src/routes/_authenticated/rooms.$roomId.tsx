@@ -429,6 +429,9 @@ function RoomPage() {
                           : "غير متصل"}
               </p>
             </div>
+            <button onClick={() => setCupOpen(true)} className="p-1" aria-label="كأس الغرفة">
+              <Trophy className="h-5 w-5" />
+            </button>
             <button onClick={() => setDominoOpen(true)} className="p-1" aria-label="لعبة الدومينو">
               <LayoutGrid className="h-5 w-5" />
             </button>
