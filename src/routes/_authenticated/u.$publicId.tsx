@@ -37,6 +37,7 @@ function UserPage() {
   const navigate = useNavigate();
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
+  const [relationOpen, setRelationOpen] = useState(false);
 
   const profile = useQuery({
     queryKey: ["profile-public", publicId],
