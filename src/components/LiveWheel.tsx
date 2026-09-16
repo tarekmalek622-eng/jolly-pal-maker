@@ -44,6 +44,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const [amount, setAmount] = useState(100);
   const [now, setNow] = useState(() => Date.now());
   const [highlight, setHighlight] = useState(0);
+  const [spinning, setSpinning] = useState(false);
   const lastSettled = useRef<string | null>(null);
 
   const round = useQuery({
@@ -52,9 +53,16 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     refetchIntervalInBackground: false,
     queryFn: async () => {
       const { data, error } = await db.rpc("wheel_tick");
-      if (error) throw new Error(error.message);
-      const row = (Array.isArray(data) ? data[0] : data) as WheelRound | null;
-      return row;
+      if (!error) return (Array.isArray(data) ? data[0] : data) as WheelRound | null;
+      // اللعبة موقوفة من الإدارة: نعرض آخر جولة ونتيجتها بدل شاشة تحميل دائمة
+      const last = await db
+        .from("wheel_rounds")
+        .select("id, round_no, status, slots, winning_key, started_at, ends_at")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (last.error) throw new Error(error.message);
+      return (last.data ?? null) as WheelRound | null;
     },
   });
 
@@ -141,29 +149,36 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     return () => window.clearInterval(t);
   }, [finished, slots.length]);
 
-  // عند تسوية الجولة من السيرفر: يتباطأ المؤشر ثم يتوقف على الفائزة
+  // عند تسوية الجولة: المؤشر يلف على كل الفواكه 5 ثوانٍ ثم يتوقف على الفائزة
   useEffect(() => {
     const data = round.data;
     if (!data || data.status !== "finished" || !data.winning_key) return;
     if (lastSettled.current === data.id) return;
     lastSettled.current = data.id;
-    const target = data.slots.findIndex((s) => s.key === data.winning_key);
     const count = Math.max(1, data.slots.length);
+    const target = Math.max(0, data.slots.findIndex((s) => s.key === data.winning_key));
+    const laps = 3;
+    const steps = count * laps + ((target - highlight + count) % count);
+    // توزيع زمني بتباطؤ تدريجي يجمع 5000 مللي ثانية بالضبط
+    const weights = Array.from({ length: steps }, (_, i) => 1 + Math.pow(i / Math.max(1, steps - 1), 2.6) * 9);
+    const sum = weights.reduce((a, b) => a + b, 0);
+    const delays = weights.map((w) => (w / sum) * 5000);
+    setSpinning(true);
     let step = 0;
-    const total = count * 2 + ((target - highlight + count) % count);
     let timer = 0;
     const tick = () => {
-      step += 1;
       setHighlight((h) => (h + 1) % count);
-      if (step < total) {
-        timer = window.setTimeout(tick, 90 + step * 12);
+      step += 1;
+      if (step < steps) {
+        timer = window.setTimeout(tick, delays[step] ?? 120);
       } else {
-        setHighlight(target < 0 ? 0 : target);
+        setHighlight(target);
+        setSpinning(false);
+        refreshMoney();
+        void history.refetch();
       }
     };
-    timer = window.setTimeout(tick, 90);
-    refreshMoney();
-    void history.refetch();
+    timer = window.setTimeout(tick, delays[0] ?? 120);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round.data, refreshMoney, history]);
@@ -215,7 +230,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     }
     return Array.from(map.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 4);
+      .slice(0, 8);
   }, [bets.data]);
 
   if (round.isLoading) {
@@ -273,7 +288,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             const top = 50 + r * Math.sin(a);
             const stat = perSlot.get(s.key) ?? { total: 0, mine: 0, players: 0 };
             const active = highlight === i;
-            const isWinner = finished && round.data?.winning_key === s.key;
+            const isWinner = finished && !spinning && round.data?.winning_key === s.key;
             return (
               <button
                 key={s.key}
@@ -306,11 +321,13 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
 
           {/* قلب العجلة: مدة الاختيار / الفاكهة الفائزة */}
           <div className="absolute inset-[33%] flex flex-col items-center justify-center rounded-full border-[5px] border-primary/60 bg-[radial-gradient(circle,oklch(0.42_0.16_20),oklch(0.28_0.12_20))] text-center text-primary-foreground">
-            <span className="text-[10px] font-bold">{finished ? "الفائزة" : "مُدة الاختيار"}</span>
-            <span className="text-3xl font-extrabold leading-none">
-              {finished ? (winning?.emoji ?? "🎡") : remaining}
+            <span className="text-[10px] font-bold">
+              {spinning ? "جاري السحب" : finished ? "الفائزة" : "مُدة الاختيار"}
             </span>
-            {finished && winning && <span className="text-[10px] font-bold">×{winning.multiplier}</span>}
+            <span className={cn("text-3xl font-extrabold leading-none", spinning && "animate-pulse")}>
+              {spinning ? "🎡" : finished ? (winning?.emoji ?? "🎡") : remaining}
+            </span>
+            {finished && !spinning && winning && <span className="text-[10px] font-bold">×{winning.multiplier}</span>}
           </div>
         </div>
 
@@ -371,7 +388,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
         </div>
 
         {/* لافتة الفوز الكبير */}
-        {finished && myWin > 0 && (
+        {finished && !spinning && myWin > 0 && (
           <div className="mt-2 animate-scale-in rounded-2xl gradient-gold px-4 py-3 text-center text-primary-foreground shadow-[0_0_30px_-8px_oklch(0.82_0.16_85/0.85)]">
             <p className="text-xl font-extrabold tracking-[0.2em]">BIG WIN</p>
             <p className="text-sm font-bold">+{myWin.toLocaleString("en-US")} كوينز</p>
@@ -380,7 +397,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
       </div>
 
       {/* نتيجة سحب الجولة وترتيب الأرباح */}
-      {finished && (
+      {finished && !spinning && (
         <div className="surface-card animate-scale-in p-3">
           <div className="flex items-center justify-between text-xs">
             <span className="font-bold">نتيجة سحب الجولة {round.data?.round_no}</span>
@@ -394,33 +411,87 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
               <p className="text-sm font-bold">{myBet.toLocaleString("en-US")}</p>
             </div>
             <div className="rounded-2xl bg-surface-2 py-2">
-              <p className="text-[10px] text-muted-foreground">أرباحك هذه الجولة</p>
+              <p className="text-[10px] text-muted-foreground">أرباح هذه الجولة</p>
               <p className="text-sm font-bold text-success">{myWin.toLocaleString("en-US")}</p>
             </div>
           </div>
 
           {leaderboard.length > 0 && (
             <>
-              <p className="mb-2 mt-3 flex items-center gap-1 text-xs font-bold">
-                <Trophy className="h-4 w-4 text-primary" /> الترتيب من أرباح هذه الجولة
+              <p className="mb-2 mt-3 text-center text-[11px] font-bold text-primary">
+                — — — الترتيب من أرباح هذه الجولة — — —
               </p>
-              <div className="space-y-1.5">
-                {leaderboard.map(([uid, total], i) => {
+              <div className="flex items-end justify-center gap-2">
+                {[1, 0, 2].map((idx) => {
+                  const entry = leaderboard[idx];
+                  if (!entry) return null;
+                  const [uid, total] = entry;
                   const pl = players.data?.get(uid);
+                  const first = idx === 0;
+                  const rankColor =
+                    idx === 0 ? "border-primary" : idx === 1 ? "border-muted-foreground" : "border-warning";
                   return (
-                    <div key={uid} className="flex items-center gap-2 text-xs">
-                      <span className="w-4 font-bold text-primary">{i + 1}</span>
-                      {pl?.avatar_url ? (
-                        <img src={pl.avatar_url} alt={pl.display_name} loading="lazy" className="h-7 w-7 rounded-full object-cover" />
-                      ) : (
-                        <span className="h-7 w-7 rounded-full bg-surface-2" />
+                    <div
+                      key={uid}
+                      className={cn(
+                        "flex flex-col items-center rounded-2xl bg-surface-2 px-2 py-2",
+                        first ? "w-[38%] -translate-y-2" : "w-[30%]",
                       )}
-                      <span className="min-w-0 flex-1 truncate">{pl?.display_name ?? "لاعب"}</span>
-                      <span className="font-bold text-success">+{total.toLocaleString("en-US")}</span>
+                    >
+                      <div className="relative">
+                        {pl?.avatar_url ? (
+                          <img
+                            src={pl.avatar_url}
+                            alt={pl.display_name}
+                            loading="lazy"
+                            className={cn(
+                              "rounded-xl border-[3px] object-cover",
+                              rankColor,
+                              first ? "h-16 w-16" : "h-12 w-12",
+                            )}
+                          />
+                        ) : (
+                          <span
+                            className={cn(
+                              "block rounded-xl border-[3px] bg-surface-3",
+                              rankColor,
+                              first ? "h-16 w-16" : "h-12 w-12",
+                            )}
+                          />
+                        )}
+                        <span
+                          className={cn(
+                            "absolute -bottom-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full border border-background text-[10px] font-extrabold text-primary-foreground",
+                            idx === 0 ? "gradient-gold" : "bg-surface-3 text-foreground",
+                          )}
+                        >
+                          {idx + 1}
+                        </span>
+                      </div>
+                      <span className="mt-1.5 w-full truncate text-center text-[11px] font-bold">
+                        {pl?.display_name ?? "لاعب"}
+                      </span>
+                      <span className="text-[11px] font-extrabold text-primary">
+                        {total.toLocaleString("en-US")} 🪙
+                      </span>
                     </div>
                   );
                 })}
               </div>
+              {leaderboard.length > 3 && (
+                <div className="mt-2 space-y-1">
+                  {leaderboard.slice(3).map(([uid, total], i) => {
+                    const pl = players.data?.get(uid);
+                    return (
+                      <div key={uid} className="flex items-center gap-2 text-xs">
+                        <span className="w-4 font-bold text-muted-foreground">{i + 4}</span>
+                        <span className="min-w-0 flex-1 truncate">{pl?.display_name ?? "لاعب"}</span>
+                        <span className="font-bold text-success">+{total.toLocaleString("en-US")}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
         </div>
