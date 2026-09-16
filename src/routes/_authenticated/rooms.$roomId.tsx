@@ -424,7 +424,7 @@ function RoomPage() {
                 )}
               </div>
               <span className="w-full truncate text-center text-[10px] text-muted-foreground">
-                {person?.display_name ?? `مايك ${seat.seat_index + 1}`}
+                {person?.display_name ?? `مايك ${seat.seat_index}`}
               </span>
             </button>
           );
@@ -600,7 +600,7 @@ function RoomPage() {
                     onClick={() => seatAction.mutate({ seat, patch: { is_locked: !seat.is_locked } })}
                     className="h-11 rounded-2xl text-[11px]"
                   >
-                    مايك {seat.seat_index + 1}: {seat.is_locked ? "مغلق" : "مفتوح"}
+                    مايك {seat.seat_index}: {seat.is_locked ? "مغلق" : "مفتوح"}
                   </Button>
                 ))}
               </div>
