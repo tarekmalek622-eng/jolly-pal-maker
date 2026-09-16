@@ -858,3 +858,31 @@ function RoomBackground({ url }: { url: string | null }) {
     </div>
   );
 }
+
+/** زر إجراء داخل لوحة التحكم بالمايك. */
+function SeatBtn({
+  label,
+  onClick,
+  tone = "normal",
+}: {
+  label: string;
+  onClick: () => void;
+  tone?: "normal" | "warn" | "danger";
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "h-12 rounded-2xl border text-xs font-semibold transition-colors active:scale-[0.98]",
+        tone === "danger"
+          ? "border-destructive/40 bg-destructive/10 text-destructive"
+          : tone === "warn"
+            ? "border-accent/40 bg-accent/10 text-accent"
+            : "border-border bg-surface",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
