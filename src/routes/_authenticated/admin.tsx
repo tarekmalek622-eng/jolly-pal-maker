@@ -27,6 +27,11 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const TABS = [
   { key: "users", label: "المستخدمون" },
   { key: "rooms", label: "الغرف" },
+  { key: "gifts", label: "الهدايا" },
+  { key: "store", label: "المتجر" },
+  { key: "vip", label: "VIP" },
+  { key: "coins", label: "الكوينز" },
+  { key: "games", label: "الألعاب" },
   { key: "reports", label: "الإبلاغات" },
   { key: "logs", label: "السجل" },
 ] as const;
