@@ -42,11 +42,88 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const COUNTRIES = [
-  "السعودية", "مصر", "الإمارات", "الكويت", "قطر", "البحرين", "عُمان", "الأردن",
-  "لبنان", "سوريا", "العراق", "فلسطين", "اليمن", "المغرب", "الجزائر", "تونس",
-  "ليبيا", "السودان", "موريتانيا", "الصومال", "جيبوتي", "جزر القمر", "تركيا", "أخرى",
-];
+/** Searchable list of every country: name, flag and dial code. */
+function CountryPicker({
+  value,
+  onSelect,
+  showDial = true,
+  placeholder = "ابحث عن دولتك…",
+}: {
+  value: string;
+  onSelect: (country: Country) => void;
+  showDial?: boolean;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [term, setTerm] = useState("");
+  const selected = findCountry(value);
+  const list = open ? searchCountries(term).slice(0, 60) : [];
+
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex h-12 w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 text-sm"
+      >
+        <span className="flex items-center gap-2">
+          <span className="text-lg leading-none">{selected?.flag ?? "🌍"}</span>
+          <span className={selected ? "font-semibold" : "text-muted-foreground"}>
+            {selected?.name ?? "اختر دولتك"}
+          </span>
+        </span>
+        {showDial && selected ? (
+          <span dir="ltr" className="text-xs text-primary">
+            +{selected.dial}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground">تغيير</span>
+        )}
+      </button>
+
+      {open && (
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+          <Input
+            autoFocus
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder={placeholder}
+            className="h-11 rounded-none border-0 border-b border-border bg-surface-2 text-sm"
+          />
+          <div className="max-h-64 overflow-y-auto">
+            {list.length === 0 ? (
+              <p className="px-4 py-4 text-center text-xs text-muted-foreground">لا نتائج</p>
+            ) : (
+              list.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => {
+                    onSelect(c);
+                    setOpen(false);
+                    setTerm("");
+                  }}
+                  className={cn(
+                    "flex w-full items-center justify-between px-4 py-2.5 text-sm transition-colors",
+                    c.code === value ? "bg-primary/15 text-primary" : "hover:bg-surface-2",
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg leading-none">{c.flag}</span>
+                    <span>{c.name}</span>
+                  </span>
+                  <span dir="ltr" className="text-xs text-muted-foreground">
+                    +{c.dial}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Landing() {
   const navigate = useNavigate();
