@@ -246,9 +246,11 @@ function PhoneAuth({
   onSignedIn: () => void;
 }) {
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE);
   const [phone, setPhone] = useState(readRememberedPhone());
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const dial = findCountry(countryCode)?.dial ?? "20";
 
   async function afterSession(userId: string) {
     const { data: profile } = await supabase
