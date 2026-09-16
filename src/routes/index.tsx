@@ -169,6 +169,15 @@ function RegisterForm() {
   const [screening, setScreening] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  function fileToDataUrl(file: File) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error("read failed"));
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function handlePhoto(file: File) {
     if (!file.type.startsWith("image/")) {
       toast.error("اختر صورة صحيحة");
