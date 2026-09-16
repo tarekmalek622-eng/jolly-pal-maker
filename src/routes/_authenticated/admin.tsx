@@ -15,6 +15,7 @@ import {
   adminSetRoomDisabled,
   adminResolveReport,
   adminUpsertGift,
+  adminDeleteGift,
   adminUpsertStoreItem,
   adminUpsertVipLevel,
   adminUpsertCvipPlan,
