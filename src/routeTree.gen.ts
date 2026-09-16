@@ -19,6 +19,7 @@ import { Route as AuthenticatedRoomsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedStoreRouteImport } from './routes/_authenticated/store'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedMessagesUserIdRouteImport } from './routes/_authenticated/messages.$userId'
+import { Route as AuthenticatedUPublicIdRouteImport } from './routes/_authenticated/u.$publicId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,6 +71,11 @@ const AuthenticatedMessagesUserIdRoute =
     path: '/$userId',
     getParentRoute: () => AuthenticatedMessagesRoute,
   } as any)
+const AuthenticatedUPublicIdRoute = AuthenticatedUPublicIdRouteImport.update({
+  id: '/u/$publicId',
+  path: '/u/$publicId',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/store': typeof AuthenticatedStoreRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/messages/$userId': typeof AuthenticatedMessagesUserIdRoute
+  '/u/$publicId': typeof AuthenticatedUPublicIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/store': typeof AuthenticatedStoreRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/messages/$userId': typeof AuthenticatedMessagesUserIdRoute
+  '/u/$publicId': typeof AuthenticatedUPublicIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/_authenticated/store': typeof AuthenticatedStoreRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/_authenticated/messages/$userId': typeof AuthenticatedMessagesUserIdRoute
+  '/_authenticated/u/$publicId': typeof AuthenticatedUPublicIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/wallet'
     | '/messages/$userId'
+    | '/u/$publicId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/wallet'
     | '/messages/$userId'
+    | '/u/$publicId'
   id:
     | '__root__'
     | '/'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/_authenticated/store'
     | '/_authenticated/wallet'
     | '/_authenticated/messages/$userId'
+    | '/_authenticated/u/$publicId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -220,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMessagesUserIdRouteImport
       parentRoute: typeof AuthenticatedMessagesRoute
     }
+    '/_authenticated/u/$publicId': {
+      id: '/_authenticated/u/$publicId'
+      path: '/u/$publicId'
+      fullPath: '/u/$publicId'
+      preLoaderRoute: typeof AuthenticatedUPublicIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -244,6 +263,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRoomsRoute: typeof AuthenticatedRoomsRoute
   AuthenticatedStoreRoute: typeof AuthenticatedStoreRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
+  AuthenticatedUPublicIdRoute: typeof AuthenticatedUPublicIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -254,6 +274,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRoomsRoute: AuthenticatedRoomsRoute,
   AuthenticatedStoreRoute: AuthenticatedStoreRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
+  AuthenticatedUPublicIdRoute: AuthenticatedUPublicIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
