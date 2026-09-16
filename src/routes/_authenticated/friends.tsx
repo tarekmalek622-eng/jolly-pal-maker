@@ -45,7 +45,7 @@ type Profile = {
 
 function FriendsPage() {
   const { userId } = useSupabaseSession();
-  const [tab, setTab] = useState<"friends" | "incoming" | "sent">("friends");
+  const [tab, setTab] = useState<"friends" | "incoming" | "sent" | "relations">("friends");
 
   const data = useQuery({
     queryKey: ["friends-page", userId],
