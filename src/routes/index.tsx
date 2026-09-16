@@ -239,11 +239,11 @@ function RegisterForm() {
       const { error } = await supabase.rpc("setup_account", {
         _display_name: name.trim(),
         _country: country,
-        _city: city.trim() || null,
+        _city: city.trim(),
         _birth_date: birthDate,
         _gender: gender,
         _avatar_url: avatarPath,
-        _bio: null,
+        _bio: "",
       });
       if (error) throw error;
 
