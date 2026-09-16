@@ -109,7 +109,7 @@ export const adminResolveReport = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("reports")
-      .update({ status: data.status, handled_by: context.userId })
+      .update({ status: data.status })
       .eq("id", data.reportId);
     if (error) throw new Error(error.message);
     await log(context.userId, data.reportId, "resolve_report", "pending", data.status);
