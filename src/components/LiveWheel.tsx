@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Trophy } from "lucide-react";
+import { Coins, Loader2, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,6 +180,11 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
 
   const myWin = useMemo(
     () => (bets.data ?? []).filter((b) => b.user_id === userId).reduce((sum, b) => sum + Number(b.payout), 0),
+    [bets.data, userId],
+  );
+
+  const myBet = useMemo(
+    () => (bets.data ?? []).filter((b) => b.user_id === userId).reduce((sum, b) => sum + Number(b.amount), 0),
     [bets.data, userId],
   );
 
