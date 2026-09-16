@@ -322,6 +322,42 @@ export type Database = {
         }
         Relationships: []
       }
+      game_sessions: {
+        Row: {
+          bet: number
+          created_at: string
+          game: string
+          id: string
+          payout: number
+          result: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bet?: number
+          created_at?: string
+          game: string
+          id?: string
+          payout?: number
+          result?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bet?: number
+          created_at?: string
+          game?: string
+          id?: string
+          payout?: number
+          result?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gift_transactions: {
         Row: {
           created_at: string
@@ -552,6 +588,39 @@ export type Database = {
           updated_at?: string
           vip_level?: number
           xp?: number
+        }
+        Relationships: []
+      }
+      quiz_questions: {
+        Row: {
+          choices: Json
+          correct_index: number
+          created_at: string
+          difficulty: number
+          id: string
+          is_active: boolean
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          choices: Json
+          correct_index: number
+          created_at?: string
+          difficulty?: number
+          id?: string
+          is_active?: boolean
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          choices?: Json
+          correct_index?: number
+          created_at?: string
+          difficulty?: number
+          id?: string
+          is_active?: boolean
+          question?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -985,6 +1054,38 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "rooms"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      equip_item: {
+        Args: { _equip: boolean; _user_item_id: string }
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          cvip_expires_at: string | null
+          display_name: string
+          frame_url: string | null
+          gender: Database["public"]["Enums"]["gender_type"] | null
+          id: string
+          is_cvip: boolean
+          is_online: boolean
+          is_suspended: boolean
+          last_seen: string
+          level: number
+          profile_background_url: string | null
+          public_id: string
+          updated_at: string
+          vip_level: number
+          xp: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
           isOneToOne: true
           isSetofReturn: false
         }
