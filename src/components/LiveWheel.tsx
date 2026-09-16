@@ -106,6 +106,25 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     },
   });
 
+  // إجمالي أرباح اليوم من العجلة (من السيرفر)
+  const todayQuery = useQuery({
+    queryKey: ["wheel-today", userId],
+    enabled: Boolean(userId),
+    refetchInterval: 20000,
+    queryFn: async () => {
+      const since = new Date();
+      since.setHours(0, 0, 0, 0);
+      const { data, error } = await db
+        .from("wheel_bets")
+        .select("payout")
+        .eq("user_id", userId)
+        .gte("created_at", since.toISOString());
+      if (error) throw new Error(error.message);
+      return (data ?? []).reduce((sum: number, r: { payout: number }) => sum + Number(r.payout), 0);
+    },
+  });
+  const todayWin = todayQuery.data ?? 0;
+
   useEffect(() => {
     const t = window.setInterval(() => setNow(Date.now()), 250);
     return () => window.clearInterval(t);
