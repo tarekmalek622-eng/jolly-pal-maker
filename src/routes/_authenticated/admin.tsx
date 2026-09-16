@@ -32,6 +32,7 @@ import {
   adminSetPaymentAccounts,
   adminUpsertQuizQuestion,
   adminSetUserRole,
+  adminUpdateUserIdentity,
 } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 
@@ -127,6 +128,9 @@ const ROLES = [
 function UsersTab() {
   const [term, setTerm] = useState("");
   const [amounts, setAmounts] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<string | null>(null);
+  const [idDraft, setIdDraft] = useState<Record<string, string>>({});
+  const [nameDraft, setNameDraft] = useState<Record<string, string>>({});
   const { userId } = useSupabaseSession();
 
   const isSuper = useQuery({
@@ -167,7 +171,8 @@ function UsersTab() {
         .select("id, public_id, display_name, avatar_url, vip_level, level, is_suspended")
         .order("created_at", { ascending: false })
         .limit(40);
-      if (term.trim().length >= 2) query = query.ilike("display_name", `%${term.trim()}%`);
+      const q = term.trim();
+      if (q.length >= 2) query = query.or(`display_name.ilike.%${q}%,public_id.ilike.%${q}%`);
       const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
@@ -186,6 +191,17 @@ function UsersTab() {
       adminSetSuspended({ data: { userId: id, suspended } }),
     onSuccess: () => {
       toast.success("تم التحديث");
+      void users.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
+  });
+
+  const identity = useMutation({
+    mutationFn: async (input: { userId: string; publicId?: string; displayName?: string }) =>
+      adminUpdateUserIdentity({ data: input }),
+    onSuccess: () => {
+      toast.success("تم تحديث بيانات الحساب");
+      setEditing(null);
       void users.refetch();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
@@ -238,6 +254,65 @@ function UsersTab() {
             >
               تعديل الرصيد
             </Button>
+          </div>
+          <div className="mt-2">
+            {editing === u.id ? (
+              <div className="space-y-2 rounded-xl border border-border bg-surface-2 p-2">
+                <Input
+                  value={idDraft[u.id] ?? u.public_id}
+                  onChange={(e) => setIdDraft((p) => ({ ...p, [u.id]: e.target.value }))}
+                  placeholder="ID الجديد (أرقام فقط)"
+                  inputMode="numeric"
+                  className="h-10 rounded-xl bg-surface text-xs"
+                />
+                <Input
+                  value={nameDraft[u.id] ?? u.display_name}
+                  onChange={(e) => setNameDraft((p) => ({ ...p, [u.id]: e.target.value }))}
+                  placeholder="الاسم الجديد"
+                  className="h-10 rounded-xl bg-surface text-xs"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    disabled={identity.isPending}
+                    onClick={() => {
+                      const nextId = (idDraft[u.id] ?? u.public_id).trim();
+                      const nextName = (nameDraft[u.id] ?? u.display_name).trim();
+                      if (!/^[0-9]{4,12}$/.test(nextId)) {
+                        toast.error("الـID يجب أن يكون أرقامًا من 4 إلى 12 خانة");
+                        return;
+                      }
+                      if (nextName.length < 2) {
+                        toast.error("الاسم قصير جدًا");
+                        return;
+                      }
+                      identity.mutate({ userId: u.id, publicId: nextId, displayName: nextName });
+                    }}
+                    className="h-10 flex-1 rounded-xl gradient-gold text-[11px] font-bold text-primary-foreground"
+                  >
+                    {identity.isPending ? "جارٍ الحفظ..." : "حفظ"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditing(null)}
+                    className="h-10 rounded-xl px-3 text-[11px]"
+                  >
+                    إلغاء
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditing(u.id);
+                  setIdDraft((p) => ({ ...p, [u.id]: u.public_id }));
+                  setNameDraft((p) => ({ ...p, [u.id]: u.display_name }));
+                }}
+                className="h-9 w-full rounded-xl text-[11px]"
+              >
+                تعديل الـID والاسم
+              </Button>
+            )}
           </div>
           {isSuper.data === true && (
             <div className="mt-2 flex gap-1">
