@@ -554,6 +554,7 @@ function RoomPage() {
       </div>
 
       <GiftSheet open={giftOpen} onOpenChange={setGiftOpen} roomId={roomId} targets={giftTargets} />
+      <GiftOverlay event={giftQueue[0] ?? null} onDone={() => setGiftQueue((prev) => prev.slice(1))} />
 
       <Sheet open={dominoOpen} onOpenChange={setDominoOpen}>
         <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl">
