@@ -79,7 +79,7 @@ function UserPage() {
       if (!userId || !target) return;
       const { error } = await supabase
         .from("friend_requests")
-        .insert({ sender_id: userId, receiver_id: target.id, status: "pending" });
+        .insert({ requester_id: userId, addressee_id: target.id, status: "pending" });
       if (error) throw error;
     },
     onSuccess: () => toast.success("تم إرسال طلب الصداقة"),

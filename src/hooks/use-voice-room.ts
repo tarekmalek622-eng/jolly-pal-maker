@@ -53,7 +53,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       setStatus("connecting");
       setError(null);
       try {
-        const result = await getVoiceToken({ data: { roomId } });
+        const result = await getVoiceToken({ data: { roomId, canPublish } });
         if (cancelled) return;
         if (!result.configured || !result.token || !result.url) {
           setStatus("unconfigured");
@@ -94,7 +94,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
     if (!canPublish) throw new Error("اصعد على المايك أولًا");
     const next = !micEnabled;
     if (next) {
-      const token = await getVoiceToken({ data: { roomId: roomId! } });
+      const token = await getVoiceToken({ data: { roomId: roomId!, canPublish: true } });
       if (token.configured && token.token) {
         // refresh grants so publishing is allowed after taking a seat
         try {
