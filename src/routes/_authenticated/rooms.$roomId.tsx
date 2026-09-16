@@ -80,6 +80,8 @@ function RoomPage() {
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [dominoOpen, setDominoOpen] = useState(false);
   const [roomGame, setRoomGame] = useState<"wheel" | "domino">("wheel");
+  const [seatSheet, setSeatSheet] = useState<string | null>(null);
+  const [giftTargetId, setGiftTargetId] = useState<string | null>(null);
 
   const room = useQuery({
     queryKey: ["room", roomId],
@@ -310,6 +312,28 @@ function RoomPage() {
     onError: () => toast.error("تعذر تنفيذ الإجراء"),
   });
 
+  /** تعيين/إزالة مشرف الغرفة — لمالك الغرفة فقط (تتحقق قاعدة البيانات أيضًا). */
+  const toggleModerator = useMutation({
+    mutationFn: async ({ target, make }: { target: string; make: boolean }) => {
+      if (make) {
+        const { error } = await supabase.from("room_moderators").insert({ room_id: roomId, user_id: target });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("room_moderators")
+          .delete()
+          .eq("room_id", roomId)
+          .eq("user_id", target);
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_d, v) => {
+      toast.success(v.make ? "تم تعيينه مشرفًا للغرفة" : "تمت إزالة الإشراف");
+      void moderators.refetch();
+    },
+    onError: () => toast.error("تعذر تغيير الإشراف"),
+  });
+
   const kick = useMutation({
     mutationFn: async (target: string) => {
       await supabase.from("room_mics").update({ user_id: null }).eq("room_id", roomId).eq("user_id", target);
@@ -440,22 +464,11 @@ function RoomPage() {
             <button
               key={seat.id}
               onClick={() => {
-                if (person) {
-                  if (canManage && person.id !== userId) {
-                    void seatAction.mutate({ seat, patch: { is_muted: !seat.is_muted } });
-                  } else if (person.id === userId) {
-                    leaveSeat.mutate();
-                  } else {
-                    void navigate({ to: "/u/$publicId", params: { publicId: person.public_id } });
-                  }
+                if (!person && !seat.is_locked && !canManage) {
+                  takeSeat.mutate(seat.seat_index);
                   return;
                 }
-                if (seat.is_locked) {
-                  toast.error("هذا المايك مغلق");
-                  return;
-                }
-                if (isOwner || canManage) takeSeat.mutate(seat.seat_index);
-                else takeSeat.mutate(seat.seat_index);
+                setSeatSheet(seat.id);
               }}
               className="flex flex-col items-center gap-1"
             >
@@ -554,7 +567,131 @@ function RoomPage() {
         </div>
       </div>
 
-      <GiftSheet open={giftOpen} onOpenChange={setGiftOpen} roomId={roomId} targets={giftTargets} />
+      <GiftSheet
+        key={giftTargetId ?? "all"}
+        open={giftOpen}
+        onOpenChange={(v) => {
+          setGiftOpen(v);
+          if (!v) setGiftTargetId(null);
+        }}
+        roomId={roomId}
+        targets={giftTargets}
+        {...(giftTargetId ? { initialReceiverId: giftTargetId } : {})}
+      />
+
+      {/* لوحة التحكم بالمايك: تظهر لصاحب الغرفة والمشرفين عند الضغط على أي مايك */}
+      <Sheet open={Boolean(seatSheet)} onOpenChange={(v) => !v && setSeatSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          {(() => {
+            const seat = (mics.data ?? []).find((m) => m.id === seatSheet) ?? null;
+            if (!seat) return null;
+            const person = personOf(seat.user_id);
+            const isMe = person?.id === userId;
+            const isMod = person ? (moderators.data ?? []).includes(person.id) : false;
+            const close = () => setSeatSheet(null);
+            return (
+              <>
+                <SheetHeader>
+                  <SheetTitle>
+                    مايك {seat.seat_index} · {person?.display_name ?? "فارغ"}
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="mt-4 grid grid-cols-2 gap-2 pb-4">
+                  {!person && !seat.is_locked && (
+                    <SeatBtn
+                      label="اصعد على المايك"
+                      onClick={() => {
+                        takeSeat.mutate(seat.seat_index);
+                        close();
+                      }}
+                    />
+                  )}
+                  {person && isMe && (
+                    <SeatBtn
+                      label="انزل من المايك"
+                      onClick={() => {
+                        leaveSeat.mutate();
+                        close();
+                      }}
+                    />
+                  )}
+                  {person && !isMe && (
+                    <>
+                      <SeatBtn
+                        label="عرض الملف الشخصي"
+                        onClick={() => {
+                          close();
+                          void navigate({ to: "/u/$publicId", params: { publicId: person.public_id } });
+                        }}
+                      />
+                      <SeatBtn
+                        label="إرسال هدية"
+                        onClick={() => {
+                          setGiftTargetId(person.id);
+                          setGiftOpen(true);
+                          close();
+                        }}
+                      />
+                    </>
+                  )}
+                  {canManage && person && !isMe && (
+                    <>
+                      <SeatBtn
+                        label={seat.is_muted ? "إلغاء الكتم" : "كتم المايك"}
+                        onClick={() => {
+                          seatAction.mutate({ seat, patch: { is_muted: !seat.is_muted } });
+                          close();
+                        }}
+                      />
+                      <SeatBtn
+                        label="تنزيل من المايك"
+                        onClick={() => {
+                          seatAction.mutate({ seat, patch: { user_id: null, is_muted: false } });
+                          close();
+                        }}
+                      />
+                      <SeatBtn
+                        label="طرد من الغرفة"
+                        tone="warn"
+                        onClick={() => {
+                          kick.mutate(person.id);
+                          close();
+                        }}
+                      />
+                      <SeatBtn
+                        label="حظر من الغرفة"
+                        tone="danger"
+                        onClick={() => {
+                          banUser.mutate(person.id);
+                          close();
+                        }}
+                      />
+                    </>
+                  )}
+                  {isOwner && person && !isMe && (
+                    <SeatBtn
+                      label={isMod ? "إزالة إشراف الغرفة" : "تعيين مشرف للغرفة"}
+                      onClick={() => {
+                        toggleModerator.mutate({ target: person.id, make: !isMod });
+                        close();
+                      }}
+                    />
+                  )}
+                  {canManage && (
+                    <SeatBtn
+                      label={seat.is_locked ? "فتح المايك" : "قفل المايك"}
+                      onClick={() => {
+                        seatAction.mutate({ seat, patch: { is_locked: !seat.is_locked } });
+                        close();
+                      }}
+                    />
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
       <GiftOverlay event={giftQueue[0] ?? null} onDone={() => setGiftQueue((prev) => prev.slice(1))} />
 
       <Sheet open={dominoOpen} onOpenChange={setDominoOpen}>
@@ -719,5 +856,33 @@ function RoomBackground({ url }: { url: string | null }) {
       <img src={resolved} alt="" className="h-full w-full object-cover opacity-30" />
       <div className="absolute inset-0 bg-background/60" />
     </div>
+  );
+}
+
+/** زر إجراء داخل لوحة التحكم بالمايك. */
+function SeatBtn({
+  label,
+  onClick,
+  tone = "normal",
+}: {
+  label: string;
+  onClick: () => void;
+  tone?: "normal" | "warn" | "danger";
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "h-12 rounded-2xl border text-xs font-semibold transition-colors active:scale-[0.98]",
+        tone === "danger"
+          ? "border-destructive/40 bg-destructive/10 text-destructive"
+          : tone === "warn"
+            ? "border-accent/40 bg-accent/10 text-accent"
+            : "border-border bg-surface",
+      )}
+    >
+      {label}
+    </button>
   );
 }
