@@ -312,6 +312,28 @@ function RoomPage() {
     onError: () => toast.error("تعذر تنفيذ الإجراء"),
   });
 
+  /** تعيين/إزالة مشرف الغرفة — لمالك الغرفة فقط (تتحقق قاعدة البيانات أيضًا). */
+  const toggleModerator = useMutation({
+    mutationFn: async ({ target, make }: { target: string; make: boolean }) => {
+      if (make) {
+        const { error } = await supabase.from("room_moderators").insert({ room_id: roomId, user_id: target });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("room_moderators")
+          .delete()
+          .eq("room_id", roomId)
+          .eq("user_id", target);
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_d, v) => {
+      toast.success(v.make ? "تم تعيينه مشرفًا للغرفة" : "تمت إزالة الإشراف");
+      void moderators.refetch();
+    },
+    onError: () => toast.error("تعذر تغيير الإشراف"),
+  });
+
   const kick = useMutation({
     mutationFn: async (target: string) => {
       await supabase.from("room_mics").update({ user_id: null }).eq("room_id", roomId).eq("user_id", target);
