@@ -187,6 +187,7 @@ function RegisterForm() {
         reader.readAsDataURL(file);
       });
 
+      await ensureDeviceSession();
       const verdict = await screenProfilePhoto({ data: { imageDataUrl: dataUrl } });
       if (!verdict.allowed) {
         toast.error(verdict.reason ?? "الصورة مرفوضة لأنها غير مناسبة");
