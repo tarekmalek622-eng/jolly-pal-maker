@@ -258,7 +258,7 @@ function MePage() {
           mode={privSheet ?? "vip"}
           currentVip={p?.vip_level ?? 0}
           isCvip={Boolean(p?.is_cvip)}
-          cvipExpiresAt={p?.cvip_expires_at ?? null}
+          cvipExpiresAt={(p as { cvip_expires_at?: string | null } | undefined)?.cvip_expires_at ?? null}
         />
 
 
