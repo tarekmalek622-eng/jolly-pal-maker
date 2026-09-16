@@ -22,10 +22,21 @@ const KIND_LABEL: Record<string, string> = {
   gift_sent: "هدية مُرسلة",
   gift_received: "هدية مستلمة",
   purchase: "شراء",
+  item_purchase: "شراء عنصر",
   vip: "اشتراك VIP",
-  topup: "شحن",
+  vip_purchase: "اشتراك VIP",
+  topup: "شراء كوينز",
   game: "لعبة",
+  refund: "استرجاع",
   admin: "تعديل إداري",
+  admin_adjust: "تعديل إداري",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  completed: "مكتملة",
+  pending: "قيد المعالجة",
+  failed: "فاشلة",
+  refunded: "مسترجعة",
 };
 
 function WalletPage() {
@@ -38,7 +49,7 @@ function WalletPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("coin_transactions")
-        .select("id, kind, amount, balance_after, reference, created_at")
+        .select("id, kind, amount, balance_before, balance_after, reference, status, created_at")
         .eq("user_id", userId!)
         .order("created_at", { ascending: false })
         .limit(60);
