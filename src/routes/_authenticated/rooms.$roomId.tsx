@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { resolveMediaUrl } from "@/lib/media";
 import { toast } from "sonner";
 import {
   ArrowRight,
