@@ -148,7 +148,11 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       const mediaTrack = dest.stream.getAudioTracks()[0];
       if (!mediaTrack) throw new Error("تعذر قراءة الملف الصوتي");
       const track = new LocalAudioTrack(mediaTrack);
-      const publication = await room.localParticipant.publishTrack(track, { name: "room-music" });
+      const publication = await room.localParticipant.publishTrack(
+        // livekit types + exactOptionalPropertyTypes لا يتوافقان مع LocalAudioTrack مباشرة
+        track as unknown as MediaStreamTrack,
+        { name: "room-music" },
+      );
 
       musicElRef.current = el;
       setMusicName(file.name.replace(/\.[^.]+$/, ""));
