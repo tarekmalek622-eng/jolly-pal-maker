@@ -567,7 +567,131 @@ function RoomPage() {
         </div>
       </div>
 
-      <GiftSheet open={giftOpen} onOpenChange={setGiftOpen} roomId={roomId} targets={giftTargets} />
+      <GiftSheet
+        key={giftTargetId ?? "all"}
+        open={giftOpen}
+        onOpenChange={(v) => {
+          setGiftOpen(v);
+          if (!v) setGiftTargetId(null);
+        }}
+        roomId={roomId}
+        targets={giftTargets}
+        initialReceiverId={giftTargetId ?? undefined}
+      />
+
+      {/* لوحة التحكم بالمايك: تظهر لصاحب الغرفة والمشرفين عند الضغط على أي مايك */}
+      <Sheet open={Boolean(seatSheet)} onOpenChange={(v) => !v && setSeatSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          {(() => {
+            const seat = (mics.data ?? []).find((m) => m.id === seatSheet) ?? null;
+            if (!seat) return null;
+            const person = personOf(seat.user_id);
+            const isMe = person?.id === userId;
+            const isMod = person ? (moderators.data ?? []).includes(person.id) : false;
+            const close = () => setSeatSheet(null);
+            return (
+              <>
+                <SheetHeader>
+                  <SheetTitle>
+                    مايك {seat.seat_index} · {person?.display_name ?? "فارغ"}
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="mt-4 grid grid-cols-2 gap-2 pb-4">
+                  {!person && !seat.is_locked && (
+                    <SeatBtn
+                      label="اصعد على المايك"
+                      onClick={() => {
+                        takeSeat.mutate(seat.seat_index);
+                        close();
+                      }}
+                    />
+                  )}
+                  {person && isMe && (
+                    <SeatBtn
+                      label="انزل من المايك"
+                      onClick={() => {
+                        leaveSeat.mutate();
+                        close();
+                      }}
+                    />
+                  )}
+                  {person && !isMe && (
+                    <>
+                      <SeatBtn
+                        label="عرض الملف الشخصي"
+                        onClick={() => {
+                          close();
+                          void navigate({ to: "/u/$publicId", params: { publicId: person.public_id } });
+                        }}
+                      />
+                      <SeatBtn
+                        label="إرسال هدية"
+                        onClick={() => {
+                          setGiftTargetId(person.id);
+                          setGiftOpen(true);
+                          close();
+                        }}
+                      />
+                    </>
+                  )}
+                  {canManage && person && !isMe && (
+                    <>
+                      <SeatBtn
+                        label={seat.is_muted ? "إلغاء الكتم" : "كتم المايك"}
+                        onClick={() => {
+                          seatAction.mutate({ seat, patch: { is_muted: !seat.is_muted } });
+                          close();
+                        }}
+                      />
+                      <SeatBtn
+                        label="تنزيل من المايك"
+                        onClick={() => {
+                          seatAction.mutate({ seat, patch: { user_id: null, is_muted: false } });
+                          close();
+                        }}
+                      />
+                      <SeatBtn
+                        label="طرد من الغرفة"
+                        tone="warn"
+                        onClick={() => {
+                          kick.mutate(person.id);
+                          close();
+                        }}
+                      />
+                      <SeatBtn
+                        label="حظر من الغرفة"
+                        tone="danger"
+                        onClick={() => {
+                          banUser.mutate(person.id);
+                          close();
+                        }}
+                      />
+                    </>
+                  )}
+                  {isOwner && person && !isMe && (
+                    <SeatBtn
+                      label={isMod ? "إزالة إشراف الغرفة" : "تعيين مشرف للغرفة"}
+                      onClick={() => {
+                        toggleModerator.mutate({ target: person.id, make: !isMod });
+                        close();
+                      }}
+                    />
+                  )}
+                  {canManage && (
+                    <SeatBtn
+                      label={seat.is_locked ? "فتح المايك" : "قفل المايك"}
+                      onClick={() => {
+                        seatAction.mutate({ seat, patch: { is_locked: !seat.is_locked } });
+                        close();
+                      }}
+                    />
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
       <GiftOverlay event={giftQueue[0] ?? null} onDone={() => setGiftQueue((prev) => prev.slice(1))} />
 
       <Sheet open={dominoOpen} onOpenChange={setDominoOpen}>
