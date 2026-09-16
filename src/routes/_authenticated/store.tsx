@@ -60,10 +60,36 @@ function StorePage() {
     queryKey: ["my-items", userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const { data, error } = await supabase.from("user_items").select("item_id, is_equipped").eq("user_id", userId!);
+      const { data, error } = await supabase
+        .from("user_items")
+        .select("id, item_id, is_equipped, created_at, expires_at")
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
+  });
+
+  const refundSettings = useQuery({
+    queryKey: ["domino-settings-refund"],
+    queryFn: async () => {
+      const { data } = await supabase.from("app_settings").select("value").eq("key", "domino").maybeSingle();
+      const value = (data?.value ?? {}) as { refund_hours?: number };
+      return value.refund_hours ?? 24;
+    },
+  });
+
+  const refundItem = useMutation({
+    mutationFn: async (userItemId: string) => {
+      const { error } = await supabase.rpc("refund_item" as never, { _user_item_id: userItemId } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم الاسترداد وأُعيدت الكوينز");
+      refresh();
+      void myItems.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الاسترداد"),
   });
 
   const vip = useQuery({
