@@ -121,5 +121,5 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
     setSpeakerEnabled(next);
   }, [speakerEnabled]);
 
-  return { status, error, micEnabled, speakerEnabled, speakingIds, toggleMic, toggleSpeaker };
+  return { status, error, micEnabled, speakerEnabled, speakingIds, toggleMic, toggleSpeaker, retry };
 }
