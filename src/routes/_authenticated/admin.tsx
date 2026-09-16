@@ -22,6 +22,7 @@ import {
   adminSetActive,
   adminDeleteQuizQuestion,
   adminSetGameSettings,
+  adminSetDominoSettings,
   adminUpsertQuizQuestion,
   adminSetUserRole,
 } from "@/lib/admin.functions";
@@ -1120,6 +1121,103 @@ function GamesTab() {
         className="h-10 w-full rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
       >
         حفظ الإعدادات
+      </Button>
+
+      <DominoSettings />
+    </div>
+  );
+}
+
+type DominoSettingsState = {
+  enabled: boolean;
+  min_bet: number;
+  max_bet: number;
+  payout_multiplier: number;
+  refund_hours: number;
+};
+
+const DOMINO_DEFAULTS: DominoSettingsState = {
+  enabled: true,
+  min_bet: 10,
+  max_bet: 100000,
+  payout_multiplier: 2,
+  refund_hours: 24,
+};
+
+function DominoSettings() {
+  const query = useQuery({
+    queryKey: ["admin-domino-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("app_settings").select("value").eq("key", "domino").maybeSingle();
+      if (error) throw error;
+      return { ...DOMINO_DEFAULTS, ...((data?.value ?? {}) as object) } as DominoSettingsState;
+    },
+  });
+
+  const [draft, setDraft] = useState<DominoSettingsState | null>(null);
+  const state = draft ?? query.data ?? null;
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!state) return;
+      await adminSetDominoSettings({ data: state });
+    },
+    onSuccess: () => {
+      toast.success("تم حفظ قواعد الدومينو");
+      void query.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  if (!state) return null;
+
+  return (
+    <div className="mt-4 space-y-3 rounded-2xl border border-border bg-surface-2 p-3">
+      <p className="text-sm font-bold">قواعد الدومينو والجوائز</p>
+      <button
+        onClick={() => setDraft({ ...state, enabled: !state.enabled })}
+        className={cn(
+          "w-full rounded-xl border px-3 py-2 text-xs",
+          state.enabled ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
+        )}
+      >
+        {state.enabled ? "الدومينو مفعّل — اضغط للإيقاف" : "الدومينو موقوف — اضغط للتشغيل"}
+      </button>
+      <div className="grid grid-cols-2 gap-2">
+        <Field
+          label="أقل رهان"
+          type="number"
+          value={String(state.min_bet)}
+          onChange={(v) => setDraft({ ...state, min_bet: Number(v) || 0 })}
+        />
+        <Field
+          label="أعلى رهان"
+          type="number"
+          value={String(state.max_bet)}
+          onChange={(v) => setDraft({ ...state, max_bet: Number(v) || 0 })}
+        />
+        <Field
+          label="مضاعف الجائزة"
+          type="number"
+          value={String(state.payout_multiplier)}
+          onChange={(v) => setDraft({ ...state, payout_multiplier: Number(v) || 1 })}
+        />
+        <Field
+          label="مدة استرداد المتجر (ساعة)"
+          type="number"
+          value={String(state.refund_hours)}
+          onChange={(v) => setDraft({ ...state, refund_hours: Number(v) || 1 })}
+        />
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        الجائزة = الرهان × المضاعف، وتُحسب في السيرفر مع نقاط الجولة (مجموع قطع الخصم المتبقية).
+      </p>
+      <Button
+        disabled={save.isPending}
+        onClick={() => save.mutate()}
+        className="h-10 w-full rounded-xl gradient-rose text-xs font-bold text-primary-foreground"
+      >
+        حفظ قواعد الدومينو
       </Button>
     </div>
   );

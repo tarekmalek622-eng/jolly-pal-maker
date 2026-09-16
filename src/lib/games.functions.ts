@@ -227,6 +227,20 @@ export const playChallenge = createServerFn({ method: "POST" })
 
 /* ---------------- الدومينو الجماعي ---------------- */
 
+export interface DominoLogEntry {
+  at: string;
+  seat?: "p1" | "p2";
+  action: "create" | "start" | "move" | "draw" | "pass" | "win" | "blocked_win" | "forfeit" | "draw_end";
+  tile?: [number, number];
+  side?: "left" | "right";
+  count?: number;
+  points?: number;
+  prize?: number;
+  remaining?: number;
+  p1?: number;
+  p2?: number;
+}
+
 export interface DominoState {
   hands: { p1: number[]; p2: number[] };
   board: [number, number][];
@@ -235,6 +249,8 @@ export interface DominoState {
   boneyard: number[];
   turn: "p1" | "p2";
   passes: number;
+  scores?: { p1: number; p2: number };
+  log?: DominoLogEntry[];
 }
 
 async function rpcAdmin<T = void>(fn: string, args: Record<string, unknown>): Promise<T> {
@@ -273,7 +289,7 @@ export const dominoMove = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
-      .object({ gameId: z.string().uuid(), tile: z.number().int().min(0).max(48), side: z.enum(["left", "right"]) })
+      .object({ gameId: z.string().uuid(), tile: z.number().int().min(0).max(54), side: z.enum(["left", "right"]) })
       .parse(input),
   )
   .handler(async ({ data, context }) => {

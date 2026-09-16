@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/AppShell";
 import { useSupabaseSession, useRefreshMoney } from "@/hooks/use-session";
 import { dominoCancel, dominoForfeit, dominoJoin, dominoMove, dominoPass } from "@/lib/games.functions";
-import type { DominoState } from "@/lib/games.functions";
+import type { DominoLogEntry, DominoState } from "@/lib/games.functions";
 import { cn } from "@/lib/utils";
 
 interface DominoRow {
@@ -52,6 +52,68 @@ const PIPS: Record<number, number[]> = {
   5: [0, 2, 4, 6, 8],
   6: [0, 2, 3, 5, 6, 8],
 };
+
+function logText(e: DominoLogEntry, seat: "p1" | "p2" | null): string {
+  const who = e.seat ? (e.seat === seat ? "أنت" : "الخصم") : "";
+  switch (e.action) {
+    case "create":
+      return "إنشاء الطاولة";
+    case "start":
+      return "بدأت المباراة";
+    case "move":
+      return `${who} لعب ${e.tile?.[0] ?? 0}|${e.tile?.[1] ?? 0} ${e.side === "left" ? "يسارًا" : "يمينًا"} · باقي ${e.remaining ?? 0}`;
+    case "draw":
+      return `${who} سحب ${e.count ?? 1} من البقرة`;
+    case "pass":
+      return `${who} مرّر الدور`;
+    case "win":
+      return `${who} أنهى قطعه · ${e.points ?? 0} نقطة · ${(e.prize ?? 0).toLocaleString("en-US")} كوينز`;
+    case "blocked_win":
+      return `طقيرة مسدودة — ${who} فاز بأقل مجموع · ${e.points ?? 0} نقطة`;
+    case "forfeit":
+      return `${who} انسحب · ${e.points ?? 0} نقطة للخصم`;
+    case "draw_end":
+      return `تعادل (${e.p1 ?? 0} / ${e.p2 ?? 0}) — أُعيدت الرهانات`;
+    default:
+      return e.action;
+  }
+}
+
+function RoundPanel({ state, seat }: { state: DominoState; seat: "p1" | "p2" | null }) {
+  const scores = state.scores ?? { p1: 0, p2: 0 };
+  const mine = seat === "p2" ? scores.p2 : scores.p1;
+  const theirs = seat === "p2" ? scores.p1 : scores.p2;
+  const entries = [...(state.log ?? [])].slice(-12).reverse();
+
+  return (
+    <div className="surface-card space-y-3 p-3">
+      <div className="grid grid-cols-2 gap-2 text-center">
+        <div className="rounded-xl bg-surface-2 p-2">
+          <p className="text-[10px] text-muted-foreground">نقاطك</p>
+          <p className="text-base font-black text-primary">{mine}</p>
+        </div>
+        <div className="rounded-xl bg-surface-2 p-2">
+          <p className="text-[10px] text-muted-foreground">نقاط الخصم</p>
+          <p className="text-base font-black">{theirs}</p>
+        </div>
+      </div>
+      <div>
+        <p className="mb-1 text-[11px] font-bold text-muted-foreground">سجل الجولة (من السيرفر)</p>
+        {entries.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground">لا حركات بعد.</p>
+        ) : (
+          <ul className="max-h-40 space-y-1 overflow-y-auto">
+            {entries.map((e, i) => (
+              <li key={`${e.at}-${i}`} className="rounded-lg bg-surface-2 px-2 py-1 text-[11px]">
+                {logText(e, seat)}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function Half({ n }: { n: number }) {
   return (
@@ -297,6 +359,8 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
                 </span>
               )}
             </div>
+
+            {st && row.status !== "waiting" && <RoundPanel state={st} seat={seat} />}
 
             {row.status === "waiting" ? (
               <Button

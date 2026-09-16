@@ -420,3 +420,30 @@ export const adminDeleteQuizQuestion = createServerFn({ method: "POST" })
     await log(context.userId, data.id, "delete_quiz_question", "", "");
     return { ok: true };
   });
+
+/* ---------------- إعدادات الدومينو ---------------- */
+
+export const adminSetDominoSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        enabled: z.boolean(),
+        min_bet: z.number().int().min(10).max(100_000),
+        max_bet: z.number().int().min(10).max(100_000),
+        payout_multiplier: z.number().min(1).max(5),
+        refund_hours: z.number().int().min(1).max(720),
+      })
+      .refine((v) => v.max_bet >= v.min_bet, { message: "الحد الأعلى أقل من الأدنى" })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("app_settings")
+      .upsert([{ key: "domino", value: data }] as never);
+    if (error) throw new Error(error.message);
+    await log(context.userId, "domino", "update_domino_settings", "", JSON.stringify(data));
+    return { ok: true };
+  });

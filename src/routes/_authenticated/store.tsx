@@ -60,10 +60,36 @@ function StorePage() {
     queryKey: ["my-items", userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const { data, error } = await supabase.from("user_items").select("item_id, is_equipped").eq("user_id", userId!);
+      const { data, error } = await supabase
+        .from("user_items")
+        .select("id, item_id, is_equipped, created_at, expires_at")
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
+  });
+
+  const refundSettings = useQuery({
+    queryKey: ["domino-settings-refund"],
+    queryFn: async () => {
+      const { data } = await supabase.from("app_settings").select("value").eq("key", "domino").maybeSingle();
+      const value = (data?.value ?? {}) as { refund_hours?: number };
+      return value.refund_hours ?? 24;
+    },
+  });
+
+  const refundItem = useMutation({
+    mutationFn: async (userItemId: string) => {
+      const { error } = await supabase.rpc("refund_item" as never, { _user_item_id: userItemId } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم الاسترداد وأُعيدت الكوينز");
+      refresh();
+      void myItems.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الاسترداد"),
   });
 
   const vip = useQuery({
@@ -127,6 +153,13 @@ function StorePage() {
   });
 
   const owned = new Set((myItems.data ?? []).map((i) => i.item_id));
+  const refundHours = refundSettings.data ?? 24;
+  const refundable = (myItems.data ?? []).filter(
+    (ui) =>
+      !ui.is_equipped &&
+      (!ui.expires_at || new Date(ui.expires_at).getTime() > Date.now()) &&
+      Date.now() - new Date(ui.created_at).getTime() < refundHours * 3600_000,
+  );
   const filtered = (items.data ?? []).filter((i) => i.category === category);
 
   return (
@@ -189,6 +222,37 @@ function StorePage() {
                   onBuy={() => buyItem.mutate(item.id)}
                 />
               ))}
+            </div>
+          )}
+          {refundable.length > 0 && (
+            <div className="mt-6">
+              <p className="mb-1 text-sm font-bold">قابل للاسترداد</p>
+              <p className="mb-2 text-[11px] text-muted-foreground">
+                يمكن استرداد المنتج خلال {refundSettings.data ?? 24} ساعة من الشراء إذا كان غير مُفعّل، وتعود الكوينز إلى محفظتك.
+              </p>
+              <div className="space-y-2">
+                {refundable.map((ui) => {
+                  const item = (items.data ?? []).find((i) => i.id === ui.item_id);
+                  return (
+                    <div key={ui.id} className="surface-card flex items-center gap-3 p-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold">{item?.name ?? "منتج"}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {(item?.price ?? 0).toLocaleString("en-US")} كوينز
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        disabled={refundItem.isPending}
+                        onClick={() => refundItem.mutate(ui.id)}
+                        className="h-9 rounded-xl px-4 text-[11px]"
+                      >
+                        استرداد
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </>

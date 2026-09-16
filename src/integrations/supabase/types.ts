@@ -1179,12 +1179,14 @@ export type Database = {
         Args: { _bet: number; _room_id?: string; _uid: string }
         Returns: string
       }
+      domino_log: { Args: { entry: Json; state: Json }; Returns: Json }
       domino_move: {
         Args: { _game_id: string; _side: string; _tile: number; _uid: string }
         Returns: Json
       }
       domino_pass: { Args: { _game_id: string; _uid: string }; Returns: Json }
       domino_pips: { Args: { seat: string; state: Json }; Returns: number }
+      domino_settings: { Args: never; Returns: Json }
       domino_tile_a: { Args: { t: number }; Returns: number }
       domino_tile_b: { Args: { t: number }; Returns: number }
       equip_item: {
@@ -1308,6 +1310,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      refund_item: { Args: { _user_item_id: string }; Returns: number }
       remove_friend: { Args: { _friend_id: string }; Returns: boolean }
       respond_friend_request: {
         Args: { _accept: boolean; _request_id: string }

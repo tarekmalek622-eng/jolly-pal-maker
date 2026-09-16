@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { GiftSheet, type GiftTarget } from "@/components/GiftSheet";
+import { DominoGame } from "@/components/DominoGame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -75,6 +76,7 @@ function RoomPage() {
   const [giftOpen, setGiftOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const [requestsOpen, setRequestsOpen] = useState(false);
+  const [dominoOpen, setDominoOpen] = useState(false);
 
   const room = useQuery({
     queryKey: ["room", roomId],
@@ -350,11 +352,7 @@ function RoomPage() {
                           : "غير متصل"}
               </p>
             </div>
-            <button
-              onClick={() => void navigate({ to: "/games", search: { room: roomId } })}
-              className="p-1"
-              aria-label="لعبة الدومينو"
-            >
+            <button onClick={() => setDominoOpen(true)} className="p-1" aria-label="لعبة الدومينو">
               <LayoutGrid className="h-5 w-5" />
             </button>
             {canManage && (
@@ -506,6 +504,17 @@ function RoomPage() {
       </div>
 
       <GiftSheet open={giftOpen} onOpenChange={setGiftOpen} roomId={roomId} targets={giftTargets} />
+
+      <Sheet open={dominoOpen} onOpenChange={setDominoOpen}>
+        <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle>دومينو الغرفة</SheetTitle>
+          </SheetHeader>
+          <div className="pb-6">
+            <DominoGame roomId={roomId} />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <Sheet open={requestsOpen} onOpenChange={setRequestsOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl">
