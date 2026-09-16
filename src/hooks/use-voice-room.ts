@@ -21,6 +21,10 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
   const [speakerEnabled, setSpeakerEnabled] = useState(true);
   const [speakingIds, setSpeakingIds] = useState<string[]>([]);
   const [retryKey, setRetryKey] = useState(0);
+  const [musicPlaying, setMusicPlaying] = useState(false);
+  const [musicName, setMusicName] = useState<string | null>(null);
+  const musicElRef = useRef<HTMLAudioElement | null>(null);
+  const stopMusicRef = useRef<(() => void) | null>(null);
 
   /** Re-run the connection attempt after a failure. */
   const retry = useCallback(() => setRetryKey((k) => k + 1), []);
