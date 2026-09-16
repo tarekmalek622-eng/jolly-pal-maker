@@ -1,0 +1,1 @@
+CREATE POLICY "Admins read all quiz questions" ON public.quiz_questions FOR SELECT TO authenticated USING (public.is_admin(auth.uid()));
