@@ -1118,10 +1118,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_manage_room: {
-        Args: { _room_id: string; _user_id: string }
-        Returns: boolean
-      }
       create_room: {
         Args: {
           _background_url?: string
@@ -1225,13 +1221,6 @@ export type Database = {
       }
       gen_public_id: { Args: never; Returns: string }
       gen_room_code: { Args: never; Returns: string }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       mark_direct_messages_read: {
