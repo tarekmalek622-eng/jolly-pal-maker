@@ -28,6 +28,9 @@ function HomePage() {
   const wallet = useWallet(userId);
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
+  const [tab, setTab] = useState<
+    "all" | "active" | "new" | "featured" | "public" | "private" | "games" | "voice"
+  >("all");
 
   const rooms = useQuery({
     queryKey: ["rooms", "discovery"],
