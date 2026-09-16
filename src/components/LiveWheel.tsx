@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Trophy } from "lucide-react";
+import { Coins, Loader2, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,6 +106,25 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     },
   });
 
+  // إجمالي أرباح اليوم من العجلة (من السيرفر)
+  const todayQuery = useQuery({
+    queryKey: ["wheel-today", userId],
+    enabled: Boolean(userId),
+    refetchInterval: 20000,
+    queryFn: async () => {
+      const since = new Date();
+      since.setHours(0, 0, 0, 0);
+      const { data, error } = await db
+        .from("wheel_bets")
+        .select("payout")
+        .eq("user_id", userId)
+        .gte("created_at", since.toISOString());
+      if (error) throw new Error(error.message);
+      return (data ?? []).reduce((sum: number, r: { payout: number }) => sum + Number(r.payout), 0);
+    },
+  });
+  const todayWin = todayQuery.data ?? 0;
+
   useEffect(() => {
     const t = window.setInterval(() => setNow(Date.now()), 250);
     return () => window.clearInterval(t);
@@ -183,6 +202,11 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     [bets.data, userId],
   );
 
+  const myBet = useMemo(
+    () => (bets.data ?? []).filter((b) => b.user_id === userId).reduce((sum, b) => sum + Number(b.amount), 0),
+    [bets.data, userId],
+  );
+
   const leaderboard = useMemo(() => {
     const map = new Map<string, number>();
     for (const b of bets.data ?? []) {
@@ -213,22 +237,38 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const winning = slots.find((s) => s.key === round.data?.winning_key);
 
   return (
-    <div className="space-y-3">
-      <div className="surface-card relative overflow-hidden p-4">
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-primary">الجولة {round.data?.round_no ?? "-"}</span>
-          <span className={cn("font-bold", finished ? "text-success" : "text-foreground")}>
-            {finished ? "النتيجة" : `${remaining} ثانية`}
+    <div className="space-y-2">
+      {/* لوح العجلة — نفس تخطيط الصور المرجعية */}
+      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-[radial-gradient(circle_at_50%_35%,oklch(0.32_0.06_90),oklch(0.18_0.03_275))] p-3">
+        <div className="flex items-center justify-between">
+          <span className="rounded-full bg-background/40 px-3 py-1 text-[11px] font-bold text-primary">
+            اليوم الجولة {round.data?.round_no ?? "-"}
           </span>
+          <div className="flex items-center gap-1.5">
+            <span className="flex h-8 items-center gap-1 rounded-full bg-background/40 px-2.5 text-[11px] font-bold">
+              <Trophy className="h-3.5 w-3.5 text-primary" />
+              {(wallet.data?.coins ?? 0).toLocaleString("en-US")}
+            </span>
+          </div>
         </div>
 
-        {/* الفواكه داخل الدائرة مع مؤشر يلف عليها ويتوقف على الفائزة */}
-        <div className="relative mx-auto mt-4 aspect-square w-full max-w-[320px]">
-          <div className="absolute inset-0 rounded-full border-[6px] border-primary/35 bg-[radial-gradient(circle_at_center,oklch(0.26_0.05_275),oklch(0.16_0.03_275))] shadow-[0_0_40px_-12px_oklch(0.72_0.16_85/0.55)]" />
+        {/* هيكل العجلة: أسلاك + خانات الفواكه حولها + قلب العدّاد */}
+        <div className="relative mx-auto mt-3 aspect-square w-full max-w-[340px]">
+          {/* الإطار والأسلاك */}
+          <div className="absolute inset-[14%] rounded-full border-[10px] border-sky-400/70 bg-sky-500/10" />
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={`spoke-${i}`}
+              className="absolute left-1/2 top-1/2 h-[36%] w-[5px] -translate-x-1/2 origin-top rounded-full bg-sky-400/60"
+              style={{ transform: `rotate(${i * 45}deg)` }}
+            />
+          ))}
+
+          {/* خانات الفواكه */}
           {slots.map((s, i) => {
             const step = (2 * Math.PI) / Math.max(1, slots.length);
             const a = -Math.PI / 2 + step * i;
-            const r = 38;
+            const r = 41;
             const left = 50 + r * Math.cos(a);
             const top = 50 + r * Math.sin(a);
             const stat = perSlot.get(s.key) ?? { total: 0, mine: 0, players: 0 };
@@ -242,146 +282,149 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                 onClick={() => place.mutate(s.key)}
                 style={{ left: `${left}%`, top: `${top}%` }}
                 className={cn(
-                  "absolute flex h-[19%] w-[19%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border-2 transition-all disabled:opacity-70",
+                  "absolute w-[30%] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border-2 text-center shadow-lg transition-all disabled:opacity-80",
                   isWinner
-                    ? "scale-110 border-success bg-success/25 shadow-[0_0_22px_oklch(0.72_0.17_150/0.7)]"
+                    ? "scale-110 border-success bg-success/25 shadow-[0_0_22px_oklch(0.72_0.17_150/0.75)]"
                     : active
-                      ? "scale-110 border-primary bg-primary/25 shadow-[0_0_20px_oklch(0.82_0.16_85/0.6)]"
+                      ? "scale-105 border-primary bg-primary/25 shadow-[0_0_18px_oklch(0.82_0.16_85/0.6)]"
                       : stat.mine > 0
                         ? "border-primary/70 bg-primary/10"
-                        : "border-border/70 bg-surface-2/80",
+                        : "border-sky-400/60 bg-background/60",
                 )}
               >
-                <span className="text-xl leading-none">{s.emoji}</span>
-                <span className="mt-0.5 text-[9px] font-extrabold text-primary">×{s.multiplier}</span>
-                {stat.total > 0 && (
-                  <span className="text-[8px] text-muted-foreground">{stat.total.toLocaleString("en-US")}</span>
-                )}
+                <span className="flex items-center justify-between gap-1 bg-background/70 px-1.5 py-1">
+                  <span className="text-base leading-none">{s.emoji}</span>
+                  <span className="text-[10px] font-extrabold text-primary">×{s.multiplier}</span>
+                </span>
+                <span className="block px-1 py-1 text-[9px] leading-tight">
+                  <span className="block text-muted-foreground">أنت {stat.mine.toLocaleString("en-US")}</span>
+                  <span className="block font-bold text-primary">{stat.total.toLocaleString("en-US")}</span>
+                </span>
               </button>
             );
           })}
-          <div className="absolute inset-[30%] flex flex-col items-center justify-center rounded-full gradient-gold text-primary-foreground">
-            <span className="text-[10px] font-bold">{finished ? "الفائزة" : "الوقت"}</span>
-            <span className="text-2xl font-extrabold">{finished ? (winning?.emoji ?? "🎡") : remaining}</span>
+
+          {/* قلب العجلة: مدة الاختيار / الفاكهة الفائزة */}
+          <div className="absolute inset-[33%] flex flex-col items-center justify-center rounded-full border-[5px] border-primary/60 bg-[radial-gradient(circle,oklch(0.42_0.16_20),oklch(0.28_0.12_20))] text-center text-primary-foreground">
+            <span className="text-[10px] font-bold">{finished ? "الفائزة" : "مُدة الاختيار"}</span>
+            <span className="text-3xl font-extrabold leading-none">
+              {finished ? (winning?.emoji ?? "🎡") : remaining}
+            </span>
             {finished && winning && <span className="text-[10px] font-bold">×{winning.multiplier}</span>}
           </div>
         </div>
 
-        {/* لافتة الفوز الكبير */}
-        {finished && myWin > 0 && (
-          <div className="mt-3 animate-scale-in rounded-2xl gradient-gold px-4 py-3 text-center text-primary-foreground shadow-[0_0_30px_-8px_oklch(0.82_0.16_85/0.8)]">
-            <p className="text-lg font-extrabold tracking-widest">BIG WIN</p>
-            <p className="text-sm font-bold">+{myWin.toLocaleString("en-US")} كوينز</p>
-          </div>
-        )}
-
-        {finished && winning && myWin === 0 && (
-          <p className="mt-3 animate-fade-in text-center text-sm font-bold text-success">
-            🎉 {winning.label} ×{winning.multiplier}
-          </p>
-        )}
-      </div>
-
-      <div className="surface-card p-3">
-        <p className="text-xs font-bold">قيمة الرهان</p>
-        <div className="mt-2 flex flex-wrap gap-2">
+        {/* شرائح الرهان مثل الصور */}
+        <div className="mt-3 flex items-center justify-center gap-2">
           {BET_STEPS.map((n) => (
             <button
               key={n}
+              type="button"
               onClick={() => setAmount(n)}
               className={cn(
-                "rounded-full border px-3 py-1.5 text-xs",
-                amount === n ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+                "flex h-12 w-[22%] flex-col items-center justify-center rounded-2xl border-2 text-[11px] font-extrabold transition-all",
+                amount === n
+                  ? "scale-105 border-primary bg-primary/25 text-primary"
+                  : "border-sky-400/50 bg-background/60 text-muted-foreground",
               )}
             >
-              {n.toLocaleString("en-US")}
+              <Coins className="h-3.5 w-3.5 text-primary" />
+              {n >= 1000 ? `${n / 1000}K` : n}
             </button>
           ))}
-          <Input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(Math.max(1, Number(e.target.value) || 1))}
-            className="h-9 w-24 rounded-full bg-surface-2 text-center text-xs"
-          />
         </div>
-        <p className="mt-2 text-[10px] text-muted-foreground">
-          رصيدك: {(wallet.data?.coins ?? 0).toLocaleString("en-US")} كوينز
-        </p>
-      </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        {slots.map((s) => {
-          const stat = perSlot.get(s.key) ?? { total: 0, mine: 0, players: 0 };
-          const isWinner = finished && round.data?.winning_key === s.key;
-          return (
-            <button
-              key={s.key}
-              disabled={finished || place.isPending}
-              onClick={() => place.mutate(s.key)}
-              className={cn(
-                "rounded-2xl border p-3 text-start transition-colors disabled:opacity-60",
-                isWinner
-                  ? "border-success bg-success/15"
-                  : stat.mine > 0
-                    ? "border-primary bg-primary/10"
-                    : "border-border bg-surface-2",
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xl">{s.emoji}</span>
-                <span className="text-xs font-extrabold text-primary">×{s.multiplier}</span>
-              </div>
-              <p className="mt-1 text-[11px] font-bold">{s.label}</p>
-              <p className="text-[10px] text-muted-foreground">
-                الإجمالي {stat.total.toLocaleString("en-US")} · {stat.players} لاعب
-              </p>
-              {stat.mine > 0 && (
-                <p className="text-[10px] font-bold text-primary">أنت {stat.mine.toLocaleString("en-US")}</p>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {finished && leaderboard.length > 0 && (
-        <div className="surface-card animate-scale-in p-3">
-          <p className="mb-2 flex items-center gap-1 text-xs font-bold">
-            <Trophy className="h-4 w-4 text-primary" /> ترتيب أرباح الجولة
-          </p>
-          <div className="space-y-1.5">
-            {leaderboard.map(([uid, total], i) => {
-              const p = players.data?.get(uid);
-              return (
-                <div key={uid} className="flex items-center gap-2 text-xs">
-                  <span className="w-4 font-bold text-primary">{i + 1}</span>
-                  {p?.avatar_url ? (
-                    <img src={p.avatar_url} alt={p.display_name} loading="lazy" className="h-6 w-6 rounded-full object-cover" />
-                  ) : (
-                    <span className="h-6 w-6 rounded-full bg-surface-2" />
-                  )}
-                  <span className="min-w-0 flex-1 truncate">{p?.display_name ?? "لاعب"}</span>
-                  <span className="font-bold text-success">+{total.toLocaleString("en-US")}</span>
-                </div>
-              );
-            })}
+        {/* شريط الرصيد وأرباح اليوم */}
+        <div className="mt-2 flex items-center gap-2">
+          <div className="flex flex-1 items-center justify-between rounded-2xl bg-background/60 px-3 py-2">
+            <span className="text-[10px] text-muted-foreground">أرباح اليوم</span>
+            <span className="text-xs font-extrabold text-success">
+              {(todayWin ?? 0).toLocaleString("en-US")}
+            </span>
+          </div>
+          <div className="flex flex-1 items-center justify-between rounded-2xl bg-background/60 px-3 py-2">
+            <span className="text-[10px] text-muted-foreground">رصيدك</span>
+            <span className="text-xs font-extrabold text-primary">
+              {(wallet.data?.coins ?? 0).toLocaleString("en-US")}
+            </span>
           </div>
         </div>
-      )}
 
-      <div className="surface-card p-3">
-        <p className="mb-2 text-xs font-bold">سجل الجولات</p>
-        <div className="flex flex-wrap gap-1.5">
+        {/* شريط نتائج الجولات السابقة */}
+        <div className="mt-2 flex items-center gap-2 overflow-x-auto rounded-2xl bg-background/60 px-3 py-2">
+          <span className="shrink-0 text-[10px] font-bold text-muted-foreground">النتيجة</span>
           {(history.data ?? []).map((r) => {
-            const slot = (r.slots ?? []).find((s) => s.key === r.winning_key);
+            const slot = (r.slots ?? []).find((x) => x.key === r.winning_key);
             return (
-              <span key={r.id} className="rounded-lg bg-surface-2 px-2 py-1 text-[11px]">
-                {slot?.emoji ?? "؟"} <span className="text-muted-foreground">#{r.round_no}</span>
+              <span
+                key={r.id}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-surface-2 text-sm"
+                title={`الجولة ${r.round_no}`}
+              >
+                {slot?.emoji ?? "؟"}
               </span>
             );
           })}
-          {(history.data?.length ?? 0) === 0 && <span className="text-[11px] text-muted-foreground">لا جولات سابقة</span>}
+          {(history.data?.length ?? 0) === 0 && (
+            <span className="text-[10px] text-muted-foreground">لا جولات سابقة</span>
+          )}
         </div>
+
+        {/* لافتة الفوز الكبير */}
+        {finished && myWin > 0 && (
+          <div className="mt-2 animate-scale-in rounded-2xl gradient-gold px-4 py-3 text-center text-primary-foreground shadow-[0_0_30px_-8px_oklch(0.82_0.16_85/0.85)]">
+            <p className="text-xl font-extrabold tracking-[0.2em]">BIG WIN</p>
+            <p className="text-sm font-bold">+{myWin.toLocaleString("en-US")} كوينز</p>
+          </div>
+        )}
       </div>
+
+      {/* نتيجة سحب الجولة وترتيب الأرباح */}
+      {finished && (
+        <div className="surface-card animate-scale-in p-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold">نتيجة سحب الجولة {round.data?.round_no}</span>
+            <span className="font-bold text-primary">
+              {winning?.label} {winning?.emoji}
+            </span>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-center">
+            <div className="rounded-2xl bg-surface-2 py-2">
+              <p className="text-[10px] text-muted-foreground">رهانك هذه الجولة</p>
+              <p className="text-sm font-bold">{myBet.toLocaleString("en-US")}</p>
+            </div>
+            <div className="rounded-2xl bg-surface-2 py-2">
+              <p className="text-[10px] text-muted-foreground">أرباحك هذه الجولة</p>
+              <p className="text-sm font-bold text-success">{myWin.toLocaleString("en-US")}</p>
+            </div>
+          </div>
+
+          {leaderboard.length > 0 && (
+            <>
+              <p className="mb-2 mt-3 flex items-center gap-1 text-xs font-bold">
+                <Trophy className="h-4 w-4 text-primary" /> الترتيب من أرباح هذه الجولة
+              </p>
+              <div className="space-y-1.5">
+                {leaderboard.map(([uid, total], i) => {
+                  const pl = players.data?.get(uid);
+                  return (
+                    <div key={uid} className="flex items-center gap-2 text-xs">
+                      <span className="w-4 font-bold text-primary">{i + 1}</span>
+                      {pl?.avatar_url ? (
+                        <img src={pl.avatar_url} alt={pl.display_name} loading="lazy" className="h-7 w-7 rounded-full object-cover" />
+                      ) : (
+                        <span className="h-7 w-7 rounded-full bg-surface-2" />
+                      )}
+                      <span className="min-w-0 flex-1 truncate">{pl?.display_name ?? "لاعب"}</span>
+                      <span className="font-bold text-success">+{total.toLocaleString("en-US")}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
