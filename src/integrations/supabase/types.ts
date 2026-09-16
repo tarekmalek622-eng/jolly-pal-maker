@@ -1150,6 +1150,27 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      remove_friend: { Args: { _friend_id: string }; Returns: boolean }
+      respond_friend_request: {
+        Args: { _accept: boolean; _request_id: string }
+        Returns: boolean
+      }
+      send_friend_request: {
+        Args: { _addressee_id: string }
+        Returns: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["friend_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "friend_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       send_gift: {
         Args: {
           _gift_id: string
