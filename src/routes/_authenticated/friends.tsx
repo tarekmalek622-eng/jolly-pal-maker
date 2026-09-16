@@ -197,7 +197,7 @@ function FriendsPage() {
               const incomingRelation = row.status === "pending" && row.partner_id === userId;
               const duration = relationDurationLabel(row.started_at);
               return (
-                <div key={row.id} className="surface-card p-3">
+                <div key={row.id} className="rounded-2xl">
                   <PersonRow person={person}>
                     {incomingRelation ? (
                       <>
