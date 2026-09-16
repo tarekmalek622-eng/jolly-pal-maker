@@ -59,6 +59,7 @@ type Person = {
   public_id: string;
   display_name: string;
   avatar_url: string | null;
+  frame_url: string | null;
   vip_level: number;
   level: number;
 };
