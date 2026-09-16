@@ -25,6 +25,7 @@ import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { GiftSheet, type GiftTarget } from "@/components/GiftSheet";
 import { DominoGame } from "@/components/DominoGame";
+import { LiveWheel } from "@/components/LiveWheel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
