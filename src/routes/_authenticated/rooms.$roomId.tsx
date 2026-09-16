@@ -80,6 +80,8 @@ function RoomPage() {
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [dominoOpen, setDominoOpen] = useState(false);
   const [roomGame, setRoomGame] = useState<"wheel" | "domino">("wheel");
+  const [seatSheet, setSeatSheet] = useState<string | null>(null);
+  const [giftTargetId, setGiftTargetId] = useState<string | null>(null);
 
   const room = useQuery({
     queryKey: ["room", roomId],
