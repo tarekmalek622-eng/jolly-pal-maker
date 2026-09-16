@@ -230,3 +230,56 @@
 @utility animate-float {
   animation: float-soft 4s ease-in-out infinite;
 }
+
+/* ===== Room frames ===== */
+@keyframes frame-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes frame-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@utility room-frame {
+  position: relative;
+  border-radius: 1.25rem;
+  padding: 3px;
+  isolation: isolate;
+}
+
+@utility room-frame-normal {
+  background: linear-gradient(140deg, oklch(0.45 0.03 275), oklch(0.32 0.02 275));
+}
+
+@utility room-frame-vip {
+  background: linear-gradient(135deg, oklch(0.82 0.17 320), oklch(0.6 0.19 275));
+  box-shadow: 0 0 14px oklch(0.7 0.18 300 / 0.45);
+}
+
+@utility room-frame-rare {
+  background: linear-gradient(135deg, oklch(0.85 0.14 195), oklch(0.6 0.15 235), oklch(0.8 0.12 165));
+  box-shadow: 0 0 14px oklch(0.75 0.14 200 / 0.4);
+}
+
+@utility room-frame-featured {
+  background: linear-gradient(135deg, oklch(0.92 0.13 92), oklch(0.76 0.17 60), oklch(0.9 0.1 100));
+  box-shadow: 0 0 16px oklch(0.85 0.15 80 / 0.45);
+}
+
+@utility room-frame-animated {
+  background: conic-gradient(from 0deg, oklch(0.9 0.13 92), oklch(0.72 0.19 8), oklch(0.78 0.17 320), oklch(0.8 0.14 200), oklch(0.9 0.13 92));
+  animation: frame-spin 6s linear infinite;
+}
+
+@utility room-frame-legendary {
+  background: conic-gradient(from 0deg, oklch(0.95 0.12 100), oklch(0.78 0.2 30), oklch(0.6 0.2 330), oklch(0.95 0.12 100));
+  animation: frame-spin 4.5s linear infinite;
+  box-shadow: 0 0 22px oklch(0.85 0.16 70 / 0.5);
+}
+
+@utility room-frame-inner {
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(1.25rem - 3px);
+  background: var(--gradient-surface);
+}
