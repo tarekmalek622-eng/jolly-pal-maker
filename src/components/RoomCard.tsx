@@ -75,7 +75,7 @@ export function RoomCard({
     <Link to="/rooms/$roomId" params={{ roomId: room.id }} className="block">
       <div className={cn("room-frame", FRAME_CLASS[tier])}>
         <div className="room-frame-inner">
-          <div className="relative h-36 w-full gradient-hero">
+          <div className="relative aspect-[4/3] w-full gradient-hero sm:aspect-[16/10]">
             {img && <img src={img} alt={room.name} className="h-full w-full object-cover" loading="lazy" />}
             <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/25 to-transparent" />
 
@@ -96,13 +96,13 @@ export function RoomCard({
                     live ? "animate-pulse bg-success" : "bg-muted-foreground/60",
                   )}
                 />
-                <p className="truncate text-base font-black">{room.name}</p>
+                <p className="truncate text-sm font-black">{room.name}</p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-2 p-3">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+          <div className="space-y-1.5 p-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
               <span className="font-bold text-foreground/80">ID: {room.room_code}</span>
               <span className="flex items-center gap-1">
                 <Users className="h-3 w-3" /> {room.member_count}
@@ -112,7 +112,7 @@ export function RoomCard({
               </span>
               <span className={live ? "text-success" : ""}>{live ? "نشطة" : "هادئة"}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
               <Crown className="h-3 w-3 text-primary" />
               <span className="truncate">صاحب الغرفة: {ownerName || "—"}</span>
             </div>
