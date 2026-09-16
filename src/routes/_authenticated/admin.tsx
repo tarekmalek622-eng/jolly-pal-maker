@@ -78,6 +78,11 @@ function AdminPage() {
 
       {tab === "users" && <UsersTab />}
       {tab === "rooms" && <RoomsTab />}
+      {tab === "gifts" && <GiftsTab />}
+      {tab === "store" && <StoreTab />}
+      {tab === "vip" && <VipTab />}
+      {tab === "coins" && <CoinsTab />}
+      {tab === "games" && <GamesTab />}
       {tab === "reports" && <ReportsTab />}
       {tab === "logs" && <LogsTab />}
     </AppShell>
