@@ -298,12 +298,7 @@ function RoomPage() {
       return;
     }
     setText("");
-    const { error } = await supabase.from("room_messages").insert({
-      room_id: roomId,
-      user_id: userId,
-      body,
-      kind: "text",
-    });
+    const { error } = await supabase.rpc("send_room_message", { _room_id: roomId, _body: body });
     if (error) {
       toast.error("تعذر إرسال الرسالة");
       setText(body);

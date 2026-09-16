@@ -84,7 +84,7 @@ function ChatPage() {
 
   useEffect(() => {
     if (!userId) return;
-    void supabase.from("direct_messages").update({ read_at: new Date().toISOString() }).eq("sender_id", otherId).eq("receiver_id", userId).is("read_at", null);
+    void supabase.rpc("mark_direct_messages_read", { _sender_id: otherId });
   }, [userId, otherId, messages.data?.length]);
 
   const deleteMessage = useMutation({
