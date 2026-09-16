@@ -22,6 +22,7 @@ import {
   adminSetActive,
   adminDeleteQuizQuestion,
   adminSetGameSettings,
+  adminSetRelationshipSettings,
   adminSetDominoSettings,
   adminReviewCoinPurchase,
   adminSetPaymentAccounts,
@@ -1128,6 +1129,72 @@ function GamesTab() {
       </Button>
 
       <DominoSettings />
+      <RelationshipSettings />
+    </div>
+  );
+}
+
+type RelationFlags = { couple: boolean; soulmate: boolean; favorite_friend: boolean; close_friend: boolean };
+
+const RELATION_DEFAULTS: RelationFlags = { couple: true, soulmate: true, favorite_friend: true, close_friend: true };
+
+function RelationshipSettings() {
+  const relationLabels: Record<keyof RelationFlags, string> = {
+    couple: "ثنائي مميز",
+    soulmate: "توأم روح",
+    favorite_friend: "صديق مفضل",
+    close_friend: "صديق مقرب",
+  };
+  const query = useQuery({
+    queryKey: ["admin-relationship-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("app_settings").select("value").eq("key", "relationships").maybeSingle();
+      if (error) throw error;
+      return { ...RELATION_DEFAULTS, ...((data?.value as object) ?? {}) } as RelationFlags;
+    },
+  });
+  const [draft, setDraft] = useState<RelationFlags | null>(null);
+  const state = draft ?? query.data ?? null;
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!state) return;
+      await adminSetRelationshipSettings({ data: state });
+    },
+    onSuccess: () => {
+      toast.success("تم حفظ إعدادات العلاقات");
+      setDraft(null);
+      void query.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  if (!state) return null;
+
+  return (
+    <div className="rounded-2xl border border-border p-3">
+      <p className="mb-2 text-sm font-bold">العلاقات الاجتماعية</p>
+      <div className="grid grid-cols-2 gap-2">
+        {(Object.keys(relationLabels) as (keyof RelationFlags)[]).map((k) => (
+          <button
+            key={k}
+            onClick={() => setDraft({ ...state, [k]: !state[k] })}
+            className={cn(
+              "rounded-xl border px-3 py-2 text-xs",
+              state[k] ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+            )}
+          >
+            {relationLabels[k]} {state[k] ? "· مفعّلة" : "· موقوفة"}
+          </button>
+        ))}
+      </div>
+      <Button
+        disabled={save.isPending}
+        onClick={() => save.mutate()}
+        className="mt-3 h-10 w-full rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
+      >
+        حفظ إعدادات العلاقات
+      </Button>
     </div>
   );
 }

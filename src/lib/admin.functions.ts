@@ -342,6 +342,29 @@ export const adminSetGameSettings = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminSetRelationshipSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        couple: z.boolean(),
+        soulmate: z.boolean(),
+        favorite_friend: z.boolean(),
+        close_friend: z.boolean(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("app_settings")
+      .upsert([{ key: "relationships", value: data }] as never);
+    if (error) throw new Error(error.message);
+    await log(context.userId, "settings", "update_relationship_settings", "", JSON.stringify(data));
+    return { ok: true };
+  });
+
 export const adminSetUserRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>

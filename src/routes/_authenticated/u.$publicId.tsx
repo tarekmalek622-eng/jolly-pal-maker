@@ -2,7 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Ban, Crown, Flag, MessageCircle, UserPlus } from "lucide-react";
+import { ArrowRight, Ban, Crown, Flag, HeartHandshake, MessageCircle, UserPlus } from "lucide-react";
+import {
+  RELATION_LABELS,
+  RELATION_STYLES,
+  RELATION_TYPES,
+  requestRelationship,
+  type RelationType,
+} from "@/lib/relationships";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -30,6 +37,7 @@ function UserPage() {
   const navigate = useNavigate();
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
+  const [relationOpen, setRelationOpen] = useState(false);
 
   const profile = useQuery({
     queryKey: ["profile-public", publicId],
@@ -98,6 +106,18 @@ function UserPage() {
     },
     onSuccess: () => toast.success("تم حجب المستخدم"),
     onError: () => toast.error("تعذر الحجب"),
+  });
+
+  const askRelation = useMutation({
+    mutationFn: async (type: RelationType) => {
+      if (!target) return;
+      await requestRelationship(target.id, type);
+    },
+    onSuccess: () => {
+      toast.success("تم إرسال طلب العلاقة");
+      setRelationOpen(false);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر إرسال الطلب"),
   });
 
   const report = useMutation({
@@ -180,6 +200,26 @@ function UserPage() {
               <Flag className="me-2 h-4 w-4" /> إبلاغ
             </Button>
           </div>
+
+          <Button variant="outline" onClick={() => setRelationOpen((v) => !v)} className="mt-3 h-12 w-full rounded-2xl">
+            <HeartHandshake className="me-2 h-4 w-4" /> طلب علاقة اجتماعية
+          </Button>
+
+          {relationOpen && (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {RELATION_TYPES.map((type) => (
+                <Button
+                  key={type}
+                  variant="outline"
+                  disabled={askRelation.isPending}
+                  onClick={() => askRelation.mutate(type)}
+                  className={`h-12 rounded-2xl border text-xs ${RELATION_STYLES[type]}`}
+                >
+                  {RELATION_LABELS[type]}
+                </Button>
+              ))}
+            </div>
+          )}
 
           {reporting && (
             <div className="mt-4 space-y-3">
