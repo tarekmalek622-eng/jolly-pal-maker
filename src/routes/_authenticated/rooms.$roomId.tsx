@@ -9,6 +9,7 @@ import {
   Check,
   Gift,
   Hand,
+  LayoutGrid,
   Lock,
   LogOut,
   Mic,
