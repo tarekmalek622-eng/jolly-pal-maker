@@ -447,3 +447,82 @@ export const adminSetDominoSettings = createServerFn({ method: "POST" })
     await log(context.userId, "domino", "update_domino_settings", "", JSON.stringify(data));
     return { ok: true };
   });
+
+/* ---------------- طلبات شراء الكوينز (تحويل محلي) ---------------- */
+
+export const adminReviewCoinPurchase = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        approve: z.boolean(),
+        note: z.string().trim().max(300).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    if (data.approve) {
+      const client = supabaseAdmin as unknown as {
+        rpc: (f: string, a: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+      };
+      const { error } = await client.rpc("approve_coin_purchase", { _request_id: data.id, _admin: context.userId });
+      if (error) throw new Error(error.message);
+      await log(context.userId, data.id, "approve_coin_purchase", "pending", "approved");
+      return { ok: true };
+    }
+
+    const { data: row, error: readError } = await supabaseAdmin
+      .from("coin_purchase_requests")
+      .select("id, user_id, status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readError) throw new Error(readError.message);
+    if (!row) throw new Error("الطلب غير موجود");
+    if (row.status !== "pending") throw new Error("تمت مراجعة الطلب بالفعل");
+
+    const { error } = await supabaseAdmin
+      .from("coin_purchase_requests")
+      .update({
+        status: "rejected",
+        reviewed_by: context.userId,
+        reviewed_at: new Date().toISOString(),
+        note: data.note ?? null,
+      } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin.from("notifications").insert({
+      user_id: row.user_id,
+      kind: "wallet",
+      title: "تم رفض طلب الشراء",
+      body: data.note ?? "لم يتم التحقق من التحويل. تواصل مع الدعم.",
+    } as never);
+    await log(context.userId, data.id, "reject_coin_purchase", "pending", "rejected");
+    return { ok: true };
+  });
+
+export const adminSetPaymentAccounts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        vodafone_cash: z.string().trim().max(40),
+        instapay: z.string().trim().max(80),
+        instructions: z.string().trim().max(400),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("app_settings")
+      .upsert([{ key: "payment_accounts", value: data }] as never);
+    if (error) throw new Error(error.message);
+    await log(context.userId, "payment_accounts", "update_payment_accounts", "", JSON.stringify(data));
+    return { ok: true };
+  });
