@@ -44,6 +44,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const [amount, setAmount] = useState(100);
   const [now, setNow] = useState(() => Date.now());
   const [highlight, setHighlight] = useState(0);
+  const [spinning, setSpinning] = useState(false);
   const lastSettled = useRef<string | null>(null);
 
   const round = useQuery({
@@ -141,29 +142,36 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     return () => window.clearInterval(t);
   }, [finished, slots.length]);
 
-  // عند تسوية الجولة من السيرفر: يتباطأ المؤشر ثم يتوقف على الفائزة
+  // عند تسوية الجولة: المؤشر يلف على كل الفواكه 5 ثوانٍ ثم يتوقف على الفائزة
   useEffect(() => {
     const data = round.data;
     if (!data || data.status !== "finished" || !data.winning_key) return;
     if (lastSettled.current === data.id) return;
     lastSettled.current = data.id;
-    const target = data.slots.findIndex((s) => s.key === data.winning_key);
     const count = Math.max(1, data.slots.length);
+    const target = Math.max(0, data.slots.findIndex((s) => s.key === data.winning_key));
+    const laps = 3;
+    const steps = count * laps + ((target - highlight + count) % count);
+    // توزيع زمني بتباطؤ تدريجي يجمع 5000 مللي ثانية بالضبط
+    const weights = Array.from({ length: steps }, (_, i) => 1 + Math.pow(i / Math.max(1, steps - 1), 2.6) * 9);
+    const sum = weights.reduce((a, b) => a + b, 0);
+    const delays = weights.map((w) => (w / sum) * 5000);
+    setSpinning(true);
     let step = 0;
-    const total = count * 2 + ((target - highlight + count) % count);
     let timer = 0;
     const tick = () => {
-      step += 1;
       setHighlight((h) => (h + 1) % count);
-      if (step < total) {
-        timer = window.setTimeout(tick, 90 + step * 12);
+      step += 1;
+      if (step < steps) {
+        timer = window.setTimeout(tick, delays[step] ?? 120);
       } else {
-        setHighlight(target < 0 ? 0 : target);
+        setHighlight(target);
+        setSpinning(false);
+        refreshMoney();
+        void history.refetch();
       }
     };
-    timer = window.setTimeout(tick, 90);
-    refreshMoney();
-    void history.refetch();
+    timer = window.setTimeout(tick, delays[0] ?? 120);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round.data, refreshMoney, history]);
