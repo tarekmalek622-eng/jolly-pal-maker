@@ -1054,6 +1054,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      settle_game: {
+        Args: {
+          _bet: number
+          _label: string
+          _payout: number
+          _user_id: string
+        }
+        Returns: number
+      }
       setup_account: {
         Args: {
           _avatar_url: string
