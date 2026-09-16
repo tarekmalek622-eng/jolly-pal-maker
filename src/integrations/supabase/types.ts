@@ -1155,6 +1155,25 @@ export type Database = {
         Args: { _accept: boolean; _request_id: string }
         Returns: boolean
       }
+      send_direct_gift: {
+        Args: { _gift_id: string; _quantity?: number; _receiver_id: string }
+        Returns: {
+          created_at: string
+          gift_id: string
+          id: string
+          quantity: number
+          receiver_id: string
+          room_id: string | null
+          sender_id: string
+          total_price: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "gift_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       send_friend_request: {
         Args: { _addressee_id: string }
         Returns: {
