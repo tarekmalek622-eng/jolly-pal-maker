@@ -93,10 +93,22 @@ function WalletPage() {
       </div>
 
       <section className="mt-6">
-        <h2 className="mb-3 text-sm font-bold">حزم الشحن</h2>
+        <h2 className="mb-1 text-sm font-bold">حزم الشحن</h2>
+        <p className="mb-3 text-[11px] text-muted-foreground">
+          حوّل المبلغ على {accounts.vodafone_cash ? `فودافون كاش ${accounts.vodafone_cash}` : "فودافون كاش"}
+          {accounts.instapay ? ` أو InstaPay ${accounts.instapay}` : " أو InstaPay"}، ثم أرسل رقم عملية التحويل ليتم
+          تأكيد الشحن من الإدارة.
+        </p>
         <div className="grid grid-cols-2 gap-3">
           {(packages.data ?? []).map((p) => (
-            <div key={p.id} className="surface-card p-4">
+            <button
+              key={p.id}
+              onClick={() => {
+                setSelected({ id: p.id, coins: p.coins + (p.bonus_coins ?? 0), price: p.price_cents, currency: p.currency });
+                setReference("");
+              }}
+              className="surface-card p-4 text-start"
+            >
               <p className="text-lg font-black text-primary">{p.coins.toLocaleString("en-US")}</p>
               <p className="text-[11px] text-muted-foreground">كوينز</p>
               {p.bonus_coins > 0 && (
@@ -105,13 +117,100 @@ function WalletPage() {
               <p className="mt-2 text-sm font-bold">
                 {(p.price_cents / 100).toFixed(2)} {p.currency}
               </p>
-              <p className="mt-2 text-[10px] text-muted-foreground">
-                الشراء متاح عند تفعيل بوابة الدفع من الإدارة
-              </p>
-            </div>
+              <p className="mt-2 text-[10px] text-primary">اطلب الشحن</p>
+            </button>
           ))}
         </div>
       </section>
+
+      {(requests.data ?? []).length > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-3 text-sm font-bold">طلبات الشحن</h2>
+          <div className="space-y-2">
+            {requests.data?.map((r) => (
+              <div key={r.id} className="surface-card flex items-center gap-3 p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold">{r.coins.toLocaleString("en-US")} كوينز</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {METHOD_LABEL[r.method] ?? r.method} · {(r.amount_cents / 100).toFixed(2)} {r.currency} ·{" "}
+                    {new Date(r.created_at).toLocaleString("ar")}
+                  </p>
+                  {r.note ? <p className="text-[11px] text-muted-foreground">{r.note}</p> : null}
+                </div>
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full px-2 py-1 text-[10px] font-bold",
+                    r.status === "approved"
+                      ? "bg-success/15 text-success"
+                      : r.status === "rejected"
+                        ? "bg-destructive/15 text-destructive"
+                        : "bg-surface-2 text-muted-foreground",
+                  )}
+                >
+                  {REQUEST_STATUS[r.status] ?? r.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <Sheet open={selected !== null} onOpenChange={(open) => !open && setSelected(null)}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle>طلب شحن كوينز</SheetTitle>
+          </SheetHeader>
+          {selected && (
+            <div className="space-y-3 pb-6">
+              <div className="surface-card p-3 text-sm">
+                <p className="font-bold text-primary">{selected.coins.toLocaleString("en-US")} كوينز</p>
+                <p className="text-[11px] text-muted-foreground">
+                  المبلغ المطلوب: {(selected.price / 100).toFixed(2)} {selected.currency}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {(["vodafone_cash", "instapay"] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setMethod(m)}
+                    className={cn(
+                      "rounded-xl border px-3 py-2 text-xs",
+                      method === m
+                        ? "border-primary bg-primary/15 text-primary"
+                        : "border-border bg-surface-2 text-muted-foreground",
+                    )}
+                  >
+                    {METHOD_LABEL[m]}
+                  </button>
+                ))}
+              </div>
+              <p className="rounded-xl bg-surface-2 p-3 text-[11px] text-muted-foreground">
+                {method === "vodafone_cash"
+                  ? accounts.vodafone_cash
+                    ? `حوّل على رقم فودافون كاش: ${accounts.vodafone_cash}`
+                    : "لم تُضف الإدارة رقم فودافون كاش بعد"
+                  : accounts.instapay
+                    ? `حوّل على InstaPay: ${accounts.instapay}`
+                    : "لم تُضف الإدارة حساب InstaPay بعد"}
+                {accounts.instructions ? ` — ${accounts.instructions}` : ""}
+              </p>
+              <Input
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+                placeholder="رقم عملية التحويل أو الرقم المُحوّل منه"
+                className="h-12 rounded-2xl bg-surface-2"
+              />
+              <Button
+                disabled={submit.isPending || reference.trim().length < 4}
+                onClick={() => submit.mutate()}
+                className="h-12 w-full rounded-2xl gradient-gold font-bold text-primary-foreground"
+              >
+                {submit.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "إرسال الطلب للإدارة"}
+              </Button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <section className="mt-6">
         <h2 className="mb-3 text-sm font-bold">سجل المعاملات</h2>
