@@ -214,25 +214,7 @@ function RegisterForm() {
 
     setSubmitting(true);
     try {
-      let session = (await supabase.auth.getSession()).data.session;
-      if (!session) {
-        const creds = readDeviceCredentials() ?? createDeviceCredentials();
-        const signIn = await supabase.auth.signInWithPassword(creds);
-        if (signIn.error) {
-          const fresh = createDeviceCredentials();
-          const signUp = await supabase.auth.signUp({ email: fresh.email, password: fresh.password });
-          if (signUp.error) throw signUp.error;
-          session = signUp.data.session;
-          if (!session) {
-            const retry = await supabase.auth.signInWithPassword(fresh);
-            if (retry.error) throw retry.error;
-            session = retry.data.session;
-          }
-        } else {
-          session = signIn.data.session;
-        }
-      }
-      if (!session) throw new Error("لم نتمكن من إنشاء الجلسة");
+      const session = await ensureDeviceSession();
 
       const avatarPath = await uploadUserImage("avatars", session.user.id, photo);
 
