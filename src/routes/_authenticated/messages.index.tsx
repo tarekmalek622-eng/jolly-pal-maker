@@ -7,7 +7,7 @@ import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useSupabaseSession } from "@/hooks/use-session";
 
-export const Route = createFileRoute("/_authenticated/messages")({
+export const Route = createFileRoute("/_authenticated/messages/")({
   head: () => ({
     meta: [
       { title: "الرسائل — صوتك" },

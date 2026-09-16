@@ -15,7 +15,7 @@ import { useSupabaseSession } from "@/hooks/use-session";
 import { uploadUserImage } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/rooms")({
+export const Route = createFileRoute("/_authenticated/rooms/")({
   head: () => ({
     meta: [
       { title: "الغرف الصوتية — صوتك" },
