@@ -244,7 +244,7 @@ async function rpcAdmin<T = void>(fn: string, args: Record<string, unknown>): Pr
   };
   const { data, error } = await client.rpc(fn, args);
   if (error) throw new Error(error.message);
-  return data;
+  return data as T;
 }
 
 async function assertDominoEnabled() {
@@ -261,7 +261,7 @@ export const dominoJoin = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertDominoEnabled();
-    const gameId = await rpcAdmin("domino_join", {
+    const gameId = await rpcAdmin<string>("domino_join", {
       _uid: context.userId,
       _bet: data.bet,
       _room_id: data.roomId ?? null,
@@ -277,7 +277,7 @@ export const dominoMove = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const state = await rpcAdmin("domino_move", {
+    const state = await rpcAdmin<DominoState>("domino_move", {
       _uid: context.userId,
       _game_id: data.gameId,
       _tile: data.tile,
