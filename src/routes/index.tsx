@@ -337,17 +337,26 @@ function PhoneAuth({
 
       <div className="mt-5 space-y-4">
         <div className="space-y-2">
+          <Label>الدولة</Label>
+          <CountryPicker value={countryCode} onSelect={(c) => setCountryCode(c.code)} />
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="phone">رقم الهاتف</Label>
-          <Input
-            id="phone"
-            type="tel"
-            inputMode="numeric"
-            dir="ltr"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="01xxxxxxxxx"
-            className="h-12 rounded-2xl bg-surface text-left"
-          />
+          <div className="flex items-center gap-2" dir="ltr">
+            <span className="flex h-12 min-w-16 items-center justify-center rounded-2xl border border-border bg-surface-2 px-3 text-sm font-semibold text-primary">
+              +{dial}
+            </span>
+            <Input
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              dir="ltr"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="1xxxxxxxxx"
+              className="h-12 flex-1 rounded-2xl bg-surface text-left"
+            />
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">كلمة السر</Label>
