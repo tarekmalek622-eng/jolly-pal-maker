@@ -16,6 +16,7 @@ import {
   MicOff,
   Send,
   Settings,
+  Trophy,
   Volume2,
   VolumeX,
   X,
@@ -25,6 +26,7 @@ import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { GiftSheet, type GiftTarget } from "@/components/GiftSheet";
 import { GiftOverlay, type GiftMediaRow, type GiftShowEvent } from "@/components/GiftMedia";
+import { RoomSupporters } from "@/components/RoomSupporters";
 import { DominoGame } from "@/components/DominoGame";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Button } from "@/components/ui/button";
@@ -81,6 +83,7 @@ function RoomPage() {
   const [dominoOpen, setDominoOpen] = useState(false);
   const [roomGame, setRoomGame] = useState<"wheel" | "domino">("wheel");
   const [seatSheet, setSeatSheet] = useState<string | null>(null);
+  const [cupOpen, setCupOpen] = useState(false);
   const [giftTargetId, setGiftTargetId] = useState<string | null>(null);
 
   const room = useQuery({
@@ -427,6 +430,9 @@ function RoomPage() {
                           : "غير متصل"}
               </p>
             </div>
+            <button onClick={() => setCupOpen(true)} className="p-1" aria-label="كأس الغرفة">
+              <Trophy className="h-5 w-5" />
+            </button>
             <button onClick={() => setDominoOpen(true)} className="p-1" aria-label="لعبة الدومينو">
               <LayoutGrid className="h-5 w-5" />
             </button>
@@ -566,6 +572,8 @@ function RoomPage() {
           </Button>
         </div>
       </div>
+
+      <RoomSupporters roomId={roomId} open={cupOpen} onOpenChange={setCupOpen} />
 
       <GiftSheet
         key={giftTargetId ?? "all"}

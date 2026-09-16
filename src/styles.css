@@ -231,6 +231,32 @@
   color: transparent;
 }
 
+/* اسم متحرك ملوّن لأعضاء VIP 4 و VIP 5 */
+@utility text-vip-flow {
+  background: linear-gradient(
+    90deg,
+    oklch(0.88 0.16 85),
+    oklch(0.75 0.2 25),
+    oklch(0.72 0.19 330),
+    oklch(0.78 0.16 200),
+    oklch(0.88 0.16 85)
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: vip-flow 4s linear infinite;
+}
+
+@keyframes vip-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 300% 50%;
+  }
+}
+
 @utility safe-bottom {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
 }

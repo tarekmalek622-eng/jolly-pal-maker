@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
+import { VipName, VipId } from "@/components/VipName";
+import { VipCvipSheet } from "@/components/VipCvipSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +42,7 @@ function MePage() {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [saving, setSaving] = useState(false);
+  const [privSheet, setPrivSheet] = useState<"vip" | "cvip" | null>(null);
 
   const counts = useQuery({
     queryKey: ["social-counts", userId],
@@ -165,8 +168,12 @@ function MePage() {
             }}
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-lg font-bold">{p?.display_name ?? "..."}</p>
-            <p className="text-[11px] text-muted-foreground">ID: {p?.public_id ?? "—"}</p>
+            <VipName
+              name={p?.display_name ?? "..."}
+              vipLevel={p?.vip_level ?? 0}
+              className="block text-lg"
+            />
+            <VipId publicId={p?.public_id ?? "—"} vipLevel={p?.vip_level ?? 0} />
             <div className="mt-1 flex flex-wrap gap-1.5">
               <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px]">مستوى {p?.level ?? 1}</span>
               {(p?.vip_level ?? 0) > 0 && (
@@ -207,6 +214,54 @@ function MePage() {
             </div>
           ))}
         </div>
+
+        {/* تفعيل مميزات VIP و CVIP */}
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setPrivSheet("vip")}
+            className={cn(
+              "flex items-center gap-2 rounded-2xl border p-3 text-start transition-transform active:scale-[0.98]",
+              `vip-tier-${Math.max(1, Math.min(5, p?.vip_level ?? 1))}`,
+            )}
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-background/30">
+              <Crown className="h-4.5 w-4.5 text-primary" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-xs font-bold">VIP</span>
+              <span className="block text-[10px] text-muted-foreground">
+                {(p?.vip_level ?? 0) > 0 ? `مستوى ${p?.vip_level} · إدارة` : "تفعيل المميزات"}
+              </span>
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setPrivSheet("cvip")}
+            className="cvip-showcase flex items-center gap-2 p-3 text-start transition-transform active:scale-[0.98]"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-background/30">
+              <Sparkles className="h-4.5 w-4.5 text-accent" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-xs font-bold">CVIP</span>
+              <span className="block text-[10px] text-muted-foreground">
+                {p?.is_cvip ? "مفعّل · إدارة" : "تفعيل المميزات"}
+              </span>
+            </span>
+          </button>
+        </div>
+
+        <VipCvipSheet
+          open={privSheet !== null}
+          onOpenChange={(v) => !v && setPrivSheet(null)}
+          mode={privSheet ?? "vip"}
+          currentVip={p?.vip_level ?? 0}
+          isCvip={Boolean(p?.is_cvip)}
+          cvipExpiresAt={(p as { cvip_expires_at?: string | null } | undefined)?.cvip_expires_at ?? null}
+        />
+
+
 
         {p?.bio && <p className="mt-4 text-sm text-muted-foreground">{p.bio}</p>}
 
