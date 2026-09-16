@@ -201,6 +201,26 @@ function UserPage() {
             </Button>
           </div>
 
+          <Button variant="outline" onClick={() => setRelationOpen((v) => !v)} className="mt-3 h-12 w-full rounded-2xl">
+            <HeartHandshake className="me-2 h-4 w-4" /> طلب علاقة اجتماعية
+          </Button>
+
+          {relationOpen && (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {RELATION_TYPES.map((type) => (
+                <Button
+                  key={type}
+                  variant="outline"
+                  disabled={askRelation.isPending}
+                  onClick={() => askRelation.mutate(type)}
+                  className={`h-12 rounded-2xl border text-xs ${RELATION_STYLES[type]}`}
+                >
+                  {RELATION_LABELS[type]}
+                </Button>
+              ))}
+            </div>
+          )}
+
           {reporting && (
             <div className="mt-4 space-y-3">
               <Textarea
