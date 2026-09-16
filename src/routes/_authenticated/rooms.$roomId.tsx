@@ -197,7 +197,18 @@ function RoomPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "room_mics" }, () => void mics.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "room_members" }, () => void members.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "mic_requests" }, () => void requests.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions" }, () => void messages.refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions" }, (payload) => {
+        void messages.refetch();
+        const row = payload.new as {
+          id?: string;
+          room_id?: string | null;
+          gift_id?: string;
+          sender_id?: string;
+          receiver_id?: string;
+          quantity?: number;
+        } | null;
+        if (payload.eventType === "INSERT" && row?.room_id === roomId) void enqueueGift(row);
+      })
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
