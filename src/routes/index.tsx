@@ -273,8 +273,8 @@ function PhoneAuth({
     }
     setBusy(true);
     try {
-      const email = phoneToIdentifier(phone);
       if (mode === "signup") {
+        const email = internationalIdentifier(dial, phone);
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) {
           if (/already/i.test(error.message)) {
@@ -284,14 +284,27 @@ function PhoneAuth({
           }
           throw error;
         }
-      }
-      const signIn = await supabase.auth.signInWithPassword({ email, password });
-      if (signIn.error) {
-        toast.error("الرقم أو كلمة السر غير صحيحة");
+        const signIn = await supabase.auth.signInWithPassword({ email, password });
+        if (signIn.error) {
+          toast.error("تم إنشاء الحساب، سجّل الدخول الآن");
+          setMode("login");
+          return;
+        }
+        rememberPhone(phone);
+        await afterSession(signIn.data.user.id);
         return;
       }
-      rememberPhone(phone);
-      await afterSession(signIn.data.user.id);
+
+      // الدخول: نجرب الصيغة الدولية ثم الصيغة القديمة (بدون مفتاح الدولة)
+      for (const email of identifierCandidates(dial, phone)) {
+        const signIn = await supabase.auth.signInWithPassword({ email, password });
+        if (!signIn.error) {
+          rememberPhone(phone);
+          await afterSession(signIn.data.user.id);
+          return;
+        }
+      }
+      toast.error("الرقم أو كلمة السر غير صحيحة");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذر إتمام العملية");
     } finally {
