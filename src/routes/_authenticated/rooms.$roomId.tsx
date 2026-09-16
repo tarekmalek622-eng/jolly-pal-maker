@@ -62,6 +62,7 @@ type MicSeat = {
   user_id: string | null;
   is_locked: boolean;
   is_muted: boolean;
+  decoration_url: string | null;
 };
 
 type Person = {
@@ -105,7 +106,7 @@ function RoomPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("room_mics")
-        .select("id, seat_index, user_id, is_locked, is_muted")
+        .select("id, seat_index, user_id, is_locked, is_muted, decoration_url")
         .eq("room_id", roomId)
         .order("seat_index", { ascending: true });
       if (error) throw error;
