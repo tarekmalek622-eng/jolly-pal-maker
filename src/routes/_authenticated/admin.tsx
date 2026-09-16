@@ -20,6 +20,7 @@ import {
   adminUpsertCoinPackage,
   adminSetActive,
   adminSetGameSettings,
+  adminSetUserRole,
 } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 
@@ -100,9 +101,46 @@ function AdminPage() {
   );
 }
 
+const ROLES = [
+  { key: "admin", label: "إدارة" },
+  { key: "moderator", label: "مشرف" },
+  { key: "host", label: "مضيف" },
+] as const;
+
 function UsersTab() {
   const [term, setTerm] = useState("");
   const [amounts, setAmounts] = useState<Record<string, string>>({});
+  const { userId } = useSupabaseSession();
+
+  const isSuper = useQuery({
+    queryKey: ["is-super-admin", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("is_super_admin", { _user_id: userId! });
+      if (error) throw error;
+      return data === true;
+    },
+  });
+
+  const roles = useQuery({
+    queryKey: ["admin-roles"],
+    enabled: isSuper.data === true,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("user_roles").select("user_id, role");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const setRole = useMutation({
+    mutationFn: async (input: { userId: string; role: "admin" | "moderator" | "host"; grant: boolean }) =>
+      adminSetUserRole({ data: input }),
+    onSuccess: () => {
+      toast.success("تم تحديث الصلاحية");
+      void roles.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
+  });
 
   const users = useQuery({
     queryKey: ["admin-users", term],
@@ -184,6 +222,28 @@ function UsersTab() {
               تعديل الرصيد
             </Button>
           </div>
+          {isSuper.data === true && (
+            <div className="mt-2 flex gap-1">
+              {ROLES.map((r) => {
+                const has = (roles.data ?? []).some((x) => x.user_id === u.id && x.role === r.key);
+                return (
+                  <button
+                    key={r.key}
+                    disabled={setRole.isPending}
+                    onClick={() => setRole.mutate({ userId: u.id, role: r.key, grant: !has })}
+                    className={cn(
+                      "flex-1 rounded-xl border px-2 py-2 text-[10px]",
+                      has
+                        ? "border-primary bg-primary/15 text-primary"
+                        : "border-border bg-surface-2 text-muted-foreground",
+                    )}
+                  >
+                    {r.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       ))}
     </div>
