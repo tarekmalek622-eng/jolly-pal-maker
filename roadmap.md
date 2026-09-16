@@ -7,3 +7,11 @@
 - [x] Complete games and room integration (Domino multiplayer + room button; engine + payouts verified)
 - [x] Complete admin management and permissions (users/rooms/gifts/store/VIP/CVIP/packages/games/quiz/reports/roles/logs)
 - [x] Audit backend, realtime, voice, transactions, and mobile UI
+
+## جولة الدومينو والمتجر (مكتملة)
+- [x] مباراة دومينو حقيقية بين حسابين حتى الفوز مع خصم وإرجاع الكوينز في سجل العمليات (تم التحقق: -50/-50 دخول و+100 للفائز)
+- [x] إصلاح خطأ حساب النقاط (domino_pips) الذي كان يُفشل نهاية الجولة/الانسحاب
+- [x] واجهة الدومينو داخل الغرفة (لوح، دور اللاعب، سجل الجولات، النقاط محسوبة من السيرفر)
+- [x] إدارة الدومينو في لوحة الإدارة: تشغيل/إيقاف، حدود الرهان، مضاعف الجائزة، مدة الاسترداد
+- [x] استرداد منتجات المتجر: إرجاع الكوينز وتسجيل عملية "refund" (تم التحقق فعليًا)
+- [ ] ربط شراء الكوينز بالدفع الحقيقي من الهاتف — بانتظار اختيار مزوّد الدفع وبلد النشاط
