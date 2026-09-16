@@ -328,3 +328,48 @@ export const adminSetUserRole = createServerFn({ method: "POST" })
     await log(context.userId, data.userId, data.grant ? "grant_role" : "revoke_role", "", data.role);
     return { ok: true };
   });
+
+export const adminUpsertQuizQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        question: z.string().min(5).max(300),
+        choices: z.array(z.string().min(1).max(120)).length(4),
+        correct_index: z.number().int().min(0).max(3),
+        difficulty: z.number().int().min(1).max(5),
+        is_active: z.boolean(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const payload = {
+      question: data.question,
+      choices: data.choices,
+      correct_index: data.correct_index,
+      difficulty: data.difficulty,
+      is_active: data.is_active,
+    };
+    const query = data.id
+      ? supabaseAdmin.from("quiz_questions").update(payload).eq("id", data.id).select("id").single()
+      : supabaseAdmin.from("quiz_questions").insert(payload).select("id").single();
+    const { data: row, error } = await query;
+    if (error) throw new Error(error.message);
+    await log(context.userId, row.id, data.id ? "update_quiz_question" : "create_quiz_question", "", data.question);
+    return { id: row.id };
+  });
+
+export const adminDeleteQuizQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("quiz_questions").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await log(context.userId, data.id, "delete_quiz_question", "", "");
+    return { ok: true };
+  });

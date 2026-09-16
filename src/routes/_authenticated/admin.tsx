@@ -19,7 +19,9 @@ import {
   adminUpsertVipLevel,
   adminUpsertCoinPackage,
   adminSetActive,
+  adminDeleteQuizQuestion,
   adminSetGameSettings,
+  adminUpsertQuizQuestion,
   adminSetUserRole,
 } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
@@ -44,6 +46,7 @@ const TABS = [
   { key: "vip", label: "VIP" },
   { key: "coins", label: "الكوينز" },
   { key: "games", label: "الألعاب" },
+  { key: "quiz", label: "الأسئلة" },
   { key: "reports", label: "الإبلاغات" },
   { key: "logs", label: "السجل" },
 ] as const;
@@ -95,6 +98,7 @@ function AdminPage() {
       {tab === "vip" && <VipTab />}
       {tab === "coins" && <CoinsTab />}
       {tab === "games" && <GamesTab />}
+      {tab === "quiz" && <QuizTab />}
       {tab === "reports" && <ReportsTab />}
       {tab === "logs" && <LogsTab />}
     </AppShell>
@@ -950,6 +954,205 @@ function GamesTab() {
       >
         حفظ الإعدادات
       </Button>
+    </div>
+  );
+}
+
+type QuizRow = {
+  id: string;
+  question: string;
+  choices: unknown;
+  correct_index: number;
+  difficulty: number | null;
+  is_active: boolean;
+};
+
+const emptyQuiz = { question: "", choices: ["", "", "", ""], correct: 0, difficulty: "1" };
+
+function QuizTab() {
+  const [draft, setDraft] = useState(emptyQuiz);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const list = useQuery({
+    queryKey: ["admin-quiz"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("quiz_questions")
+        .select("id, question, choices, correct_index, difficulty, is_active")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as QuizRow[];
+    },
+  });
+
+  const choicesOf = (raw: unknown): string[] =>
+    Array.isArray(raw) ? raw.map((c) => String(c)) : ["", "", "", ""];
+
+  async function save(isActive: boolean) {
+    if (draft.question.trim().length < 5 || draft.choices.some((c) => !c.trim())) {
+      toast.error("أكمل السؤال والخيارات الأربعة");
+      return;
+    }
+    setBusy(true);
+    try {
+      await adminUpsertQuizQuestion({
+        data: {
+          ...(editing ? { id: editing } : {}),
+          question: draft.question.trim(),
+          choices: draft.choices.map((c) => c.trim()),
+          correct_index: draft.correct,
+          difficulty: Number(draft.difficulty) || 1,
+          is_active: isActive,
+        },
+      });
+      toast.success(editing ? "تم تحديث السؤال" : "تمت إضافة السؤال");
+      setDraft(emptyQuiz);
+      setEditing(null);
+      void list.refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذر الحفظ");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove(id: string) {
+    setBusy(true);
+    try {
+      await adminDeleteQuizQuestion({ data: { id } });
+      toast.success("تم حذف السؤال");
+      if (editing === id) {
+        setEditing(null);
+        setDraft(emptyQuiz);
+      }
+      void list.refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذر الحذف");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-3 rounded-2xl border border-border bg-surface p-3">
+        <p className="text-xs font-bold">{editing ? "تعديل سؤال" : "سؤال جديد"}</p>
+        <Field label="السؤال" value={draft.question} onChange={(v) => setDraft((d) => ({ ...d, question: v }))} />
+        <div className="grid grid-cols-2 gap-2">
+          {draft.choices.map((choice, index) => (
+            <div key={index} className="space-y-1">
+              <Field
+                label={`الخيار ${index + 1}`}
+                value={choice}
+                onChange={(v) =>
+                  setDraft((d) => ({ ...d, choices: d.choices.map((c, i) => (i === index ? v : c)) }))
+                }
+              />
+              <button
+                onClick={() => setDraft((d) => ({ ...d, correct: index }))}
+                className={cn(
+                  "w-full rounded-lg border px-2 py-1 text-[10px]",
+                  draft.correct === index
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border text-muted-foreground",
+                )}
+              >
+                {draft.correct === index ? "الإجابة الصحيحة" : "تعيين كصحيحة"}
+              </button>
+            </div>
+          ))}
+        </div>
+        <Field
+          label="الصعوبة (1-5)"
+          type="number"
+          value={draft.difficulty}
+          onChange={(v) => setDraft((d) => ({ ...d, difficulty: v }))}
+        />
+        <div className="flex gap-2">
+          <Button onClick={() => void save(true)} disabled={busy} className="h-10 flex-1 rounded-xl text-xs">
+            {editing ? "حفظ التعديل" : "إضافة ونشر"}
+          </Button>
+          {editing && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditing(null);
+                setDraft(emptyQuiz);
+              }}
+              className="h-10 rounded-xl text-xs"
+            >
+              إلغاء
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {(list.data ?? []).map((row) => (
+          <div key={row.id} className="rounded-2xl border border-border bg-surface p-3">
+            <p className="text-xs font-bold">{row.question}</p>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              الصحيحة: {choicesOf(row.choices)[row.correct_index] ?? "-"} · صعوبة {row.difficulty ?? 1} ·{" "}
+              {row.is_active ? "منشور" : "مخفي"}
+            </p>
+            <div className="mt-2 flex gap-2">
+              <Button
+                variant="outline"
+                className="h-9 rounded-xl px-3 text-[11px]"
+                onClick={() => {
+                  const parsed = choicesOf(row.choices);
+                  setEditing(row.id);
+                  setDraft({
+                    question: row.question,
+                    choices: [parsed[0] ?? "", parsed[1] ?? "", parsed[2] ?? "", parsed[3] ?? ""],
+                    correct: row.correct_index,
+                    difficulty: String(row.difficulty ?? 1),
+                  });
+                }}
+              >
+                تعديل
+              </Button>
+              <ActiveButton
+                active={row.is_active}
+                busy={busy}
+                onToggle={() =>
+                  void (async () => {
+                    setBusy(true);
+                    try {
+                      const parsed = choicesOf(row.choices);
+                      await adminUpsertQuizQuestion({
+                        data: {
+                          id: row.id,
+                          question: row.question,
+                          choices: [parsed[0] ?? "", parsed[1] ?? "", parsed[2] ?? "", parsed[3] ?? ""],
+                          correct_index: row.correct_index,
+                          difficulty: row.difficulty ?? 1,
+                          is_active: !row.is_active,
+                        },
+                      });
+                      void list.refetch();
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "تعذر التحديث");
+                    } finally {
+                      setBusy(false);
+                    }
+                  })()
+                }
+              />
+              <Button
+                variant="outline"
+                disabled={busy}
+                onClick={() => void remove(row.id)}
+                className="h-9 rounded-xl px-3 text-[11px] text-destructive"
+              >
+                حذف
+              </Button>
+            </div>
+          </div>
+        ))}
+        {list.data?.length === 0 && <p className="text-xs text-muted-foreground">لا توجد أسئلة بعد.</p>}
+      </div>
     </div>
   );
 }
