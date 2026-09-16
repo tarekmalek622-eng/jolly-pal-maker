@@ -124,10 +124,14 @@ function WalletPage() {
                     {positive ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold">{KIND_LABEL[t.kind] ?? t.kind}</p>
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      {new Date(t.created_at).toLocaleString("ar")}
+                    <p className="text-sm font-semibold">
+                      {KIND_LABEL[t.kind] ?? t.kind}
+                      {t.reference ? <span className="text-[11px] text-muted-foreground"> · {t.reference}</span> : null}
                     </p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      {new Date(t.created_at).toLocaleString("ar")} · {STATUS_LABEL[t.status] ?? t.status}
+                    </p>
+                    <p className="truncate text-[10px] text-muted-foreground/70">رقم العملية: {t.id.slice(0, 8)}</p>
                   </div>
                   <div className="text-end">
                     <p className={`text-sm font-bold ${positive ? "text-success" : "text-destructive"}`}>
@@ -135,7 +139,10 @@ function WalletPage() {
                       {t.amount.toLocaleString("en-US")}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                      الرصيد: {t.balance_after.toLocaleString("en-US")}
+                      قبل: {t.balance_before.toLocaleString("en-US")}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      بعد: {t.balance_after.toLocaleString("en-US")}
                     </p>
                   </div>
                 </div>
