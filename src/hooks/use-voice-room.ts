@@ -179,5 +179,19 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
 
   const stopMusic = useCallback(() => stopMusicRef.current?.(), []);
 
-  return { status, error, micEnabled, speakerEnabled, speakingIds, toggleMic, toggleSpeaker, retry };
+  return {
+    status,
+    error,
+    micEnabled,
+    speakerEnabled,
+    speakingIds,
+    toggleMic,
+    toggleSpeaker,
+    retry,
+    playMusic,
+    stopMusic,
+    musicPlaying,
+    musicName,
+    musicEl: musicElRef,
+  };
 }
