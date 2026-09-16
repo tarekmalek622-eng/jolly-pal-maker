@@ -281,7 +281,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             const top = 50 + r * Math.sin(a);
             const stat = perSlot.get(s.key) ?? { total: 0, mine: 0, players: 0 };
             const active = highlight === i;
-            const isWinner = finished && round.data?.winning_key === s.key;
+            const isWinner = finished && !spinning && round.data?.winning_key === s.key;
             return (
               <button
                 key={s.key}
@@ -314,11 +314,13 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
 
           {/* قلب العجلة: مدة الاختيار / الفاكهة الفائزة */}
           <div className="absolute inset-[33%] flex flex-col items-center justify-center rounded-full border-[5px] border-primary/60 bg-[radial-gradient(circle,oklch(0.42_0.16_20),oklch(0.28_0.12_20))] text-center text-primary-foreground">
-            <span className="text-[10px] font-bold">{finished ? "الفائزة" : "مُدة الاختيار"}</span>
-            <span className="text-3xl font-extrabold leading-none">
-              {finished ? (winning?.emoji ?? "🎡") : remaining}
+            <span className="text-[10px] font-bold">
+              {spinning ? "جاري السحب" : finished ? "الفائزة" : "مُدة الاختيار"}
             </span>
-            {finished && winning && <span className="text-[10px] font-bold">×{winning.multiplier}</span>}
+            <span className={cn("text-3xl font-extrabold leading-none", spinning && "animate-pulse")}>
+              {spinning ? "🎡" : finished ? (winning?.emoji ?? "🎡") : remaining}
+            </span>
+            {finished && !spinning && winning && <span className="text-[10px] font-bold">×{winning.multiplier}</span>}
           </div>
         </div>
 
@@ -379,7 +381,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
         </div>
 
         {/* لافتة الفوز الكبير */}
-        {finished && myWin > 0 && (
+        {finished && !spinning && myWin > 0 && (
           <div className="mt-2 animate-scale-in rounded-2xl gradient-gold px-4 py-3 text-center text-primary-foreground shadow-[0_0_30px_-8px_oklch(0.82_0.16_85/0.85)]">
             <p className="text-xl font-extrabold tracking-[0.2em]">BIG WIN</p>
             <p className="text-sm font-bold">+{myWin.toLocaleString("en-US")} كوينز</p>
@@ -388,7 +390,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
       </div>
 
       {/* نتيجة سحب الجولة وترتيب الأرباح */}
-      {finished && (
+      {finished && !spinning && (
         <div className="surface-card animate-scale-in p-3">
           <div className="flex items-center justify-between text-xs">
             <span className="font-bold">نتيجة سحب الجولة {round.data?.round_no}</span>
@@ -402,33 +404,87 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
               <p className="text-sm font-bold">{myBet.toLocaleString("en-US")}</p>
             </div>
             <div className="rounded-2xl bg-surface-2 py-2">
-              <p className="text-[10px] text-muted-foreground">أرباحك هذه الجولة</p>
+              <p className="text-[10px] text-muted-foreground">أرباح هذه الجولة</p>
               <p className="text-sm font-bold text-success">{myWin.toLocaleString("en-US")}</p>
             </div>
           </div>
 
           {leaderboard.length > 0 && (
             <>
-              <p className="mb-2 mt-3 flex items-center gap-1 text-xs font-bold">
-                <Trophy className="h-4 w-4 text-primary" /> الترتيب من أرباح هذه الجولة
+              <p className="mb-2 mt-3 text-center text-[11px] font-bold text-primary">
+                — — — الترتيب من أرباح هذه الجولة — — —
               </p>
-              <div className="space-y-1.5">
-                {leaderboard.map(([uid, total], i) => {
+              <div className="flex items-end justify-center gap-2">
+                {[1, 0, 2].map((idx) => {
+                  const entry = leaderboard[idx];
+                  if (!entry) return null;
+                  const [uid, total] = entry;
                   const pl = players.data?.get(uid);
+                  const first = idx === 0;
+                  const rankColor =
+                    idx === 0 ? "border-primary" : idx === 1 ? "border-muted-foreground" : "border-warning";
                   return (
-                    <div key={uid} className="flex items-center gap-2 text-xs">
-                      <span className="w-4 font-bold text-primary">{i + 1}</span>
-                      {pl?.avatar_url ? (
-                        <img src={pl.avatar_url} alt={pl.display_name} loading="lazy" className="h-7 w-7 rounded-full object-cover" />
-                      ) : (
-                        <span className="h-7 w-7 rounded-full bg-surface-2" />
+                    <div
+                      key={uid}
+                      className={cn(
+                        "flex flex-col items-center rounded-2xl bg-surface-2 px-2 py-2",
+                        first ? "w-[38%] -translate-y-2" : "w-[30%]",
                       )}
-                      <span className="min-w-0 flex-1 truncate">{pl?.display_name ?? "لاعب"}</span>
-                      <span className="font-bold text-success">+{total.toLocaleString("en-US")}</span>
+                    >
+                      <div className="relative">
+                        {pl?.avatar_url ? (
+                          <img
+                            src={pl.avatar_url}
+                            alt={pl.display_name}
+                            loading="lazy"
+                            className={cn(
+                              "rounded-xl border-[3px] object-cover",
+                              rankColor,
+                              first ? "h-16 w-16" : "h-12 w-12",
+                            )}
+                          />
+                        ) : (
+                          <span
+                            className={cn(
+                              "block rounded-xl border-[3px] bg-surface-3",
+                              rankColor,
+                              first ? "h-16 w-16" : "h-12 w-12",
+                            )}
+                          />
+                        )}
+                        <span
+                          className={cn(
+                            "absolute -bottom-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full border border-background text-[10px] font-extrabold text-primary-foreground",
+                            idx === 0 ? "gradient-gold" : "bg-surface-3 text-foreground",
+                          )}
+                        >
+                          {idx + 1}
+                        </span>
+                      </div>
+                      <span className="mt-1.5 w-full truncate text-center text-[11px] font-bold">
+                        {pl?.display_name ?? "لاعب"}
+                      </span>
+                      <span className="text-[11px] font-extrabold text-primary">
+                        {total.toLocaleString("en-US")} 🪙
+                      </span>
                     </div>
                   );
                 })}
               </div>
+              {leaderboard.length > 3 && (
+                <div className="mt-2 space-y-1">
+                  {leaderboard.slice(3).map(([uid, total], i) => {
+                    const pl = players.data?.get(uid);
+                    return (
+                      <div key={uid} className="flex items-center gap-2 text-xs">
+                        <span className="w-4 font-bold text-muted-foreground">{i + 4}</span>
+                        <span className="min-w-0 flex-1 truncate">{pl?.display_name ?? "لاعب"}</span>
+                        <span className="font-bold text-success">+{total.toLocaleString("en-US")}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
         </div>
