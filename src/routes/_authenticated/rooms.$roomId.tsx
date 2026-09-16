@@ -353,8 +353,6 @@ function RoomPage() {
             <button onClick={() => setDominoOpen(true)} className="p-1" aria-label="لعبة الدومينو">
               <LayoutGrid className="h-5 w-5" />
             </button>
-              <LayoutGrid className="h-5 w-5" />
-            </button>
             {canManage && (
               <>
                 <button onClick={() => setRequestsOpen(true)} className="relative p-1" aria-label="طلبات المايك">
