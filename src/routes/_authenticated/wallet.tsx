@@ -46,6 +46,44 @@ const STATUS_LABEL: Record<string, string> = {
   refunded: "مسترجعة",
 };
 
+const METHOD_LABEL: Record<string, string> = {
+  vodafone_cash: "فودافون كاش",
+  instapay: "InstaPay",
+};
+
+const REQUEST_STATUS: Record<string, string> = {
+  pending: "قيد المراجعة",
+  approved: "تمت الإضافة",
+  rejected: "مرفوض",
+};
+
+type PaymentAccounts = { vodafone_cash?: string; instapay?: string; instructions?: string };
+
+type PurchaseRequest = {
+  id: string;
+  coins: number;
+  amount_cents: number;
+  currency: string;
+  method: string;
+  status: string;
+  note: string | null;
+  created_at: string;
+};
+
+type SelectedPackage = { id: string; coins: number; price: number; currency: string };
+
+type SupabaseAny = {
+  from: (table: string) => {
+    select: (cols: string) => {
+      eq: (col: string, val: unknown) => {
+        order: (col: string, opts: { ascending: boolean }) => {
+          limit: (n: number) => Promise<{ data: unknown[] | null; error: { message: string } | null }>;
+        };
+      };
+    };
+  };
+};
+
 function WalletPage() {
   const { userId } = useSupabaseSession();
   const wallet = useWallet(userId);
@@ -76,6 +114,55 @@ function WalletPage() {
       if (error) throw error;
       return data ?? [];
     },
+  });
+
+  const settings = useQuery({
+    queryKey: ["payment-accounts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "payment_accounts")
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.value ?? {}) as PaymentAccounts;
+    },
+  });
+  const accounts: PaymentAccounts = settings.data ?? {};
+
+  const requests = useQuery({
+    queryKey: ["coin-purchase-requests", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { data, error } = await (supabase as unknown as SupabaseAny)
+        .from("coin_purchase_requests")
+        .select("id, coins, amount_cents, currency, method, status, note, created_at")
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return (data ?? []) as PurchaseRequest[];
+    },
+  });
+
+  const [selected, setSelected] = useState<SelectedPackage | null>(null);
+  const [method, setMethod] = useState<"vodafone_cash" | "instapay">("vodafone_cash");
+  const [reference, setReference] = useState("");
+
+  const submit = useMutation({
+    mutationFn: async () => {
+      if (!selected) return;
+      await createCoinPurchaseRequest({
+        data: { packageId: selected.id, method, senderReference: reference.trim() },
+      });
+    },
+    onSuccess: () => {
+      toast.success("تم إرسال الطلب — سيتم تأكيده من الإدارة");
+      setSelected(null);
+      setReference("");
+      void requests.refetch();
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   return (
