@@ -178,10 +178,37 @@ function HomePage() {
         <div className="space-y-7">
           <section>
             <SectionTitle icon={Flame} title="الغرف" />
+            <div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1">
+              {(
+                [
+                  ["all", "الكل"],
+                  ["active", "الأكثر نشاطًا"],
+                  ["new", "الجديدة"],
+                  ["featured", "المميزة"],
+                  ["public", "عامة"],
+                  ["private", "خاصة"],
+                  ["games", "ألعاب"],
+                  ["voice", "صوتية"],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setTab(key)}
+                  className={
+                    tab === key
+                      ? "shrink-0 rounded-full gradient-gold px-3.5 py-1.5 text-xs font-bold text-primary-foreground"
+                      : "shrink-0 rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-semibold text-muted-foreground"
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             {trending.length === 0 ? (
               <EmptyState
-                title="لا توجد غرف بعد"
-                hint="كن أول من ينشئ غرفة صوتية"
+                title="لا توجد غرف في هذا التصنيف"
+                hint="جرّب تصنيفًا آخر أو أنشئ غرفة جديدة"
                 action={
                   <Link to="/rooms" className="mt-3 rounded-full gradient-gold px-4 py-2 text-xs font-bold text-primary-foreground">
                     إنشاء غرفة
