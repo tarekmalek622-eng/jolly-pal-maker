@@ -342,6 +342,42 @@ export const adminSetGameSettings = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminSetWheelSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        enabled: z.boolean(),
+        duration_seconds: z.number().int().min(5).max(120),
+        result_seconds: z.number().int().min(1).max(30),
+        min_bet: z.number().int().min(1).max(1_000_000),
+        max_bet: z.number().int().min(1).max(10_000_000),
+        slots: z
+          .array(
+            z.object({
+              key: z.string().min(1).max(32),
+              label: z.string().min(1).max(40),
+              emoji: z.string().min(1).max(8),
+              multiplier: z.number().min(0).max(1000),
+              weight: z.number().min(0.01).max(1000),
+            }),
+          )
+          .min(2)
+          .max(16),
+      })
+      .refine((v) => v.max_bet >= v.min_bet, { message: "الحد الأعلى أقل من الأدنى" })
+      .refine((v) => new Set(v.slots.map((s) => s.key)).size === v.slots.length, { message: "مفاتيح الخانات مكررة" })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("app_settings").upsert([{ key: "wheel", value: data }] as never);
+    if (error) throw new Error(error.message);
+    await log(context.userId, "settings", "update_wheel_settings", "", JSON.stringify(data));
+    return { ok: true };
+  });
+
 export const adminSetRelationshipSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
