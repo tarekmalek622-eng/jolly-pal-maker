@@ -227,7 +227,17 @@ export const playChallenge = createServerFn({ method: "POST" })
 
 /* ---------------- الدومينو الجماعي ---------------- */
 
-async function rpcAdmin(fn: string, args: Record<string, unknown>) {
+export interface DominoState {
+  hands: { p1: number[]; p2: number[] };
+  board: [number, number][];
+  left: number;
+  right: number;
+  boneyard: number[];
+  turn: "p1" | "p2";
+  passes: number;
+}
+
+async function rpcAdmin<T = void>(fn: string, args: Record<string, unknown>): Promise<T> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const client = supabaseAdmin as unknown as {
     rpc: (f: string, a?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
@@ -241,7 +251,7 @@ async function assertDominoEnabled() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin.from("app_settings").select("key, value").eq("key", "games").maybeSingle();
   const games = ((data?.value ?? {}) as Record<string, boolean | undefined>);
-  if (games.domino === false) throw new Error("الدومينو موقوف حاليًا");
+  if (games['domino'] === false) throw new Error("الدومينو موقوف حاليًا");
 }
 
 export const dominoJoin = createServerFn({ method: "POST" })
@@ -273,14 +283,14 @@ export const dominoMove = createServerFn({ method: "POST" })
       _tile: data.tile,
       _side: data.side,
     });
-    return { state };
+    return { state: state as DominoState };
   });
 
 export const dominoPass = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ gameId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const state = await rpcAdmin("domino_pass", { _uid: context.userId, _game_id: data.gameId });
+    const state = await rpcAdmin<DominoState>("domino_pass", { _uid: context.userId, _game_id: data.gameId });
     return { state };
   });
 
@@ -288,8 +298,8 @@ export const dominoForfeit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ gameId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const state = await rpcAdmin("domino_forfeit", { _uid: context.userId, _game_id: data.gameId });
-    return { state };
+    const state = await rpcAdmin<DominoState>("domino_forfeit", { _uid: context.userId, _game_id: data.gameId });
+    return { state: state as DominoState };
   });
 
 export const dominoCancel = createServerFn({ method: "POST" })
