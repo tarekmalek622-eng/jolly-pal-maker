@@ -34,7 +34,7 @@ function UserPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, public_id, display_name, avatar_url, bio, country, city, level, xp, vip_level, is_cvip, is_online")
+        .select("id, public_id, display_name, avatar_url, frame_url, bio, country, city, level, xp, vip_level, is_cvip, is_online")
         .eq("public_id", publicId)
         .maybeSingle();
       if (error) throw error;
