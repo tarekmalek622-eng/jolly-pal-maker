@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Camera, ShieldCheck, Mic, Gift, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { createDeviceCredentials, readDeviceCredentials } from "@/lib/device-account";
+import { isValidPhone, phoneToIdentifier, rememberPhone, readRememberedPhone } from "@/lib/phone-auth";
 import { uploadUserImage } from "@/lib/media";
 import { screenProfilePhoto } from "@/lib/moderation.functions";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,8 @@ const COUNTRIES = [
 function Landing() {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
-  const [step, setStep] = useState<"intro" | "form">("intro");
+  const [step, setStep] = useState<"intro" | "auth" | "form">("intro");
+
 
   useEffect(() => {
     let active = true;
@@ -75,7 +76,16 @@ function Landing() {
   return (
     <div className="min-h-screen gradient-hero">
       <div className="mx-auto flex min-h-screen max-w-lg flex-col px-5 py-8">
-        {step === "intro" ? <Intro onStart={() => setStep("form")} /> : <RegisterForm />}
+        {step === "intro" ? (
+          <Intro onStart={() => setStep("auth")} />
+        ) : step === "auth" ? (
+          <PhoneAuth
+            onNeedsProfile={() => setStep("form")}
+            onSignedIn={() => void navigate({ to: "/home", replace: true })}
+          />
+        ) : (
+          <RegisterForm />
+        )}
       </div>
     </div>
   );
@@ -121,10 +131,10 @@ function Intro({ onStart }: { onStart: () => void }) {
           onClick={onStart}
           className="h-14 w-full rounded-2xl gradient-gold text-base font-bold text-primary-foreground hover:opacity-90"
         >
-          إنشاء حسابي الآن
+          ابدأ برقم هاتفك
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          بدون بريد إلكتروني، بدون كلمة مرور، بدون رمز تحقق.
+          رقم الهاتف وكلمة السر فقط — بدون بريد إلكتروني وبدون رمز تحقق.
         </p>
       </div>
     </div>
