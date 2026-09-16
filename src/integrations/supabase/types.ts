@@ -787,6 +787,42 @@ export type Database = {
         }
         Relationships: []
       }
+      relationships: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          partner_id: string
+          requester_id: string
+          started_at: string | null
+          status: string
+          type: Database["public"]["Enums"]["relation_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          partner_id: string
+          requester_id: string
+          started_at?: string | null
+          status?: string
+          type: Database["public"]["Enums"]["relation_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          partner_id?: string
+          requester_id?: string
+          started_at?: string | null
+          status?: string
+          type?: Database["public"]["Enums"]["relation_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           created_at: string
@@ -1252,6 +1288,7 @@ export type Database = {
       domino_settings: { Args: never; Returns: Json }
       domino_tile_a: { Args: { t: number }; Returns: number }
       domino_tile_b: { Args: { t: number }; Returns: number }
+      end_relationship: { Args: { _relationship_id: string }; Returns: boolean }
       equip_item: {
         Args: { _equip: boolean; _user_item_id: string }
         Returns: {
@@ -1374,10 +1411,54 @@ export type Database = {
         }
       }
       refund_item: { Args: { _user_item_id: string }; Returns: number }
+      relationship_settings: { Args: never; Returns: Json }
       remove_friend: { Args: { _friend_id: string }; Returns: boolean }
+      request_relationship: {
+        Args: {
+          _partner_id: string
+          _type: Database["public"]["Enums"]["relation_type"]
+        }
+        Returns: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          partner_id: string
+          requester_id: string
+          started_at: string | null
+          status: string
+          type: Database["public"]["Enums"]["relation_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "relationships"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       respond_friend_request: {
         Args: { _accept: boolean; _request_id: string }
         Returns: boolean
+      }
+      respond_relationship: {
+        Args: { _accept: boolean; _relationship_id: string }
+        Returns: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          partner_id: string
+          requester_id: string
+          started_at: string | null
+          status: string
+          type: Database["public"]["Enums"]["relation_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "relationships"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       send_direct_gift: {
         Args: { _gift_id: string; _quantity?: number; _receiver_id: string }
@@ -1529,6 +1610,7 @@ export type Database = {
       app_role: "super_admin" | "admin" | "moderator" | "host" | "user"
       friend_status: "pending" | "accepted" | "rejected"
       gender_type: "male" | "female"
+      relation_type: "couple" | "soulmate" | "favorite_friend" | "close_friend"
       room_type: "public" | "private"
     }
     CompositeTypes: {
@@ -1660,6 +1742,7 @@ export const Constants = {
       app_role: ["super_admin", "admin", "moderator", "host", "user"],
       friend_status: ["pending", "accepted", "rejected"],
       gender_type: ["male", "female"],
+      relation_type: ["couple", "soulmate", "favorite_friend", "close_friend"],
       room_type: ["public", "private"],
     },
   },
