@@ -43,7 +43,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const refreshMoney = useRefreshMoney();
   const [amount, setAmount] = useState(100);
   const [now, setNow] = useState(() => Date.now());
-  const [spinAngle, setSpinAngle] = useState(0);
+  const [highlight, setHighlight] = useState(0);
   const lastSettled = useRef<string | null>(null);
 
   const round = useQuery({
@@ -115,17 +115,38 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const finished = round.data?.status === "finished";
   const remaining = round.data ? Math.max(0, Math.ceil((new Date(round.data.ends_at).getTime() - now) / 1000)) : 0;
 
-  // spin the wheel to the winning slot once the server settles the round
+  // مؤشر يلف على الفواكه أثناء المراهنة
+  useEffect(() => {
+    if (finished || slots.length === 0) return;
+    const t = window.setInterval(() => setHighlight((h) => (h + 1) % slots.length), 420);
+    return () => window.clearInterval(t);
+  }, [finished, slots.length]);
+
+  // عند تسوية الجولة من السيرفر: يتباطأ المؤشر ثم يتوقف على الفائزة
   useEffect(() => {
     const data = round.data;
     if (!data || data.status !== "finished" || !data.winning_key) return;
     if (lastSettled.current === data.id) return;
     lastSettled.current = data.id;
-    const index = data.slots.findIndex((s) => s.key === data.winning_key);
-    const per = 360 / Math.max(1, data.slots.length);
-    setSpinAngle((prev) => prev + 1440 + ((360 - index * per) % 360));
+    const target = data.slots.findIndex((s) => s.key === data.winning_key);
+    const count = Math.max(1, data.slots.length);
+    let step = 0;
+    const total = count * 2 + ((target - highlight + count) % count);
+    let timer = 0;
+    const tick = () => {
+      step += 1;
+      setHighlight((h) => (h + 1) % count);
+      if (step < total) {
+        timer = window.setTimeout(tick, 90 + step * 12);
+      } else {
+        setHighlight(target < 0 ? 0 : target);
+      }
+    };
+    timer = window.setTimeout(tick, 90);
     refreshMoney();
     void history.refetch();
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round.data, refreshMoney, history]);
 
   const place = useMutation({
@@ -156,6 +177,11 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     }
     return map;
   }, [slots, bets.data, userId]);
+
+  const myWin = useMemo(
+    () => (bets.data ?? []).filter((b) => b.user_id === userId).reduce((sum, b) => sum + Number(b.payout), 0),
+    [bets.data, userId],
+  );
 
   const leaderboard = useMemo(() => {
     const map = new Map<string, number>();
@@ -196,36 +222,60 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
           </span>
         </div>
 
-        <div className="relative mx-auto mt-4 aspect-square w-full max-w-[300px]">
-          <div
-            className="absolute inset-0 rounded-full border-4 border-primary/40 transition-transform duration-[2500ms] ease-out"
-            style={{ transform: `rotate(${spinAngle}deg)` }}
-          >
-            {slots.map((s, i) => {
-              const angle = (360 / Math.max(1, slots.length)) * i;
-              return (
-                <div
-                  key={s.key}
-                  className="absolute left-1/2 top-1/2 h-1/2 origin-top -translate-x-1/2"
-                  style={{ transform: `rotate(${angle}deg)` }}
-                >
-                  <div className="mt-2 -translate-y-0 text-center text-2xl" style={{ transform: `rotate(${-angle - spinAngle}deg)` }}>
-                    {s.emoji}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="absolute inset-[26%] flex flex-col items-center justify-center rounded-full gradient-gold text-primary-foreground">
-            <span className="text-[10px] font-bold">
-              {finished ? "الفائزة" : "مدة الاختيار"}
-            </span>
+        {/* الفواكه داخل الدائرة مع مؤشر يلف عليها ويتوقف على الفائزة */}
+        <div className="relative mx-auto mt-4 aspect-square w-full max-w-[320px]">
+          <div className="absolute inset-0 rounded-full border-[6px] border-primary/35 bg-[radial-gradient(circle_at_center,oklch(0.26_0.05_275),oklch(0.16_0.03_275))] shadow-[0_0_40px_-12px_oklch(0.72_0.16_85/0.55)]" />
+          {slots.map((s, i) => {
+            const step = (2 * Math.PI) / Math.max(1, slots.length);
+            const a = -Math.PI / 2 + step * i;
+            const r = 38;
+            const left = 50 + r * Math.cos(a);
+            const top = 50 + r * Math.sin(a);
+            const stat = perSlot.get(s.key) ?? { total: 0, mine: 0, players: 0 };
+            const active = highlight === i;
+            const isWinner = finished && round.data?.winning_key === s.key;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                disabled={finished || place.isPending}
+                onClick={() => place.mutate(s.key)}
+                style={{ left: `${left}%`, top: `${top}%` }}
+                className={cn(
+                  "absolute flex h-[19%] w-[19%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border-2 transition-all disabled:opacity-70",
+                  isWinner
+                    ? "scale-110 border-success bg-success/25 shadow-[0_0_22px_oklch(0.72_0.17_150/0.7)]"
+                    : active
+                      ? "scale-110 border-primary bg-primary/25 shadow-[0_0_20px_oklch(0.82_0.16_85/0.6)]"
+                      : stat.mine > 0
+                        ? "border-primary/70 bg-primary/10"
+                        : "border-border/70 bg-surface-2/80",
+                )}
+              >
+                <span className="text-xl leading-none">{s.emoji}</span>
+                <span className="mt-0.5 text-[9px] font-extrabold text-primary">×{s.multiplier}</span>
+                {stat.total > 0 && (
+                  <span className="text-[8px] text-muted-foreground">{stat.total.toLocaleString("en-US")}</span>
+                )}
+              </button>
+            );
+          })}
+          <div className="absolute inset-[30%] flex flex-col items-center justify-center rounded-full gradient-gold text-primary-foreground">
+            <span className="text-[10px] font-bold">{finished ? "الفائزة" : "الوقت"}</span>
             <span className="text-2xl font-extrabold">{finished ? (winning?.emoji ?? "🎡") : remaining}</span>
+            {finished && winning && <span className="text-[10px] font-bold">×{winning.multiplier}</span>}
           </div>
-          <div className="absolute -top-1 left-1/2 -translate-x-1/2 text-lg">▼</div>
         </div>
 
-        {finished && winning && (
+        {/* لافتة الفوز الكبير */}
+        {finished && myWin > 0 && (
+          <div className="mt-3 animate-scale-in rounded-2xl gradient-gold px-4 py-3 text-center text-primary-foreground shadow-[0_0_30px_-8px_oklch(0.82_0.16_85/0.8)]">
+            <p className="text-lg font-extrabold tracking-widest">BIG WIN</p>
+            <p className="text-sm font-bold">+{myWin.toLocaleString("en-US")} كوينز</p>
+          </div>
+        )}
+
+        {finished && winning && myWin === 0 && (
           <p className="mt-3 animate-fade-in text-center text-sm font-bold text-success">
             🎉 {winning.label} ×{winning.multiplier}
           </p>
