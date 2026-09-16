@@ -223,6 +223,63 @@ export type Database = {
         }
         Relationships: []
       }
+      cvip_plans: {
+        Row: {
+          background_url: string | null
+          badge_url: string | null
+          created_at: string
+          decorations: Json
+          description: string | null
+          duration_days: number
+          frame_url: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_effect: string | null
+          perks: Json
+          price: number
+          room_effect: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          background_url?: string | null
+          badge_url?: string | null
+          created_at?: string
+          decorations?: Json
+          description?: string | null
+          duration_days: number
+          frame_url?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_effect?: string | null
+          perks?: Json
+          price: number
+          room_effect?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          background_url?: string | null
+          badge_url?: string | null
+          created_at?: string
+          decorations?: Json
+          description?: string | null
+          duration_days?: number
+          frame_url?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_effect?: string | null
+          perks?: Json
+          price?: number
+          room_effect?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       direct_messages: {
         Row: {
           body: string
@@ -1104,6 +1161,38 @@ export type Database = {
       mark_direct_messages_read: {
         Args: { _sender_id: string }
         Returns: number
+      }
+      purchase_cvip: {
+        Args: { _plan_id: string }
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          cvip_expires_at: string | null
+          display_name: string
+          frame_url: string | null
+          gender: Database["public"]["Enums"]["gender_type"] | null
+          id: string
+          is_cvip: boolean
+          is_online: boolean
+          is_suspended: boolean
+          last_seen: string
+          level: number
+          profile_background_url: string | null
+          public_id: string
+          updated_at: string
+          vip_level: number
+          xp: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       purchase_item: {
         Args: { _item_id: string }
