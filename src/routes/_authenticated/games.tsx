@@ -210,8 +210,9 @@ function GamesPage() {
           </div>
 
           {active === "domino" && <DominoGame roomId={search.room ?? null} />}
+          {active === "wheel" && <LiveWheel roomId={search.room ?? null} />}
 
-          <div className={cn("surface-card p-5", active === "domino" && "hidden")}>
+          <div className={cn("surface-card p-5", (active === "domino" || active === "wheel") && "hidden")}>
             <p className="text-sm font-bold">
               مبلغ الرهان (بين {limits.min_bet.toLocaleString("en-US")} و {limits.max_bet.toLocaleString("en-US")})
             </p>
