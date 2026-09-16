@@ -1425,3 +1425,169 @@ function QuizTab() {
     </div>
   );
 }
+
+const METHOD_LABEL_AR: Record<string, string> = {
+  vodafone_cash: "فودافون كاش",
+  instapay: "InstaPay",
+};
+
+type TopupRow = {
+  id: string;
+  user_id: string;
+  coins: number;
+  amount_cents: number;
+  currency: string;
+  method: string;
+  sender_reference: string;
+  status: string;
+  note: string | null;
+  created_at: string;
+};
+
+function TopupsTab() {
+  const [status, setStatus] = useState<"pending" | "approved" | "rejected">("pending");
+  const [accounts, setAccounts] = useState({ vodafone_cash: "", instapay: "", instructions: "" });
+  const [loadedAccounts, setLoadedAccounts] = useState(false);
+
+  const settings = useQuery({
+    queryKey: ["admin-payment-accounts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("app_settings").select("value").eq("key", "payment_accounts").maybeSingle();
+      if (error) throw error;
+      return (data?.value ?? {}) as { vodafone_cash?: string; instapay?: string; instructions?: string };
+    },
+  });
+
+  useEffect(() => {
+    if (settings.data && !loadedAccounts) {
+      setAccounts({
+        vodafone_cash: settings.data.vodafone_cash ?? "",
+        instapay: settings.data.instapay ?? "",
+        instructions: settings.data.instructions ?? "",
+      });
+      setLoadedAccounts(true);
+    }
+  }, [settings.data, loadedAccounts]);
+
+  const rows = useQuery({
+    queryKey: ["admin-topups", status],
+    queryFn: async () => {
+      const client = supabase as unknown as {
+        from: (t: string) => {
+          select: (c: string) => {
+            eq: (col: string, v: unknown) => {
+              order: (col: string, o: { ascending: boolean }) => {
+                limit: (n: number) => Promise<{ data: unknown[] | null; error: { message: string } | null }>;
+              };
+            };
+          };
+        };
+      };
+      const { data, error } = await client
+        .from("coin_purchase_requests")
+        .select("id, user_id, coins, amount_cents, currency, method, sender_reference, status, note, created_at")
+        .eq("status", status)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw new Error(error.message);
+      const list = (data ?? []) as TopupRow[];
+      const ids = [...new Set(list.map((r) => r.user_id))];
+      if (ids.length === 0) return { list, names: {} as Record<string, string> };
+      const { data: profiles } = await supabase.from("profiles").select("id, display_name, public_id").in("id", ids);
+      const names: Record<string, string> = {};
+      (profiles ?? []).forEach((p) => {
+        names[p.id] = `${p.display_name} · ${p.public_id}`;
+      });
+      return { list, names };
+    },
+  });
+
+  const review = useMutation({
+    mutationFn: (v: { id: string; approve: boolean; note?: string }) => adminReviewCoinPurchase({ data: v }),
+    onSuccess: () => {
+      toast.success("تم تنفيذ المراجعة");
+      void rows.refetch();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const saveAccounts = useMutation({
+    mutationFn: () => adminSetPaymentAccounts({ data: accounts }),
+    onSuccess: () => toast.success("تم حفظ بيانات التحويل"),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="surface-card space-y-3 p-4">
+        <p className="text-sm font-bold">حسابات التحويل</p>
+        <Field label="رقم فودافون كاش" value={accounts.vodafone_cash} onChange={(v) => setAccounts((s) => ({ ...s, vodafone_cash: v }))} />
+        <Field label="حساب InstaPay" value={accounts.instapay} onChange={(v) => setAccounts((s) => ({ ...s, instapay: v }))} />
+        <Field label="تعليمات للمستخدم" value={accounts.instructions} onChange={(v) => setAccounts((s) => ({ ...s, instructions: v }))} />
+        <Button
+          disabled={saveAccounts.isPending}
+          onClick={() => saveAccounts.mutate()}
+          className="h-11 w-full rounded-2xl gradient-gold font-bold text-primary-foreground"
+        >
+          {saveAccounts.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ بيانات التحويل"}
+        </Button>
+      </div>
+
+      <div className="flex gap-2">
+        {(["pending", "approved", "rejected"] as const).map((s) => (
+          <button
+            key={s}
+            onClick={() => setStatus(s)}
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-xs",
+              status === s ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
+            )}
+          >
+            {s === "pending" ? "قيد المراجعة" : s === "approved" ? "مؤكدة" : "مرفوضة"}
+          </button>
+        ))}
+      </div>
+
+      {rows.isLoading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </div>
+      ) : (rows.data?.list.length ?? 0) === 0 ? (
+        <EmptyState title="لا توجد طلبات" hint="ستظهر طلبات شحن الكوينز هنا" />
+      ) : (
+        <div className="space-y-2">
+          {rows.data?.list.map((r) => (
+            <div key={r.id} className="surface-card space-y-2 p-3">
+              <p className="text-sm font-bold">{rows.data?.names[r.user_id] ?? r.user_id.slice(0, 8)}</p>
+              <p className="text-xs text-muted-foreground">
+                {r.coins.toLocaleString("en-US")} كوينز · {(r.amount_cents / 100).toFixed(2)} {r.currency} ·{" "}
+                {METHOD_LABEL_AR[r.method] ?? r.method}
+              </p>
+              <p className="text-xs">مرجع التحويل: {r.sender_reference}</p>
+              <p className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString("ar")}</p>
+              {r.status === "pending" && (
+                <div className="flex gap-2">
+                  <Button
+                    disabled={review.isPending}
+                    onClick={() => review.mutate({ id: r.id, approve: true })}
+                    className="h-10 flex-1 rounded-xl bg-success/20 text-xs font-bold text-success hover:bg-success/30"
+                  >
+                    تأكيد وإضافة الكوينز
+                  </Button>
+                  <Button
+                    disabled={review.isPending}
+                    onClick={() => review.mutate({ id: r.id, approve: false, note: "لم يتم التحقق من التحويل" })}
+                    className="h-10 flex-1 rounded-xl bg-destructive/20 text-xs font-bold text-destructive hover:bg-destructive/30"
+                  >
+                    رفض
+                  </Button>
+                </div>
+              )}
+              {r.note ? <p className="text-[11px] text-muted-foreground">ملاحظة: {r.note}</p> : null}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
