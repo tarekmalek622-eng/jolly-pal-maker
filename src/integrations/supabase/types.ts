@@ -1101,6 +1101,10 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      mark_direct_messages_read: {
+        Args: { _sender_id: string }
+        Returns: number
+      }
       purchase_item: {
         Args: { _item_id: string }
         Returns: {
@@ -1210,6 +1214,24 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "gift_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      send_room_message: {
+        Args: { _body: string; _room_id: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          metadata: Json | null
+          room_id: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "room_messages"
           isOneToOne: true
           isSetofReturn: false
         }
