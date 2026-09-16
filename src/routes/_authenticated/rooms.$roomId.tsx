@@ -367,6 +367,7 @@ function RoomPage() {
     display_name: p.display_name,
     avatar_url: p.avatar_url,
     vip_level: p.vip_level,
+    public_id: p.public_id,
   }));
 
   if (room.isLoading) return <AppShell hideNav>جارٍ تحميل الغرفة...</AppShell>;
