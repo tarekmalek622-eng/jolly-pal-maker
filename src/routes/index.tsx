@@ -312,7 +312,7 @@ function RegisterForm() {
         reader.readAsDataURL(file);
       });
 
-      await ensureDeviceSession();
+      await currentSession();
       const verdict = await screenProfilePhoto({ data: { imageDataUrl: dataUrl } });
       if (!verdict.allowed) {
         toast.error(verdict.reason ?? "الصورة غير مناسبة", {
@@ -372,7 +372,7 @@ function RegisterForm() {
 
     setSubmitting(true);
     try {
-      const session = await ensureDeviceSession();
+      const session = await currentSession();
 
       const avatarPath = await uploadUserImage("avatars", session.user.id, photo);
 
