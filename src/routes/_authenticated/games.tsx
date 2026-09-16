@@ -2,33 +2,39 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Dices, Loader2, Sparkles, Spade, HelpCircle, Flame } from "lucide-react";
+import { Dices, Loader2, Sparkles, Spade, HelpCircle, Flame, LayoutGrid } from "lucide-react";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DominoGame } from "@/components/DominoGame";
 import { supabase } from "@/integrations/supabase/client";
 import { playDice, spinWheel, playCards, startQuiz, answerQuiz, playChallenge } from "@/lib/games.functions";
 import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/games")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    room: typeof search.room === "string" ? search.room : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "الألعاب — صوتك" },
       {
         name: "description",
-        content: "النرد وعجلة الحظ والورق والأسئلة والتحديات بالكوينز الافتراضية داخل التطبيق — للترفيه فقط بدون أموال حقيقية.",
+        content:
+          "الدومينو الجماعي والنرد وعجلة الحظ والورق والأسئلة والتحديات بالكوينز الافتراضية — للترفيه فقط بدون أموال حقيقية.",
       },
       { property: "og:title", content: "الألعاب — صوتك" },
-      { property: "og:description", content: "خمس ألعاب بالكوينز الافتراضية، للترفيه فقط." },
+      { property: "og:description", content: "ستة ألعاب بالكوينز الافتراضية، للترفيه فقط." },
     ],
   }),
   component: GamesPage,
 });
 
-type GameKey = "dice" | "wheel" | "cards" | "quiz" | "challenge";
+type GameKey = "domino" | "dice" | "wheel" | "cards" | "quiz" | "challenge";
 
 const GAME_TABS: { key: GameKey; label: string; icon: typeof Dices; flag: string }[] = [
+  { key: "domino", label: "دومينو", icon: LayoutGrid, flag: "domino" },
   { key: "dice", label: "النرد", icon: Dices, flag: "dice" },
   { key: "wheel", label: "العجلة", icon: Sparkles, flag: "wheel" },
   { key: "cards", label: "الورق", icon: Spade, flag: "cards" },
