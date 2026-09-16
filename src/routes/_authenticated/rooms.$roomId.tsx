@@ -576,7 +576,7 @@ function RoomPage() {
         }}
         roomId={roomId}
         targets={giftTargets}
-        initialReceiverId={giftTargetId ?? undefined}
+        {...(giftTargetId ? { initialReceiverId: giftTargetId } : {})}
       />
 
       {/* لوحة التحكم بالمايك: تظهر لصاحب الغرفة والمشرفين عند الضغط على أي مايك */}
