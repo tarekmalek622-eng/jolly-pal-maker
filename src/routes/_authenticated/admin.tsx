@@ -2,7 +2,21 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import {
+  Coins,
+  CreditCard,
+  Crown,
+  Flag,
+  Gamepad2,
+  Gem,
+  Gift,
+  HelpCircle,
+  Loader2,
+  ScrollText,
+  ShoppingBag,
+  Sofa,
+  Users,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -49,18 +63,18 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 const TABS = [
-  { key: "users", label: "المستخدمون" },
-  { key: "rooms", label: "الغرف" },
-  { key: "gifts", label: "الهدايا" },
-  { key: "store", label: "المتجر" },
-  { key: "vip", label: "VIP" },
-  { key: "cvip", label: "CVIP" },
-  { key: "coins", label: "الكوينز" },
-  { key: "topups", label: "طلبات الشحن" },
-  { key: "games", label: "الألعاب" },
-  { key: "quiz", label: "الأسئلة" },
-  { key: "reports", label: "الإبلاغات" },
-  { key: "logs", label: "السجل" },
+  { key: "users", label: "المستخدمون", icon: Users },
+  { key: "rooms", label: "الغرف", icon: Sofa },
+  { key: "gifts", label: "الهدايا", icon: Gift },
+  { key: "store", label: "المتجر", icon: ShoppingBag },
+  { key: "vip", label: "VIP", icon: Crown },
+  { key: "cvip", label: "CVIP", icon: Gem },
+  { key: "coins", label: "الكوينز", icon: Coins },
+  { key: "topups", label: "طلبات الشحن", icon: CreditCard },
+  { key: "games", label: "الألعاب", icon: Gamepad2 },
+  { key: "quiz", label: "الأسئلة", icon: HelpCircle },
+  { key: "reports", label: "الإبلاغات", icon: Flag },
+  { key: "logs", label: "السجل", icon: ScrollText },
 ] as const;
 
 function AdminPage() {
@@ -87,20 +101,29 @@ function AdminPage() {
   }
 
   return (
-    <AppShell header={<PageHeader title="لوحة الإدارة" subtitle="تحكم كامل بالتطبيق" />}>
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={cn(
-              "shrink-0 rounded-full border px-3 py-1.5 text-xs",
-              tab === t.key ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
+    <AppShell header={<PageHeader title="لوحة الإدارة" subtitle="تحكم كامل بالتطبيق — كل إجراء يُسجَّل" />}>
+      <div className="sticky top-0 z-20 -mx-4 mb-4 bg-background/85 px-4 pb-2 pt-1 backdrop-blur-md">
+        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 rounded-2xl border px-3 py-2 text-xs font-bold transition-all duration-200 active:scale-95",
+                  active
+                    ? "border-primary/60 gradient-gold text-primary-foreground shadow-[0_6px_18px_-8px_oklch(0.82_0.16_85/0.9)]"
+                    : "border-border bg-surface text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {tab === "users" && <UsersTab />}
