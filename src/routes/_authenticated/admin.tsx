@@ -772,6 +772,169 @@ function VipTab() {
   );
 }
 
+/* ---------------- CVIP ---------------- */
+
+type CvipPlanRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  duration_days: number;
+  sort_order: number;
+  badge_url: string | null;
+  frame_url: string | null;
+  background_url: string | null;
+  name_effect: string | null;
+  room_effect: string | null;
+  is_active: boolean;
+};
+
+const emptyCvip = {
+  id: "" as string,
+  name: "",
+  description: "",
+  price: "100000",
+  duration_days: "30",
+  sort_order: "0",
+  badge_url: "",
+  frame_url: "",
+  background_url: "",
+  name_effect: "",
+  room_effect: "",
+};
+
+function CvipTab() {
+  const [form, setForm] = useState(emptyCvip);
+
+  const plans = useQuery({
+    queryKey: ["admin-cvip"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cvip_plans")
+        .select(
+          "id, name, description, price, duration_days, sort_order, badge_url, frame_url, background_url, name_effect, room_effect, is_active",
+        )
+        .order("sort_order");
+      if (error) throw error;
+      return (data ?? []) as CvipPlanRow[];
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async () =>
+      adminUpsertCvipPlan({
+        data: {
+          id: form.id || undefined,
+          name: form.name.trim(),
+          description: form.description.trim() || undefined,
+          price: Number(form.price),
+          duration_days: Number(form.duration_days),
+          sort_order: Number(form.sort_order),
+          badge_url: form.badge_url.trim() || undefined,
+          frame_url: form.frame_url.trim() || undefined,
+          background_url: form.background_url.trim() || undefined,
+          name_effect: form.name_effect.trim() || undefined,
+          room_effect: form.room_effect.trim() || undefined,
+          is_active: true,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("تم حفظ الخطة");
+      setForm(emptyCvip);
+      void plans.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  const toggle = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) =>
+      adminSetActive({ data: { table: "cvip_plans", id, active } }),
+    onSuccess: () => void plans.refetch(),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="surface-card space-y-2 p-3">
+        <p className="text-sm font-bold">{form.id ? "تعديل خطة CVIP" : "إضافة خطة CVIP"}</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="الاسم" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+          <Field label="السعر" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Field
+            label="المدة (يوم)"
+            type="number"
+            value={form.duration_days}
+            onChange={(v) => setForm({ ...form, duration_days: v })}
+          />
+          <Field
+            label="الترتيب"
+            type="number"
+            value={form.sort_order}
+            onChange={(v) => setForm({ ...form, sort_order: v })}
+          />
+        </div>
+        <Field label="الوصف" value={form.description} onChange={(v) => setForm({ ...form, description: v })} />
+        <Field label="رابط الشارة" value={form.badge_url} onChange={(v) => setForm({ ...form, badge_url: v })} />
+        <Field label="رابط الإطار" value={form.frame_url} onChange={(v) => setForm({ ...form, frame_url: v })} />
+        <Field label="رابط الخلفية" value={form.background_url} onChange={(v) => setForm({ ...form, background_url: v })} />
+        <div className="flex gap-2">
+          <Button
+            disabled={save.isPending || form.name.trim().length < 1}
+            onClick={() => save.mutate()}
+            className="h-10 flex-1 rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
+          >
+            حفظ
+          </Button>
+          {form.id ? (
+            <Button
+              variant="outline"
+              onClick={() => setForm(emptyCvip)}
+              className="h-10 rounded-xl border-border bg-surface-2 text-xs"
+            >
+              إلغاء التعديل
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      {plans.data?.map((p) => (
+        <div key={p.id} className="surface-card flex items-center gap-3 p-3">
+          <button
+            className="min-w-0 flex-1 text-start"
+            onClick={() =>
+              setForm({
+                id: p.id,
+                name: p.name,
+                description: p.description ?? "",
+                price: String(p.price),
+                duration_days: String(p.duration_days),
+                sort_order: String(p.sort_order),
+                badge_url: p.badge_url ?? "",
+                frame_url: p.frame_url ?? "",
+                background_url: p.background_url ?? "",
+                name_effect: p.name_effect ?? "",
+                room_effect: p.room_effect ?? "",
+              })
+            }
+          >
+            <p className="truncate text-sm font-semibold">{p.name}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {p.price} كوينز · {p.duration_days} يوم {p.is_active ? "" : "· مخفية"}
+            </p>
+          </button>
+          <ActiveButton
+            active={p.is_active}
+            busy={toggle.isPending}
+            onToggle={() => toggle.mutate({ id: p.id, active: !p.is_active })}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ---------------- باقات الكوينز ---------------- */
 
 function CoinsTab() {
@@ -876,7 +1039,7 @@ function CoinsTab() {
 
 /* ---------------- إعدادات الألعاب ---------------- */
 
-type GameFlags = { dice: boolean; wheel: boolean; cards: boolean; quiz: boolean };
+type GameFlags = { dice: boolean; wheel: boolean; cards: boolean; quiz: boolean; domino: boolean };
 type BetLimits = { min_bet: number; max_bet: number };
 
 function GamesTab() {
