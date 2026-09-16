@@ -80,7 +80,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       void room.disconnect();
       roomRef.current = null;
     };
-  }, [roomId, attach]);
+  }, [roomId, attach, retryKey]);
 
   // Refresh publish permission when the user's mic seat changes.
   useEffect(() => {
