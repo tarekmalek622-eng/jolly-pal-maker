@@ -94,7 +94,6 @@ function HomePage() {
     games: (r: RoomRow) => r.category === "games",
     voice: (r: RoomRow) => r.category === "voice" || r.category === "music",
   } as const;
-  type FilterKey = keyof typeof filters;
   const trending = [...list]
     .filter(filters[tab])
     .sort((a, b) => b.member_count - a.member_count || b.popularity - a.popularity)
