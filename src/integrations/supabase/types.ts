@@ -1208,6 +1208,90 @@ export type Database = {
         }
         Relationships: []
       }
+      wheel_bets: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          payout: number
+          room_id: string | null
+          round_id: string
+          slot_key: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          payout?: number
+          room_id?: string | null
+          round_id: string
+          slot_key: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          payout?: number
+          room_id?: string | null
+          round_id?: string
+          slot_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wheel_bets_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wheel_bets_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "wheel_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wheel_rounds: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          round_no: number
+          settled_at: string | null
+          slots: Json
+          started_at: string
+          status: string
+          winning_key: string | null
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          round_no?: number
+          settled_at?: string | null
+          slots: Json
+          started_at?: string
+          status?: string
+          winning_key?: string | null
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          round_no?: number
+          settled_at?: string | null
+          slots?: Json
+          started_at?: string
+          status?: string
+          winning_key?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1601,6 +1685,47 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "room_mics"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      wheel_bet: {
+        Args: { _amount: number; _room_id?: string; _slot_key: string }
+        Returns: {
+          amount: number
+          created_at: string
+          id: string
+          payout: number
+          room_id: string | null
+          round_id: string
+          slot_key: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wheel_bets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      wheel_settings: { Args: never; Returns: Json }
+      wheel_settle: { Args: { _round_id: string }; Returns: undefined }
+      wheel_tick: {
+        Args: never
+        Returns: {
+          created_at: string
+          ends_at: string
+          id: string
+          round_no: number
+          settled_at: string | null
+          slots: Json
+          started_at: string
+          status: string
+          winning_key: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wheel_rounds"
           isOneToOne: true
           isSetofReturn: false
         }
