@@ -80,7 +80,22 @@ function HomePage() {
   });
 
   const list = rooms.data ?? [];
-  const trending = [...list].sort((a, b) => b.member_count - a.member_count).slice(0, 12);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const filters = {
+    all: (r: RoomRow) => true,
+    active: (r: RoomRow) => r.member_count > 0,
+    new: (r: RoomRow) => Date.now() - new Date(r.created_at).getTime() < 3 * dayMs,
+    featured: (r: RoomRow) => r.member_count >= 10 || r.popularity >= 100,
+    public: (r: RoomRow) => r.room_type === "public",
+    private: (r: RoomRow) => r.room_type === "private",
+    games: (r: RoomRow) => r.category === "games",
+    voice: (r: RoomRow) => r.category === "voice" || r.category === "music",
+  } as const;
+  type FilterKey = keyof typeof filters;
+  const trending = [...list]
+    .filter(filters[tab])
+    .sort((a, b) => b.member_count - a.member_count || b.popularity - a.popularity)
+    .slice(0, 24);
 
   const ownerIds = [...new Set(list.map((r) => r.owner_id))].sort();
   const owners = useQuery({
