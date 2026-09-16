@@ -108,6 +108,18 @@ function UserPage() {
     onError: () => toast.error("تعذر الحجب"),
   });
 
+  const askRelation = useMutation({
+    mutationFn: async (type: RelationType) => {
+      if (!target) return;
+      await requestRelationship(target.id, type);
+    },
+    onSuccess: () => {
+      toast.success("تم إرسال طلب العلاقة");
+      setRelationOpen(false);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر إرسال الطلب"),
+  });
+
   const report = useMutation({
     mutationFn: async () => {
       if (!userId || !target) return;
