@@ -215,6 +215,54 @@ function MePage() {
           ))}
         </div>
 
+        {/* تفعيل مميزات VIP و CVIP */}
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setPrivSheet("vip")}
+            className={cn(
+              "flex items-center gap-2 rounded-2xl border p-3 text-start transition-transform active:scale-[0.98]",
+              `vip-tier-${Math.max(1, Math.min(5, p?.vip_level ?? 1))}`,
+            )}
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-background/30">
+              <Crown className="h-4.5 w-4.5 text-primary" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-xs font-bold">VIP</span>
+              <span className="block text-[10px] text-muted-foreground">
+                {(p?.vip_level ?? 0) > 0 ? `مستوى ${p?.vip_level} · إدارة` : "تفعيل المميزات"}
+              </span>
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setPrivSheet("cvip")}
+            className="cvip-showcase flex items-center gap-2 p-3 text-start transition-transform active:scale-[0.98]"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-background/30">
+              <Sparkles className="h-4.5 w-4.5 text-accent" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-xs font-bold">CVIP</span>
+              <span className="block text-[10px] text-muted-foreground">
+                {p?.is_cvip ? "مفعّل · إدارة" : "تفعيل المميزات"}
+              </span>
+            </span>
+          </button>
+        </div>
+
+        <VipCvipSheet
+          open={privSheet !== null}
+          onOpenChange={(v) => !v && setPrivSheet(null)}
+          mode={privSheet ?? "vip"}
+          currentVip={p?.vip_level ?? 0}
+          isCvip={Boolean(p?.is_cvip)}
+          cvipExpiresAt={p?.cvip_expires_at ?? null}
+        />
+
+
+
         {p?.bio && <p className="mt-4 text-sm text-muted-foreground">{p.bio}</p>}
 
         <Button
