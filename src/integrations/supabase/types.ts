@@ -1315,6 +1315,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_set_profile_suspended: {
+        Args: { _suspended: boolean; _user_id: string }
+        Returns: boolean
+      }
       approve_coin_purchase: {
         Args: { _admin: string; _request_id: string }
         Returns: number

@@ -80,10 +80,10 @@ export const adminSetSuspended = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("profiles")
-      .update({ is_suspended: data.suspended })
-      .eq("id", data.userId);
+    const { error } = await supabaseAdmin.rpc("admin_set_profile_suspended", {
+      _user_id: data.userId,
+      _suspended: data.suspended,
+    });
     if (error) throw new Error(error.message);
     await log(context.userId, data.userId, "set_suspended", String(!data.suspended), String(data.suspended));
     return { ok: true };
