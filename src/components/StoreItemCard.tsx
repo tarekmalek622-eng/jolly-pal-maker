@@ -38,9 +38,18 @@ export function StoreItemCard({
 
   return (
     <div className="surface-card overflow-hidden">
-      <div className="flex h-24 items-center justify-center gradient-surface">
+      <div className="flex h-28 items-center justify-center gradient-surface p-1">
         {img ? (
-          <img src={img} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
+          <img
+            src={img}
+            alt={item.name}
+            className={
+              item.category === "room_background" || item.category === "profile_background"
+                ? "h-full w-full rounded-lg object-cover"
+                : "h-full w-full object-contain"
+            }
+            loading="lazy"
+          />
         ) : (
           <span className="text-2xl">🎁</span>
         )}
