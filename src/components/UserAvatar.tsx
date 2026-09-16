@@ -59,7 +59,7 @@ export function UserAvatar({ src, name, size = 48, vipLevel = 0, frame, online, 
           src={frameUrl}
           alt=""
           aria-hidden
-          className="pointer-events-none absolute -inset-[12%] h-[124%] w-[124%] object-contain"
+          className="pointer-events-none absolute -inset-[16%] h-[132%] w-[132%] max-w-none object-contain"
           loading="lazy"
         />
       )}

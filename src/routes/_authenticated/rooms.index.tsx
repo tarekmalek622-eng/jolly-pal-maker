@@ -100,7 +100,9 @@ function RoomsPage() {
         <section className="mb-6">
           <h2 className="mb-2 text-sm font-bold text-muted-foreground">غرفي</h2>
           <div className="space-y-3">
-            {myRooms.data?.map((r) => <RoomCard key={r.id} room={r} />)}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {myRooms.data?.map((r) => <RoomCard key={r.id} room={r} />)}
+            </div>
           </div>
         </section>
       )}
@@ -113,7 +115,9 @@ function RoomsPage() {
         <EmptyState title="لا توجد غرف في هذا التصنيف" hint="أنشئ أول غرفة الآن" />
       ) : (
         <div className="space-y-3">
-          {filtered.map((r) => <RoomCard key={r.id} room={r} />)}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {filtered.map((r) => <RoomCard key={r.id} room={r} />)}
+          </div>
         </div>
       )}
 

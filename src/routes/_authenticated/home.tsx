@@ -170,7 +170,9 @@ function HomePage() {
                   </div>
                 </button>
               ))}
-              {searchResults.data?.rooms.map((r) => <RoomCard key={r.id} room={r} />)}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {searchResults.data?.rooms.map((r) => <RoomCard key={r.id} room={r} />)}
+              </div>
             </>
           )}
         </section>
@@ -216,7 +218,7 @@ function HomePage() {
                 }
               />
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {trending.map((r) => (
                   <RoomCard key={r.id} room={r} ownerName={owners.data?.[r.owner_id]} />
                 ))}
