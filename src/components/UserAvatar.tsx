@@ -3,12 +3,12 @@ import { resolveMediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  src?: string | null;
-  name?: string | null;
-  size?: number;
-  vipLevel?: number;
-  online?: boolean;
-  className?: string;
+  src?: string | null | undefined;
+  name?: string | null | undefined;
+  size?: number | undefined;
+  vipLevel?: number | undefined;
+  online?: boolean | undefined;
+  className?: string | undefined;
 };
 
 export function UserAvatar({ src, name, size = 48, vipLevel = 0, online, className }: Props) {
