@@ -148,7 +148,7 @@ function MePage() {
       <div className="surface-card p-5">
         <div className="flex items-center gap-4">
           <button type="button" onClick={() => fileRef.current?.click()} className="relative">
-            <UserAvatar src={p?.avatar_url} name={p?.display_name} size={72} vipLevel={p?.vip_level ?? 0} />
+            <UserAvatar src={p?.avatar_url} name={p?.display_name} size={72} vipLevel={p?.vip_level ?? 0} frame={p?.frame_url} />
             <span className="absolute -bottom-1 -end-1 flex h-7 w-7 items-center justify-center rounded-full gradient-gold">
               <Camera className="h-3.5 w-3.5 text-primary-foreground" />
             </span>

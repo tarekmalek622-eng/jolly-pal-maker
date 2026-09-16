@@ -137,7 +137,7 @@ function UserPage() {
     >
       <div className="surface-card p-5 text-center">
         <div className="flex justify-center">
-          <UserAvatar src={target.avatar_url} name={target.display_name} size={88} vipLevel={target.vip_level} online={target.is_online} />
+          <UserAvatar src={target.avatar_url} name={target.display_name} size={88} vipLevel={target.vip_level} frame={target.frame_url} online={target.is_online} />
         </div>
         <p className="mt-3 text-lg font-bold">{target.display_name}</p>
         <p className="text-[11px] text-muted-foreground">ID: {target.public_id}</p>

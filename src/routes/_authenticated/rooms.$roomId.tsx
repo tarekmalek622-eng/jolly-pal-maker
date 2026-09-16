@@ -121,7 +121,7 @@ function RoomPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, public_id, display_name, avatar_url, vip_level, level")
+        .select("id, public_id, display_name, avatar_url, frame_url, vip_level, level")
         .in("id", peopleIds);
       if (error) throw error;
       return (data ?? []) as Person[];
@@ -411,7 +411,7 @@ function RoomPage() {
                 )}
               >
                 {person ? (
-                  <UserAvatar src={person.avatar_url} name={person.display_name} size={54} vipLevel={person.vip_level} />
+                  <UserAvatar src={person.avatar_url} name={person.display_name} size={54} vipLevel={person.vip_level} frame={person.frame_url} />
                 ) : seat.is_locked ? (
                   <Lock className="h-5 w-5 text-muted-foreground" />
                 ) : (
@@ -565,7 +565,7 @@ function RoomPage() {
               <div className="space-y-2">
                 {(people.data ?? []).map((p) => (
                   <div key={p.id} className="surface-card flex items-center gap-3 p-3">
-                    <UserAvatar src={p.avatar_url} name={p.display_name} size={40} vipLevel={p.vip_level} />
+                    <UserAvatar src={p.avatar_url} name={p.display_name} size={40} vipLevel={p.vip_level} frame={p.frame_url} />
                     <p className="flex-1 truncate text-sm font-semibold">{p.display_name}</p>
                     {p.id !== userId && (
                       <>
