@@ -1,9 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
 import { ArrowDownLeft, ArrowUpRight, Coins, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { createCoinPurchaseRequest } from "@/lib/wallet.functions";
 import { useSupabaseSession, useWallet } from "@/hooks/use-session";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/wallet")({
   head: () => ({
