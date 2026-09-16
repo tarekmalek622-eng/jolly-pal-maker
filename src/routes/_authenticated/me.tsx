@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Camera, Coins, Crown, LogOut, Shield, Sparkles, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,21 @@ function MePage() {
     },
   });
 
+  const [equipping, setEquipping] = useState<string | null>(null);
+
+  async function toggleEquip(userItemId: string, equip: boolean) {
+    setEquipping(userItemId);
+    const { error } = await supabase.rpc("equip_item", { _user_item_id: userItemId, _equip: equip });
+    setEquipping(null);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(equip ? "تم تطبيق العنصر" : "تم إزالة العنصر");
+    void myItems.refetch();
+    void profile.refetch();
+  }
+
   async function saveProfile() {
     if (!userId) return;
     if (name.trim().length < 2) {
@@ -132,7 +148,7 @@ function MePage() {
       <div className="surface-card p-5">
         <div className="flex items-center gap-4">
           <button type="button" onClick={() => fileRef.current?.click()} className="relative">
-            <UserAvatar src={p?.avatar_url} name={p?.display_name} size={72} vipLevel={p?.vip_level ?? 0} />
+            <UserAvatar src={p?.avatar_url} name={p?.display_name} size={72} vipLevel={p?.vip_level ?? 0} frame={p?.frame_url} />
             <span className="absolute -bottom-1 -end-1 flex h-7 w-7 items-center justify-center rounded-full gradient-gold">
               <Camera className="h-3.5 w-3.5 text-primary-foreground" />
             </span>
@@ -259,6 +275,18 @@ function MePage() {
                 <p className="text-[10px] text-muted-foreground">
                   {it.expires_at ? new Date(it.expires_at).toLocaleDateString("ar") : "دائم"}
                 </p>
+                <button
+                  disabled={equipping === it.id}
+                  onClick={() => void toggleEquip(it.id, !it.is_equipped)}
+                  className={cn(
+                    "mt-2 w-full rounded-lg border px-2 py-1.5 text-[10px]",
+                    it.is_equipped
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border bg-surface-2 text-muted-foreground",
+                  )}
+                >
+                  {it.is_equipped ? "مُستخدم" : "استخدم"}
+                </button>
               </div>
             ))}
           </div>

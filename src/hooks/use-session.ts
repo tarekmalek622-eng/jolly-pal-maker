@@ -37,6 +37,8 @@ export type Profile = {
   gender: "male" | "female" | null;
   bio: string | null;
   avatar_url: string | null;
+  frame_url: string | null;
+  profile_background_url: string | null;
   level: number;
   xp: number;
   vip_level: number;

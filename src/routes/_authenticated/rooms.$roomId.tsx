@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { resolveMediaUrl } from "@/lib/media";
 import { toast } from "sonner";
 import {
   ArrowRight,
@@ -59,6 +60,7 @@ type Person = {
   public_id: string;
   display_name: string;
   avatar_url: string | null;
+  frame_url: string | null;
   vip_level: number;
   level: number;
 };
@@ -121,7 +123,7 @@ function RoomPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, public_id, display_name, avatar_url, vip_level, level")
+        .select("id, public_id, display_name, avatar_url, frame_url, vip_level, level")
         .in("id", peopleIds);
       if (error) throw error;
       return (data ?? []) as Person[];
@@ -376,6 +378,8 @@ function RoomPage() {
         </header>
       }
     >
+      <RoomBackground url={room.data.background_url} />
+
       <div className="grid grid-cols-4 gap-3">
         {(mics.data ?? []).map((seat) => {
           const person = personOf(seat.user_id);
@@ -411,7 +415,7 @@ function RoomPage() {
                 )}
               >
                 {person ? (
-                  <UserAvatar src={person.avatar_url} name={person.display_name} size={54} vipLevel={person.vip_level} />
+                  <UserAvatar src={person.avatar_url} name={person.display_name} size={54} vipLevel={person.vip_level} frame={person.frame_url} />
                 ) : seat.is_locked ? (
                   <Lock className="h-5 w-5 text-muted-foreground" />
                 ) : (
@@ -565,7 +569,7 @@ function RoomPage() {
               <div className="space-y-2">
                 {(people.data ?? []).map((p) => (
                   <div key={p.id} className="surface-card flex items-center gap-3 p-3">
-                    <UserAvatar src={p.avatar_url} name={p.display_name} size={40} vipLevel={p.vip_level} />
+                    <UserAvatar src={p.avatar_url} name={p.display_name} size={40} vipLevel={p.vip_level} frame={p.frame_url} />
                     <p className="flex-1 truncate text-sm font-semibold">{p.display_name}</p>
                     {p.id !== userId && (
                       <>
@@ -609,5 +613,28 @@ function RoomPage() {
         </SheetContent>
       </Sheet>
     </AppShell>
+  );
+}
+
+function RoomBackground({ url }: { url: string | null }) {
+  const [resolved, setResolved] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void resolveMediaUrl(url).then((next) => {
+      if (active) setResolved(next);
+    });
+    return () => {
+      active = false;
+    };
+  }, [url]);
+
+  if (!resolved) return null;
+
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+      <img src={resolved} alt="" className="h-full w-full object-cover opacity-30" />
+      <div className="absolute inset-0 bg-background/60" />
+    </div>
   );
 }

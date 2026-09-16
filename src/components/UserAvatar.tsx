@@ -7,12 +7,14 @@ type Props = {
   name?: string | null | undefined;
   size?: number | undefined;
   vipLevel?: number | undefined;
+  frame?: string | null | undefined;
   online?: boolean | undefined;
   className?: string | undefined;
 };
 
-export function UserAvatar({ src, name, size = 48, vipLevel = 0, online, className }: Props) {
+export function UserAvatar({ src, name, size = 48, vipLevel = 0, frame, online, className }: Props) {
   const [url, setUrl] = useState<string | null>(null);
+  const [frameUrl, setFrameUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -23,6 +25,16 @@ export function UserAvatar({ src, name, size = 48, vipLevel = 0, online, classNa
       active = false;
     };
   }, [src]);
+
+  useEffect(() => {
+    let active = true;
+    void resolveMediaUrl(frame).then((next) => {
+      if (active) setFrameUrl(next);
+    });
+    return () => {
+      active = false;
+    };
+  }, [frame]);
 
   const initial = (name ?? "؟").trim().charAt(0);
 
@@ -42,6 +54,15 @@ export function UserAvatar({ src, name, size = 48, vipLevel = 0, online, classNa
           </div>
         )}
       </div>
+      {frameUrl && (
+        <img
+          src={frameUrl}
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute -inset-[12%] h-[124%] w-[124%] object-contain"
+          loading="lazy"
+        />
+      )}
       {online != null && (
         <span
           className={cn(
