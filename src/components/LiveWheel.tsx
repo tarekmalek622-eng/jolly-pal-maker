@@ -115,17 +115,38 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const finished = round.data?.status === "finished";
   const remaining = round.data ? Math.max(0, Math.ceil((new Date(round.data.ends_at).getTime() - now) / 1000)) : 0;
 
-  // spin the wheel to the winning slot once the server settles the round
+  // مؤشر يلف على الفواكه أثناء المراهنة
+  useEffect(() => {
+    if (finished || slots.length === 0) return;
+    const t = window.setInterval(() => setHighlight((h) => (h + 1) % slots.length), 420);
+    return () => window.clearInterval(t);
+  }, [finished, slots.length]);
+
+  // عند تسوية الجولة من السيرفر: يتباطأ المؤشر ثم يتوقف على الفائزة
   useEffect(() => {
     const data = round.data;
     if (!data || data.status !== "finished" || !data.winning_key) return;
     if (lastSettled.current === data.id) return;
     lastSettled.current = data.id;
-    const index = data.slots.findIndex((s) => s.key === data.winning_key);
-    const per = 360 / Math.max(1, data.slots.length);
-    setSpinAngle((prev) => prev + 1440 + ((360 - index * per) % 360));
+    const target = data.slots.findIndex((s) => s.key === data.winning_key);
+    const count = Math.max(1, data.slots.length);
+    let step = 0;
+    const total = count * 2 + ((target - highlight + count) % count);
+    let timer = 0;
+    const tick = () => {
+      step += 1;
+      setHighlight((h) => (h + 1) % count);
+      if (step < total) {
+        timer = window.setTimeout(tick, 90 + step * 12);
+      } else {
+        setHighlight(target < 0 ? 0 : target);
+      }
+    };
+    timer = window.setTimeout(tick, 90);
     refreshMoney();
     void history.refetch();
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round.data, refreshMoney, history]);
 
   const place = useMutation({
