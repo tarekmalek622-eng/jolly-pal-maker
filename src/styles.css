@@ -317,3 +317,24 @@
   border-radius: calc(1.25rem - 3px);
   background: var(--gradient-surface);
 }
+
+/* ===== Hide Lovable branding badge everywhere ===== */
+#lovable-badge,
+#lovable-badge *,
+[id^="lovable-badge"],
+[id*="lovable-badge"],
+[class*="lovable-badge"],
+[class*="LovableBadge"],
+[data-lovable-badge],
+a[href*="lovable.dev"][target="_blank"],
+iframe[src*="lovable.dev/badge"],
+iframe[title*="Lovable"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
