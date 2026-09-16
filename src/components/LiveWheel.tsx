@@ -299,7 +299,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             const left = 50 + r * Math.cos(a);
             const top = 50 + r * Math.sin(a);
             const stat = perSlot.get(s.key) ?? { total: 0, mine: 0, players: 0 };
-            const active = highlight === i;
+            const active = spinning && highlight === i;
             const isWinner = finished && !spinning && round.data?.winning_key === s.key;
             return (
               <button
