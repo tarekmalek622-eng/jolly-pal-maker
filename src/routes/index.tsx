@@ -190,16 +190,24 @@ function RegisterForm() {
       await ensureDeviceSession();
       const verdict = await screenProfilePhoto({ data: { imageDataUrl: dataUrl } });
       if (!verdict.allowed) {
-        toast.error(verdict.reason ?? "الصورة مرفوضة لأنها غير مناسبة");
+        toast.error(verdict.reason ?? "الصورة غير مناسبة", {
+          description: "اختر صورة شخصية لائقة بدون محتوى للبالغين، وحسابك لم يتأثر.",
+          duration: 7000,
+        });
         setPhoto(null);
         setPreview(null);
         return;
       }
       setPhoto(file);
       setPreview(dataUrl);
-      toast.success("تم قبول الصورة");
+      toast.success(verdict.checked ? "تم قبول الصورة" : "تم اختيار الصورة");
     } catch {
-      toast.error("تعذر فحص الصورة، حاول مرة أخرى");
+      // فحص الصورة خدمة مساعدة: لو تعذّر الفحص نقبل الصورة ولا نمنع إنشاء الحساب
+      setPhoto(file);
+      setPreview(await fileToDataUrl(file).catch(() => null));
+      toast.message("تم اختيار الصورة", {
+        description: "لم نتمكن من فحص الصورة الآن، وسيتم مراجعتها لاحقًا.",
+      });
     } finally {
       setScreening(false);
     }
