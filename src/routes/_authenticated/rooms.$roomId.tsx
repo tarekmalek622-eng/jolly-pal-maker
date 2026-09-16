@@ -377,6 +377,8 @@ function RoomPage() {
         </header>
       }
     >
+      <RoomBackground url={room.data.background_url} />
+
       <div className="grid grid-cols-4 gap-3">
         {(mics.data ?? []).map((seat) => {
           const person = personOf(seat.user_id);
@@ -610,5 +612,28 @@ function RoomPage() {
         </SheetContent>
       </Sheet>
     </AppShell>
+  );
+}
+
+function RoomBackground({ url }: { url: string | null }) {
+  const [resolved, setResolved] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void resolveMediaUrl(url).then((next) => {
+      if (active) setResolved(next);
+    });
+    return () => {
+      active = false;
+    };
+  }, [url]);
+
+  if (!resolved) return null;
+
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+      <img src={resolved} alt="" className="h-full w-full object-cover opacity-30" />
+      <div className="absolute inset-0 bg-background/60" />
+    </div>
   );
 }
