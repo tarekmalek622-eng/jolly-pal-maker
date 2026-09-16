@@ -141,28 +141,134 @@ function Intro({ onStart }: { onStart: () => void }) {
   );
 }
 
-/** Creates (or restores) the silent device-bound session used instead of email/password login. */
-async function ensureDeviceSession() {
-  let session = (await supabase.auth.getSession()).data.session;
-  if (session) return session;
+async function currentSession() {
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) throw new Error("انتهت الجلسة، سجّل الدخول برقمك مرة أخرى");
+  return data.session;
+}
 
-  const creds = readDeviceCredentials() ?? createDeviceCredentials();
-  const signIn = await supabase.auth.signInWithPassword(creds);
-  if (!signIn.error) {
-    session = signIn.data.session;
-  } else {
-    const fresh = createDeviceCredentials();
-    const signUp = await supabase.auth.signUp({ email: fresh.email, password: fresh.password });
-    if (signUp.error) throw signUp.error;
-    session = signUp.data.session;
-    if (!session) {
-      const retry = await supabase.auth.signInWithPassword(fresh);
-      if (retry.error) throw retry.error;
-      session = retry.data.session;
+/** Phone + password sign in / sign up. No email, no verification code. */
+function PhoneAuth({
+  onNeedsProfile,
+  onSignedIn,
+}: {
+  onNeedsProfile: () => void;
+  onSignedIn: () => void;
+}) {
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [phone, setPhone] = useState(readRememberedPhone());
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function afterSession(userId: string) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile) onSignedIn();
+    else onNeedsProfile();
+  }
+
+  async function submit() {
+    if (!isValidPhone(phone)) {
+      toast.error("اكتب رقم هاتف صحيح");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("كلمة السر 6 أحرف أو أرقام على الأقل");
+      return;
+    }
+    setBusy(true);
+    try {
+      const email = phoneToIdentifier(phone);
+      if (mode === "signup") {
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+          if (/already/i.test(error.message)) {
+            toast.error("هذا الرقم مسجّل بالفعل، سجّل الدخول");
+            setMode("login");
+            return;
+          }
+          throw error;
+        }
+      }
+      const signIn = await supabase.auth.signInWithPassword({ email, password });
+      if (signIn.error) {
+        toast.error("الرقم أو كلمة السر غير صحيحة");
+        return;
+      }
+      rememberPhone(phone);
+      await afterSession(signIn.data.user.id);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذر إتمام العملية");
+    } finally {
+      setBusy(false);
     }
   }
-  if (!session) throw new Error("لم نتمكن من إنشاء الجلسة");
-  return session;
+
+  return (
+    <div className="flex flex-1 flex-col justify-center">
+      <h1 className="text-2xl font-bold">
+        {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب جديد"}
+      </h1>
+      <p className="mt-1 text-sm text-muted-foreground">برقم هاتفك وكلمة السر فقط.</p>
+
+      <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl bg-surface p-1">
+        {([["login", "دخول"], ["signup", "حساب جديد"]] as const).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setMode(value)}
+            className={cn(
+              "h-11 rounded-xl text-sm font-semibold transition-colors",
+              mode === value ? "gradient-gold text-primary-foreground" : "text-muted-foreground",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-5 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="phone">رقم الهاتف</Label>
+          <Input
+            id="phone"
+            type="tel"
+            inputMode="numeric"
+            dir="ltr"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="01xxxxxxxxx"
+            className="h-12 rounded-2xl bg-surface text-left"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">كلمة السر</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••"
+            className="h-12 rounded-2xl bg-surface"
+          />
+        </div>
+      </div>
+
+      <Button
+        onClick={() => void submit()}
+        disabled={busy}
+        className="mt-7 h-14 w-full rounded-2xl gradient-gold text-base font-bold text-primary-foreground hover:opacity-90"
+      >
+        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : mode === "login" ? "دخول" : "متابعة"}
+      </Button>
+      <p className="mt-3 text-center text-xs text-muted-foreground">
+        لا نطلب بريدًا إلكترونيًا ولا رمز تحقق.
+      </p>
+    </div>
+  );
 }
 
 function RegisterForm() {
