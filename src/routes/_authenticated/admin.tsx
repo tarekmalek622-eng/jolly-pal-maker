@@ -1095,7 +1095,13 @@ function StoreTab() {
             onChange={(v) => setForm({ ...form, required_vip: v })}
           />
         </div>
-        <Field label="رابط الصورة" value={form.image_url} onChange={(v) => setForm({ ...form, image_url: v })} />
+        <MediaUpload
+          label="صورة المنتج من الجهاز (PNG/JPG/WebP)"
+          kind="image"
+          accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
+          value={form.image_url}
+          onChange={(v) => setForm({ ...form, image_url: v })}
+        />
         <RaritySelect value={form.rarity} onChange={(v) => setForm({ ...form, rarity: v })} />
         <Button
           disabled={save.isPending || form.name.trim().length < 1}
