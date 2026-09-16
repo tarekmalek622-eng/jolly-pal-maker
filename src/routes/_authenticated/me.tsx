@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Camera, Coins, Crown, LogOut, Shield, Sparkles, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,21 @@ function MePage() {
       return data ?? [];
     },
   });
+
+  const [equipping, setEquipping] = useState<string | null>(null);
+
+  async function toggleEquip(userItemId: string, equip: boolean) {
+    setEquipping(userItemId);
+    const { error } = await supabase.rpc("equip_item", { _user_item_id: userItemId, _equip: equip });
+    setEquipping(null);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(equip ? "تم تطبيق العنصر" : "تم إزالة العنصر");
+    void myItems.refetch();
+    void profile.refetch();
+  }
 
   async function saveProfile() {
     if (!userId) return;
