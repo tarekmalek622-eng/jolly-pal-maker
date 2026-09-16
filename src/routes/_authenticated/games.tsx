@@ -13,8 +13,8 @@ import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-sess
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/games")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    room: typeof search.room === "string" ? search.room : undefined,
+  validateSearch: (search: Record<string, unknown>): { room?: string } => ({
+    room: typeof search["room"] === "string" ? search["room"] : undefined,
   }),
   head: () => ({
     meta: [
