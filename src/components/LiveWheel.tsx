@@ -53,9 +53,16 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     refetchIntervalInBackground: false,
     queryFn: async () => {
       const { data, error } = await db.rpc("wheel_tick");
-      if (error) throw new Error(error.message);
-      const row = (Array.isArray(data) ? data[0] : data) as WheelRound | null;
-      return row;
+      if (!error) return (Array.isArray(data) ? data[0] : data) as WheelRound | null;
+      // اللعبة موقوفة من الإدارة: نعرض آخر جولة ونتيجتها بدل شاشة تحميل دائمة
+      const last = await db
+        .from("wheel_rounds")
+        .select("id, round_no, status, slots, winning_key, started_at, ends_at")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (last.error) throw new Error(error.message);
+      return (last.data ?? null) as WheelRound | null;
     },
   });
 
