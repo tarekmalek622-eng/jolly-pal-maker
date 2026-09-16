@@ -183,6 +183,51 @@ function FriendsPage() {
             </PersonRow>;
           })}
         </div>
+      ) : tab === "relations" ? (
+        relations.isLoading ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+        ) : relationRows.length === 0 ? (
+          <EmptyState title="لا توجد علاقات اجتماعية" hint="افتح ملف أي مستخدم واختر «طلب علاقة»" />
+        ) : (
+          <div className="space-y-2">
+            {relationRows.map((row: RelationshipRow) => {
+              const otherId = row.requester_id === userId ? row.partner_id : row.requester_id;
+              const person = relationPeople.get(otherId);
+              if (!person) return null;
+              const incomingRelation = row.status === "pending" && row.partner_id === userId;
+              const duration = relationDurationLabel(row.started_at);
+              return (
+                <div key={row.id} className="surface-card p-3">
+                  <PersonRow person={person}>
+                    {incomingRelation ? (
+                      <>
+                        <Button onClick={() => relationAction.mutate({ id: row.id, action: "accept" })} className="h-9 w-9 rounded-xl p-0" aria-label="قبول العلاقة"><Check className="h-4 w-4" /></Button>
+                        <Button variant="outline" onClick={() => relationAction.mutate({ id: row.id, action: "reject" })} className="h-9 w-9 rounded-xl p-0" aria-label="رفض العلاقة"><X className="h-4 w-4" /></Button>
+                      </>
+                    ) : (
+                      <Button variant="outline" onClick={() => relationAction.mutate({ id: row.id, action: "end" })} className="h-9 rounded-xl px-3 text-[11px] text-destructive">
+                        {row.status === "pending" ? "إلغاء الطلب" : "إنهاء"}
+                      </Button>
+                    )}
+                  </PersonRow>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 px-1">
+                    <span className={cn("flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px]", RELATION_STYLES[row.type])}>
+                      <HeartHandshake className="h-3 w-3" /> {RELATION_LABELS[row.type]}
+                    </span>
+                    <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] text-muted-foreground">
+                      {row.status === "pending" ? "بانتظار الموافقة" : duration ?? "نشطة"}
+                    </span>
+                    {row.started_at && (
+                      <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] text-muted-foreground">
+                        بدأت {new Date(row.started_at).toLocaleDateString("ar-EG")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
       ) : tab === "incoming" ? (
         incoming.length === 0 ? <EmptyState title="لا توجد طلبات واردة" /> :
         <div className="space-y-2">{incoming.map((request) => {
