@@ -71,7 +71,7 @@ export const applyRoomCosmetic = createServerFn({ method: "POST" })
         .eq("user_id", userId)
         .maybeSingle();
       if (seat.error || !seat.data) throw new Error("اصعد على المايك أولًا");
-      const res = await supabase.from("room_mics").update({ decoration_url: imageUrl }).eq("id", seat.data.id);
+      const res = await supabaseAdmin.from("room_mics").update({ decoration_url: imageUrl }).eq("id", seat.data.id);
       if (res.error) throw new Error(res.error.message);
     }
 
