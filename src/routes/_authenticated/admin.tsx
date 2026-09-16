@@ -1078,6 +1078,7 @@ function GamesTab() {
     wheel: "عجلة الحظ",
     cards: "الورق",
     quiz: "الأسئلة",
+    domino: "دومينو",
   };
 
   return (
