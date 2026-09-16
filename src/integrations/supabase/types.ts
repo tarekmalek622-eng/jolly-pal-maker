@@ -163,6 +163,65 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_purchase_requests: {
+        Row: {
+          amount_cents: number
+          coins: number
+          created_at: string
+          currency: string
+          id: string
+          method: string
+          note: string | null
+          package_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sender_reference: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          coins: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method: string
+          note?: string | null
+          package_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_reference: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          coins?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string
+          note?: string | null
+          package_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_reference?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coin_purchase_requests_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "coin_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coin_transactions: {
         Row: {
           amount: number
@@ -1118,6 +1177,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_coin_purchase: {
+        Args: { _admin: string; _request_id: string }
+        Returns: number
+      }
       create_room: {
         Args: {
           _background_url?: string
