@@ -28,6 +28,9 @@ function HomePage() {
   const wallet = useWallet(userId);
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
+  const [tab, setTab] = useState<
+    "all" | "active" | "new" | "featured" | "public" | "private" | "games" | "voice"
+  >("all");
 
   const rooms = useQuery({
     queryKey: ["rooms", "discovery"],
@@ -80,7 +83,21 @@ function HomePage() {
   });
 
   const list = rooms.data ?? [];
-  const trending = [...list].sort((a, b) => b.member_count - a.member_count).slice(0, 12);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const filters = {
+    all: (r: RoomRow) => true,
+    active: (r: RoomRow) => r.member_count > 0,
+    new: (r: RoomRow) => Date.now() - new Date(r.created_at).getTime() < 3 * dayMs,
+    featured: (r: RoomRow) => r.member_count >= 10 || r.popularity >= 100,
+    public: (r: RoomRow) => r.room_type === "public",
+    private: (r: RoomRow) => r.room_type === "private",
+    games: (r: RoomRow) => r.category === "games",
+    voice: (r: RoomRow) => r.category === "voice" || r.category === "music",
+  } as const;
+  const trending = [...list]
+    .filter(filters[tab])
+    .sort((a, b) => b.member_count - a.member_count || b.popularity - a.popularity)
+    .slice(0, 24);
 
   const ownerIds = [...new Set(list.map((r) => r.owner_id))].sort();
   const owners = useQuery({
@@ -161,10 +178,37 @@ function HomePage() {
         <div className="space-y-7">
           <section>
             <SectionTitle icon={Flame} title="الغرف" />
+            <div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1">
+              {(
+                [
+                  ["all", "الكل"],
+                  ["active", "الأكثر نشاطًا"],
+                  ["new", "الجديدة"],
+                  ["featured", "المميزة"],
+                  ["public", "عامة"],
+                  ["private", "خاصة"],
+                  ["games", "ألعاب"],
+                  ["voice", "صوتية"],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setTab(key)}
+                  className={
+                    tab === key
+                      ? "shrink-0 rounded-full gradient-gold px-3.5 py-1.5 text-xs font-bold text-primary-foreground"
+                      : "shrink-0 rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-semibold text-muted-foreground"
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             {trending.length === 0 ? (
               <EmptyState
-                title="لا توجد غرف بعد"
-                hint="كن أول من ينشئ غرفة صوتية"
+                title="لا توجد غرف في هذا التصنيف"
+                hint="جرّب تصنيفًا آخر أو أنشئ غرفة جديدة"
                 action={
                   <Link to="/rooms" className="mt-3 rounded-full gradient-gold px-4 py-2 text-xs font-bold text-primary-foreground">
                     إنشاء غرفة
