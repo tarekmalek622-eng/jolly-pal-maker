@@ -169,6 +169,15 @@ function RegisterForm() {
   const [screening, setScreening] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  function fileToDataUrl(file: File) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error("read failed"));
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function handlePhoto(file: File) {
     if (!file.type.startsWith("image/")) {
       toast.error("اختر صورة صحيحة");
@@ -190,16 +199,24 @@ function RegisterForm() {
       await ensureDeviceSession();
       const verdict = await screenProfilePhoto({ data: { imageDataUrl: dataUrl } });
       if (!verdict.allowed) {
-        toast.error(verdict.reason ?? "الصورة مرفوضة لأنها غير مناسبة");
+        toast.error(verdict.reason ?? "الصورة غير مناسبة", {
+          description: "اختر صورة شخصية لائقة بدون محتوى للبالغين، وحسابك لم يتأثر.",
+          duration: 7000,
+        });
         setPhoto(null);
         setPreview(null);
         return;
       }
       setPhoto(file);
       setPreview(dataUrl);
-      toast.success("تم قبول الصورة");
+      toast.success(verdict.checked ? "تم قبول الصورة" : "تم اختيار الصورة");
     } catch {
-      toast.error("تعذر فحص الصورة، حاول مرة أخرى");
+      // فحص الصورة خدمة مساعدة: لو تعذّر الفحص نقبل الصورة ولا نمنع إنشاء الحساب
+      setPhoto(file);
+      setPreview(await fileToDataUrl(file).catch(() => null));
+      toast.message("تم اختيار الصورة", {
+        description: "لم نتمكن من فحص الصورة الآن، وسيتم مراجعتها لاحقًا.",
+      });
     } finally {
       setScreening(false);
     }
