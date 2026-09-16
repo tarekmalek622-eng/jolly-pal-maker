@@ -505,6 +505,17 @@ function RoomPage() {
 
       <GiftSheet open={giftOpen} onOpenChange={setGiftOpen} roomId={roomId} targets={giftTargets} />
 
+      <Sheet open={dominoOpen} onOpenChange={setDominoOpen}>
+        <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle>دومينو الغرفة</SheetTitle>
+          </SheetHeader>
+          <div className="pb-6">
+            <DominoGame roomId={roomId} />
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <Sheet open={requestsOpen} onOpenChange={setRequestsOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl">
           <SheetHeader>
