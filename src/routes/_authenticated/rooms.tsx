@@ -165,7 +165,9 @@ function CreateRoomSheet({ open, onOpenChange }: { open: boolean; onOpenChange: 
       if (error) throw error;
       toast.success("تم إنشاء الغرفة");
       onOpenChange(false);
-      void navigate({ to: "/rooms/$roomId", params: { roomId: String(data) } });
+      const created = data as unknown as { id: string } | null;
+      if (!created?.id) throw new Error("تعذر قراءة بيانات الغرفة");
+      void navigate({ to: "/rooms/$roomId", params: { roomId: created.id } });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذر إنشاء الغرفة");
     } finally {
