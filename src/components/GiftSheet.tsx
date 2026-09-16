@@ -56,12 +56,18 @@ export function GiftSheet({
     mutationFn: async () => {
       if (!receiverId) throw new Error("اختر المستلم من داخل الغرفة");
       if (!giftId) throw new Error("اختر الهدية");
-      const { error } = await supabase.rpc("send_gift", {
-        _gift_id: giftId,
-        _receiver_id: receiverId,
-        _room_id: roomId ?? null,
-        _quantity: quantity,
-      });
+      const { error } = roomId
+        ? await supabase.rpc("send_gift", {
+            _gift_id: giftId,
+            _receiver_id: receiverId,
+            _room_id: roomId,
+            _quantity: quantity,
+          })
+        : await supabase.rpc("send_direct_gift", {
+            _gift_id: giftId,
+            _receiver_id: receiverId,
+            _quantity: quantity,
+          });
       if (error) throw error;
     },
     onSuccess: async () => {

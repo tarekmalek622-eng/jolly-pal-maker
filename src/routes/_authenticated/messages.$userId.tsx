@@ -19,6 +19,8 @@ export const Route = createFileRoute("/_authenticated/messages/$userId")({
       { name: "description", content: "محادثة خاصة مباشرة داخل تطبيق صوتك." },
       { property: "og:title", content: "محادثة — صوتك" },
       { property: "og:description", content: "دردشة خاصة لحظية مع صديقك." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ChatPage,
