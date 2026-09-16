@@ -56,8 +56,8 @@ export function RoomCard({
   frame,
 }: {
   room: RoomRow;
-  ownerName?: string | null;
-  frame?: RoomFrameTier | null;
+  ownerName?: string | null | undefined;
+  frame?: RoomFrameTier | null | undefined;
 }) {
   const [img, setImg] = useState<string | null>(null);
   const tier = roomFrameTier(room, frame);
