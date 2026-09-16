@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated/games'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
@@ -19,6 +20,7 @@ import { Route as AuthenticatedRoomsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedStoreRouteImport } from './routes/_authenticated/store'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedMessagesUserIdRouteImport } from './routes/_authenticated/messages.$userId'
+import { Route as AuthenticatedRoomsRoomIdRouteImport } from './routes/_authenticated/rooms.$roomId'
 import { Route as AuthenticatedUPublicIdRouteImport } from './routes/_authenticated/u.$publicId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +31,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedGamesRoute = AuthenticatedGamesRouteImport.update({
   id: '/games',
@@ -71,6 +78,12 @@ const AuthenticatedMessagesUserIdRoute =
     path: '/$userId',
     getParentRoute: () => AuthenticatedMessagesRoute,
   } as any)
+const AuthenticatedRoomsRoomIdRoute =
+  AuthenticatedRoomsRoomIdRouteImport.update({
+    id: '/$roomId',
+    path: '/$roomId',
+    getParentRoute: () => AuthenticatedRoomsRoute,
+  } as any)
 const AuthenticatedUPublicIdRoute = AuthenticatedUPublicIdRouteImport.update({
   id: '/u/$publicId',
   path: '/u/$publicId',
@@ -79,46 +92,53 @@ const AuthenticatedUPublicIdRoute = AuthenticatedUPublicIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/games': typeof AuthenticatedGamesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/me': typeof AuthenticatedMeRoute
   '/messages': typeof AuthenticatedMessagesRouteWithChildren
-  '/rooms': typeof AuthenticatedRoomsRoute
+  '/rooms': typeof AuthenticatedRoomsRouteWithChildren
   '/store': typeof AuthenticatedStoreRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/messages/$userId': typeof AuthenticatedMessagesUserIdRoute
+  '/rooms/$roomId': typeof AuthenticatedRoomsRoomIdRoute
   '/u/$publicId': typeof AuthenticatedUPublicIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/games': typeof AuthenticatedGamesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/me': typeof AuthenticatedMeRoute
   '/messages': typeof AuthenticatedMessagesRouteWithChildren
-  '/rooms': typeof AuthenticatedRoomsRoute
+  '/rooms': typeof AuthenticatedRoomsRouteWithChildren
   '/store': typeof AuthenticatedStoreRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/messages/$userId': typeof AuthenticatedMessagesUserIdRoute
+  '/rooms/$roomId': typeof AuthenticatedRoomsRoomIdRoute
   '/u/$publicId': typeof AuthenticatedUPublicIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/games': typeof AuthenticatedGamesRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRouteWithChildren
-  '/_authenticated/rooms': typeof AuthenticatedRoomsRoute
+  '/_authenticated/rooms': typeof AuthenticatedRoomsRouteWithChildren
   '/_authenticated/store': typeof AuthenticatedStoreRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/_authenticated/messages/$userId': typeof AuthenticatedMessagesUserIdRoute
+  '/_authenticated/rooms/$roomId': typeof AuthenticatedRoomsRoomIdRoute
   '/_authenticated/u/$publicId': typeof AuthenticatedUPublicIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/games'
     | '/home'
     | '/me'
@@ -127,10 +147,12 @@ export interface FileRouteTypes {
     | '/store'
     | '/wallet'
     | '/messages/$userId'
+    | '/rooms/$roomId'
     | '/u/$publicId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/games'
     | '/home'
     | '/me'
@@ -139,11 +161,13 @@ export interface FileRouteTypes {
     | '/store'
     | '/wallet'
     | '/messages/$userId'
+    | '/rooms/$roomId'
     | '/u/$publicId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/_authenticated/admin'
     | '/_authenticated/games'
     | '/_authenticated/home'
     | '/_authenticated/me'
@@ -152,6 +176,7 @@ export interface FileRouteTypes {
     | '/_authenticated/store'
     | '/_authenticated/wallet'
     | '/_authenticated/messages/$userId'
+    | '/_authenticated/rooms/$roomId'
     | '/_authenticated/u/$publicId'
   fileRoutesById: FileRoutesById
 }
@@ -175,6 +200,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/games': {
       id: '/_authenticated/games'
@@ -232,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMessagesUserIdRouteImport
       parentRoute: typeof AuthenticatedMessagesRoute
     }
+    '/_authenticated/rooms/$roomId': {
+      id: '/_authenticated/rooms/$roomId'
+      path: '/$roomId'
+      fullPath: '/rooms/$roomId'
+      preLoaderRoute: typeof AuthenticatedRoomsRoomIdRouteImport
+      parentRoute: typeof AuthenticatedRoomsRoute
+    }
     '/_authenticated/u/$publicId': {
       id: '/_authenticated/u/$publicId'
       path: '/u/$publicId'
@@ -255,23 +294,36 @@ const AuthenticatedMessagesRouteWithChildren =
     AuthenticatedMessagesRouteChildren,
   )
 
+interface AuthenticatedRoomsRouteChildren {
+  AuthenticatedRoomsRoomIdRoute: typeof AuthenticatedRoomsRoomIdRoute
+}
+
+const AuthenticatedRoomsRouteChildren: AuthenticatedRoomsRouteChildren = {
+  AuthenticatedRoomsRoomIdRoute: AuthenticatedRoomsRoomIdRoute,
+}
+
+const AuthenticatedRoomsRouteWithChildren =
+  AuthenticatedRoomsRoute._addFileChildren(AuthenticatedRoomsRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedGamesRoute: typeof AuthenticatedGamesRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMeRoute: typeof AuthenticatedMeRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRouteWithChildren
-  AuthenticatedRoomsRoute: typeof AuthenticatedRoomsRoute
+  AuthenticatedRoomsRoute: typeof AuthenticatedRoomsRouteWithChildren
   AuthenticatedStoreRoute: typeof AuthenticatedStoreRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedUPublicIdRoute: typeof AuthenticatedUPublicIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedGamesRoute: AuthenticatedGamesRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMeRoute: AuthenticatedMeRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRouteWithChildren,
-  AuthenticatedRoomsRoute: AuthenticatedRoomsRoute,
+  AuthenticatedRoomsRoute: AuthenticatedRoomsRouteWithChildren,
   AuthenticatedStoreRoute: AuthenticatedStoreRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedUPublicIdRoute: AuthenticatedUPublicIdRoute,
