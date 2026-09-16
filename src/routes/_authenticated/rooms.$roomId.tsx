@@ -508,10 +508,29 @@ function RoomPage() {
       <Sheet open={dominoOpen} onOpenChange={setDominoOpen}>
         <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl">
           <SheetHeader>
-            <SheetTitle>دومينو الغرفة</SheetTitle>
+            <SheetTitle>ألعاب الغرفة</SheetTitle>
           </SheetHeader>
+          <div className="mb-3 flex gap-2 rounded-2xl bg-surface-2 p-1">
+            {(
+              [
+                { key: "wheel" as const, label: "🎡 عجلة الحظ" },
+                { key: "domino" as const, label: "🁣 دومينو" },
+              ]
+            ).map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setRoomGame(t.key)}
+                className={cn(
+                  "flex-1 rounded-xl px-3 py-2 text-xs font-bold transition-colors",
+                  roomGame === t.key ? "gradient-gold text-primary-foreground" : "text-muted-foreground",
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
           <div className="pb-6">
-            <DominoGame roomId={roomId} />
+            {roomGame === "wheel" ? <LiveWheel roomId={roomId} /> : <DominoGame roomId={roomId} />}
           </div>
         </SheetContent>
       </Sheet>
