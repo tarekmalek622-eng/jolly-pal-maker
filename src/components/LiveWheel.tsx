@@ -223,7 +223,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     }
     return Array.from(map.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 4);
+      .slice(0, 8);
   }, [bets.data]);
 
   if (round.isLoading) {
