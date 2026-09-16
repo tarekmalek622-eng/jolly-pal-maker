@@ -259,6 +259,18 @@ function MePage() {
                 <p className="text-[10px] text-muted-foreground">
                   {it.expires_at ? new Date(it.expires_at).toLocaleDateString("ar") : "دائم"}
                 </p>
+                <button
+                  disabled={equipping === it.id}
+                  onClick={() => void toggleEquip(it.id, !it.is_equipped)}
+                  className={cn(
+                    "mt-2 w-full rounded-lg border px-2 py-1.5 text-[10px]",
+                    it.is_equipped
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border bg-surface-2 text-muted-foreground",
+                  )}
+                >
+                  {it.is_equipped ? "مُستخدم" : "استخدم"}
+                </button>
               </div>
             ))}
           </div>
