@@ -3,7 +3,20 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Camera, ShieldCheck, Mic, Gift, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { isValidPhone, phoneToIdentifier, rememberPhone, readRememberedPhone } from "@/lib/phone-auth";
+import {
+  isValidPhone,
+  internationalIdentifier,
+  identifierCandidates,
+  rememberPhone,
+  readRememberedPhone,
+} from "@/lib/phone-auth";
+import {
+  COUNTRIES,
+  DEFAULT_COUNTRY_CODE,
+  findCountry,
+  searchCountries,
+  type Country,
+} from "@/lib/countries";
 import { uploadUserImage } from "@/lib/media";
 import { screenProfilePhoto } from "@/lib/moderation.functions";
 import { Button } from "@/components/ui/button";
