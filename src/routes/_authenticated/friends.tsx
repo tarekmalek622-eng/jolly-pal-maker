@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { Check, Clock3, Loader2, MessageCircle, UserMinus, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -157,7 +158,7 @@ function FriendsPage() {
   );
 }
 
-function PersonRow({ person, children }: { person: Profile; children: React.ReactNode }) {
+function PersonRow({ person, children }: { person: Profile; children: ReactNode }) {
   return (
     <div className="surface-card flex items-center gap-3 p-3">
       <Link to="/u/$publicId" params={{ publicId: person.public_id }}>

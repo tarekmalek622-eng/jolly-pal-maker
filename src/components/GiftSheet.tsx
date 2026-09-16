@@ -22,16 +22,20 @@ export function GiftSheet({
   onOpenChange,
   roomId,
   targets,
+  initialReceiverId,
+  onSent,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  roomId: string;
+  roomId?: string | null;
   targets: GiftTarget[];
+  initialReceiverId?: string;
+  onSent?: (giftName: string) => void | Promise<void>;
 }) {
   const { userId } = useSupabaseSession();
   const wallet = useWallet(userId);
   const refresh = useRefreshMoney();
-  const [receiverId, setReceiverId] = useState<string | null>(null);
+  const [receiverId, setReceiverId] = useState<string | null>(initialReceiverId ?? null);
   const [giftId, setGiftId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
@@ -55,13 +59,14 @@ export function GiftSheet({
       const { error } = await supabase.rpc("send_gift", {
         _gift_id: giftId,
         _receiver_id: receiverId,
-        _room_id: roomId,
+        _room_id: roomId ?? null,
         _quantity: quantity,
       });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("تم إرسال الهدية 🎉");
+      if (selectedGift) await onSent?.(selectedGift.name);
       refresh();
       onOpenChange(false);
       setGiftId(null);
