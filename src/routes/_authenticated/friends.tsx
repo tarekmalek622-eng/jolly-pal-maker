@@ -156,9 +156,10 @@ function FriendsPage() {
 
   return (
     <AppShell header={<PageHeader title="الأصدقاء" subtitle={`${data.data?.friends.length ?? 0} صديق`} />}>
-      <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-surface p-1">
+      <div className="mb-4 grid grid-cols-4 gap-1 rounded-2xl bg-surface p-1">
         {([
           ["friends", "الأصدقاء", data.data?.friends.length ?? 0],
+          ["relations", "العلاقات", relationRows.length],
           ["incoming", "الواردة", incoming.length],
           ["sent", "المرسلة", sent.length],
         ] as const).map(([key, label, count]) => (
