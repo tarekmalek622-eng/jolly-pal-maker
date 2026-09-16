@@ -931,6 +931,46 @@ export type Database = {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
       }
+      create_room: {
+        Args: {
+          _background_url?: string
+          _category: string
+          _description: string
+          _image_url?: string
+          _mic_count: number
+          _name: string
+          _password: string
+          _room_type: Database["public"]["Enums"]["room_type"]
+        }
+        Returns: {
+          background_url: string | null
+          category: string
+          chat_locked: boolean
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          is_disabled: boolean
+          max_users: number
+          member_count: number
+          mic_count: number
+          name: string
+          owner_id: string
+          password: string | null
+          popularity: number
+          room_code: string
+          room_type: Database["public"]["Enums"]["room_type"]
+          theme: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "rooms"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       gen_public_id: { Args: never; Returns: string }
       gen_room_code: { Args: never; Returns: string }
       has_role: {
@@ -941,6 +981,138 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      purchase_item: {
+        Args: { _item_id: string }
+        Returns: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_equipped: boolean
+          item_id: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_items"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      purchase_vip: {
+        Args: { _level: number }
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          cvip_expires_at: string | null
+          display_name: string
+          frame_url: string | null
+          gender: Database["public"]["Enums"]["gender_type"] | null
+          id: string
+          is_cvip: boolean
+          is_online: boolean
+          is_suspended: boolean
+          last_seen: string
+          level: number
+          profile_background_url: string | null
+          public_id: string
+          updated_at: string
+          vip_level: number
+          xp: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      send_gift: {
+        Args: {
+          _gift_id: string
+          _quantity?: number
+          _receiver_id: string
+          _room_id: string
+        }
+        Returns: {
+          created_at: string
+          gift_id: string
+          id: string
+          quantity: number
+          receiver_id: string
+          room_id: string | null
+          sender_id: string
+          total_price: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "gift_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      setup_account: {
+        Args: {
+          _avatar_url: string
+          _bio?: string
+          _birth_date: string
+          _city: string
+          _country: string
+          _display_name: string
+          _gender: Database["public"]["Enums"]["gender_type"]
+        }
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          cvip_expires_at: string | null
+          display_name: string
+          frame_url: string | null
+          gender: Database["public"]["Enums"]["gender_type"] | null
+          id: string
+          is_cvip: boolean
+          is_online: boolean
+          is_suspended: boolean
+          last_seen: string
+          level: number
+          profile_background_url: string | null
+          public_id: string
+          updated_at: string
+          vip_level: number
+          xp: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      take_mic: {
+        Args: { _room_id: string; _seat: number }
+        Returns: {
+          decoration_url: string | null
+          id: string
+          is_locked: boolean
+          is_muted: boolean
+          room_id: string
+          seat_index: number
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "room_mics"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "moderator" | "host" | "user"
