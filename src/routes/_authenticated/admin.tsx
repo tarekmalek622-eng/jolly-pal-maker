@@ -1130,6 +1130,7 @@ function GamesTab() {
       </Button>
 
       <DominoSettings />
+      <WheelSettings />
       <RelationshipSettings />
     </div>
   );
