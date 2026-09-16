@@ -200,11 +200,16 @@ export const adminSetActive = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const query = supabaseAdmin.from(data.table).update({ is_active: data.active } as never);
     const { error } =
       data.table === "vip_levels"
-        ? await query.eq("level", Number(data.id))
-        : await query.eq("id", String(data.id));
+        ? await supabaseAdmin
+            .from("vip_levels")
+            .update({ is_active: data.active })
+            .eq("level", Number(data.id))
+        : await supabaseAdmin
+            .from(data.table)
+            .update({ is_active: data.active } as never)
+            .eq("id", String(data.id));
     if (error) throw new Error(error.message);
     await log(context.userId, String(data.id), `set_active_${data.table}`, String(!data.active), String(data.active));
     return { ok: true };
