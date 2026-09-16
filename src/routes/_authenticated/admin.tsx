@@ -22,6 +22,7 @@ import {
   adminSetActive,
   adminDeleteQuizQuestion,
   adminSetGameSettings,
+  adminSetWheelSettings,
   adminSetRelationshipSettings,
   adminSetDominoSettings,
   adminReviewCoinPurchase,
