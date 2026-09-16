@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
+import { GiftPlayer, GiftThumb, type GiftMediaRow } from "@/components/GiftMedia";
+import { uploadGiftMedia, type GiftMediaKind } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsAdmin, useSupabaseSession } from "@/hooks/use-session";
