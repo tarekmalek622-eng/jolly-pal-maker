@@ -164,6 +164,30 @@ export const adminUpsertGift = createServerFn({ method: "POST" })
     return { id: row.id };
   });
 
+export const adminDeleteGift = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: gift } = await supabaseAdmin.from("gifts").select("name").eq("id", data.id).maybeSingle();
+    const { count } = await supabaseAdmin
+      .from("gift_transactions")
+      .select("id", { count: "exact", head: true })
+      .eq("gift_id", data.id);
+    if ((count ?? 0) > 0) {
+      // الهدية مستخدمة في سجل عمليات — نخفيها بدل حذف السجل
+      const { error } = await supabaseAdmin.from("gifts").update({ is_active: false }).eq("id", data.id);
+      if (error) throw new Error(error.message);
+      await log(context.userId, data.id, "hide_gift", gift?.name ?? "", "مخفية (لها سجل إرسال)");
+      return { deleted: false, hidden: true };
+    }
+    const { error } = await supabaseAdmin.from("gifts").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await log(context.userId, data.id, "delete_gift", gift?.name ?? "", "");
+    return { deleted: true, hidden: false };
+  });
+
 const storeSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1).max(60),
