@@ -140,10 +140,8 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
   /* تحديث فوري عبر Realtime */
   useEffect(() => {
     if (!gameId) return;
-    const channel = (supabase.channel(`domino-${gameId}`) as unknown as {
-      on: (type: string, opts: unknown, cb: (payload: { new: DominoRow | null }) => void) => unknown;
-      subscribe: () => { unsubscribe: () => void };
-    })
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    const channel = (supabase.channel(`domino-${gameId}`) as any)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "domino_games", filter: `id=eq.${gameId}` },
@@ -155,24 +153,22 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
       )
       .subscribe();
     return () => {
-      void channel.unsubscribe();
+      void (channel as { unsubscribe: () => void }).unsubscribe();
     };
   }, [gameId, queryClient]);
 
   /* تحديث قائمة الانتظار عبر Realtime + احتياطي دوري */
   useEffect(() => {
     if (gameId) return;
-    const channel = (supabase.channel("domino-lobby") as unknown as {
-      on: (type: string, opts: unknown, cb: () => void) => unknown;
-      subscribe: () => { unsubscribe: () => void };
-    })
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    const channel = (supabase.channel("domino-lobby") as any)
       .on("postgres_changes", { event: "*", schema: "public", table: "domino_games" }, () => {
         void lobby.refetch();
       })
       .subscribe();
     const t = setInterval(() => void lobby.refetch(), 10000);
     return () => {
-      void channel.unsubscribe();
+      void (channel as { unsubscribe: () => void }).unsubscribe();
       clearInterval(t);
     };
   }, [gameId, lobby]);
