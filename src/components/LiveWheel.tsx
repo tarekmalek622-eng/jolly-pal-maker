@@ -43,7 +43,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const refreshMoney = useRefreshMoney();
   const [amount, setAmount] = useState(100);
   const [now, setNow] = useState(() => Date.now());
-  const [spinAngle, setSpinAngle] = useState(0);
+  const [highlight, setHighlight] = useState(0);
   const lastSettled = useRef<string | null>(null);
 
   const round = useQuery({
@@ -177,6 +177,11 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     }
     return map;
   }, [slots, bets.data, userId]);
+
+  const myWin = useMemo(
+    () => (bets.data ?? []).filter((b) => b.user_id === userId).reduce((sum, b) => sum + Number(b.payout), 0),
+    [bets.data, userId],
+  );
 
   const leaderboard = useMemo(() => {
     const map = new Map<string, number>();
