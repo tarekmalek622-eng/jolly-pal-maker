@@ -42,6 +42,7 @@ function MePage() {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [saving, setSaving] = useState(false);
+  const [privSheet, setPrivSheet] = useState<"vip" | "cvip" | null>(null);
 
   const counts = useQuery({
     queryKey: ["social-counts", userId],
