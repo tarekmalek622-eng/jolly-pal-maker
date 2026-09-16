@@ -39,3 +39,20 @@ export function readRememberedPhone(): string {
     return "";
   }
 }
+
+/**
+ * Builds the technical identifier from a dial code + local number.
+ * The leading zero of the local number is dropped (international format).
+ */
+export function internationalIdentifier(dial: string, local: string): string {
+  const d = dial.replace(/\D+/g, "");
+  const n = normalizePhone(local).replace(/^0+/, "");
+  return `${d}${n}@${DOMAIN}`;
+}
+
+/** Candidate identifiers to try at sign-in (international first, legacy local second). */
+export function identifierCandidates(dial: string, local: string): string[] {
+  const intl = internationalIdentifier(dial, local);
+  const legacy = phoneToIdentifier(local);
+  return intl === legacy ? [intl] : [intl, legacy];
+}

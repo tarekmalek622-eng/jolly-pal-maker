@@ -3,7 +3,20 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Camera, ShieldCheck, Mic, Gift, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { isValidPhone, phoneToIdentifier, rememberPhone, readRememberedPhone } from "@/lib/phone-auth";
+import {
+  isValidPhone,
+  internationalIdentifier,
+  identifierCandidates,
+  rememberPhone,
+  readRememberedPhone,
+} from "@/lib/phone-auth";
+import {
+  COUNTRIES,
+  DEFAULT_COUNTRY_CODE,
+  findCountry,
+  searchCountries,
+  type Country,
+} from "@/lib/countries";
 import { uploadUserImage } from "@/lib/media";
 import { screenProfilePhoto } from "@/lib/moderation.functions";
 import { Button } from "@/components/ui/button";
@@ -29,11 +42,88 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const COUNTRIES = [
-  "السعودية", "مصر", "الإمارات", "الكويت", "قطر", "البحرين", "عُمان", "الأردن",
-  "لبنان", "سوريا", "العراق", "فلسطين", "اليمن", "المغرب", "الجزائر", "تونس",
-  "ليبيا", "السودان", "موريتانيا", "الصومال", "جيبوتي", "جزر القمر", "تركيا", "أخرى",
-];
+/** Searchable list of every country: name, flag and dial code. */
+function CountryPicker({
+  value,
+  onSelect,
+  showDial = true,
+  placeholder = "ابحث عن دولتك…",
+}: {
+  value: string;
+  onSelect: (country: Country) => void;
+  showDial?: boolean;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [term, setTerm] = useState("");
+  const selected = findCountry(value);
+  const list = open ? searchCountries(term).slice(0, 60) : [];
+
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex h-12 w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 text-sm"
+      >
+        <span className="flex items-center gap-2">
+          <span className="text-lg leading-none">{selected?.flag ?? "🌍"}</span>
+          <span className={selected ? "font-semibold" : "text-muted-foreground"}>
+            {selected?.name ?? "اختر دولتك"}
+          </span>
+        </span>
+        {showDial && selected ? (
+          <span dir="ltr" className="text-xs text-primary">
+            +{selected.dial}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground">تغيير</span>
+        )}
+      </button>
+
+      {open && (
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+          <Input
+            autoFocus
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder={placeholder}
+            className="h-11 rounded-none border-0 border-b border-border bg-surface-2 text-sm"
+          />
+          <div className="max-h-64 overflow-y-auto">
+            {list.length === 0 ? (
+              <p className="px-4 py-4 text-center text-xs text-muted-foreground">لا نتائج</p>
+            ) : (
+              list.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => {
+                    onSelect(c);
+                    setOpen(false);
+                    setTerm("");
+                  }}
+                  className={cn(
+                    "flex w-full items-center justify-between px-4 py-2.5 text-sm transition-colors",
+                    c.code === value ? "bg-primary/15 text-primary" : "hover:bg-surface-2",
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg leading-none">{c.flag}</span>
+                    <span>{c.name}</span>
+                  </span>
+                  <span dir="ltr" className="text-xs text-muted-foreground">
+                    +{c.dial}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Landing() {
   const navigate = useNavigate();
@@ -156,9 +246,11 @@ function PhoneAuth({
   onSignedIn: () => void;
 }) {
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE);
   const [phone, setPhone] = useState(readRememberedPhone());
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const dial = findCountry(countryCode)?.dial ?? "20";
 
   async function afterSession(userId: string) {
     const { data: profile } = await supabase
@@ -181,8 +273,8 @@ function PhoneAuth({
     }
     setBusy(true);
     try {
-      const email = phoneToIdentifier(phone);
       if (mode === "signup") {
+        const email = internationalIdentifier(dial, phone);
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) {
           if (/already/i.test(error.message)) {
@@ -192,14 +284,27 @@ function PhoneAuth({
           }
           throw error;
         }
-      }
-      const signIn = await supabase.auth.signInWithPassword({ email, password });
-      if (signIn.error) {
-        toast.error("الرقم أو كلمة السر غير صحيحة");
+        const signIn = await supabase.auth.signInWithPassword({ email, password });
+        if (signIn.error) {
+          toast.error("تم إنشاء الحساب، سجّل الدخول الآن");
+          setMode("login");
+          return;
+        }
+        rememberPhone(phone);
+        await afterSession(signIn.data.user.id);
         return;
       }
-      rememberPhone(phone);
-      await afterSession(signIn.data.user.id);
+
+      // الدخول: نجرب الصيغة الدولية ثم الصيغة القديمة (بدون مفتاح الدولة)
+      for (const email of identifierCandidates(dial, phone)) {
+        const signIn = await supabase.auth.signInWithPassword({ email, password });
+        if (!signIn.error) {
+          rememberPhone(phone);
+          await afterSession(signIn.data.user.id);
+          return;
+        }
+      }
+      toast.error("الرقم أو كلمة السر غير صحيحة");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذر إتمام العملية");
     } finally {
@@ -232,17 +337,26 @@ function PhoneAuth({
 
       <div className="mt-5 space-y-4">
         <div className="space-y-2">
+          <Label>الدولة</Label>
+          <CountryPicker value={countryCode} onSelect={(c) => setCountryCode(c.code)} />
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="phone">رقم الهاتف</Label>
-          <Input
-            id="phone"
-            type="tel"
-            inputMode="numeric"
-            dir="ltr"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="01xxxxxxxxx"
-            className="h-12 rounded-2xl bg-surface text-left"
-          />
+          <div className="flex items-center gap-2" dir="ltr">
+            <span className="flex h-12 min-w-16 items-center justify-center rounded-2xl border border-border bg-surface-2 px-3 text-sm font-semibold text-primary">
+              +{dial}
+            </span>
+            <Input
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              dir="ltr"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="1xxxxxxxxx"
+              className="h-12 flex-1 rounded-2xl bg-surface text-left"
+            />
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">كلمة السر</Label>
@@ -454,23 +568,11 @@ function RegisterForm() {
 
         <div className="space-y-2">
           <Label>الدولة</Label>
-          <div className="flex flex-wrap gap-2">
-            {COUNTRIES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setCountry(c)}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs transition-colors",
-                  country === c
-                    ? "border-primary bg-primary/15 text-primary"
-                    : "border-border bg-surface text-muted-foreground",
-                )}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
+          <CountryPicker
+            value={COUNTRIES.find((c) => c.name === country)?.code ?? ""}
+            onSelect={(c) => setCountry(c.name)}
+            showDial={false}
+          />
         </div>
 
         <div className="space-y-2">
