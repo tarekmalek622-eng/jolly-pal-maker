@@ -165,8 +165,12 @@ function MePage() {
             }}
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-lg font-bold">{p?.display_name ?? "..."}</p>
-            <p className="text-[11px] text-muted-foreground">ID: {p?.public_id ?? "—"}</p>
+            <VipName
+              name={p?.display_name ?? "..."}
+              vipLevel={p?.vip_level ?? 0}
+              className="block text-lg"
+            />
+            <VipId publicId={p?.public_id ?? "—"} vipLevel={p?.vip_level ?? 0} />
             <div className="mt-1 flex flex-wrap gap-1.5">
               <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px]">مستوى {p?.level ?? 1}</span>
               {(p?.vip_level ?? 0) > 0 && (
