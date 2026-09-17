@@ -212,9 +212,9 @@ function RoomPage() {
   minimizedRef.current = minimized;
 
   useEffect(() => {
-    if (!room.data) return;
+    if (!room.data || room.data.is_disabled || !room.data.is_active) return;
     enterRoom({ id: roomId, name: room.data.name, imageUrl: room.data.image_url }, canPublish);
-  }, [enterRoom, roomId, room.data?.name, room.data?.image_url, canPublish]);
+  }, [enterRoom, roomId, room.data?.name, room.data?.image_url, room.data?.is_active, room.data?.is_disabled, canPublish]);
 
   // join / leave membership
   useEffect(() => {
@@ -465,7 +465,7 @@ function RoomPage() {
   }));
 
   if (room.isLoading) return <AppShell hideNav>جارٍ تحميل الغرفة...</AppShell>;
-  if (!room.data) return <AppShell hideNav>الغرفة غير موجودة.</AppShell>;
+  if (!room.data || room.data.is_disabled || !room.data.is_active) return <AppShell hideNav>الغرفة غير متاحة.</AppShell>;
 
   return (
     <AppShell
