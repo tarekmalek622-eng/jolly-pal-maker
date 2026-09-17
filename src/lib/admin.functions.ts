@@ -106,6 +106,39 @@ export const adminSetRoomDisabled = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminUpdateRoomBackground = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ roomId: z.string().uuid(), backgroundUrl: z.string().max(500).nullable() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const previous = await supabaseAdmin.from("rooms").select("background_url").eq("id", data.roomId).maybeSingle();
+    if (previous.error || !previous.data) throw new Error("الغرفة غير موجودة");
+    const { error } = await supabaseAdmin.from("rooms").update({ background_url: data.backgroundUrl }).eq("id", data.roomId);
+    if (error) throw new Error(error.message);
+    await log(context.userId, data.roomId, "admin_room_background", previous.data.background_url ?? "", data.backgroundUrl ?? "");
+    return { ok: true };
+  });
+
+export const adminCloseWheelRound = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const round = await supabaseAdmin.from("wheel_rounds").select("id, round_no").eq("status", "betting").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (round.error) throw new Error(round.error.message);
+    if (!round.data) throw new Error("لا توجد جولة مفتوحة");
+    const settled = await supabaseAdmin.rpc("wheel_settle", { _round_id: round.data.id });
+    if (settled.error) throw new Error(settled.error.message);
+    const result = await supabaseAdmin.from("wheel_rounds").select("id, round_no, status, winning_key").eq("id", round.data.id).single();
+    if (result.error) throw new Error(result.error.message);
+    await log(context.userId, round.data.id, "admin_wheel_close", "betting", JSON.stringify({ room_id: data.roomId, winning_key: result.data.winning_key }));
+    return result.data;
+  });
+
 export const adminResolveReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -285,6 +318,9 @@ export const adminUpsertVipLevel = createServerFn({ method: "POST" })
         name: z.string().min(1).max(60),
         price: z.number().int().min(1).max(100_000_000),
         duration_days: z.number().int().min(1).max(3650),
+        badge_url: z.string().max(500).nullable().optional(),
+        frame_url: z.string().max(500).nullable().optional(),
+        name_effect: z.string().max(500).nullable().optional(),
         is_active: z.boolean(),
       })
       .parse(input),

@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getVipFrame, getVipName } from "@/lib/vip-frames";
+import { useSupabaseSession } from "@/hooks/use-session";
 
 /** الأنواع المولّدة لا تعرف جدول cvip_plans بعد. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,6 +52,7 @@ export function VipCvipSheet({
   cvipExpiresAt?: string | null;
 }) {
   const qc = useQueryClient();
+  const { userId } = useSupabaseSession();
 
   const vip = useQuery({
     queryKey: ["vip-levels-sheet"],
@@ -92,7 +94,13 @@ export function VipCvipSheet({
     },
     onSuccess: async () => {
       toast.success("تم تفعيل المميزات 🎉");
-      await qc.invalidateQueries();
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["profile"] }),
+        qc.invalidateQueries({ queryKey: ["room-people"] }),
+        qc.invalidateQueries({ queryKey: ["wallet"] }),
+        qc.invalidateQueries({ queryKey: ["coin-transactions"] }),
+        qc.invalidateQueries({ queryKey: ["badge-strip", userId] }),
+      ]);
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التفعيل"),
