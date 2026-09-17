@@ -203,7 +203,7 @@ function MePage() {
               )}
               {p?.is_cvip && (
                 <span className="flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] text-accent">
-                  <Sparkles className="h-3 w-3" /> CVIP
+                  <Sparkles className="h-3 w-3" /> SVIP
                 </span>
               )}
             </div>
@@ -235,7 +235,7 @@ function MePage() {
           ))}
         </div>
 
-        {/* تفعيل مميزات VIP و CVIP */}
+        {/* تفعيل مميزات VIP و SVIP */}
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -264,7 +264,7 @@ function MePage() {
               <Sparkles className="h-4.5 w-4.5 text-accent" />
             </span>
             <span className="min-w-0">
-              <span className="block text-xs font-bold">CVIP</span>
+              <span className="block text-xs font-bold">SVIP</span>
               <span className="block text-[10px] text-muted-foreground">
                 {p?.is_cvip ? "مفعّل · إدارة" : "تفعيل المميزات"}
               </span>

@@ -23,9 +23,9 @@ CREATE POLICY "active cvip plans viewable" ON public.cvip_plans FOR SELECT TO au
 CREATE POLICY "admins manage cvip plans" ON public.cvip_plans FOR ALL TO authenticated USING (public.is_admin(auth.uid())) WITH CHECK (public.is_admin(auth.uid()));
 
 INSERT INTO public.cvip_plans (name, description, price, duration_days, name_effect, room_effect, decorations, perks, sort_order) VALUES
-('CVIP شهري', 'هوية CVIP كاملة لمدة شهر مع شارة وإطار وتأثير اسم وغرفة حصري.', 120000, 30, 'لمعان كريستالي', 'هالة كريستالية', '["زينة مايك كريستالية","دخول مميز"]'::jsonb, '["متجر CVIP","هدايا حصرية","أولوية دخول الغرف"]'::jsonb, 1),
-('CVIP موسمي', 'تفعيل CVIP لمدة ثلاثة أشهر مع مزايا موسعة وهوية ملكية.', 300000, 90, 'بريق ملكي متحرك', 'إضاءة ملكية', '["تاج الغرفة","مسار دخول مضيء"]'::jsonb, '["متجر CVIP","هدايا حصرية","خصومات عناصر","أولوية دعم"]'::jsonb, 2),
-('CVIP سنوي', 'أعلى باقة CVIP لمدة عام مع جميع المزايا والتأثيرات الأسطورية.', 950000, 365, 'طيف أسطوري', 'مشهد أسطوري متحرك', '["تاج أسطوري","زينة مايك أسطورية","دخول احتفالي"]'::jsonb, '["كامل متجر CVIP","هدايا سنوية","خصومات موسعة","أولوية قصوى"]'::jsonb, 3);
+('SVIP شهري', 'هوية SVIP كاملة لمدة شهر مع شارة وإطار وتأثير اسم وغرفة حصري.', 120000, 30, 'لمعان كريستالي', 'هالة كريستالية', '["زينة مايك كريستالية","دخول مميز"]'::jsonb, '["متجر SVIP","هدايا حصرية","أولوية دخول الغرف"]'::jsonb, 1),
+('SVIP موسمي', 'تفعيل SVIP لمدة ثلاثة أشهر مع مزايا موسعة وهوية ملكية.', 300000, 90, 'بريق ملكي متحرك', 'إضاءة ملكية', '["تاج الغرفة","مسار دخول مضيء"]'::jsonb, '["متجر SVIP","هدايا حصرية","خصومات عناصر","أولوية دعم"]'::jsonb, 2),
+('SVIP سنوي', 'أعلى باقة SVIP لمدة عام مع جميع المزايا والتأثيرات الأسطورية.', 950000, 365, 'طيف أسطوري', 'مشهد أسطوري متحرك', '["تاج أسطوري","زينة مايك أسطورية","دخول احتفالي"]'::jsonb, '["كامل متجر SVIP","هدايا سنوية","خصومات موسعة","أولوية قصوى"]'::jsonb, 3);
 
 CREATE OR REPLACE FUNCTION public.purchase_cvip(_plan_id UUID)
 RETURNS public.profiles
@@ -34,7 +34,7 @@ DECLARE uid UUID := auth.uid(); plan public.cvip_plans; bal BIGINT; p public.pro
 BEGIN
   IF uid IS NULL THEN RAISE EXCEPTION 'not authenticated'; END IF;
   SELECT * INTO plan FROM public.cvip_plans WHERE id = _plan_id AND is_active;
-  IF plan.id IS NULL THEN RAISE EXCEPTION 'خطة CVIP غير متوفرة'; END IF;
+  IF plan.id IS NULL THEN RAISE EXCEPTION 'خطة SVIP غير متوفرة'; END IF;
   SELECT coins INTO bal FROM public.coin_wallets WHERE user_id = uid FOR UPDATE;
   IF COALESCE(bal, 0) < plan.price THEN RAISE EXCEPTION 'رصيدك غير كافٍ'; END IF;
   UPDATE public.coin_wallets SET coins = coins - plan.price, updated_at = now() WHERE user_id = uid;
@@ -43,7 +43,7 @@ BEGIN
   SELECT CASE WHEN is_cvip AND cvip_expires_at > now() THEN cvip_expires_at ELSE now() END INTO start_at FROM public.profiles WHERE id = uid FOR UPDATE;
   UPDATE public.profiles SET is_cvip = true, cvip_expires_at = start_at + (plan.duration_days || ' days')::interval WHERE id = uid RETURNING * INTO p;
   INSERT INTO public.notifications (user_id, kind, title, body, metadata)
-  VALUES (uid, 'cvip', 'تم تفعيل CVIP', plan.name, jsonb_build_object('plan_id', plan.id, 'expires_at', p.cvip_expires_at));
+  VALUES (uid, 'cvip', 'تم تفعيل SVIP', plan.name, jsonb_build_object('plan_id', plan.id, 'expires_at', p.cvip_expires_at));
   RETURN p;
 END; $$;
 REVOKE ALL ON FUNCTION public.purchase_cvip(UUID) FROM PUBLIC, anon;

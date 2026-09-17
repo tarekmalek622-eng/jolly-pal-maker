@@ -26,7 +26,7 @@ VALUES
   ('admin_assistant_14', 'مساعد إدارة الهدايا', 'شارة إدارية موثقة', 'administrative', 1, 114, 'pink'),
   ('admin_assistant_15', 'مساعد إدارة المتجر', 'شارة إدارية موثقة', 'administrative', 1, 115, 'bronze'),
   ('admin_assistant_16', 'مساعد إدارة VIP', 'شارة إدارية موثقة', 'administrative', 1, 116, 'platinum'),
-  ('admin_assistant_17', 'مساعد إدارة CVIP', 'شارة إدارية موثقة', 'administrative', 1, 117, 'diamond'),
+  ('admin_assistant_17', 'مساعد إدارة SVIP', 'شارة إدارية موثقة', 'administrative', 1, 117, 'diamond'),
   ('admin_assistant_18', 'مساعد إدارة المحتوى', 'شارة إدارية موثقة', 'administrative', 1, 118, 'teal'),
   ('admin_assistant_19', 'مساعد العلاقات العامة', 'شارة إدارية موثقة', 'administrative', 1, 119, 'coral'),
   ('admin_assistant_20', 'مساعد التواصل', 'شارة إدارية موثقة', 'administrative', 1, 120, 'sky'),
