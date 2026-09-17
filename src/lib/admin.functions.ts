@@ -122,6 +122,60 @@ export const adminUpdateRoomBackground = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** تعديل اسم الغرفة وصورتها ومالكها من لوحة الإدارة — كل التحقق على الخادم مع تسجيل الإجراء */
+export const adminUpdateRoomDetails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        roomId: z.string().uuid(),
+        name: z.string().trim().min(2, "اسم الغرفة قصير").max(30, "اسم الغرفة طويل"),
+        imageUrl: z.string().trim().max(500).nullable(),
+        ownerPublicId: z.string().trim().max(30).nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const previous = await supabaseAdmin
+      .from("rooms")
+      .select("id, name, image_url, owner_id")
+      .eq("id", data.roomId)
+      .maybeSingle();
+    if (previous.error || !previous.data) throw new Error("الغرفة غير موجودة");
+
+    let ownerId = previous.data.owner_id;
+    if (data.ownerPublicId) {
+      const owner = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("public_id", data.ownerPublicId)
+        .maybeSingle();
+      if (owner.error) throw new Error(owner.error.message);
+      if (!owner.data) throw new Error("لا يوجد مستخدم بهذا المعرّف");
+      ownerId = owner.data.id;
+    }
+
+    const result = await supabaseAdmin
+      .from("rooms")
+      .update({ name: data.name, image_url: data.imageUrl, owner_id: ownerId })
+      .eq("id", data.roomId)
+      .select("id, name, image_url, owner_id")
+      .maybeSingle();
+    if (result.error || !result.data) throw new Error(result.error?.message ?? "تعذر تعديل الغرفة");
+
+    await log(
+      context.userId,
+      data.roomId,
+      "admin_room_details",
+      JSON.stringify({ name: previous.data.name, image_url: previous.data.image_url, owner_id: previous.data.owner_id }),
+      JSON.stringify({ name: result.data.name, image_url: result.data.image_url, owner_id: result.data.owner_id }),
+    );
+    return result.data;
+  });
+
 export const adminCloseWheelRound = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid() }).parse(input))
