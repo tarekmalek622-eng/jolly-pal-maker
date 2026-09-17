@@ -391,3 +391,58 @@ iframe[title*="Lovable"] {
 @utility animate-frame-glow {
   animation: frame-glow 2.4s ease-in-out infinite;
 }
+
+/* ===== لوح عجلة الحظ (سكين اللعبة) ===== */
+.wheel-board {
+  background: linear-gradient(180deg, oklch(0.93 0.13 96) 0%, oklch(0.88 0.15 92) 55%, oklch(0.82 0.16 80) 100%);
+  border: 2px solid oklch(0.75 0.15 70);
+}
+.wheel-ring {
+  border-color: oklch(0.7 0.13 240);
+  background: oklch(0.72 0.14 240 / 0.16);
+}
+.wheel-spoke {
+  background: oklch(0.68 0.14 240 / 0.75);
+}
+.wheel-hub {
+  background: radial-gradient(circle, oklch(0.62 0.2 25), oklch(0.5 0.19 22));
+  border-color: oklch(0.98 0.02 90);
+  color: oklch(0.99 0.01 90);
+}
+.wheel-cabin {
+  background: oklch(0.99 0.01 240);
+  border-color: oklch(0.66 0.14 240);
+  color: oklch(0.28 0.03 260);
+}
+.wheel-cabin-mine {
+  background: oklch(0.95 0.06 30);
+  border-color: oklch(0.62 0.19 25);
+}
+.wheel-cabin-active {
+  background: oklch(0.94 0.12 95);
+  border-color: oklch(0.72 0.17 70);
+  box-shadow: 0 0 18px oklch(0.8 0.17 80 / 0.85);
+}
+.wheel-cabin-winner {
+  background: oklch(0.92 0.14 150);
+  border-color: oklch(0.6 0.17 150);
+  box-shadow: 0 0 22px oklch(0.72 0.17 150 / 0.85);
+}
+.wheel-cabin-cap {
+  background: oklch(0.66 0.14 240);
+  color: oklch(0.99 0.01 240);
+}
+.wheel-chip {
+  background: linear-gradient(180deg, oklch(0.98 0.02 240), oklch(0.9 0.03 240));
+  border-color: oklch(0.66 0.14 240);
+  color: oklch(0.3 0.04 260);
+}
+.wheel-chip-active {
+  background: linear-gradient(180deg, oklch(0.95 0.13 92), oklch(0.86 0.16 78));
+  border-color: oklch(0.55 0.16 30);
+  color: oklch(0.28 0.06 40);
+}
+.wheel-bar {
+  background: linear-gradient(180deg, oklch(0.62 0.2 22), oklch(0.52 0.19 20));
+  color: oklch(0.99 0.01 90);
+}
