@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_user_role_change() FROM service_role;

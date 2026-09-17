@@ -1,14 +1,41 @@
 import { cn } from "@/lib/utils";
 import { Award } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BadgeStripProps {
   count?: number;
   rank?: number | string;
   className?: string;
+  userId?: string | null;
 }
 
-export function BadgeStrip({ count, rank, className }: BadgeStripProps) {
-  if (!count && !rank) return null;
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: "مالك التطبيق",
+  admin: "مدير التطبيق",
+  moderator: "مساعد سوبر أدمن",
+  host: "مضيف",
+};
+
+export function BadgeStrip({ count, rank, className, userId }: BadgeStripProps) {
+  const summary = useQuery({
+    queryKey: ["badge-strip", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const [badges, roles] = await Promise.all([
+        supabase.from("user_badges").select("id", { count: "exact", head: true }).eq("user_id", userId ?? ""),
+        supabase.from("user_roles").select("role").eq("user_id", userId ?? ""),
+      ]);
+      if (badges.error) throw badges.error;
+      if (roles.error) throw roles.error;
+      const ordered = ["super_admin", "admin", "moderator", "host"];
+      const role = ordered.find((item) => (roles.data ?? []).some((row) => row.role === item));
+      return { count: badges.count ?? 0, rank: role ? ROLE_LABELS[role] : rank };
+    },
+  });
+  const shownCount = summary.data?.count ?? count;
+  const shownRank = summary.data?.rank ?? rank;
+  if (!shownCount && !shownRank) return null;
   
   return (
     <div className={cn(
@@ -16,11 +43,11 @@ export function BadgeStrip({ count, rank, className }: BadgeStripProps) {
       className
     )}>
       <Award className="h-3 w-3 text-primary" />
-      {rank && <span>#{rank}</span>}
-      {count !== undefined && (
+      {shownRank && <span>{shownRank}</span>}
+      {shownCount !== undefined && (
         <span className="flex items-center gap-0.5">
           <span className="opacity-60">|</span>
-          {count} شارة
+          {shownCount} شارة
         </span>
       )}
     </div>

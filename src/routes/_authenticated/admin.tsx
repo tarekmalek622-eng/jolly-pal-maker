@@ -85,6 +85,20 @@ function AdminPage() {
   const isAdmin = useIsAdmin(userId);
   const navigate = useNavigate();
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("users");
+  const ownerBadge = useQuery({
+    queryKey: ["admin-owner-badge", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_badges")
+        .select("id, badge_definitions(name, style_key)")
+        .eq("user_id", userId ?? "")
+        .eq("badge_definitions.key", "app_owner")
+        .maybeSingle();
+      if (error) throw error;
+      return data as unknown as { id: string; badge_definitions: { name: string; style_key: string } | null } | null;
+    },
+  });
 
   useEffect(() => {
     if (isAdmin.isSuccess && !isAdmin.data) {
@@ -105,6 +119,25 @@ function AdminPage() {
 
   return (
     <AppShell header={<PageHeader title="لوحة الإدارة" subtitle="تحكم كامل بالتطبيق — كل إجراء يُسجَّل" />}>
+      {ownerBadge.data?.badge_definitions && (
+        <div className="mb-3 flex items-center gap-3 rounded-2xl border border-primary/35 bg-primary/10 p-3">
+          <AdminBadgeCrest name={ownerBadge.data.badge_definitions.name} styleKey={ownerBadge.data.badge_definitions.style_key} compact />
+          <div>
+            <p className="text-sm font-black">حساب مالك التطبيق</p>
+            <p className="text-[10px] text-muted-foreground">أعلى رتبة موثقة · جميع صلاحيات الإدارة</p>
+          </div>
+        </div>
+      )}
+      <div className="mb-3 grid grid-cols-2 gap-2">
+        <div className="rounded-2xl border border-border bg-surface p-3">
+          <p className="text-xs font-black">رتبة مساعد</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">صلاحيات محددة حسب الشارة، مثل المتابعة أو سحب المشاركين.</p>
+        </div>
+        <div className="rounded-2xl border border-primary/35 bg-primary/10 p-3">
+          <p className="text-xs font-black text-primary">رتبة مسؤول</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">سحب المشاركين وتخصيص الغرفة وإغلاق الجولة.</p>
+        </div>
+      </div>
       <div className="sticky top-0 z-20 -mx-4 mb-4 bg-background/85 px-4 pb-2 pt-1 backdrop-blur-md">
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((t) => {
@@ -196,7 +229,7 @@ function UsersTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("badge_definitions")
-        .select("id, name, style_key, sort_order")
+        .select("id, name, description, style_key, sort_order, permissions")
         .eq("kind", "administrative")
         .eq("is_active", true)
         .order("sort_order");
@@ -424,6 +457,7 @@ function UsersTab() {
                       )}
                     >
                       <AdminBadgeCrest name={badge.name} styleKey={badge.style_key} compact />
+                      <span className="mt-1 line-clamp-2 text-[8px] text-muted-foreground">{badge.description}</span>
                     </Button>
                   );
                 })}

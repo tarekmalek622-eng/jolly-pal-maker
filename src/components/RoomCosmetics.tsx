@@ -39,6 +39,7 @@ export function RoomCosmetics({
   roomId,
   userId,
   isOwner,
+  canCustomize = false,
   open,
   onOpenChange,
   onApplied,
@@ -46,11 +47,12 @@ export function RoomCosmetics({
   roomId: string;
   userId: string | null;
   isOwner: boolean;
+  canCustomize?: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onApplied: () => void;
 }) {
-  const [target, setTarget] = useState<"background" | "decoration" | "mic">(isOwner ? "background" : "mic");
+  const [target, setTarget] = useState<"background" | "decoration" | "mic">(isOwner || canCustomize ? "background" : "mic");
   const apply = useServerFn(applyRoomCosmetic);
 
   const owned = useQuery({
@@ -75,7 +77,7 @@ export function RoomCosmetics({
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التطبيق"),
   });
 
-  const targets = TARGETS.filter((t) => (t.key === "mic" ? true : isOwner));
+  const targets = TARGETS.filter((t) => (t.key === "mic" ? true : isOwner || canCustomize));
   const category = TARGETS.find((t) => t.key === target)?.category;
   const list = (owned.data ?? []).filter((o) => o.store_items?.category === category);
 

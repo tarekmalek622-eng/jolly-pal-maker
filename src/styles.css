@@ -181,6 +181,14 @@
   box-shadow: var(--shadow-card);
 }
 
+.admin-crest {
+  clip-path: polygon(50% 0, 88% 16%, 100% 54%, 78% 88%, 50% 100%, 22% 88%, 0 54%, 12% 16%);
+}
+
+.admin-crest-wing {
+  clip-path: polygon(100% 0, 75% 24%, 96% 30%, 61% 48%, 82% 58%, 38% 70%, 52% 82%, 0 100%, 18% 55%, 0 20%);
+}
+
 @utility gradient-hero {
   background: var(--gradient-hero);
 }

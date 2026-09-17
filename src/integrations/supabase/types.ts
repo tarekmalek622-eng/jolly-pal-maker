@@ -71,6 +71,7 @@ export type Database = {
           key: string
           kind: string
           name: string
+          permissions: string[]
           sort_order: number
           style_key: string
           threshold: number
@@ -84,6 +85,7 @@ export type Database = {
           key: string
           kind?: string
           name: string
+          permissions?: string[]
           sort_order?: number
           style_key?: string
           threshold: number
@@ -97,6 +99,7 @@ export type Database = {
           key?: string
           kind?: string
           name?: string
+          permissions?: string[]
           sort_order?: number
           style_key?: string
           threshold?: number
@@ -1541,6 +1544,10 @@ export type Database = {
       gen_public_id: { Args: never; Returns: string }
       gen_room_code: { Args: never; Returns: string }
       gift_stats: { Args: { _since?: string }; Returns: Json }
+      has_badge_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       mark_direct_messages_read: {
@@ -1815,6 +1822,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      suppress_duplicate_role_notification_marker: {
+        Args: never
+        Returns: undefined
       }
       take_mic: {
         Args: { _room_id: string; _seat: number }
