@@ -16,6 +16,7 @@ import {
   Mic,
   MicOff,
   Music,
+  Camera,
   Send,
   Settings,
   Sparkles,
@@ -44,7 +45,8 @@ import {
 import { useSupabaseSession } from "@/hooks/use-session";
 import { useVoiceRoomContext } from "@/components/VoiceRoomProvider";
 import { BadgeStrip } from "@/components/BadgeStrip";
-import { closeWheelRound, getMyRoomBadgePermissions, removeRoomParticipant } from "@/lib/rooms.functions";
+import { closeWheelRound, getMyRoomBadgePermissions, removeRoomParticipant, updateOwnedRoomDetails } from "@/lib/rooms.functions";
+import { uploadUserImage } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import roomAuroraBackground from "@/assets/room-aurora-bg.jpg";
 import { VipName } from "@/components/VipName";
@@ -97,6 +99,10 @@ function RoomPage() {
   const [cosmeticsOpen, setCosmeticsOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const musicRef = useRef<HTMLInputElement>(null);
+  const roomImageRef = useRef<HTMLInputElement>(null);
+  const [roomNameDraft, setRoomNameDraft] = useState("");
+  const [roomImageFile, setRoomImageFile] = useState<File | null>(null);
+  const [roomImagePreview, setRoomImagePreview] = useState<string | null>(null);
   const [giftTargetId, setGiftTargetId] = useState<string | null>(null);
   const [liveCount, setLiveCount] = useState(userId ? 1 : 0);
 
@@ -404,6 +410,23 @@ function RoomPage() {
     onError: () => toast.error("تعذر الحظر"),
   });
 
+  const updateRoomDetails = useMutation({
+    mutationFn: async () => {
+      const name = roomNameDraft.trim();
+      if (name.length < 2) throw new Error("اكتب اسمًا من حرفين على الأقل");
+      let imageUrl = room.data?.image_url ?? null;
+      if (roomImageFile && userId) imageUrl = await uploadUserImage("rooms", userId, roomImageFile);
+      return updateOwnedRoomDetails({ data: { roomId, name, imageUrl } });
+    },
+    onSuccess: () => {
+      toast.success("تم تحديث اسم الغرفة وصورتها");
+      setRoomImageFile(null);
+      setRoomImagePreview(null);
+      void room.refetch();
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "تعذر تعديل الغرفة"),
+  });
+
   async function sendMessage() {
     const body = text.trim();
     if (!body || !userId) return;
@@ -454,7 +477,12 @@ function RoomPage() {
             <div className="flex shrink-0 gap-1">
               <button onClick={() => setCupOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15" aria-label="كأس الغرفة"><Trophy className="h-4 w-4 text-primary" /></button>
               <button onClick={() => setCosmeticsOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80" aria-label="تزيين الغرفة"><Sparkles className="h-4 w-4" /></button>
-              {canManage && <button onClick={() => setManageOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80" aria-label="إدارة الغرفة"><Settings className="h-4 w-4" /></button>}
+              {canManage && <button onClick={() => {
+                setRoomNameDraft(room.data.name);
+                setRoomImageFile(null);
+                setRoomImagePreview(null);
+                setManageOpen(true);
+              }} className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80" aria-label="إدارة الغرفة"><Settings className="h-4 w-4" /></button>}
             </div>
           </div>
           <div className="mt-1 flex justify-between px-1"><BadgeStrip userId={userId} rank="عضو" count={0} />{canManage && (requests.data?.length ?? 0) > 0 && <button onClick={() => setRequestsOpen(true)} className="rounded-full bg-accent px-2 py-1 text-[9px] font-bold text-accent-foreground">{requests.data?.length} طلب مايك</button>}</div>
@@ -896,6 +924,52 @@ function RoomPage() {
             <SheetTitle>إدارة الغرفة</SheetTitle>
           </SheetHeader>
           <div className="space-y-4 pb-6">
+            {isOwner && (
+              <section className="space-y-3 border-b border-border pb-4">
+                <p className="text-xs font-bold text-muted-foreground">بيانات الغرفة</p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => roomImageRef.current?.click()}
+                    className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-surface"
+                    aria-label="تغيير صورة الغرفة"
+                  >
+                    {roomImagePreview || room.data.image_url ? (
+                      <RoomImagePreview stored={roomImagePreview ?? room.data.image_url} />
+                    ) : (
+                      <Camera className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </button>
+                  <Input
+                    value={roomNameDraft}
+                    onChange={(event) => setRoomNameDraft(event.target.value)}
+                    maxLength={30}
+                    placeholder="اسم الغرفة"
+                    className="h-12 rounded-xl bg-surface"
+                  />
+                  <input
+                    ref={roomImageRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      if (!file) return;
+                      setRoomImageFile(file);
+                      setRoomImagePreview(URL.createObjectURL(file));
+                    }}
+                  />
+                </div>
+                <Button
+                  onClick={() => updateRoomDetails.mutate()}
+                  disabled={updateRoomDetails.isPending}
+                  className="h-11 w-full rounded-xl"
+                >
+                  {updateRoomDetails.isPending ? "جارٍ الحفظ..." : "حفظ الاسم والصورة"}
+                </Button>
+              </section>
+            )}
             <Button
               variant="outline"
               onClick={async () => {
@@ -987,6 +1061,27 @@ function RoomBackground({ url }: { url: string | null }) {
       <div className="absolute inset-0 bg-background/60" />
     </div>
   );
+}
+
+function RoomImagePreview({ stored }: { stored: string | null }) {
+  const [resolved, setResolved] = useState<string | null>(stored?.startsWith("blob:") ? stored : null);
+
+  useEffect(() => {
+    if (stored?.startsWith("blob:")) {
+      setResolved(stored);
+      return;
+    }
+    let active = true;
+    void resolveMediaUrl(stored).then((url) => {
+      if (active) setResolved(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [stored]);
+
+  if (!resolved) return <Camera className="h-5 w-5 text-muted-foreground" />;
+  return <img src={resolved} alt="صورة الغرفة" className="h-full w-full object-cover" />;
 }
 
 /** زر إجراء داخل لوحة التحكم بالمايك. */

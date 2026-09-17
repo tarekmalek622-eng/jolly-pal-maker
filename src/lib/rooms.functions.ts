@@ -23,6 +23,44 @@ export const getMyRoomBadgePermissions = createServerFn({ method: "GET" })
     return { roomBackground: checks[0], participantRemove: checks[1], wheelClose: checks[2] };
   });
 
+export const updateOwnedRoomDetails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      roomId: z.string().uuid(),
+      name: z.string().trim().min(2, "اسم الغرفة قصير").max(30, "اسم الغرفة طويل"),
+      imageUrl: z.string().trim().max(500).nullable(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const room = await context.supabase
+      .from("rooms")
+      .select("id, owner_id, name, image_url")
+      .eq("id", data.roomId)
+      .maybeSingle();
+    if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
+    if (room.data.owner_id !== context.userId) throw new Error("تعديل بيانات الغرفة متاح لمالكها فقط");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const result = await supabaseAdmin
+      .from("rooms")
+      .update({ name: data.name, image_url: data.imageUrl })
+      .eq("id", data.roomId)
+      .eq("owner_id", context.userId)
+      .select("id, name, image_url")
+      .maybeSingle();
+    if (result.error || !result.data) throw new Error(result.error?.message ?? "تعذر تعديل الغرفة");
+
+    await supabaseAdmin.from("audit_logs").insert({
+      actor_id: context.userId,
+      target_id: data.roomId,
+      action: "room_details_updated",
+      old_value: { name: room.data.name, image_url: room.data.image_url },
+      new_value: { name: result.data.name, image_url: result.data.image_url },
+    });
+    return result.data;
+  });
+
 export const removeRoomParticipant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid(), targetId: z.string().uuid() }).parse(input))
