@@ -313,17 +313,25 @@ function PhoneAuth({
   }
 
   return (
-    <div className="flex flex-1 flex-col justify-center">
-      <h1 className="text-2xl font-bold">
-        {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب جديد"}
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">برقم هاتفك وكلمة السر فقط.</p>
+    <div className="flex flex-1 flex-col justify-center py-4">
+      <div className="mb-5 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl gradient-gold shadow-glow">
+          <Mic className="h-7 w-7 text-primary-foreground" />
+        </div>
+        <p className="mt-3 text-sm font-black text-gradient-gold">صوتك</p>
+        <h1 className="mt-1 text-2xl font-bold">
+          {mode === "login" ? "مرحبًا بعودتك" : "ابدأ حسابك الجديد"}
+        </h1>
+        <p className="mt-1 text-xs text-muted-foreground">رقم الهاتف وكلمة السر فقط</p>
+      </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl bg-surface p-1">
+      <div className="surface-card p-4">
+      <div className="grid grid-cols-2 gap-2 rounded-2xl bg-surface-2 p-1">
         {([["login", "دخول"], ["signup", "حساب جديد"]] as const).map(([value, label]) => (
-          <button
+          <Button
             key={value}
             type="button"
+            variant="ghost"
             onClick={() => setMode(value)}
             className={cn(
               "h-11 rounded-xl text-sm font-semibold transition-colors",
@@ -331,7 +339,7 @@ function PhoneAuth({
             )}
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -378,9 +386,11 @@ function PhoneAuth({
       >
         {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : mode === "login" ? "دخول" : "متابعة"}
       </Button>
-      <p className="mt-3 text-center text-xs text-muted-foreground">
-        لا نطلب بريدًا إلكترونيًا ولا رمز تحقق.
-      </p>
+      </div>
+      <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+        <ShieldCheck className="h-3.5 w-3.5 text-success" />
+        بيانات الدخول محمية ولا تظهر للمستخدمين
+      </div>
     </div>
   );
 }
