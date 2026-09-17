@@ -146,20 +146,33 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   }, []);
 
   const slots = round.data?.slots ?? [];
+  const roundRef = useRef<WheelRound | null>(null);
+  roundRef.current = round.data ?? null;
   const finished = round.data?.status === "finished";
   const remaining = round.data ? Math.max(0, Math.ceil((new Date(round.data.ends_at).getTime() - now) / 1000)) : 0;
 
-  // عند تسوية الجولة: المؤشر يلف على كل الفواكه 5 ثوانٍ ثم يتوقف على الفائزة
+  // عند تسوية الجولة: المؤشر يلف على كل الفواكه ٤ ثوانٍ ثم يتوقف على الفائزة
+  const roundKey = `${round.data?.id ?? ""}:${round.data?.status ?? ""}:${round.data?.winning_key ?? ""}`;
+  const afterSpin = useRef<() => void>(() => {});
+  afterSpin.current = () => {
+    refreshMoney();
+    void history.refetch();
+  };
   useEffect(() => {
-    const data = round.data;
-    if (!data || data.status !== "finished" || !data.winning_key) return;
-    if (lastSettled.current === data.id) return;
-    lastSettled.current = data.id;
+    const [id, status, key] = roundKey.split(":");
+    const data = roundRef.current;
+    if (!id || status !== "finished" || !key || !data) return;
+    if (lastSettled.current === id) return;
+    lastSettled.current = id;
+    // نتيجة قديمة (فُتحت الصفحة بعد انتهاء الجولة): تُعرض بدون تعطيل المراهنة
+    const settledAgo = Date.now() - new Date(data.settled_at ?? data.ends_at).getTime();
+    const target = Math.max(0, data.slots.findIndex((s) => s.key === key));
+    if (settledAgo > 15_000) {
+      setHighlight(target);
+      return;
+    }
     const count = Math.max(1, data.slots.length);
-    const target = Math.max(0, data.slots.findIndex((s) => s.key === data.winning_key));
-    const laps = 3;
-    const steps = count * laps + ((target - highlight + count) % count);
-    // توزيع زمني بتباطؤ تدريجي يجمع 4000 مللي ثانية بالضبط
+    const steps = count * 3 + 1;
     const weights = Array.from({ length: steps }, (_, i) => 1 + Math.pow(i / Math.max(1, steps - 1), 2.6) * 9);
     const sum = weights.reduce((a, b) => a + b, 0);
     const delays = weights.map((w) => (w / sum) * 4000);
@@ -174,14 +187,17 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
       } else {
         setHighlight(target);
         setSpinning(false);
-        refreshMoney();
-        void history.refetch();
+        afterSpin.current();
       }
     };
     timer = window.setTimeout(tick, delays[0] ?? 120);
-    return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [round.data, refreshMoney, history]);
+    // أمان: لا تترك اللعبة عالقة في وضع "جاري السحب" أبدًا
+    const guard = window.setTimeout(() => setSpinning(false), 6000);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(guard);
+    };
+  }, [roundKey]);
 
   const place = useMutation({
     mutationFn: async (slotKey: string) => {
@@ -254,44 +270,38 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   return (
     <div className="space-y-2">
       {/* لوح العجلة — نفس تخطيط الصور المرجعية */}
-      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-[radial-gradient(circle_at_50%_35%,oklch(0.32_0.06_90),oklch(0.18_0.03_275))] p-3">
-        <div className="flex items-center justify-between">
-          <span className="rounded-full bg-background/40 px-3 py-1 text-[11px] font-bold text-primary">
+      <div className="wheel-board relative overflow-hidden rounded-3xl p-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="wheel-cabin-cap rounded-full px-3 py-1 text-[11px] font-extrabold">
             اليوم الجولة {round.data?.round_no ?? "-"}
           </span>
           <span
             className={cn(
-              "rounded-full px-3 py-1 text-[11px] font-extrabold",
-              spinning
-                ? "bg-primary/25 text-primary"
-                : finished
-                  ? "bg-destructive/20 text-destructive"
-                  : "bg-success/20 text-success",
+              "rounded-full px-2.5 py-1 text-[10px] font-extrabold",
+              spinning ? "wheel-bar" : finished ? "wheel-cabin-mine border" : "wheel-chip border",
             )}
           >
-            {spinning ? "جاري إعلان النتيجة" : finished ? "الجولة مغلقة" : "الجولة مفتوحة للمشاركة"}
+            {spinning ? "جاري إعلان النتيجة" : finished ? "الجولة مغلقة" : `مفتوحة ${remaining}ث`}
           </span>
-          <div className="flex items-center gap-1.5">
-            <span className="flex h-8 items-center gap-1 rounded-full bg-background/40 px-2.5 text-[11px] font-bold">
-              <Trophy className="h-3.5 w-3.5 text-primary" />
-              {(wallet.data?.coins ?? 0).toLocaleString("en-US")}
-            </span>
-          </div>
+          <span className="wheel-chip flex h-8 items-center gap-1 rounded-full border px-2.5 text-[11px] font-extrabold">
+            <Trophy className="h-3.5 w-3.5" />
+            {(wallet.data?.coins ?? 0).toLocaleString("en-US")}
+          </span>
         </div>
 
-        {/* هيكل العجلة: أسلاك + خانات الفواكه حولها + قلب العدّاد */}
+        {/* هيكل العجلة: أسلاك + كبائن الفواكه حولها + قلب العدّاد */}
         <div className="relative mx-auto mt-3 aspect-square w-full max-w-[340px]">
           {/* الإطار والأسلاك */}
-          <div className="absolute inset-[14%] rounded-full border-[10px] border-sky-400/70 bg-sky-500/10" />
+          <div className="wheel-ring absolute inset-[16%] rounded-full border-[10px]" />
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={`spoke-${i}`}
-              className="absolute left-1/2 top-1/2 h-[36%] w-[5px] -translate-x-1/2 origin-top rounded-full bg-sky-400/60"
+              className="wheel-spoke absolute left-1/2 top-1/2 h-[34%] w-[5px] -translate-x-1/2 origin-top rounded-full"
               style={{ transform: `rotate(${i * 45}deg)` }}
             />
           ))}
 
-          {/* خانات الفواكه */}
+          {/* كبائن الفواكه */}
           {slots.map((s, i) => {
             const step = (2 * Math.PI) / Math.max(1, slots.length);
             const a = -Math.PI / 2 + step * i;
@@ -309,37 +319,39 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                 onClick={() => place.mutate(s.key)}
                 style={{ left: `${left}%`, top: `${top}%` }}
                 className={cn(
-                  "absolute w-[30%] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border-2 text-center shadow-lg transition-all disabled:opacity-80",
+                  "wheel-cabin absolute w-[31%] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border-2 text-center shadow-lg transition-all disabled:opacity-90",
                   isWinner
-                    ? "scale-110 border-success bg-success/25 shadow-[0_0_22px_oklch(0.72_0.17_150/0.75)]"
+                    ? "wheel-cabin-winner scale-110"
                     : active
-                      ? "scale-105 border-primary bg-primary/25 shadow-[0_0_18px_oklch(0.82_0.16_85/0.6)]"
+                      ? "wheel-cabin-active scale-105"
                       : stat.mine > 0
-                        ? "border-primary/70 bg-primary/10"
-                        : "border-sky-400/60 bg-background/60",
+                        ? "wheel-cabin-mine"
+                        : "",
                 )}
               >
-                <span className="flex items-center justify-between gap-1 bg-background/70 px-1.5 py-1">
-                  <span className="text-base leading-none">{s.emoji}</span>
-                  <span className="text-[10px] font-extrabold text-primary">×{s.multiplier}</span>
+                <span className="flex items-center justify-between gap-1 px-1.5 py-1">
+                  <span className="emoji text-lg">{s.emoji}</span>
+                  <span className="wheel-cabin-cap rounded-md px-1.5 py-0.5 text-[10px] font-extrabold">
+                    x{s.multiplier}
+                  </span>
                 </span>
-                <span className="block px-1 py-1 text-[9px] leading-tight">
-                  <span className="block text-muted-foreground">أنت {stat.mine.toLocaleString("en-US")}</span>
-                  <span className="block font-bold text-primary">{stat.total.toLocaleString("en-US")}</span>
+                <span className="block px-1 pb-1 text-[9px] font-bold leading-tight">
+                  <span className="block">أنت {stat.mine.toLocaleString("en-US")}</span>
+                  <span className="block opacity-70">{stat.total.toLocaleString("en-US")}</span>
                 </span>
               </button>
             );
           })}
 
           {/* قلب العجلة: مدة الاختيار / الفاكهة الفائزة */}
-          <div className="absolute inset-[33%] flex flex-col items-center justify-center rounded-full border-[5px] border-primary/60 bg-[radial-gradient(circle,oklch(0.42_0.16_20),oklch(0.28_0.12_20))] text-center text-primary-foreground">
+          <div className="wheel-hub absolute inset-[33%] flex flex-col items-center justify-center rounded-full border-[5px] text-center">
             <span className="text-[10px] font-bold">
               {spinning ? "جاري السحب" : finished ? "الفائزة" : "مُدة الاختيار"}
             </span>
             <span className={cn("text-3xl font-extrabold leading-none", spinning && "animate-pulse")}>
-              {spinning ? "🎡" : finished ? (winning?.emoji ?? "🎡") : remaining}
+              {spinning ? <span className="emoji">🎡</span> : finished ? <span className="emoji">{winning?.emoji ?? "🎡"}</span> : remaining}
             </span>
-            {finished && !spinning && winning && <span className="text-[10px] font-bold">×{winning.multiplier}</span>}
+            {finished && !spinning && winning && <span className="text-[10px] font-bold">x{winning.multiplier}</span>}
           </div>
         </div>
 
@@ -351,52 +363,44 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
               type="button"
               onClick={() => setAmount(n)}
               className={cn(
-                "flex h-12 w-[22%] flex-col items-center justify-center rounded-2xl border-2 text-[11px] font-extrabold transition-all",
-                amount === n
-                  ? "scale-105 border-primary bg-primary/25 text-primary"
-                  : "border-sky-400/50 bg-background/60 text-muted-foreground",
+                "wheel-chip flex h-12 w-[22%] flex-col items-center justify-center rounded-2xl border-2 text-[11px] font-extrabold transition-all",
+                amount === n && "wheel-chip-active scale-105",
               )}
             >
-              <Coins className="h-3.5 w-3.5 text-primary" />
+              <Coins className="h-3.5 w-3.5" />
               {betLabel(n)}
             </button>
           ))}
         </div>
 
         {/* شريط الرصيد وأرباح اليوم */}
-        <div className="mt-2 flex items-center gap-2">
-          <div className="flex flex-1 items-center justify-between rounded-2xl bg-background/60 px-3 py-2">
-            <span className="text-[10px] text-muted-foreground">أرباح اليوم</span>
-            <span className="text-xs font-extrabold text-success">
-              {(todayWin ?? 0).toLocaleString("en-US")}
-            </span>
+        <div className="wheel-bar mt-2 flex items-center gap-2 rounded-2xl px-2 py-2">
+          <div className="flex flex-1 items-center justify-between rounded-xl bg-background/25 px-2.5 py-1.5">
+            <span className="text-[10px]">أرباح اليوم</span>
+            <span className="text-xs font-extrabold">{(todayWin ?? 0).toLocaleString("en-US")}</span>
           </div>
-          <div className="flex flex-1 items-center justify-between rounded-2xl bg-background/60 px-3 py-2">
-            <span className="text-[10px] text-muted-foreground">رصيدك</span>
-            <span className="text-xs font-extrabold text-primary">
-              {(wallet.data?.coins ?? 0).toLocaleString("en-US")}
-            </span>
+          <div className="flex flex-1 items-center justify-between rounded-xl bg-background/25 px-2.5 py-1.5">
+            <span className="text-[10px]">رهانك</span>
+            <span className="text-xs font-extrabold">{myBet.toLocaleString("en-US")}</span>
           </div>
         </div>
 
         {/* شريط نتائج الجولات السابقة */}
-        <div className="mt-2 flex items-center gap-2 overflow-x-auto rounded-2xl bg-background/60 px-3 py-2">
-          <span className="shrink-0 text-[10px] font-bold text-muted-foreground">النتيجة</span>
+        <div className="wheel-bar mt-2 flex items-center gap-2 overflow-x-auto rounded-2xl px-3 py-2">
+          <span className="shrink-0 text-[10px] font-extrabold">النتيجة</span>
           {(history.data ?? []).map((r) => {
             const slot = (r.slots ?? []).find((x) => x.key === r.winning_key);
             return (
               <span
                 key={r.id}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-surface-2 text-sm"
+                className="emoji flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background/25 text-sm"
                 title={`الجولة ${r.round_no}`}
               >
                 {slot?.emoji ?? "؟"}
               </span>
             );
           })}
-          {(history.data?.length ?? 0) === 0 && (
-            <span className="text-[10px] text-muted-foreground">لا جولات سابقة</span>
-          )}
+          {(history.data?.length ?? 0) === 0 && <span className="text-[10px] opacity-80">لا جولات سابقة</span>}
         </div>
 
         {/* لافتة الفوز الكبير */}
