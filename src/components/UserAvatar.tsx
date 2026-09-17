@@ -37,6 +37,13 @@ export function UserAvatar({ src, name, size = 48, vipLevel = 0, frame, online, 
   }, [frame]);
 
   const initial = (name ?? "؟").trim().charAt(0);
+  // إطارات متحركة: إطار النار يرتجف ويتوهّج، وباقي الإطارات توهّج ناعم
+  const frameKey = String(frame ?? "");
+  const frameAnim = /frame-03|fire|نار/i.test(frameKey)
+    ? "animate-frame-fire"
+    : frameUrl
+      ? "animate-frame-glow"
+      : "";
 
   return (
     <div className={cn("relative shrink-0", className)} style={{ width: size, height: size }}>
@@ -59,7 +66,10 @@ export function UserAvatar({ src, name, size = 48, vipLevel = 0, frame, online, 
           src={frameUrl}
           alt=""
           aria-hidden
-          className="pointer-events-none absolute -inset-[16%] h-[132%] w-[132%] max-w-none object-contain"
+          className={cn(
+            "pointer-events-none absolute -inset-[16%] h-[132%] w-[132%] max-w-none object-contain",
+            frameAnim,
+          )}
           loading="lazy"
         />
       )}

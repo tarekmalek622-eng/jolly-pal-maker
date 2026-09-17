@@ -9,6 +9,7 @@ import {
   Check,
   Gift,
   Hand,
+  FerrisWheel,
   LayoutGrid,
   Lock,
   LogOut,
@@ -41,7 +42,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useSupabaseSession } from "@/hooks/use-session";
-import { useVoiceRoom } from "@/hooks/use-voice-room";
+import { useVoiceRoomContext } from "@/components/VoiceRoomProvider";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/rooms/$roomId")({
@@ -73,6 +74,7 @@ type Person = {
   frame_url: string | null;
   vip_level: number;
   level: number;
+  mic_decoration_url: string | null;
 };
 
 function RoomPage() {
@@ -89,6 +91,7 @@ function RoomPage() {
   const [seatSheet, setSeatSheet] = useState<string | null>(null);
   const [cupOpen, setCupOpen] = useState(false);
   const [cosmeticsOpen, setCosmeticsOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const musicRef = useRef<HTMLInputElement>(null);
   const [giftTargetId, setGiftTargetId] = useState<string | null>(null);
 
@@ -140,7 +143,7 @@ function RoomPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, public_id, display_name, avatar_url, frame_url, vip_level, level")
+        .select("id, public_id, display_name, avatar_url, frame_url, vip_level, level, mic_decoration_url")
         .in("id", peopleIds);
       if (error) throw error;
       return (data ?? []) as Person[];
@@ -185,7 +188,15 @@ function RoomPage() {
   const isOwner = room.data?.owner_id === userId;
   const canManage = isOwner || (moderators.data ?? []).includes(userId ?? "");
   const mySeat = (mics.data ?? []).find((m) => m.user_id === userId) ?? null;
-  const voice = useVoiceRoom(roomId, Boolean(mySeat && !mySeat.is_muted));
+  const { voice, enterRoom, minimizeRoom, exitRoom, minimized } = useVoiceRoomContext();
+  const canPublish = Boolean(mySeat && !mySeat.is_muted);
+  const minimizedRef = useRef(false);
+  minimizedRef.current = minimized;
+
+  useEffect(() => {
+    if (!room.data) return;
+    enterRoom({ id: roomId, name: room.data.name, imageUrl: room.data.image_url }, canPublish);
+  }, [enterRoom, roomId, room.data?.name, room.data?.image_url, canPublish, room.data]);
 
   // join / leave membership
   useEffect(() => {
@@ -195,6 +206,7 @@ function RoomPage() {
       { onConflict: "room_id,user_id" },
     );
     return () => {
+      if (minimizedRef.current) return; // الغرفة مصغّرة — نُبقي العضوية والمايك
       void supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", userId);
       void supabase.from("room_mics").update({ user_id: null }).eq("room_id", roomId).eq("user_id", userId);
     };
@@ -269,7 +281,6 @@ function RoomPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("أنت الآن على المايك");
       void mics.refetch();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الصعود على المايك"),
@@ -412,11 +423,7 @@ function RoomPage() {
       header={
         <header className="sticky top-0 z-30 bg-background/85 px-4 py-3 backdrop-blur-xl">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => void navigate({ to: "/rooms" })}
-              className="p-1"
-              aria-label="رجوع"
-            >
+            <button onClick={() => setLeaveOpen(true)} className="p-1" aria-label="تصغير أو خروج">
               <ArrowRight className="h-5 w-5" />
             </button>
             <div className="min-w-0 flex-1">
@@ -441,9 +448,6 @@ function RoomPage() {
             </button>
             <button onClick={() => setCupOpen(true)} className="p-1" aria-label="كأس الغرفة">
               <Trophy className="h-5 w-5" />
-            </button>
-            <button onClick={() => setDominoOpen(true)} className="p-1" aria-label="لعبة الدومينو">
-              <LayoutGrid className="h-5 w-5" />
             </button>
             {canManage && (
               <>
@@ -508,9 +512,9 @@ function RoomPage() {
                 ) : (
                   <Mic className="h-5 w-5 text-muted-foreground" />
                 )}
-                {seat.decoration_url && (
+                {(person?.mic_decoration_url ?? seat.decoration_url) && (
                   <CosmeticImage
-                    url={seat.decoration_url}
+                    url={person?.mic_decoration_url ?? seat.decoration_url}
                     className="pointer-events-none absolute left-1/2 top-1/2 h-[170%] w-[170%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain"
                   />
                 )}
@@ -593,37 +597,88 @@ function RoomPage() {
             <Gift className="me-1 h-4 w-4" /> هدية
           </Button>
         </div>
-        {/* تشغيل أغنية من ملفات الهاتف لكل الحاضرين — لمن هو على المايك */}
-        {mySeat && (
-          <div className="mt-2 flex items-center gap-2">
-            <input
-              ref={musicRef}
-              type="file"
-              accept="audio/*"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                e.target.value = "";
-                if (!f) return;
-                voice
-                  .playMusic(f)
-                  .then(() => toast.success("جارٍ تشغيل الأغنية للجميع"))
-                  .catch((err: unknown) =>
-                    toast.error(err instanceof Error ? err.message : "تعذر تشغيل الأغنية"),
-                  );
+        <input
+          ref={musicRef}
+          type="file"
+          accept="audio/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (!f) return;
+            voice
+              .playMusic(f)
+              .then(() => toast.success("جارٍ تشغيل الأغنية للجميع"))
+              .catch((err: unknown) => toast.error(err instanceof Error ? err.message : "تعذر تشغيل الأغنية"));
+          }}
+        />
+      </div>
+
+      {/* أزرار عائمة أسفل يسار الغرفة: عجلة الحظ + تشغيل الموسيقى */}
+      <div className="fixed bottom-40 left-3 z-30 flex flex-col items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setRoomGame("wheel");
+            setDominoOpen(true);
+          }}
+          aria-label="عجلة الحظ والألعاب"
+          className="flex h-14 w-14 flex-col items-center justify-center rounded-2xl border border-primary/50 bg-background/80 shadow-lg backdrop-blur-xl"
+        >
+          <FerrisWheel className="h-6 w-6 text-primary" />
+          <span className="mt-0.5 text-[8px] font-bold text-primary">العجلة</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (!mySeat) {
+              toast.error("اصعد على المايك أولًا لتشغيل الموسيقى");
+              return;
+            }
+            if (voice.musicPlaying) voice.stopMusic();
+            else musicRef.current?.click();
+          }}
+          aria-label="تشغيل موسيقى من الهاتف"
+          className={cn(
+            "flex h-12 w-12 items-center justify-center rounded-2xl border bg-background/80 shadow-lg backdrop-blur-xl",
+            voice.musicPlaying ? "border-primary text-primary" : "border-border text-muted-foreground",
+          )}
+        >
+          <Music className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* تصغير الغرفة أو الخروج منها */}
+      <Sheet open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle className="text-start">الغرفة</SheetTitle>
+          </SheetHeader>
+          <div className="mt-3 space-y-2 pb-4">
+            <Button
+              onClick={() => {
+                minimizeRoom();
+                setLeaveOpen(false);
+                void navigate({ to: "/home" });
               }}
-            />
+              className="h-12 w-full rounded-2xl gradient-gold font-bold text-primary-foreground"
+            >
+              تصغير الغرفة (تبقى على المايك)
+            </Button>
             <Button
               variant="outline"
-              onClick={() => (voice.musicPlaying ? voice.stopMusic() : musicRef.current?.click())}
-              className={cn("h-11 flex-1 rounded-2xl text-xs", voice.musicPlaying && "border-primary text-primary")}
+              onClick={() => {
+                exitRoom();
+                setLeaveOpen(false);
+                void navigate({ to: "/home" });
+              }}
+              className="h-12 w-full rounded-2xl border-destructive/40 text-destructive"
             >
-              <Music className="me-1 h-4 w-4" />
-              {voice.musicPlaying ? `إيقاف: ${voice.musicName ?? "الأغنية"}` : "تشغيل أغنية من الهاتف"}
+              خروج من الغرفة
             </Button>
           </div>
-        )}
-      </div>
+        </SheetContent>
+      </Sheet>
 
       <RoomCosmetics
         roomId={roomId}

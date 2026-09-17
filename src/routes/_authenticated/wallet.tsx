@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { createCoinPurchaseRequest } from "@/lib/wallet.functions";
 import { useSupabaseSession, useWallet } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
-import { COINS_RATE_NOTE, coinsUsdLabel } from "@/lib/coins";
+import { COINS_RATE_NOTE, coinsEgpLabel, coinsUsdLabel } from "@/lib/coins";
 
 export const Route = createFileRoute("/_authenticated/wallet")({
   head: () => ({
@@ -174,7 +174,9 @@ function WalletPage() {
           <Coins className="h-8 w-8" />
           {(wallet.data?.coins ?? 0).toLocaleString("en-US")}
         </p>
-        <p className="mt-1 text-[11px] font-bold opacity-90">{coinsUsdLabel(wallet.data?.coins ?? 0)}</p>
+        <p className="mt-1 text-[11px] font-bold opacity-90">
+          {coinsEgpLabel(wallet.data?.coins ?? 0)} · {coinsUsdLabel(wallet.data?.coins ?? 0)}
+        </p>
         <p className="mt-1 text-[10px] opacity-75">{COINS_RATE_NOTE}</p>
         <div className="mt-4 flex gap-4 text-xs">
           <span>أُرسل: {(wallet.data?.total_sent ?? 0).toLocaleString("en-US")}</span>

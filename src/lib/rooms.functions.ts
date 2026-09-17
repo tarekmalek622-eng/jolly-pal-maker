@@ -64,15 +64,13 @@ export const applyRoomCosmetic = createServerFn({ method: "POST" })
       const res = await supabaseAdmin.from("rooms").update({ theme: imageUrl }).eq("id", data.roomId);
       if (res.error) throw new Error(res.error.message);
     } else {
-      const seat = await supabase
-        .from("room_mics")
-        .select("id")
-        .eq("room_id", data.roomId)
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (seat.error || !seat.data) throw new Error("اصعد على المايك أولًا");
-      const res = await supabaseAdmin.from("room_mics").update({ decoration_url: imageUrl }).eq("id", seat.data.id);
+      // زينة المايك تُخزَّن على حساب المستخدم نفسه لتبقى معه في أي مقعد يجلس عليه
+      const res = await supabaseAdmin
+        .from("profiles")
+        .update({ mic_decoration_url: imageUrl } as never)
+        .eq("id", userId);
       if (res.error) throw new Error(res.error.message);
+      await supabaseAdmin.from("room_mics").update({ decoration_url: null }).eq("room_id", data.roomId).eq("user_id", userId);
     }
 
     return { ok: true, imageUrl };

@@ -718,6 +718,7 @@ export type Database = {
           is_suspended: boolean
           last_seen: string
           level: number
+          mic_decoration_url: string | null
           profile_background_url: string | null
           public_id: string
           updated_at: string
@@ -741,6 +742,7 @@ export type Database = {
           is_suspended?: boolean
           last_seen?: string
           level?: number
+          mic_decoration_url?: string | null
           profile_background_url?: string | null
           public_id: string
           updated_at?: string
@@ -764,6 +766,7 @@ export type Database = {
           is_suspended?: boolean
           last_seen?: string
           level?: number
+          mic_decoration_url?: string | null
           profile_background_url?: string | null
           public_id?: string
           updated_at?: string
@@ -1414,6 +1417,7 @@ export type Database = {
           is_suspended: boolean
           last_seen: string
           level: number
+          mic_decoration_url: string | null
           profile_background_url: string | null
           public_id: string
           updated_at: string
@@ -1455,6 +1459,7 @@ export type Database = {
           is_suspended: boolean
           last_seen: string
           level: number
+          mic_decoration_url: string | null
           profile_background_url: string | null
           public_id: string
           updated_at: string
@@ -1504,6 +1509,7 @@ export type Database = {
           is_suspended: boolean
           last_seen: string
           level: number
+          mic_decoration_url: string | null
           profile_background_url: string | null
           public_id: string
           updated_at: string
@@ -1689,6 +1695,7 @@ export type Database = {
           is_suspended: boolean
           last_seen: string
           level: number
+          mic_decoration_url: string | null
           profile_background_url: string | null
           public_id: string
           updated_at: string

@@ -668,6 +668,34 @@ export const adminUpdateUserIdentity = createServerFn({ method: "POST" })
       .eq("id", data.userId);
     if (error) throw new Error(error.message);
 
+    // عند تغيير الـID: يصبح كود غرفة المستخدم نفس الـID الشخصي + إشعار له
+    if (patch['public_id']) {
+      const newId = String(patch['public_id']);
+      const { data: myRoom } = await supabaseAdmin
+        .from("rooms")
+        .select("id")
+        .eq("owner_id", data.userId)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (myRoom) {
+        const { data: codeTaken } = await supabaseAdmin
+          .from("rooms")
+          .select("id")
+          .eq("room_code", newId)
+          .maybeSingle();
+        if (!codeTaken) {
+          await supabaseAdmin.from("rooms").update({ room_code: newId } as never).eq("id", myRoom.id);
+        }
+      }
+      await supabaseAdmin.from("notifications").insert({
+        user_id: data.userId,
+        kind: "system",
+        title: "تم تغيير الـID الخاص بك",
+        body: `الـID الجديد: ${newId}${myRoom ? " — وأصبح كود غرفتك بنفس الـID" : ""}`,
+        metadata: { old_public_id: current.public_id, new_public_id: newId },
+      } as never);
+    }
+
     await log(
       context.userId,
       data.userId,

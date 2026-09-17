@@ -190,7 +190,7 @@ function GamesPage() {
         <EmptyState title="كل الألعاب موقوفة حاليًا" />
       ) : (
         <>
-          <div className="mb-4 flex gap-2 overflow-x-auto rounded-2xl bg-surface p-1">
+          <div className="mb-4 grid grid-cols-3 gap-2">
             {tabs.map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
@@ -200,11 +200,20 @@ function GamesPage() {
                   setQuiz(null);
                 }}
                 className={cn(
-                  "flex shrink-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition-colors",
-                  active === key ? "gradient-gold text-primary-foreground" : "text-muted-foreground",
+                  "flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 text-[11px] font-bold transition-all active:scale-[0.97]",
+                  active === key
+                    ? "border-primary/60 gradient-gold text-primary-foreground shadow-lg"
+                    : "border-border bg-surface text-muted-foreground",
                 )}
               >
-                <Icon className="h-4 w-4" />
+                <span
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-xl",
+                    active === key ? "bg-background/25" : "bg-surface-2",
+                  )}
+                >
+                  <Icon className="h-4.5 w-4.5" />
+                </span>
                 {label}
               </button>
             ))}

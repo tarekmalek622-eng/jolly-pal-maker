@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
+import { AppShell, EmptyState } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useSupabaseSession } from "@/hooks/use-session";
 
@@ -79,7 +79,23 @@ function MessagesPage() {
   }, [userId, threads]);
 
   return (
-    <AppShell header={<PageHeader title="الرسائل" subtitle="محادثاتك الخاصة" />}>
+    <AppShell
+      header={
+        <div className="sticky top-0 z-30 flex items-center gap-3 bg-background/85 px-4 py-3 backdrop-blur-xl">
+          <Link
+            to="/friends"
+            aria-label="الأصدقاء"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-gold text-primary-foreground"
+          >
+            <Users className="h-5 w-5" />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-lg font-bold">الرسائل</h1>
+            <p className="text-[11px] text-muted-foreground">محادثاتك الخاصة · الأصدقاء من الزر</p>
+          </div>
+        </div>
+      }
+    >
       {threads.isLoading ? (
         <div className="flex justify-center py-10">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />

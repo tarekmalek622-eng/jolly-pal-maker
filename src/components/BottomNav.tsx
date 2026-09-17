@@ -1,14 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Mic, Gamepad2, MessageCircle, Users, Wallet, User } from "lucide-react";
+import { Home, Gamepad2, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/home", label: "الرئيسية", icon: Home },
-  { to: "/rooms", label: "الغرف", icon: Mic },
   { to: "/games", label: "الألعاب", icon: Gamepad2 },
   { to: "/messages", label: "الرسائل", icon: MessageCircle },
-  { to: "/friends", label: "الأصدقاء", icon: Users },
-  { to: "/wallet", label: "المحفظة", icon: Wallet },
   { to: "/me", label: "حسابي", icon: User },
 ] as const;
 
