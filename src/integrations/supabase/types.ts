@@ -390,6 +390,142 @@ export type Database = {
         }
         Relationships: []
       }
+      cup_event_payouts: {
+        Row: {
+          beneficiary_user_id: string
+          coins: number
+          event_id: string
+          id: string
+          paid_at: string
+          rank: number
+          score: number
+        }
+        Insert: {
+          beneficiary_user_id: string
+          coins: number
+          event_id: string
+          id?: string
+          paid_at?: string
+          rank: number
+          score: number
+        }
+        Update: {
+          beneficiary_user_id?: string
+          coins?: number
+          event_id?: string
+          id?: string
+          paid_at?: string
+          rank?: number
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cup_event_payouts_beneficiary_user_id_fkey"
+            columns: ["beneficiary_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cup_event_payouts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "cup_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cup_event_prizes: {
+        Row: {
+          coins: number
+          created_at: string
+          event_id: string
+          id: string
+          label: string
+          rank_from: number
+          rank_to: number
+        }
+        Insert: {
+          coins: number
+          created_at?: string
+          event_id: string
+          id?: string
+          label: string
+          rank_from: number
+          rank_to: number
+        }
+        Update: {
+          coins?: number
+          created_at?: string
+          event_id?: string
+          id?: string
+          label?: string
+          rank_from?: number
+          rank_to?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cup_event_prizes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "cup_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cup_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string
+          id: string
+          image_url: string | null
+          ranking_kind: string
+          starts_at: string
+          status: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at: string
+          id?: string
+          image_url?: string | null
+          ranking_kind: string
+          starts_at: string
+          status?: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string
+          id?: string
+          image_url?: string | null
+          ranking_kind?: string
+          starts_at?: string
+          status?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cup_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cvip_plans: {
         Row: {
           background_url: string | null
@@ -1498,6 +1634,17 @@ export type Database = {
         Args: { _suspended: boolean; _user_id: string }
         Returns: boolean
       }
+      app_cup_leaderboard: {
+        Args: { _category: string; _limit?: number; _period?: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          entity_id: string
+          image_url: string
+          public_id: string
+          score: number
+        }[]
+      }
       approve_coin_purchase: {
         Args: { _admin: string; _request_id: string }
         Returns: number
@@ -1543,6 +1690,18 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      cup_event_leaderboard: {
+        Args: { _event_id: string; _limit?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          entity_id: string
+          image_url: string
+          public_id: string
+          score: number
+        }[]
+      }
+      cup_window_start: { Args: { _period: string }; Returns: string }
       domino_cancel: {
         Args: { _game_id: string; _uid: string }
         Returns: undefined
@@ -1784,6 +1943,17 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      room_cup_leaderboard: {
+        Args: { _limit?: number; _period?: string; _room_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          public_id: string
+          score: number
+          user_id: string
+          vip_level: number
+        }[]
+      }
       send_direct_gift: {
         Args: { _gift_id: string; _quantity?: number; _receiver_id: string }
         Returns: {
@@ -1869,6 +2039,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      settle_cup_event: {
+        Args: { _admin: string; _event_id: string }
+        Returns: number
       }
       settle_game: {
         Args: {
