@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Award, Crown, Gem, ShieldCheck, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { GiftThumb, type GiftMediaRow } from "@/components/GiftMedia";
+import { AdminBadgeCrest } from "@/components/AdminBadgeCrest";
 
 type Role = "super_admin" | "admin" | "moderator" | "host" | "user";
 
@@ -13,8 +14,10 @@ type BadgeRow = {
     key: string;
     name: string;
     description: string | null;
+    kind: string;
     threshold: number;
     sort_order: number;
+    style_key: string;
   } | null;
 };
 
@@ -57,7 +60,7 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_badges")
-        .select("id, progress, awarded_at, badge_definitions(key, name, description, threshold, sort_order)")
+        .select("id, progress, awarded_at, badge_definitions(key, name, description, kind, threshold, sort_order, style_key)")
         .eq("user_id", userId)
         .order("awarded_at", { ascending: false });
       if (error) throw error;
@@ -83,6 +86,8 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
     .map((role) => ROLE_BADGES[role])
     .filter((role): role is { label: string; note: string } => Boolean(role));
   const earned = (badges.data ?? []).filter((badge) => badge.badge_definitions);
+  const administrative = earned.filter((badge) => badge.badge_definitions?.kind === "administrative");
+  const achievements = earned.filter((badge) => badge.badge_definitions?.kind !== "administrative");
   const received = (gifts.data ?? []).filter((gift) => gift.gifts);
 
   return (
@@ -120,7 +125,16 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
                 </span>
               </div>
             ))}
-            {earned.map((badge) => {
+            {administrative.map((badge) => {
+              const definition = badge.badge_definitions;
+              if (!definition) return null;
+              return (
+                <div key={badge.id} className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-surface-2 p-2">
+                  <AdminBadgeCrest name={definition.name} styleKey={definition.style_key} compact />
+                </div>
+              );
+            })}
+            {achievements.map((badge) => {
               const definition = badge.badge_definitions;
               if (!definition) return null;
               return (
