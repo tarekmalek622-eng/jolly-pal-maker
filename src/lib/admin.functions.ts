@@ -463,13 +463,6 @@ export const adminSetUserRole = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
     await log(context.userId, data.userId, data.grant ? "grant_role" : "revoke_role", "", data.role);
-    await supabaseAdmin.from("notifications").insert({
-      user_id: data.userId,
-      kind: "role_change",
-      title: data.grant ? "تمت ترقية رتبتك" : "تم تغيير رتبتك",
-      body: data.grant ? `رتبتك الجديدة: ${data.role}` : `تم سحب رتبة: ${data.role}`,
-      metadata: { role: data.role, granted: data.grant },
-    });
     return { ok: true };
   });
 

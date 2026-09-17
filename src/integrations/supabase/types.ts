@@ -1823,6 +1823,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      suppress_duplicate_role_notification_marker: {
+        Args: never
+        Returns: undefined
+      }
       take_mic: {
         Args: { _room_id: string; _seat: number }
         Returns: {
