@@ -72,6 +72,7 @@ export type Database = {
           kind: string
           name: string
           sort_order: number
+          style_key: string
           threshold: number
           updated_at: string
         }
@@ -84,6 +85,7 @@ export type Database = {
           kind?: string
           name: string
           sort_order?: number
+          style_key?: string
           threshold: number
           updated_at?: string
         }
@@ -96,6 +98,7 @@ export type Database = {
           kind?: string
           name?: string
           sort_order?: number
+          style_key?: string
           threshold?: number
           updated_at?: string
         }
