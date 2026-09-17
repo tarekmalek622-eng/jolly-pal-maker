@@ -64,9 +64,14 @@ export type Database = {
       }
       badge_definitions: {
         Row: {
+          audience: string
+          color_key: string
           created_at: string
           description: string | null
+          display_variant: string
+          icon_key: string
           id: string
+          image_url: string | null
           is_active: boolean
           key: string
           kind: string
@@ -78,9 +83,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          audience?: string
+          color_key?: string
           created_at?: string
           description?: string | null
+          display_variant?: string
+          icon_key?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean
           key: string
           kind?: string
@@ -92,9 +102,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          audience?: string
+          color_key?: string
           created_at?: string
           description?: string | null
+          display_variant?: string
+          icon_key?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean
           key?: string
           kind?: string
@@ -1427,6 +1442,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_end_relationship: {
+        Args: { _relationship_id: string }
+        Returns: boolean
+      }
       admin_set_profile_suspended: {
         Args: { _suspended: boolean; _user_id: string }
         Returns: boolean
@@ -1550,6 +1569,13 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      lock_relationship_slot: {
+        Args: {
+          _type: Database["public"]["Enums"]["relation_type"]
+          _user_id: string
+        }
+        Returns: undefined
+      }
       mark_direct_messages_read: {
         Args: { _sender_id: string }
         Returns: number
@@ -1640,6 +1666,29 @@ export type Database = {
       refund_item: { Args: { _user_item_id: string }; Returns: number }
       relationship_settings: { Args: never; Returns: Json }
       remove_friend: { Args: { _friend_id: string }; Returns: boolean }
+      replace_relationship: {
+        Args: {
+          _partner_id: string
+          _type: Database["public"]["Enums"]["relation_type"]
+        }
+        Returns: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          partner_id: string
+          requester_id: string
+          started_at: string | null
+          status: string
+          type: Database["public"]["Enums"]["relation_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "relationships"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       request_relationship: {
         Args: {
           _partner_id: string

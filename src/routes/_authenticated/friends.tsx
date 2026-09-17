@@ -79,16 +79,6 @@ function FriendsPage() {
     },
   });
 
-  useEffect(() => {
-    if (!userId) return;
-    const channel = supabase
-      .channel(`social-${userId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "friend_requests" }, () => void data.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "friends" }, () => void data.refetch())
-      .subscribe();
-    return () => void supabase.removeChannel(channel);
-  }, [userId, data]);
-
   const respond = useMutation({
     mutationFn: async ({ id, accept }: { id: string; accept: boolean }) => {
       const { error } = await supabase.rpc("respond_friend_request", { _request_id: id, _accept: accept });
@@ -131,6 +121,17 @@ function FriendsPage() {
       return { rows, people };
     },
   });
+
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`social-${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friend_requests" }, () => void data.refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "friends" }, () => void data.refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "relationships" }, () => void relations.refetch())
+      .subscribe();
+    return () => void supabase.removeChannel(channel);
+  }, [userId, data, relations]);
 
   const relationAction = useMutation({
     mutationFn: async (input: { id: string; action: "accept" | "reject" | "end" }) => {

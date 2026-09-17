@@ -328,7 +328,17 @@ export const adminUpsertVipLevel = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("vip_levels").upsert(data);
+    const payload = {
+      level: data.level,
+      name: data.name,
+      price: data.price,
+      duration_days: data.duration_days,
+      badge_url: data.badge_url ?? null,
+      frame_url: data.frame_url ?? null,
+      name_effect: data.name_effect ?? null,
+      is_active: data.is_active,
+    };
+    const { error } = await supabaseAdmin.from("vip_levels").upsert(payload);
     if (error) throw new Error(error.message);
     await log(context.userId, String(data.level), "upsert_vip_level", "", data.name);
     return { ok: true };
@@ -542,6 +552,61 @@ export const adminSetUserBadge = createServerFn({ method: "POST" })
     }
     await log(context.userId, data.userId, data.grant ? "grant_admin_badge" : "revoke_admin_badge", "", badge.name);
     return { ok: true };
+  });
+
+export const adminUpsertBadgeDefinition = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    id: z.string().uuid().optional(),
+    key: z.string().min(2).max(50).regex(/^[a-z0-9_]+$/),
+    name: z.string().min(2).max(60),
+    description: z.string().max(240).nullable().optional(),
+    kind: z.enum(["administrative", "achievement"]),
+    imageUrl: z.string().url().max(2000).nullable().optional(),
+    iconKey: z.string().max(40),
+    colorKey: z.string().max(40),
+    displayVariant: z.enum(["crest", "ribbon", "medal", "glass"]),
+    audience: z.enum(["assigned", "admin", "moderator", "host", "vip", "all"]),
+    sortOrder: z.number().int().min(0).max(10000),
+    threshold: z.number().int().min(0).max(100000000),
+    isActive: z.boolean(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const payload = {
+      key: data.key,
+      name: data.name,
+      description: data.description ?? null,
+      kind: data.kind,
+      image_url: data.imageUrl ?? null,
+      icon_key: data.iconKey,
+      color_key: data.colorKey,
+      display_variant: data.displayVariant,
+      audience: data.audience,
+      style_key: data.colorKey,
+      sort_order: data.sortOrder,
+      threshold: data.threshold,
+      is_active: data.isActive,
+    };
+    const result = data.id
+      ? await supabaseAdmin.from("badge_definitions").update(payload).eq("id", data.id).select("id").single()
+      : await supabaseAdmin.from("badge_definitions").insert(payload).select("id").single();
+    if (result.error) throw new Error(result.error.message);
+    await log(context.userId, result.data.id, data.id ? "update_badge_definition" : "create_badge_definition", "", data.name);
+    return { id: result.data.id };
+  });
+
+export const adminEndRelationship = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ relationshipId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { data: ended, error } = await (context.supabase as unknown as Rpc).rpc("admin_end_relationship", {
+      _relationship_id: data.relationshipId,
+    });
+    if (error) throw new Error(error instanceof Error ? error.message : "تعذر إنهاء العلاقة");
+    return { ok: ended === true };
   });
 
 export const adminUpsertQuizQuestion = createServerFn({ method: "POST" })

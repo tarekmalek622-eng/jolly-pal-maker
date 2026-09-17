@@ -49,6 +49,8 @@ import {
   adminSetUserRole,
   adminSetUserBadge,
   adminUpdateUserIdentity,
+  adminUpsertBadgeDefinition,
+  adminEndRelationship,
 } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 import { AdminBadgeCrest } from "@/components/AdminBadgeCrest";
@@ -68,6 +70,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const TABS = [
   { key: "users", label: "المستخدمون", icon: Users },
   { key: "rooms", label: "الغرف", icon: Sofa },
+  { key: "badges", label: "الشارات", icon: Award },
   { key: "gifts", label: "الهدايا", icon: Gift },
   { key: "store", label: "المتجر", icon: ShoppingBag },
   { key: "vip", label: "VIP", icon: Crown },
@@ -164,6 +167,7 @@ function AdminPage() {
 
       {tab === "users" && <UsersTab />}
       {tab === "rooms" && <RoomsTab />}
+      {tab === "badges" && <BadgeDefinitionsTab />}
       {tab === "gifts" && <GiftsTab />}
       {tab === "store" && <StoreTab />}
       {tab === "vip" && <VipTab />}
@@ -467,6 +471,116 @@ function UsersTab() {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+type BadgeDraft = {
+  id?: string;
+  key: string;
+  name: string;
+  description: string;
+  kind: "administrative" | "achievement";
+  imageUrl: string;
+  iconKey: string;
+  colorKey: string;
+  displayVariant: "crest" | "ribbon" | "medal" | "glass";
+  audience: "assigned" | "admin" | "moderator" | "host" | "vip" | "all";
+  sortOrder: string;
+  threshold: string;
+  isActive: boolean;
+};
+
+const EMPTY_BADGE: BadgeDraft = {
+  key: "",
+  name: "",
+  description: "",
+  kind: "administrative",
+  imageUrl: "",
+  iconKey: "shield",
+  colorKey: "royal",
+  displayVariant: "crest",
+  audience: "assigned",
+  sortOrder: "0",
+  threshold: "0",
+  isActive: true,
+};
+
+function BadgeDefinitionsTab() {
+  const [form, setForm] = useState<BadgeDraft>(EMPTY_BADGE);
+  const query = useQuery({
+    queryKey: ["badge-definitions-editor"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("badge_definitions")
+        .select("id, key, name, description, kind, image_url, icon_key, color_key, display_variant, audience, sort_order, threshold, is_active")
+        .order("sort_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const save = useMutation({
+    mutationFn: () => adminUpsertBadgeDefinition({ data: {
+      ...(form.id ? { id: form.id } : {}),
+      key: form.key.trim(),
+      name: form.name.trim(),
+      description: form.description.trim() || null,
+      kind: form.kind,
+      imageUrl: form.imageUrl.trim() || null,
+      iconKey: form.iconKey.trim() || "shield",
+      colorKey: form.colorKey.trim() || "royal",
+      displayVariant: form.displayVariant,
+      audience: form.audience,
+      sortOrder: Number(form.sortOrder) || 0,
+      threshold: Number(form.threshold) || 0,
+      isActive: form.isActive,
+    } }),
+    onSuccess: () => {
+      toast.success(form.id ? "تم تعديل الشارة" : "تمت إضافة الشارة");
+      setForm(EMPTY_BADGE);
+      void query.refetch();
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "تعذر حفظ الشارة"),
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="surface-card space-y-2 p-3">
+        <p className="text-sm font-black">{form.id ? "تعديل الشارة" : "إضافة شارة"}</p>
+        <div className="flex justify-center py-2">
+          <AdminBadgeCrest name={form.name || "معاينة الشارة"} styleKey={form.colorKey} imageUrl={form.imageUrl || null} variant={form.displayVariant} compact />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="اسم الشارة" className="rounded-xl bg-surface-2" />
+          <Input value={form.key} disabled={Boolean(form.id)} onChange={(e) => setForm({ ...form, key: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })} placeholder="badge_key" className="rounded-xl bg-surface-2" />
+        </div>
+        <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="وصف الشارة" className="rounded-xl bg-surface-2" />
+        <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="رابط صورة الشارة (اختياري)" className="rounded-xl bg-surface-2" />
+        <div className="grid grid-cols-2 gap-2">
+          <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as BadgeDraft["kind"] })} className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs">
+            <option value="administrative">إدارية</option><option value="achievement">إنجاز</option>
+          </select>
+          <select value={form.displayVariant} onChange={(e) => setForm({ ...form, displayVariant: e.target.value as BadgeDraft["displayVariant"] })} className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs">
+            <option value="crest">درع</option><option value="ribbon">وشاح</option><option value="medal">ميدالية</option><option value="glass">زجاجية</option>
+          </select>
+          <select value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value as BadgeDraft["audience"] })} className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs">
+            <option value="assigned">المعيّنون</option><option value="admin">الإدارة</option><option value="moderator">المشرفون</option><option value="host">المضيفون</option><option value="vip">VIP</option><option value="all">الجميع</option>
+          </select>
+          <Input value={form.colorKey} onChange={(e) => setForm({ ...form, colorKey: e.target.value })} placeholder="نمط اللون" className="rounded-xl bg-surface-2" />
+        </div>
+        <Button variant="outline" onClick={() => setForm({ ...form, isActive: !form.isActive })} className="w-full rounded-xl">{form.isActive ? "مفعّلة" : "متوقفة"}</Button>
+        <div className="flex gap-2">
+          <Button disabled={save.isPending || form.name.trim().length < 2 || form.key.length < 2} onClick={() => save.mutate()} className="flex-1 rounded-xl gradient-gold font-bold text-primary-foreground">حفظ الشارة</Button>
+          {form.id && <Button variant="outline" onClick={() => setForm(EMPTY_BADGE)} className="rounded-xl">إلغاء</Button>}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {(query.data ?? []).map((badge) => (
+          <button key={badge.id} type="button" onClick={() => setForm({ id: badge.id, key: badge.key, name: badge.name, description: badge.description ?? "", kind: badge.kind as BadgeDraft["kind"], imageUrl: badge.image_url ?? "", iconKey: badge.icon_key, colorKey: badge.color_key, displayVariant: badge.display_variant as BadgeDraft["displayVariant"], audience: badge.audience as BadgeDraft["audience"], sortOrder: String(badge.sort_order), threshold: String(badge.threshold), isActive: badge.is_active })} className="surface-card flex min-h-40 flex-col items-center p-3 text-center">
+            <AdminBadgeCrest name={badge.name} styleKey={badge.color_key} imageUrl={badge.image_url} variant={badge.display_variant} compact />
+            <span className="mt-2 text-[9px] text-muted-foreground">{badge.kind === "administrative" ? "إدارية" : "إنجاز"} · {badge.is_active ? "مفعلة" : "متوقفة"}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1869,6 +1983,22 @@ function RelationshipSettings() {
     },
   });
   const [draft, setDraft] = useState<RelationFlags | null>(null);
+  const active = useQuery({
+    queryKey: ["admin-active-relationships"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("relationships")
+        .select("id, requester_id, partner_id, type, status, created_at")
+        .in("status", ["pending", "accepted"])
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      const ids = [...new Set((data ?? []).flatMap((row) => [row.requester_id, row.partner_id]))];
+      if (ids.length === 0) return { rows: data ?? [], names: new Map<string, string>() };
+      const profiles = await supabase.from("profiles").select("id, display_name, public_id").in("id", ids);
+      if (profiles.error) throw profiles.error;
+      return { rows: data ?? [], names: new Map((profiles.data ?? []).map((person) => [person.id, `${person.display_name} · ${person.public_id}`])) };
+    },
+  });
   const state = draft ?? query.data ?? null;
 
   const save = useMutation({
@@ -1882,6 +2012,11 @@ function RelationshipSettings() {
       void query.refetch();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+  const forceEnd = useMutation({
+    mutationFn: (relationshipId: string) => adminEndRelationship({ data: { relationshipId } }),
+    onSuccess: () => { toast.success("تم إنهاء العلاقة وتسجيل الإجراء"); void active.refetch(); },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "تعذر إنهاء العلاقة"),
   });
 
   if (!state) return null;
@@ -1910,6 +2045,22 @@ function RelationshipSettings() {
       >
         حفظ إعدادات العلاقات
       </Button>
+      <div className="mt-4 border-t border-border pt-3">
+        <p className="mb-2 text-xs font-black">العلاقات والطلبات الحالية</p>
+        <div className="max-h-72 space-y-2 overflow-y-auto">
+          {(active.data?.rows ?? []).map((row) => (
+            <div key={row.id} className="rounded-xl bg-surface-2 p-2 text-[10px]">
+              <p className="truncate font-bold">{active.data?.names.get(row.requester_id) ?? row.requester_id}</p>
+              <p className="truncate text-muted-foreground">مع {active.data?.names.get(row.partner_id) ?? row.partner_id}</p>
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <span>{relationLabels[row.type]} · {row.status === "accepted" ? "مقبولة" : "معلقة"}</span>
+                <Button variant="outline" disabled={forceEnd.isPending} onClick={() => forceEnd.mutate(row.id)} className="h-7 rounded-lg px-2 text-[9px] text-destructive">إنهاء إداري</Button>
+              </div>
+            </div>
+          ))}
+          {!active.isLoading && (active.data?.rows.length ?? 0) === 0 && <p className="py-4 text-center text-[10px] text-muted-foreground">لا توجد علاقات حالية</p>}
+        </div>
+      </div>
     </div>
   );
 }

@@ -7,6 +7,8 @@ import {
   RELATION_LABELS,
   RELATION_STYLES,
   RELATION_TYPES,
+  fetchMyRelationships,
+  replaceRelationship,
   requestRelationship,
   type RelationType,
 } from "@/lib/relationships";
@@ -25,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BadgeStrip } from "@/components/BadgeStrip";
+import { RelationshipShowcase } from "@/components/RelationshipShowcase";
 
 export const Route = createFileRoute("/_authenticated/u/$publicId")({
   head: () => ({
@@ -77,6 +80,12 @@ function UserPage() {
     },
   });
 
+  const specialRelations = useQuery({
+    queryKey: ["my-special-relations", userId],
+    enabled: Boolean(userId && !isMe),
+    queryFn: () => fetchMyRelationships(userId!),
+  });
+
   const toggleFollow = useMutation({
     mutationFn: async () => {
       if (!userId || !target) return;
@@ -118,13 +127,15 @@ function UserPage() {
   });
 
   const askRelation = useMutation({
-    mutationFn: async (type: RelationType) => {
+    mutationFn: async ({ type, replace }: { type: RelationType; replace: boolean }) => {
       if (!target) return;
-      await requestRelationship(target.id, type);
+      if (replace) await replaceRelationship(target.id, type);
+      else await requestRelationship(target.id, type);
     },
     onSuccess: () => {
       toast.success("تم إرسال طلب العلاقة");
       setRelationOpen(false);
+      void specialRelations.refetch();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر إرسال الطلب"),
   });
@@ -233,7 +244,11 @@ function UserPage() {
                   key={type}
                   variant="outline"
                   disabled={askRelation.isPending}
-                  onClick={() => askRelation.mutate(type)}
+                   onClick={() => {
+                     const occupied = (specialRelations.data ?? []).some((row) => row.type === type);
+                     if (occupied && !window.confirm(`لديك ${RELATION_LABELS[type]} حاليًا. هل تريد إنهاءها وإرسال طلب بديل؟`)) return;
+                     askRelation.mutate({ type, replace: occupied });
+                   }}
                   className={`h-12 rounded-2xl border text-xs ${RELATION_STYLES[type]}`}
                 >
                   {RELATION_LABELS[type]}
@@ -260,6 +275,7 @@ function UserPage() {
           )}
         </>
       )}
+      <RelationshipShowcase userId={target.id} />
       <ProfileShowcase userId={target.id} />
     </AppShell>
   );

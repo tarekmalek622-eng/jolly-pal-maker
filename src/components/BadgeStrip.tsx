@@ -22,7 +22,7 @@ export function BadgeStrip({ count, rank, className, userId }: BadgeStripProps) 
     queryKey: ["badge-strip", userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const [badges, roles] = await Promise.all([
+      const [badges, roles, profile] = await Promise.all([
         supabase.from("user_badges").select("id", { count: "exact", head: true }).eq("user_id", userId ?? ""),
         supabase.from("user_roles").select("role").eq("user_id", userId ?? ""),
         supabase.from("profiles").select("vip_level").eq("id", userId ?? "").maybeSingle(),
@@ -31,7 +31,8 @@ export function BadgeStrip({ count, rank, className, userId }: BadgeStripProps) 
       if (roles.error) throw roles.error;
       const ordered = ["super_admin", "admin", "moderator", "host"];
       const role = ordered.find((item) => (roles.data ?? []).some((row) => row.role === item));
-      const vip = Number(profiles.data?.vip_level ?? 0);
+      if (profile.error) throw profile.error;
+      const vip = Number(profile.data?.vip_level ?? 0);
       return { count: badges.count ?? 0, rank: role ? ROLE_LABELS[role] : vip > 0 ? `VIP ${vip}` : rank };
     },
   });

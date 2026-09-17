@@ -16,10 +16,14 @@ export function AdminBadgeCrest({
   name,
   styleKey = "royal",
   compact = false,
+  imageUrl,
+  variant = "crest",
 }: {
   name: string;
   styleKey?: string;
   compact?: boolean;
+  imageUrl?: string | null;
+  variant?: string;
 }) {
   const palette = STYLES[styleIndex(styleKey)];
   return (
@@ -36,7 +40,11 @@ export function AdminBadgeCrest({
         </span>
         <span className="admin-crest-wing absolute -start-4 top-3 h-10 w-6 -rotate-12 border border-current bg-current/15" />
         <span className="admin-crest-wing absolute -end-4 top-3 h-10 w-6 rotate-12 border border-current bg-current/15" />
-        <Shield className={compact ? "h-9 w-9" : "h-14 w-14"} fill="currentColor" fillOpacity={0.2} />
+        {imageUrl ? (
+          <img src={imageUrl} alt="" className="h-[72%] w-[72%] object-contain" loading="lazy" />
+        ) : (
+          <Shield className={compact ? "h-9 w-9" : "h-14 w-14"} fill="currentColor" fillOpacity={0.2} />
+        )}
         <Sparkles className="absolute end-1 top-1 h-3 w-3" />
         <span className="absolute -bottom-2 flex gap-0.5 rounded-full border border-current bg-background px-2 py-0.5">
           {[0, 1, 2].map((star) => <Star key={star} className="h-2.5 w-2.5 fill-current" />)}

@@ -98,6 +98,7 @@ function RoomPage() {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const musicRef = useRef<HTMLInputElement>(null);
   const [giftTargetId, setGiftTargetId] = useState<string | null>(null);
+  const [liveCount, setLiveCount] = useState(userId ? 1 : 0);
 
   const room = useQuery({
     queryKey: ["room", roomId],
@@ -206,7 +207,7 @@ function RoomPage() {
   useEffect(() => {
     if (!room.data) return;
     enterRoom({ id: roomId, name: room.data.name, imageUrl: room.data.image_url }, canPublish);
-  }, [enterRoom, roomId, room.data?.name, room.data?.image_url, canPublish, room.data]);
+  }, [enterRoom, roomId, room.data?.name, room.data?.image_url, canPublish]);
 
   // join / leave membership
   useEffect(() => {
@@ -245,7 +246,7 @@ function RoomPage() {
       if (!gift) return;
       const nameOf = (id?: string) => (names ?? []).find((p) => p.id === id)?.display_name ?? "مستخدم";
       setGiftQueue((prev) => [
-        ...prev,
+        ...prev.slice(-7),
         {
           key: row.id ?? `${row.gift_id}-${Date.now()}`,
           gift: gift as GiftMediaRow,
@@ -261,7 +262,7 @@ function RoomPage() {
   // realtime
   useEffect(() => {
     const channel = supabase
-      .channel(`room-live-${roomId}`)
+      .channel(`room-live-${roomId}`, { config: { presence: { key: userId ?? crypto.randomUUID() } } })
       .on("postgres_changes", { event: "*", schema: "public", table: "room_messages" }, () => void messages.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "room_mics" }, () => void mics.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "room_members" }, () => void members.refetch())
@@ -278,12 +279,20 @@ function RoomPage() {
         } | null;
         if (payload.eventType === "INSERT" && row?.room_id === roomId) void enqueueGift(row);
       })
-      .subscribe();
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        setLiveCount(Math.max(userId ? 1 : 0, Object.keys(state).length));
+      })
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED" && userId) {
+          void channel.track({ user_id: userId, joined_at: new Date().toISOString() });
+        }
+      });
     return () => {
       void supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId]);
+  }, [roomId, userId]);
 
   const takeSeat = useMutation({
     mutationFn: async (seat: number) => {
@@ -438,7 +447,7 @@ function RoomPage() {
             <div className="min-w-0 text-center">
               <p className="truncate text-sm font-black">{room.data.name}</p>
               <div className="mt-0.5 flex items-center justify-center gap-1.5 text-[9px] text-muted-foreground">
-                <span>ID: {room.data.room_code}</span><span>•</span><span>{members.data?.length ?? 0} متواجد</span>
+               <span>ID: {room.data.room_code}</span><span>•</span><span>{Math.max(liveCount, members.data?.includes(userId ?? "") ? 1 : 0)} متواجد</span>
                 <span className={cn("h-1.5 w-1.5 rounded-full", voice.status === "connected" ? "bg-success" : "bg-destructive")} />
               </div>
             </div>

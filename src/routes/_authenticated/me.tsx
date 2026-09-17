@@ -19,6 +19,7 @@ import { uploadUserImage } from "@/lib/media";
 import { screenProfilePhoto } from "@/lib/moderation.functions";
 import { clearDeviceCredentials } from "@/lib/device-account";
 import { ProfileShowcase } from "@/components/ProfileShowcase";
+import { RelationshipShowcase } from "@/components/RelationshipShowcase";
 
 export const Route = createFileRoute("/_authenticated/me")({
   head: () => ({
@@ -306,6 +307,7 @@ function MePage() {
         )}
       </div>
 
+      {userId && <RelationshipShowcase userId={userId} own />}
       {userId && <ProfileShowcase userId={userId} own />}
 
       <div className="mt-4 grid grid-cols-2 gap-3">
