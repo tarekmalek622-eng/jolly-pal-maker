@@ -49,6 +49,8 @@ import {
   adminSetUserRole,
   adminSetUserBadge,
   adminUpdateUserIdentity,
+  adminUpsertBadgeDefinition,
+  adminEndRelationship,
 } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 import { AdminBadgeCrest } from "@/components/AdminBadgeCrest";
@@ -68,6 +70,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const TABS = [
   { key: "users", label: "المستخدمون", icon: Users },
   { key: "rooms", label: "الغرف", icon: Sofa },
+  { key: "badges", label: "الشارات", icon: Award },
   { key: "gifts", label: "الهدايا", icon: Gift },
   { key: "store", label: "المتجر", icon: ShoppingBag },
   { key: "vip", label: "VIP", icon: Crown },
@@ -164,6 +167,7 @@ function AdminPage() {
 
       {tab === "users" && <UsersTab />}
       {tab === "rooms" && <RoomsTab />}
+      {tab === "badges" && <BadgeDefinitionsTab />}
       {tab === "gifts" && <GiftsTab />}
       {tab === "store" && <StoreTab />}
       {tab === "vip" && <VipTab />}
