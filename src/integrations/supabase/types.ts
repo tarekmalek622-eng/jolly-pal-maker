@@ -1436,11 +1436,6 @@ export type Database = {
         Returns: number
       }
       award_gift_badges: { Args: { _user_id: string }; Returns: number }
-      badge_close_wheel_round: { Args: { _room_id: string }; Returns: string }
-      badge_remove_room_participant: {
-        Args: { _room_id: string; _target_id: string }
-        Returns: boolean
-      }
       create_room: {
         Args: {
           _background_url?: string
