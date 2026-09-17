@@ -429,7 +429,7 @@ function RoomPage() {
       header={
         <div className="relative">
           <div className="absolute top-0.5 start-4">
-            <BadgeStrip rank="1" count={0} />
+            <BadgeStrip userId={userId} rank="عضو" count={0} />
           </div>
         <header className="sticky top-0 z-30 bg-background/85 px-4 pb-3 pt-5 backdrop-blur-xl">
           <div className="flex items-center gap-3">

@@ -1,4 +1,4 @@
-import { Crown, Shield, Sparkles } from "lucide-react";
+import { Crown, Shield, Sparkles, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STYLES = [
@@ -26,23 +26,23 @@ export function AdminBadgeCrest({
     <div className={cn("relative flex flex-col items-center text-center", compact ? "w-24" : "w-full")}>
       <div
         className={cn(
-          "relative flex items-center justify-center rounded-[1.4rem] border-2 bg-gradient-to-br shadow-glow",
+          "admin-crest relative flex items-center justify-center border-2 bg-gradient-to-br shadow-glow",
           palette,
-          compact ? "h-16 w-16" : "h-20 w-20",
+          compact ? "h-16 w-[4.5rem]" : "h-24 w-28",
         )}
       >
-        <span className="absolute -top-3 rounded-full border border-current bg-background p-1 shadow-lg">
+        <span className="absolute -top-4 z-20 rounded-full border border-current bg-background p-1 shadow-lg">
           <Crown className={compact ? "h-4 w-4" : "h-5 w-5"} />
         </span>
-        <span className="absolute -start-2 top-4 h-8 w-4 -rotate-12 rounded-full border border-current bg-current/15" />
-        <span className="absolute -end-2 top-4 h-8 w-4 rotate-12 rounded-full border border-current bg-current/15" />
-        <Shield className={compact ? "h-8 w-8" : "h-10 w-10"} fill="currentColor" fillOpacity={0.16} />
+        <span className="admin-crest-wing absolute -start-4 top-3 h-10 w-6 -rotate-12 border border-current bg-current/15" />
+        <span className="admin-crest-wing absolute -end-4 top-3 h-10 w-6 rotate-12 border border-current bg-current/15" />
+        <Shield className={compact ? "h-9 w-9" : "h-14 w-14"} fill="currentColor" fillOpacity={0.2} />
         <Sparkles className="absolute end-1 top-1 h-3 w-3" />
-        <span className="absolute -bottom-2 rounded-full border border-current bg-background px-2 py-0.5 text-[8px] font-black">
-          مساعد
+        <span className="absolute -bottom-2 flex gap-0.5 rounded-full border border-current bg-background px-2 py-0.5">
+          {[0, 1, 2].map((star) => <Star key={star} className="h-2.5 w-2.5 fill-current" />)}
         </span>
       </div>
-      <span className={cn("mt-3 line-clamp-2 font-black leading-tight", compact ? "text-[9px]" : "text-[11px]")}>{name}</span>
+      <span className={cn("relative z-20 mt-2 line-clamp-2 min-w-full rounded-full border border-primary/45 bg-background px-2 py-1 font-black leading-tight text-primary shadow-glow", compact ? "text-[9px]" : "text-[11px]")}>{name}</span>
     </div>
   );
 }

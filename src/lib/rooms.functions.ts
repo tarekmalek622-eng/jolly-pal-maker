@@ -33,11 +33,16 @@ export const removeRoomParticipant = createServerFn({ method: "POST" })
     const manager = room.data.owner_id === context.userId || allowed;
     if (!manager) throw new Error("لا تملك صلاحية سحب المشاركين");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.rpc("badge_remove_room_participant", {
-      _room_id: data.roomId,
-      _target_id: data.targetId,
+    if (data.targetId === room.data.owner_id) throw new Error("لا يمكن سحب مالك الغرفة");
+    const memberResult = await supabaseAdmin.from("room_members").delete().eq("room_id", data.roomId).eq("user_id", data.targetId);
+    if (memberResult.error) throw new Error(memberResult.error.message);
+    await supabaseAdmin.from("room_mics").update({ user_id: null, is_muted: false }).eq("room_id", data.roomId).eq("user_id", data.targetId);
+    await supabaseAdmin.from("audit_logs").insert({
+      actor_id: context.userId,
+      target_id: data.targetId,
+      action: "badge_room_participant_remove",
+      new_value: { room_id: data.roomId },
     });
-    if (error) throw new Error(error.message);
     return { ok: true };
   });
 
@@ -50,8 +55,18 @@ export const closeWheelRound = createServerFn({ method: "POST" })
     if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
     if (room.data.owner_id !== context.userId && !allowed) throw new Error("لا تملك صلاحية إغلاق الجولة");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: roundId, error } = await supabaseAdmin.rpc("badge_close_wheel_round", { _room_id: data.roomId });
+    const round = await supabaseAdmin.from("wheel_rounds").select("id").eq("status", "betting").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (round.error) throw new Error(round.error.message);
+    if (!round.data) throw new Error("لا توجد جولة مفتوحة");
+    const { error } = await supabaseAdmin.rpc("wheel_settle", { _round_id: round.data.id });
     if (error) throw new Error(error.message);
+    await supabaseAdmin.from("audit_logs").insert({
+      actor_id: context.userId,
+      target_id: round.data.id,
+      action: "badge_wheel_close",
+      new_value: { room_id: data.roomId },
+    });
+    const roundId = round.data.id;
     return { ok: true, roundId };
   });
 
