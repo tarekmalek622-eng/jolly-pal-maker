@@ -45,15 +45,24 @@ export function useGiftUrls(gift: GiftMediaRow | null | undefined) {
 
 /** صورة الهدية المصغّرة داخل القوائم — تحميل عند الحاجة فقط. */
 export function GiftThumb({ gift, size = 48, className }: { gift: GiftMediaRow; size?: number; className?: string }) {
-  const [src, setSrc] = useState<string | null>(null);
+  const [sources, setSources] = useState<string[]>([]);
+  const [sourceIndex, setSourceIndex] = useState(0);
   useEffect(() => {
     let alive = true;
-    void resolveMediaUrl(gift.thumb_url ?? gift.image_url).then((u) => alive && setSrc(u));
+    void Promise.all([
+      resolveMediaUrl(gift.animation_url),
+      resolveMediaUrl(gift.thumb_url ?? gift.image_url),
+    ]).then((resolved) => {
+      if (!alive) return;
+      setSources(resolved.filter((url, index, all): url is string => Boolean(url) && all.indexOf(url) === index));
+      setSourceIndex(0);
+    });
     return () => {
       alive = false;
     };
-  }, [gift.thumb_url, gift.image_url]);
+  }, [gift.animation_url, gift.thumb_url, gift.image_url]);
 
+  const src = sources[sourceIndex] ?? null;
   if (!src) {
     return (
       <div className={cn("flex items-center justify-center rounded-xl bg-surface text-lg", className)} style={{ width: size, height: size }}>
@@ -67,6 +76,7 @@ export function GiftThumb({ gift, size = 48, className }: { gift: GiftMediaRow; 
       alt={gift.name}
       loading="lazy"
       decoding="async"
+      onError={() => setSourceIndex((index) => index + 1)}
       className={cn("object-contain", className)}
       style={{ width: size, height: size }}
     />
@@ -91,8 +101,15 @@ export function GiftPlayer({
   const urls = useGiftUrls(gift);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [animationFailed, setAnimationFailed] = useState(false);
   const scale = Math.min(Math.max(gift.display_scale ?? 100, 20), 200) / 100;
   const soundOn = (gift.sound_enabled ?? true) && !muted;
+
+  useEffect(() => {
+    setVideoFailed(false);
+    setAnimationFailed(false);
+  }, [urls.video, urls.anim]);
 
   useEffect(() => {
     if (!playing) return;
@@ -108,7 +125,7 @@ export function GiftPlayer({
     }
   }, [playing, urls.video, urls.sound, soundOn]);
 
-  const media = urls.video ? (
+  const media = urls.video && !videoFailed ? (
     <video
       ref={videoRef}
       src={urls.video}
@@ -119,9 +136,10 @@ export function GiftPlayer({
       loop={false}
       preload="none"
       poster={urls.thumb ?? undefined}
+      onError={() => setVideoFailed(true)}
     />
-  ) : urls.anim ? (
-    <img src={urls.anim} alt={gift.name} className="h-full w-full object-contain" decoding="async" />
+  ) : urls.anim && !animationFailed ? (
+    <img src={urls.anim} alt={gift.name} className="h-full w-full object-contain" decoding="async" onError={() => setAnimationFailed(true)} />
   ) : urls.thumb ? (
     <img src={urls.thumb} alt={gift.name} className="h-full w-full object-contain" decoding="async" />
   ) : (

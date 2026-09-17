@@ -105,6 +105,7 @@ function RoomPage() {
   const [roomImagePreview, setRoomImagePreview] = useState<string | null>(null);
   const [giftTargetId, setGiftTargetId] = useState<string | null>(null);
   const [liveCount, setLiveCount] = useState(userId ? 1 : 0);
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   const room = useQuery({
     queryKey: ["room", roomId],
@@ -269,10 +270,10 @@ function RoomPage() {
   useEffect(() => {
     const channel = supabase
       .channel(`room-live-${roomId}`, { config: { presence: { key: userId ?? crypto.randomUUID() } } })
-      .on("postgres_changes", { event: "*", schema: "public", table: "room_messages" }, () => void messages.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "room_mics" }, () => void mics.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "room_members" }, () => void members.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "mic_requests" }, () => void requests.refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_messages", filter: `room_id=eq.${roomId}` }, () => void messages.refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_mics", filter: `room_id=eq.${roomId}` }, () => void mics.refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_members", filter: `room_id=eq.${roomId}` }, () => void members.refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "mic_requests", filter: `room_id=eq.${roomId}` }, () => void requests.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions" }, (payload) => {
         void messages.refetch();
         const row = payload.new as {
@@ -429,19 +430,28 @@ function RoomPage() {
 
   async function sendMessage() {
     const body = text.trim();
-    if (!body || !userId) return;
+    if (!body || !userId || sendingMessage) return;
     if (room.data?.chat_locked && !canManage) {
       toast.error("الدردشة مغلقة");
       return;
     }
-    setText("");
-    const { error } = await supabase.rpc("send_room_message", { _room_id: roomId, _body: body });
-    if (error) {
-      toast.error("تعذر إرسال الرسالة");
-      setText(body);
-      return;
+    setSendingMessage(true);
+    try {
+      const { error: membershipError } = await supabase.from("room_members").upsert(
+        { room_id: roomId, user_id: userId, joined_at: new Date().toISOString() },
+        { onConflict: "room_id,user_id" },
+      );
+      if (membershipError) throw membershipError;
+
+      const { error } = await supabase.rpc("send_room_message", { _room_id: roomId, _body: body });
+      if (error) throw error;
+      setText("");
+      await messages.refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذر إرسال الرسالة");
+    } finally {
+      setSendingMessage(false);
     }
-    void messages.refetch();
   }
 
   const personOf = (id: string | null) => (id ? (people.data ?? []).find((p) => p.id === id) ?? null : null);
@@ -578,13 +588,13 @@ function RoomPage() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") void sendMessage();
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) void sendMessage();
             }}
             placeholder={room.data.chat_locked && !canManage ? "الدردشة مغلقة" : "اكتب رسالة..."}
             disabled={room.data.chat_locked && !canManage}
             className="h-11 flex-1 rounded-full border-border/50 bg-surface/70 text-sm"
           />
-          <Button onClick={() => void sendMessage()} className="h-11 w-11 rounded-full gradient-gold p-0 text-primary-foreground">
+          <Button disabled={sendingMessage || !text.trim()} onClick={() => void sendMessage()} aria-label="إرسال الرسالة" className="h-11 w-11 rounded-full gradient-gold p-0 text-primary-foreground">
             <Send className="h-4 w-4" />
           </Button>
         </div>

@@ -978,9 +978,9 @@ function GiftsTab() {
         </button>
 
         <MediaUpload
-          label="صورة الهدية (PNG/JPG/WebP)"
+          label="صورة الهدية (PNG/JPG/WebP/GIF)"
           kind="image"
-          accept="image/png,image/jpeg,image/webp,image/avif"
+          accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
           value={form.thumb_url}
           onChange={(v) => set({ thumb_url: v })}
         />
