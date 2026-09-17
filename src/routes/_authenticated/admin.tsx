@@ -475,6 +475,116 @@ function UsersTab() {
   );
 }
 
+type BadgeDraft = {
+  id?: string;
+  key: string;
+  name: string;
+  description: string;
+  kind: "administrative" | "achievement";
+  imageUrl: string;
+  iconKey: string;
+  colorKey: string;
+  displayVariant: "crest" | "ribbon" | "medal" | "glass";
+  audience: "assigned" | "admin" | "moderator" | "host" | "vip" | "all";
+  sortOrder: string;
+  threshold: string;
+  isActive: boolean;
+};
+
+const EMPTY_BADGE: BadgeDraft = {
+  key: "",
+  name: "",
+  description: "",
+  kind: "administrative",
+  imageUrl: "",
+  iconKey: "shield",
+  colorKey: "royal",
+  displayVariant: "crest",
+  audience: "assigned",
+  sortOrder: "0",
+  threshold: "0",
+  isActive: true,
+};
+
+function BadgeDefinitionsTab() {
+  const [form, setForm] = useState<BadgeDraft>(EMPTY_BADGE);
+  const query = useQuery({
+    queryKey: ["badge-definitions-editor"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("badge_definitions")
+        .select("id, key, name, description, kind, image_url, icon_key, color_key, display_variant, audience, sort_order, threshold, is_active")
+        .order("sort_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const save = useMutation({
+    mutationFn: () => adminUpsertBadgeDefinition({ data: {
+      ...(form.id ? { id: form.id } : {}),
+      key: form.key.trim(),
+      name: form.name.trim(),
+      description: form.description.trim() || null,
+      kind: form.kind,
+      imageUrl: form.imageUrl.trim() || null,
+      iconKey: form.iconKey.trim() || "shield",
+      colorKey: form.colorKey.trim() || "royal",
+      displayVariant: form.displayVariant,
+      audience: form.audience,
+      sortOrder: Number(form.sortOrder) || 0,
+      threshold: Number(form.threshold) || 0,
+      isActive: form.isActive,
+    } }),
+    onSuccess: () => {
+      toast.success(form.id ? "تم تعديل الشارة" : "تمت إضافة الشارة");
+      setForm(EMPTY_BADGE);
+      void query.refetch();
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "تعذر حفظ الشارة"),
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="surface-card space-y-2 p-3">
+        <p className="text-sm font-black">{form.id ? "تعديل الشارة" : "إضافة شارة"}</p>
+        <div className="flex justify-center py-2">
+          <AdminBadgeCrest name={form.name || "معاينة الشارة"} styleKey={form.colorKey} imageUrl={form.imageUrl || null} variant={form.displayVariant} compact />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="اسم الشارة" className="rounded-xl bg-surface-2" />
+          <Input value={form.key} disabled={Boolean(form.id)} onChange={(e) => setForm({ ...form, key: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })} placeholder="badge_key" className="rounded-xl bg-surface-2" />
+        </div>
+        <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="وصف الشارة" className="rounded-xl bg-surface-2" />
+        <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="رابط صورة الشارة (اختياري)" className="rounded-xl bg-surface-2" />
+        <div className="grid grid-cols-2 gap-2">
+          <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as BadgeDraft["kind"] })} className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs">
+            <option value="administrative">إدارية</option><option value="achievement">إنجاز</option>
+          </select>
+          <select value={form.displayVariant} onChange={(e) => setForm({ ...form, displayVariant: e.target.value as BadgeDraft["displayVariant"] })} className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs">
+            <option value="crest">درع</option><option value="ribbon">وشاح</option><option value="medal">ميدالية</option><option value="glass">زجاجية</option>
+          </select>
+          <select value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value as BadgeDraft["audience"] })} className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs">
+            <option value="assigned">المعيّنون</option><option value="admin">الإدارة</option><option value="moderator">المشرفون</option><option value="host">المضيفون</option><option value="vip">VIP</option><option value="all">الجميع</option>
+          </select>
+          <Input value={form.colorKey} onChange={(e) => setForm({ ...form, colorKey: e.target.value })} placeholder="نمط اللون" className="rounded-xl bg-surface-2" />
+        </div>
+        <Button variant="outline" onClick={() => setForm({ ...form, isActive: !form.isActive })} className="w-full rounded-xl">{form.isActive ? "مفعّلة" : "متوقفة"}</Button>
+        <div className="flex gap-2">
+          <Button disabled={save.isPending || form.name.trim().length < 2 || form.key.length < 2} onClick={() => save.mutate()} className="flex-1 rounded-xl gradient-gold font-bold text-primary-foreground">حفظ الشارة</Button>
+          {form.id && <Button variant="outline" onClick={() => setForm(EMPTY_BADGE)} className="rounded-xl">إلغاء</Button>}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {(query.data ?? []).map((badge) => (
+          <button key={badge.id} type="button" onClick={() => setForm({ id: badge.id, key: badge.key, name: badge.name, description: badge.description ?? "", kind: badge.kind as BadgeDraft["kind"], imageUrl: badge.image_url ?? "", iconKey: badge.icon_key, colorKey: badge.color_key, displayVariant: badge.display_variant as BadgeDraft["displayVariant"], audience: badge.audience as BadgeDraft["audience"], sortOrder: String(badge.sort_order), threshold: String(badge.threshold), isActive: badge.is_active })} className="surface-card flex min-h-40 flex-col items-center p-3 text-center">
+            <AdminBadgeCrest name={badge.name} styleKey={badge.color_key} imageUrl={badge.image_url} variant={badge.display_variant} compact />
+            <span className="mt-2 text-[9px] text-muted-foreground">{badge.kind === "administrative" ? "إدارية" : "إنجاز"} · {badge.is_active ? "مفعلة" : "متوقفة"}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function RoomsTab() {
   const rooms = useQuery({
     queryKey: ["admin-rooms"],
