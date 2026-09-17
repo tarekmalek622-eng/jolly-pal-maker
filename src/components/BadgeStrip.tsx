@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Award } from "lucide-react";
+import { Award, Crown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,24 +22,31 @@ export function BadgeStrip({ count, rank, className, userId }: BadgeStripProps) 
     queryKey: ["badge-strip", userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const [badges, roles, profile] = await Promise.all([
+      const [badges, roles, profile, ownedRoom] = await Promise.all([
         supabase.from("user_badges").select("id", { count: "exact", head: true }).eq("user_id", userId ?? ""),
         supabase.from("user_roles").select("role").eq("user_id", userId ?? ""),
         supabase.from("profiles").select("vip_level").eq("id", userId ?? "").maybeSingle(),
+        supabase.from("rooms").select("id").eq("owner_id", userId ?? "").eq("is_active", true).limit(1),
       ]);
       if (badges.error) throw badges.error;
       if (roles.error) throw roles.error;
       const ordered = ["super_admin", "admin", "moderator", "host"];
       const role = ordered.find((item) => (roles.data ?? []).some((row) => row.role === item));
       if (profile.error) throw profile.error;
+      if (ownedRoom.error) throw ownedRoom.error;
       const vip = Number(profile.data?.vip_level ?? 0);
-      return { count: badges.count ?? 0, rank: role ? ROLE_LABELS[role] : vip > 0 ? `VIP ${vip}` : rank };
+      return {
+        count: badges.count ?? 0,
+        rank: role ? ROLE_LABELS[role] : vip > 0 ? `VIP ${vip}` : rank,
+        roomOwner: (ownedRoom.data ?? []).length > 0,
+      };
     },
   });
   const shownCount = summary.data?.count ?? count;
   const shownRank = summary.data?.rank ?? rank;
-  if (!shownCount && !shownRank) return null;
-  
+  const roomOwner = summary.data?.roomOwner ?? false;
+  if (!shownCount && !shownRank && !roomOwner) return null;
+
   return (
     <div className={cn(
       "flex items-center gap-1.5 rounded-full bg-background/60 px-2 py-0.5 text-[9px] font-bold backdrop-blur-md border border-white/10 shadow-sm transition-all",
@@ -47,6 +54,13 @@ export function BadgeStrip({ count, rank, className, userId }: BadgeStripProps) 
     )}>
       <Award className="h-3 w-3 text-primary" />
       {shownRank && <span>{shownRank}</span>}
+      {roomOwner && (
+        <span className="flex items-center gap-0.5 text-primary">
+          <span className="opacity-60">|</span>
+          <Crown className="h-3 w-3" />
+          مالك غرفة
+        </span>
+      )}
       {shownCount !== undefined && (
         <span className="flex items-center gap-0.5">
           <span className="opacity-60">|</span>

@@ -31,6 +31,11 @@ import {
   adminSetSuspended,
   adminSetRoomDisabled,
   adminUpdateRoomDetails,
+  adminCreateRoom,
+  adminSetRoomModerator,
+  adminRemoveRoomMember,
+  adminDeleteRoomMessage,
+  adminResendRoomMessage,
   adminResolveReport,
   adminUpsertGift,
   adminDeleteGift,
@@ -71,6 +76,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const TABS = [
   { key: "users", label: "المستخدمون", icon: Users },
   { key: "rooms", label: "الغرف", icon: Sofa },
+  { key: "roomMessages", label: "رسائل الغرف", icon: ScrollText },
   { key: "badges", label: "الشارات", icon: Award },
   { key: "gifts", label: "الهدايا", icon: Gift },
   { key: "store", label: "المتجر", icon: ShoppingBag },
@@ -168,6 +174,7 @@ function AdminPage() {
 
       {tab === "users" && <UsersTab />}
       {tab === "rooms" && <RoomsTab />}
+      {tab === "roomMessages" && <RoomMessagesTab />}
       {tab === "badges" && <BadgeDefinitionsTab />}
       {tab === "gifts" && <GiftsTab />}
       {tab === "store" && <StoreTab />}
@@ -620,6 +627,294 @@ function AdminRoomImage({ stored, preview }: { stored: string | null; preview: s
   );
 }
 
+/** إنشاء غرفة جديدة من لوحة الإدارة */
+function RoomCreateCard({ onCreated }: { onCreated: () => void }) {
+  const { userId } = useSupabaseSession();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("عام");
+  const [micCount, setMicCount] = useState("8");
+  const [privateRoom, setPrivateRoom] = useState(false);
+  const [password, setPassword] = useState("");
+  const [ownerPublicId, setOwnerPublicId] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+
+  const create = useMutation({
+    mutationFn: async () => {
+      let imageUrl: string | null = null;
+      if (file && userId) imageUrl = await uploadUserImage("rooms", userId, file);
+      return adminCreateRoom({
+        data: {
+          name: name.trim(),
+          description: null,
+          category: category.trim() || "عام",
+          roomType: privateRoom ? "private" : "public",
+          password: privateRoom && password.trim() ? password.trim() : null,
+          micCount: Math.min(20, Math.max(1, Number(micCount) || 8)),
+          imageUrl,
+          ownerPublicId: ownerPublicId.trim() ? ownerPublicId.trim() : null,
+        },
+      });
+    },
+    onSuccess: () => {
+      toast.success("تم إنشاء الغرفة");
+      setName("");
+      setOwnerPublicId("");
+      setPassword("");
+      setFile(null);
+      setOpen(false);
+      onCreated();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر إنشاء الغرفة"),
+  });
+
+  return (
+    <div className="surface-card space-y-2 p-3">
+      <Button variant={open ? "outline" : "default"} onClick={() => setOpen(!open)} className="h-10 w-full rounded-xl text-[12px]">
+        {open ? "إلغاء إنشاء غرفة" : "إنشاء غرفة جديدة"}
+      </Button>
+      {open && (
+        <div className="space-y-2 border-t border-border/50 pt-2">
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="اسم الغرفة" className="h-10 rounded-xl" />
+          <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="التصنيف" className="h-10 rounded-xl" />
+          <Input value={micCount} onChange={(e) => setMicCount(e.target.value)} placeholder="عدد المايكات" inputMode="numeric" className="h-10 rounded-xl" />
+          <Input value={ownerPublicId} onChange={(e) => setOwnerPublicId(e.target.value)} placeholder="معرّف المالك (اتركه فارغًا لتكون أنت المالك)" className="h-10 rounded-xl" />
+          <div className="flex gap-2">
+            <Button variant={privateRoom ? "outline" : "default"} onClick={() => setPrivateRoom(false)} className="h-9 flex-1 rounded-xl text-[11px]">
+              عامة
+            </Button>
+            <Button variant={privateRoom ? "default" : "outline"} onClick={() => setPrivateRoom(true)} className="h-9 flex-1 rounded-xl text-[11px]">
+              خاصة
+            </Button>
+          </div>
+          {privateRoom && (
+            <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="كلمة مرور الغرفة" className="h-10 rounded-xl" />
+          )}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="w-full text-[11px]"
+          />
+          <Button onClick={() => create.mutate()} disabled={create.isPending || name.trim().length < 2} className="h-10 w-full rounded-xl text-[12px]">
+            {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "إنشاء الغرفة"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** إدارة مشرفي الغرفة والمشاركين فيها */
+function RoomTeamPanel({ roomId, ownerId }: { roomId: string; ownerId: string }) {
+  const [modId, setModId] = useState("");
+
+  const moderators = useQuery({
+    queryKey: ["admin-room-mods", roomId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("room_moderators")
+        .select("user_id, profiles:user_id(display_name, public_id)")
+        .eq("room_id", roomId);
+      if (error) throw error;
+      return (data ?? []) as unknown as { user_id: string; profiles: { display_name: string; public_id: string } | null }[];
+    },
+  });
+
+  const members = useQuery({
+    queryKey: ["admin-room-members", roomId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("room_members")
+        .select("user_id, profiles:user_id(display_name, public_id)")
+        .eq("room_id", roomId)
+        .limit(60);
+      if (error) throw error;
+      return (data ?? []) as unknown as { user_id: string; profiles: { display_name: string; public_id: string } | null }[];
+    },
+  });
+
+  const setMod = useMutation({
+    mutationFn: async ({ publicId, enable }: { publicId: string; enable: boolean }) =>
+      adminSetRoomModerator({ data: { roomId, publicId, enable } }),
+    onSuccess: () => {
+      toast.success("تم تحديث المشرفين");
+      setModId("");
+      void moderators.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (userId: string) => adminRemoveRoomMember({ data: { roomId, userId } }),
+    onSuccess: () => {
+      toast.success("تم إخراج المشارك");
+      void members.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الإخراج"),
+  });
+
+  return (
+    <div className="space-y-2 border-t border-border/50 pt-3">
+      <p className="text-[11px] font-bold">المشرفون</p>
+      <div className="flex gap-2">
+        <Input value={modId} onChange={(e) => setModId(e.target.value)} placeholder="معرّف المستخدم" className="h-9 flex-1 rounded-xl" />
+        <Button
+          onClick={() => setMod.mutate({ publicId: modId.trim(), enable: true })}
+          disabled={setMod.isPending || modId.trim().length < 3}
+          className="h-9 rounded-xl px-3 text-[11px]"
+        >
+          منح إشراف
+        </Button>
+      </div>
+      {(moderators.data ?? []).map((m) => (
+        <div key={m.user_id} className="flex items-center justify-between rounded-xl bg-surface-2 px-2 py-1.5">
+          <span className="truncate text-[11px]">
+            {m.profiles?.display_name ?? "—"} ({m.profiles?.public_id ?? "—"})
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => m.profiles?.public_id && setMod.mutate({ publicId: m.profiles.public_id, enable: false })}
+            className="h-7 rounded-lg px-2 text-[10px]"
+          >
+            سحب
+          </Button>
+        </div>
+      ))}
+
+      <p className="pt-2 text-[11px] font-bold">المشاركون</p>
+      {(members.data ?? []).length === 0 && <p className="text-[10px] text-muted-foreground">لا يوجد مشاركون الآن.</p>}
+      {(members.data ?? []).map((m) => (
+        <div key={m.user_id} className="flex items-center justify-between rounded-xl bg-surface-2 px-2 py-1.5">
+          <span className="truncate text-[11px]">
+            {m.profiles?.display_name ?? "—"} ({m.profiles?.public_id ?? "—"}) {m.user_id === ownerId ? "· المالك" : ""}
+          </span>
+          {m.user_id !== ownerId && (
+            <Button
+              variant="outline"
+              onClick={() => remove.mutate(m.user_id)}
+              disabled={remove.isPending}
+              className="h-7 rounded-lg border-destructive/40 px-2 text-[10px] text-destructive"
+            >
+              إخراج
+            </Button>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** رسائل الغرف: عرض، إعادة إرسال، وحذف */
+function RoomMessagesTab() {
+  const [roomId, setRoomId] = useState<string>("");
+
+  const rooms = useQuery({
+    queryKey: ["admin-msg-rooms"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("rooms")
+        .select("id, name, room_code")
+        .order("member_count", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const activeRoom = roomId || rooms.data?.[0]?.id || "";
+
+  const messages = useQuery({
+    queryKey: ["admin-room-messages", activeRoom],
+    enabled: Boolean(activeRoom),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("room_messages")
+        .select("id, body, kind, created_at, user_id, profiles:user_id(display_name, public_id)")
+        .eq("room_id", activeRoom)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data ?? []) as unknown as {
+        id: string;
+        body: string;
+        kind: string;
+        created_at: string;
+        user_id: string;
+        profiles: { display_name: string; public_id: string } | null;
+      }[];
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: async (messageId: string) => adminDeleteRoomMessage({ data: { messageId } }),
+    onSuccess: () => {
+      toast.success("تم حذف الرسالة");
+      void messages.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحذف"),
+  });
+
+  const resend = useMutation({
+    mutationFn: async (messageId: string) => adminResendRoomMessage({ data: { messageId } }),
+    onSuccess: () => {
+      toast.success("تمت إعادة الإرسال");
+      void messages.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر إعادة الإرسال"),
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="surface-card space-y-2 p-3">
+        <p className="text-[11px] font-bold">اختر الغرفة</p>
+        <div className="flex flex-wrap gap-2">
+          {(rooms.data ?? []).map((r) => (
+            <Button
+              key={r.id}
+              variant={activeRoom === r.id ? "default" : "outline"}
+              onClick={() => setRoomId(r.id)}
+              className="h-8 rounded-xl px-3 text-[10px]"
+            >
+              {r.name} #{r.room_code}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {messages.isLoading && <div className="h-20 animate-pulse rounded-2xl bg-surface-2" />}
+      {messages.isSuccess && (messages.data ?? []).length === 0 && <EmptyState title="لا توجد رسائل في هذه الغرفة" />}
+      {(messages.data ?? []).map((m) => (
+        <div key={m.id} className="surface-card space-y-2 p-3">
+          <p className="text-[10px] text-muted-foreground">
+            {m.profiles?.display_name ?? "—"} ({m.profiles?.public_id ?? "—"}) ·{" "}
+            {new Date(m.created_at).toLocaleString("ar-EG")}
+          </p>
+          <p className="break-words text-[12px]">{m.body}</p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => resend.mutate(m.id)}
+              disabled={resend.isPending}
+              className="h-8 flex-1 rounded-xl text-[10px]"
+            >
+              إعادة إرسال
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => remove.mutate(m.id)}
+              disabled={remove.isPending}
+              className="h-8 flex-1 rounded-xl border-destructive/40 text-[10px] text-destructive"
+            >
+              حذف
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function RoomsTab() {
   const { userId } = useSupabaseSession();
   const [search, setSearch] = useState("");
@@ -735,6 +1030,8 @@ function RoomsTab() {
         </div>
       </div>
 
+      <RoomCreateCard onCreated={() => void rooms.refetch()} />
+
       {list.length === 0 && <EmptyState title="لا توجد غرف مطابقة" />}
 
       {list.map((r) => {
@@ -802,6 +1099,7 @@ function RoomsTab() {
                 >
                   {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ التعديلات"}
                 </Button>
+                <RoomTeamPanel roomId={r.id} ownerId={r.owner_id} />
               </div>
             )}
           </div>

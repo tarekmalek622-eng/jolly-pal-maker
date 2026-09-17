@@ -42,7 +42,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useSupabaseSession } from "@/hooks/use-session";
+import { useMyProfile, useSupabaseSession } from "@/hooks/use-session";
 import { useVoiceRoomContext } from "@/components/VoiceRoomProvider";
 import { BadgeStrip } from "@/components/BadgeStrip";
 import { closeWheelRound, getMyRoomBadgePermissions, removeRoomParticipant, updateOwnedRoomDetails } from "@/lib/rooms.functions";
@@ -50,6 +50,8 @@ import { uploadUserImage } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import roomAuroraBackground from "@/assets/room-aurora-bg.jpg";
 import { VipName } from "@/components/VipName";
+import { VipCvipSheet } from "@/components/VipCvipSheet";
+import { Crown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/rooms/$roomId")({
   head: () => ({
@@ -98,6 +100,8 @@ function RoomPage() {
   const [cupOpen, setCupOpen] = useState(false);
   const [cosmeticsOpen, setCosmeticsOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [vipOpen, setVipOpen] = useState(false);
+  const myProfile = useMyProfile(userId);
   const musicRef = useRef<HTMLInputElement>(null);
   const roomImageRef = useRef<HTMLInputElement>(null);
   const [roomNameDraft, setRoomNameDraft] = useState("");
@@ -649,6 +653,15 @@ function RoomPage() {
       <div className="fixed bottom-36 left-2 z-30 flex flex-col items-center gap-2">
         <button
           type="button"
+          onClick={() => setVipOpen(true)}
+          aria-label="صالة VIP"
+          className="flex h-14 w-14 flex-col items-center justify-center rounded-xl border border-primary/60 bg-background/65 shadow-glow backdrop-blur-xl"
+        >
+          <Crown className="h-6 w-6 text-primary" />
+          <span className="mt-0.5 text-[8px] font-bold text-primary">صالة VIP</span>
+        </button>
+        <button
+          type="button"
           onClick={() => {
             setRoomGame("wheel");
             setDominoOpen(true);
@@ -723,6 +736,14 @@ function RoomPage() {
           void mics.refetch();
           setCosmeticsOpen(false);
         }}
+      />
+
+      <VipCvipSheet
+        open={vipOpen}
+        onOpenChange={setVipOpen}
+        mode="vip"
+        currentVip={myProfile.data?.vip_level ?? 0}
+        isCvip={Boolean(myProfile.data?.is_cvip)}
       />
 
       <RoomSupporters roomId={roomId} open={cupOpen} onOpenChange={setCupOpen} />

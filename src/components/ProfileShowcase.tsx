@@ -71,6 +71,20 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
     },
   });
 
+  const ownedRoom = useQuery({
+    queryKey: ["profile-owned-room", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("rooms")
+        .select("id, name, room_code")
+        .eq("owner_id", userId)
+        .eq("is_active", true)
+        .limit(1);
+      if (error) throw error;
+      return (data ?? [])[0] ?? null;
+    },
+  });
+
   const gifts = useQuery({
     queryKey: ["profile-received-gifts", userId],
     queryFn: async () => {
@@ -107,18 +121,23 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
             </div>
           </div>
           <span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold">
-            {roleBadges.length + earned.length}
+            {roleBadges.length + earned.length + (ownedRoom.data ? 1 : 0)}
           </span>
         </div>
 
         {roles.isLoading || badges.isLoading ? (
           <div className="mt-3 h-16 animate-pulse rounded-2xl bg-surface-2" />
-        ) : roleBadges.length + earned.length === 0 ? (
+        ) : roleBadges.length + earned.length === 0 && !ownedRoom.data ? (
           <p className="mt-3 rounded-2xl bg-surface-2 px-3 py-4 text-center text-xs text-muted-foreground">
             {own ? "أرسل الهدايا لفتح شارات جديدة." : "لم يفتح شارات بعد."}
           </p>
         ) : (
           <div className="mt-3 grid grid-cols-2 gap-2">
+            {ownedRoom.data && (
+              <div className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-primary/5 p-2">
+                <AdminBadgeCrest name={`مالك غرفة · ${ownedRoom.data.name}`} styleKey="royal" compact />
+              </div>
+            )}
             {roleBadges.map((role) => (
               <div key={`${role.label}-${role.note}`} className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-primary/5 p-2">
                 <AdminBadgeCrest name={`${role.label} · ${role.note}`} styleKey={role.styleKey} compact />
