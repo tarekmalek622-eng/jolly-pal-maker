@@ -425,8 +425,8 @@ function RegisterForm() {
       toast.error("اختر صورة صحيحة");
       return;
     }
-    if (file.size > 8 * 1024 * 1024) {
-      toast.error("حجم الصورة كبير، اختر صورة أصغر من 8 ميجابايت");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("حجم الصورة كبير، اختر صورة أصغر من 5 ميجابايت");
       return;
     }
     setScreening(true);

@@ -116,6 +116,14 @@ function MePage() {
 
   async function changePhoto(file: File) {
     if (!userId) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("اختر صورة صحيحة");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("حجم الصورة كبير، اختر صورة أصغر من 5 ميجابايت");
+      return;
+    }
     toast.info("جارٍ فحص الصورة...");
     try {
       const dataUrl = await new Promise<string>((resolve, reject) => {
