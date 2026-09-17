@@ -27,11 +27,13 @@ export const getVoiceToken = createServerFn({ method: "POST" })
 
     const { data: room, error: roomError } = await supabase
       .from("rooms")
-      .select("id, is_disabled")
+      .select("id, is_active, is_disabled")
       .eq("id", data.roomId)
       .maybeSingle();
     if (roomError) throw new Error(roomError.message);
-    if (!room || room.is_disabled) throw new Error("الغرفة غير متاحة");
+    if (!room || room.is_disabled || !room.is_active) {
+      return { configured: false as const, token: null, url: null, reason: "الغرفة غير متاحة" };
+    }
 
     const { data: ban } = await supabase
       .from("bans")
@@ -39,7 +41,9 @@ export const getVoiceToken = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .or(`room_id.eq.${data.roomId},scope.eq.global`)
       .limit(1);
-    if (ban && ban.length > 0) throw new Error("أنت محظور من هذه الغرفة");
+    if (ban && ban.length > 0) {
+      return { configured: false as const, token: null, url: null, reason: "أنت محظور من هذه الغرفة" };
+    }
 
     let canPublish = false;
     if (data.canPublish) {
@@ -71,5 +75,5 @@ export const getVoiceToken = createServerFn({ method: "POST" })
       .setExpirationTime(now + 60 * 60 * 6)
       .sign(secret);
 
-    return { configured: true as const, token, url: wsUrl, canPublish };
+    return { configured: true as const, token, url: wsUrl, canPublish, reason: null };
   });

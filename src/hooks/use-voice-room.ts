@@ -65,7 +65,12 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
         const result = await getVoiceToken({ data: { roomId, canPublish } });
         if (cancelled) return;
         if (!result.configured || !result.token || !result.url) {
-          setStatus("unconfigured");
+          if (result.reason) {
+            setStatus("error");
+            setError(result.reason);
+          } else {
+            setStatus("unconfigured");
+          }
           return;
         }
         await room.connect(result.url, result.token, { autoSubscribe: true });
@@ -104,6 +109,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
     const next = !micEnabled;
     if (next) {
       const token = await getVoiceToken({ data: { roomId: roomId!, canPublish: true } });
+      if (token.reason) throw new Error(token.reason);
       if (token.configured && token.token) {
         // refresh grants so publishing is allowed after taking a seat
         try {

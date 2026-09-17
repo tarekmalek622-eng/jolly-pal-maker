@@ -206,15 +206,18 @@ function RoomPage() {
   const canRemoveParticipants = isOwner || Boolean(badgePermissions.data?.participantRemove);
   const canManage = isOwner || (moderators.data ?? []).includes(userId ?? "") || canRemoveParticipants;
   const mySeat = (mics.data ?? []).find((m) => m.user_id === userId) ?? null;
-  const { voice, enterRoom, minimizeRoom, exitRoom, minimized } = useVoiceRoomContext();
+  const { voice, activeRoom, enterRoom, minimizeRoom, exitRoom, minimized } = useVoiceRoomContext();
   const canPublish = Boolean(mySeat && !mySeat.is_muted);
   const minimizedRef = useRef(false);
   minimizedRef.current = minimized;
 
   useEffect(() => {
-    if (!room.data || room.data.is_disabled || !room.data.is_active) return;
+    if (!room.data || room.data.is_disabled || !room.data.is_active) {
+      if (activeRoom?.id === roomId) exitRoom();
+      return;
+    }
     enterRoom({ id: roomId, name: room.data.name, imageUrl: room.data.image_url }, canPublish);
-  }, [enterRoom, roomId, room.data?.name, room.data?.image_url, room.data?.is_active, room.data?.is_disabled, canPublish]);
+  }, [activeRoom?.id, canPublish, enterRoom, exitRoom, roomId, room.data]);
 
   // join / leave membership
   useEffect(() => {
