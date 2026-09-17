@@ -141,9 +141,16 @@ function Landing() {
       if (data.session) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("id")
+          .select("id, is_suspended")
           .eq("id", data.session.user.id)
           .maybeSingle();
+        if (profile?.is_suspended) {
+          // حساب موقوف: نسجّل الخروج بدل حلقة إعادة توجيه لا تنتهي
+          await supabase.auth.signOut();
+          if (!active) return;
+          setChecking(false);
+          return;
+        }
         if (profile) {
           void navigate({ to: "/home", replace: true });
           return;
