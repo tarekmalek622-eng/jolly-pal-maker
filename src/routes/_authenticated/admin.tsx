@@ -13,7 +13,9 @@ import {
   Gift,
   HelpCircle,
   Loader2,
+  Megaphone,
   ScrollText,
+  Trash2,
   ShoppingBag,
   Sofa,
   Users,
@@ -57,6 +59,8 @@ import {
   adminUpdateUserIdentity,
   adminUpsertBadgeDefinition,
   adminEndRelationship,
+  adminUpsertBanner,
+  adminDeleteBanner,
 } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 import { AdminBadgeCrest } from "@/components/AdminBadgeCrest";
@@ -77,6 +81,7 @@ const TABS = [
   { key: "users", label: "المستخدمون", icon: Users },
   { key: "rooms", label: "الغرف", icon: Sofa },
   { key: "roomMessages", label: "رسائل الغرف", icon: ScrollText },
+  { key: "banners", label: "البنرات", icon: Megaphone },
   { key: "badges", label: "الشارات", icon: Award },
   { key: "gifts", label: "الهدايا", icon: Gift },
   { key: "store", label: "المتجر", icon: ShoppingBag },
@@ -175,6 +180,7 @@ function AdminPage() {
       {tab === "users" && <UsersTab />}
       {tab === "rooms" && <RoomsTab />}
       {tab === "roomMessages" && <RoomMessagesTab />}
+      {tab === "banners" && <BannersTab />}
       {tab === "badges" && <BadgeDefinitionsTab />}
       {tab === "gifts" && <GiftsTab />}
       {tab === "store" && <StoreTab />}
@@ -2997,6 +3003,303 @@ function TopupsTab() {
             </div>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------- بنرات الرئيسية ---------------- */
+
+type BannerAdminRow = {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  image_url: string | null;
+  link_url: string | null;
+  kind: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_active: boolean;
+  sort_order: number;
+};
+
+type BannerDraft = {
+  id: string | null;
+  title: string;
+  subtitle: string;
+  imageUrl: string | null;
+  linkUrl: string;
+  kind: "ad" | "event" | "contest";
+  startsAt: string;
+  endsAt: string;
+  isActive: boolean;
+  sortOrder: number;
+};
+
+const EMPTY_BANNER: BannerDraft = {
+  id: null,
+  title: "",
+  subtitle: "",
+  imageUrl: null,
+  linkUrl: "",
+  kind: "ad",
+  startsAt: "",
+  endsAt: "",
+  isActive: true,
+  sortOrder: 0,
+};
+
+function BannerThumb({ stored }: { stored: string | null }) {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    void resolveMediaUrl(stored).then((url) => {
+      if (active) setSrc(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [stored]);
+  return (
+    <div className="h-16 w-24 shrink-0 overflow-hidden rounded-xl border border-border bg-surface-2">
+      {src && <img src={src} alt="" className="h-full w-full object-cover" />}
+    </div>
+  );
+}
+
+function BannersTab() {
+  const { userId } = useSupabaseSession();
+  const [draft, setDraft] = useState<BannerDraft>(EMPTY_BANNER);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  const banners = useQuery({
+    queryKey: ["admin-banners"],
+    queryFn: async () => {
+      const db = supabase as unknown as {
+        from: (t: string) => {
+          select: (c: string) => {
+            order: (
+              c2: string,
+              o: { ascending: boolean },
+            ) => Promise<{ data: BannerAdminRow[] | null; error: { message: string } | null }>;
+          };
+        };
+      };
+      const { data, error } = await db
+        .from("banners")
+        .select("id, title, subtitle, image_url, link_url, kind, starts_at, ends_at, is_active, sort_order")
+        .order("sort_order", { ascending: true });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async () => {
+      let imageUrl = draft.imageUrl;
+      if (file && userId) imageUrl = await uploadUserImage("rooms", userId, file);
+      await adminUpsertBanner({
+        data: {
+          id: draft.id,
+          title: draft.title.trim(),
+          subtitle: draft.subtitle.trim() || null,
+          imageUrl,
+          linkUrl: draft.linkUrl.trim() || null,
+          kind: draft.kind,
+          startsAt: draft.startsAt || null,
+          endsAt: draft.endsAt || null,
+          isActive: draft.isActive,
+          sortOrder: draft.sortOrder,
+        },
+      });
+    },
+    onSuccess: async () => {
+      toast.success("تم حفظ البنر");
+      setDraft(EMPTY_BANNER);
+      setFile(null);
+      setPreview(null);
+      await banners.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      await adminDeleteBanner({ data: { id } });
+    },
+    onSuccess: async () => {
+      toast.success("تم حذف البنر");
+      await banners.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحذف"),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="surface-card space-y-3 p-4">
+        <p className="text-sm font-bold">{draft.id ? "تعديل بنر" : "بنر جديد"}</p>
+        <Input
+          value={draft.title}
+          onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+          placeholder="عنوان البنر"
+          className="h-11 rounded-2xl"
+        />
+        <Input
+          value={draft.subtitle}
+          onChange={(e) => setDraft((d) => ({ ...d, subtitle: e.target.value }))}
+          placeholder="وصف مختصر (اختياري)"
+          className="h-11 rounded-2xl"
+        />
+        <Input
+          value={draft.linkUrl}
+          onChange={(e) => setDraft((d) => ({ ...d, linkUrl: e.target.value }))}
+          placeholder="رابط عند الضغط (اختياري) مثل /store"
+          className="h-11 rounded-2xl"
+        />
+        <div className="flex gap-2">
+          {(
+            [
+              ["ad", "إعلان"],
+              ["event", "حدث"],
+              ["contest", "مسابقة"],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setDraft((d) => ({ ...d, kind: key }))}
+              className={cn(
+                "flex-1 rounded-2xl border px-3 py-2 text-xs font-bold",
+                draft.kind === key ? "border-primary/60 gradient-gold text-primary-foreground" : "border-border bg-surface text-muted-foreground",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="space-y-1 text-[11px] text-muted-foreground">
+            يبدأ
+            <Input
+              type="datetime-local"
+              value={draft.startsAt}
+              onChange={(e) => setDraft((d) => ({ ...d, startsAt: e.target.value }))}
+              className="h-11 rounded-2xl"
+            />
+          </label>
+          <label className="space-y-1 text-[11px] text-muted-foreground">
+            ينتهي
+            <Input
+              type="datetime-local"
+              value={draft.endsAt}
+              onChange={(e) => setDraft((d) => ({ ...d, endsAt: e.target.value }))}
+              className="h-11 rounded-2xl"
+            />
+          </label>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="space-y-1 text-[11px] text-muted-foreground">
+            الترتيب
+            <Input
+              type="number"
+              value={draft.sortOrder}
+              onChange={(e) => setDraft((d) => ({ ...d, sortOrder: Number(e.target.value) || 0 }))}
+              className="h-11 rounded-2xl"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => setDraft((d) => ({ ...d, isActive: !d.isActive }))}
+            className={cn(
+              "mt-5 h-11 rounded-2xl border text-xs font-bold",
+              draft.isActive ? "border-primary/60 gradient-gold text-primary-foreground" : "border-border bg-surface text-muted-foreground",
+            )}
+          >
+            {draft.isActive ? "مُفعّل" : "موقوف"}
+          </button>
+        </div>
+        <label className="block space-y-1 text-[11px] text-muted-foreground">
+          صورة البنر من ملفات الهاتف
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            onChange={(e) => {
+              const picked = e.target.files?.[0] ?? null;
+              setFile(picked);
+              setPreview(picked ? URL.createObjectURL(picked) : null);
+            }}
+            className="w-full rounded-2xl border border-border bg-surface p-2 text-xs"
+          />
+        </label>
+        {preview ? (
+          <img src={preview} alt="معاينة" className="h-32 w-full rounded-2xl object-cover" />
+        ) : (
+          draft.imageUrl && <BannerThumb stored={draft.imageUrl} />
+        )}
+        <div className="flex gap-2">
+          <Button
+            onClick={() => save.mutate()}
+            disabled={save.isPending || draft.title.trim().length < 2}
+            className="h-11 flex-1 rounded-2xl gradient-gold text-primary-foreground"
+          >
+            {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ"}
+          </Button>
+          {draft.id && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDraft(EMPTY_BANNER);
+                setFile(null);
+                setPreview(null);
+              }}
+              className="h-11 rounded-2xl"
+            >
+              إلغاء
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {banners.isLoading && <div className="h-20 animate-pulse rounded-2xl bg-surface-2" />}
+      {(banners.data ?? []).map((b) => (
+        <div key={b.id} className="surface-card flex items-center gap-3 p-3">
+          <BannerThumb stored={b.image_url} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold">{b.title}</p>
+            <p className="truncate text-[11px] text-muted-foreground">
+              {b.kind === "event" ? "حدث" : b.kind === "contest" ? "مسابقة" : "إعلان"} · ترتيب {b.sort_order} ·{" "}
+              {b.is_active ? "مُفعّل" : "موقوف"}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl"
+            onClick={() =>
+              setDraft({
+                id: b.id,
+                title: b.title,
+                subtitle: b.subtitle ?? "",
+                imageUrl: b.image_url,
+                linkUrl: b.link_url ?? "",
+                kind: (b.kind as BannerDraft["kind"]) ?? "ad",
+                startsAt: b.starts_at ? b.starts_at.slice(0, 16) : "",
+                endsAt: b.ends_at ? b.ends_at.slice(0, 16) : "",
+                isActive: b.is_active,
+                sortOrder: b.sort_order,
+              })
+            }
+          >
+            تعديل
+          </Button>
+          <Button size="sm" variant="destructive" className="rounded-xl" onClick={() => remove.mutate(b.id)}>
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ))}
+      {!banners.isLoading && (banners.data ?? []).length === 0 && (
+        <EmptyState title="لا توجد بنرات" hint="أضف بنر إعلان أو حدث أو مسابقة ليظهر أعلى الصفحة الرئيسية" />
       )}
     </div>
   );
