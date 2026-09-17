@@ -30,7 +30,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
   return (
     <header className="sticky top-0 z-30 bg-background/85 px-4 pb-4 pt-6 backdrop-blur-xl">
       <div className="absolute top-1 start-4">
-        <BadgeStrip rank={profile.data?.level ?? 1} count={0} />
+        <BadgeStrip userId={userId} rank={profile.data?.level ?? 1} count={0} />
       </div>
       <div className="flex items-center justify-between gap-3">
         <div>

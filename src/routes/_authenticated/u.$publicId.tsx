@@ -162,7 +162,7 @@ function UserPage() {
       header={
         <div className="relative">
           <div className="absolute top-1 start-12">
-            <BadgeStrip rank={target?.level} count={0} />
+            <BadgeStrip userId={target.id} rank={target.level} count={0} />
           </div>
         <header className="sticky top-0 z-30 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 bg-background/85 px-4 pb-4 pt-6 backdrop-blur-xl">
           <Button variant="ghost" size="icon" onClick={() => void navigate({ to: "/home" })} aria-label="العودة">

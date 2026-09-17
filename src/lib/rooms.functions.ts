@@ -2,6 +2,59 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function hasPermission(
+  supabase: { rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> },
+  userId: string,
+  permission: "room_background" | "participant_remove" | "wheel_close",
+) {
+  const { data, error } = await supabase.rpc("has_badge_permission", { _user_id: userId, _permission: permission });
+  if (error) throw new Error("تعذر التحقق من صلاحية الشارة");
+  return data === true;
+}
+
+export const getMyRoomBadgePermissions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const checks = await Promise.all([
+      hasPermission(context.supabase as never, context.userId, "room_background"),
+      hasPermission(context.supabase as never, context.userId, "participant_remove"),
+      hasPermission(context.supabase as never, context.userId, "wheel_close"),
+    ]);
+    return { roomBackground: checks[0], participantRemove: checks[1], wheelClose: checks[2] };
+  });
+
+export const removeRoomParticipant = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid(), targetId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const allowed = await hasPermission(context.supabase as never, context.userId, "participant_remove");
+    const room = await context.supabase.from("rooms").select("owner_id").eq("id", data.roomId).maybeSingle();
+    if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
+    const manager = room.data.owner_id === context.userId || allowed;
+    if (!manager) throw new Error("لا تملك صلاحية سحب المشاركين");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.rpc("badge_remove_room_participant", {
+      _room_id: data.roomId,
+      _target_id: data.targetId,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const closeWheelRound = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const allowed = await hasPermission(context.supabase as never, context.userId, "wheel_close");
+    const room = await context.supabase.from("rooms").select("owner_id").eq("id", data.roomId).maybeSingle();
+    if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
+    if (room.data.owner_id !== context.userId && !allowed) throw new Error("لا تملك صلاحية إغلاق الجولة");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: roundId, error } = await supabaseAdmin.rpc("badge_close_wheel_round", { _room_id: data.roomId });
+    if (error) throw new Error(error.message);
+    return { ok: true, roundId };
+  });
+
 /** تطبيق عنصر تزيين مملوك على الغرفة أو على مقعد المايك — كل التحقق على السيرفر */
 export const applyRoomCosmetic = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -25,7 +78,10 @@ export const applyRoomCosmetic = createServerFn({ method: "POST" })
     if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
 
     // الخلفية والزينة لصاحب الغرفة فقط، وزينة المايك لصاحب المقعد
-    if (data.target !== "mic" && room.data.owner_id !== userId) {
+    const delegated = data.target !== "mic"
+      ? await hasPermission(supabase as never, userId, "room_background")
+      : false;
+    if (data.target !== "mic" && room.data.owner_id !== userId && !delegated) {
       throw new Error("هذا الإجراء لصاحب الغرفة فقط");
     }
 
