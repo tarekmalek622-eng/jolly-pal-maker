@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Camera, Coins, Crown, LogOut, Shield, Sparkles, Users } from "lucide-react";
+import { Backpack, Camera, Coins, Crown, LogOut, Pencil, Shield, Sparkles, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { AppShell, PageHeader } from "@/components/AppShell";
@@ -12,6 +12,8 @@ import { VipCvipSheet } from "@/components/VipCvipSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { CosmeticImage } from "@/components/RoomCosmetics";
 import { useIsAdmin, useMyProfile, useSupabaseSession, useWallet } from "@/hooks/use-session";
 import { uploadUserImage } from "@/lib/media";
 import { screenProfilePhoto } from "@/lib/moderation.functions";
@@ -43,6 +45,7 @@ function MePage() {
   const [bio, setBio] = useState("");
   const [saving, setSaving] = useState(false);
   const [privSheet, setPrivSheet] = useState<"vip" | "cvip" | null>(null);
+  const [bagOpen, setBagOpen] = useState(false);
 
   const counts = useQuery({
     queryKey: ["social-counts", userId],
@@ -168,11 +171,28 @@ function MePage() {
             }}
           />
           <div className="min-w-0 flex-1">
-            <VipName
-              name={p?.display_name ?? "..."}
-              vipLevel={p?.vip_level ?? 0}
-              className="block text-lg"
-            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label="تعديل الملف"
+                onClick={() => {
+                  setName(p?.display_name ?? "");
+                  setBio(p?.bio ?? "");
+                  setEditing((v) => !v);
+                }}
+                className={cn(
+                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors",
+                  editing ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+                )}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              <VipName
+                name={p?.display_name ?? "..."}
+                vipLevel={p?.vip_level ?? 0}
+                className="block min-w-0 truncate text-lg"
+              />
+            </div>
             <VipId publicId={p?.public_id ?? "—"} vipLevel={p?.vip_level ?? 0} />
             <div className="mt-1 flex flex-wrap gap-1.5">
               <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px]">مستوى {p?.level ?? 1}</span>
@@ -265,18 +285,6 @@ function MePage() {
 
         {p?.bio && <p className="mt-4 text-sm text-muted-foreground">{p.bio}</p>}
 
-        <Button
-          variant="outline"
-          onClick={() => {
-            setName(p?.display_name ?? "");
-            setBio(p?.bio ?? "");
-            setEditing((v) => !v);
-          }}
-          className="mt-4 h-11 w-full rounded-2xl"
-        >
-          {editing ? "إلغاء" : "تعديل الملف"}
-        </Button>
-
         {editing && (
           <div className="mt-4 space-y-3">
             <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={24} className="h-12 rounded-2xl bg-surface-2" />
@@ -299,54 +307,98 @@ function MePage() {
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <Link to="/wallet" className="surface-card flex items-center gap-2 p-4 text-sm font-bold">
-          <Coins className="h-5 w-5 text-primary" />
-          {(wallet.data?.coins ?? 0).toLocaleString("en-US")}
+        <Link to="/wallet" className="surface-card flex items-center gap-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-gold">
+            <Coins className="h-5 w-5 text-primary-foreground" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-xs text-muted-foreground">المحفظة</span>
+            <span className="block truncate text-sm font-bold">
+              {(wallet.data?.coins ?? 0).toLocaleString("en-US")}
+            </span>
+          </span>
         </Link>
-        <Link to="/store" className="surface-card flex items-center gap-2 p-4 text-sm font-bold">
-          <Crown className="h-5 w-5 text-primary" /> المتجر
+        <Link to="/store" className="surface-card flex items-center gap-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
+            <Crown className="h-5 w-5 text-primary" />
+          </span>
+          <span className="text-sm font-bold">المتجر</span>
         </Link>
-        <Link to="/messages" className="surface-card flex items-center gap-2 p-4 text-sm font-bold">
-          <Users className="h-5 w-5 text-primary" /> الرسائل
+        <button
+          type="button"
+          onClick={() => setBagOpen(true)}
+          className="surface-card flex items-center gap-3 p-4 text-start"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/15">
+            <Backpack className="h-5 w-5 text-accent" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-bold">حقيبتي</span>
+            <span className="block text-[10px] text-muted-foreground">
+              {(myItems.data?.length ?? 0).toLocaleString("en-US")} عنصر
+            </span>
+          </span>
+        </button>
+        <Link to="/messages" className="surface-card flex items-center gap-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
+            <Users className="h-5 w-5 text-primary" />
+          </span>
+          <span className="text-sm font-bold">الرسائل</span>
         </Link>
         {isAdmin.data && (
-          <Link to="/admin" className="surface-card flex items-center gap-2 p-4 text-sm font-bold">
-            <Shield className="h-5 w-5 text-primary" /> الإدارة
+          <Link to="/admin" className="surface-card flex items-center gap-3 p-4">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
+              <Shield className="h-5 w-5 text-primary" />
+            </span>
+            <span className="text-sm font-bold">الإدارة</span>
           </Link>
         )}
       </div>
 
-      <section className="mt-6">
-        <h2 className="mb-3 text-sm font-bold">عناصري</h2>
-        {(myItems.data?.length ?? 0) === 0 ? (
-          <p className="text-sm text-muted-foreground">لا تملك عناصر بعد — تفضل بزيارة المتجر.</p>
-        ) : (
-          <div className="grid grid-cols-3 gap-2">
-            {myItems.data?.map((it) => (
-              <div key={it.id} className="surface-card p-3 text-center">
-                <p className="truncate text-[11px] font-semibold">
-                  {(it.store_items as { name?: string } | null)?.name ?? "عنصر"}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {it.expires_at ? new Date(it.expires_at).toLocaleDateString("ar") : "دائم"}
-                </p>
-                <button
-                  disabled={equipping === it.id}
-                  onClick={() => void toggleEquip(it.id, !it.is_equipped)}
-                  className={cn(
-                    "mt-2 w-full rounded-lg border px-2 py-1.5 text-[10px]",
-                    it.is_equipped
-                      ? "border-primary bg-primary/15 text-primary"
-                      : "border-border bg-surface-2 text-muted-foreground",
-                  )}
-                >
-                  {it.is_equipped ? "مُستخدم" : "استخدم"}
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      {/* حقيبتي — كل ما اشتريته من المتجر بصوره مع التفعيل المباشر */}
+      <Sheet open={bagOpen} onOpenChange={setBagOpen}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle className="text-start">حقيبتي</SheetTitle>
+          </SheetHeader>
+          {(myItems.data?.length ?? 0) === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              حقيبتك فارغة — اشترِ عناصر من المتجر لتظهر هنا.
+            </p>
+          ) : (
+            <div className="mt-3 grid grid-cols-3 gap-2 pb-4">
+              {myItems.data?.map((it) => {
+                const si = it.store_items as { name?: string; category?: string; image_url?: string | null } | null;
+                return (
+                  <div key={it.id} className="surface-card overflow-hidden">
+                    <div className="flex h-24 items-center justify-center gradient-surface p-1">
+                      <CosmeticImage url={si?.image_url ?? null} className="h-full w-full object-contain" />
+                    </div>
+                    <div className="p-2 text-center">
+                      <p className="truncate text-[11px] font-semibold">{si?.name ?? "عنصر"}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {it.expires_at ? new Date(it.expires_at).toLocaleDateString("ar") : "دائم"}
+                      </p>
+                      <button
+                        disabled={equipping === it.id}
+                        onClick={() => void toggleEquip(it.id, !it.is_equipped)}
+                        className={cn(
+                          "mt-2 w-full rounded-lg border px-2 py-1.5 text-[10px]",
+                          it.is_equipped
+                            ? "border-primary bg-primary/15 text-primary"
+                            : "border-border bg-surface-2 text-muted-foreground",
+                        )}
+                      >
+                        {it.is_equipped ? "مُستخدم" : "استخدم"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <Button
         variant="outline"

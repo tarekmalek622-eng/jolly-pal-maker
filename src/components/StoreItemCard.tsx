@@ -38,7 +38,7 @@ export function StoreItemCard({
 
   return (
     <div className="surface-card overflow-hidden">
-      <div className="flex h-28 items-center justify-center gradient-surface p-1">
+      <div className="flex h-32 items-center justify-center gradient-surface p-1.5">
         {img ? (
           <img
             src={img}

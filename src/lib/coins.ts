@@ -19,4 +19,21 @@ export function usdToCoins(usd: number): number {
   return Math.round(usd * COINS_PER_USD);
 }
 
-export const COINS_RATE_NOTE = "عملة افتراضية داخل التطبيق — 80,000,000 عملة = 1$ ولا تُصرف نقدًا.";
+/** سعر الشحن بالجنيه المصري: 50 جنيه = 100,000,000 عملة (2,000,000 عملة للجنيه). */
+export const COINS_PER_EGP = 2_000_000;
+
+/** القيمة التقديرية بالجنيه المصري لعدد معيّن من العملات. */
+export function coinsEgpLabel(coins: number): string {
+  const egp = coins / COINS_PER_EGP;
+  if (egp === 0) return "≈ 0 ج.م";
+  if (egp < 0.5) return "< 0.5 ج.م";
+  return `≈ ${egp.toLocaleString("en-US", { maximumFractionDigits: 0 })} ج.م`;
+}
+
+/** عدد العملات المقابل لمبلغ بالجنيه المصري. */
+export function egpToCoins(egp: number): number {
+  return Math.round(egp * COINS_PER_EGP);
+}
+
+export const COINS_RATE_NOTE =
+  "عملة افتراضية داخل التطبيق — 50 ج.م = 100,000,000 عملة (80,000,000 عملة ≈ 1$) ولا تُصرف نقدًا.";
