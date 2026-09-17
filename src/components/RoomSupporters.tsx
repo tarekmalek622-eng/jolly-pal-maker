@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Trophy } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { getRoomCupLeaderboard } from "@/lib/cups.functions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { UserAvatar } from "@/components/UserAvatar";
 import { VipName } from "@/components/VipName";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 type Supporter = {
   id: string;
@@ -26,38 +27,12 @@ export function RoomSupporters({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const [period, setPeriod] = useState<"day" | "week" | "month">("day");
   const board = useQuery({
-    queryKey: ["room-supporters", roomId],
+    queryKey: ["room-supporters", roomId, period],
     enabled: open,
-    queryFn: async (): Promise<Supporter[]> => {
-      const { data, error } = await supabase
-        .from("gift_transactions")
-        .select("sender_id, total_price")
-        .eq("room_id", roomId)
-        .limit(1000);
-      if (error) throw error;
-      const totals = new Map<string, number>();
-      for (const row of data ?? []) {
-        totals.set(row.sender_id, (totals.get(row.sender_id) ?? 0) + Number(row.total_price ?? 0));
-      }
-      const top = [...totals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20);
-      if (top.length === 0) return [];
-      const { data: profiles, error: pErr } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url, vip_level")
-        .in("id", top.map(([id]) => id));
-      if (pErr) throw pErr;
-      return top.map(([id, coins]) => {
-        const prof = (profiles ?? []).find((p) => p.id === id);
-        return {
-          id,
-          display_name: prof?.display_name ?? "مستخدم",
-          avatar_url: prof?.avatar_url ?? null,
-          vip_level: prof?.vip_level ?? 0,
-          coins,
-        };
-      });
-    },
+    staleTime: 60_000,
+    queryFn: () => getRoomCupLeaderboard({ data: { roomId, period } }) as Promise<Supporter[]>,
   });
 
   return (
@@ -68,6 +43,12 @@ export function RoomSupporters({
             <Trophy className="h-4 w-4 text-primary" /> كأس الغرفة · أكثر الداعمين
           </SheetTitle>
         </SheetHeader>
+
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {([["day", "يومي"], ["week", "أسبوعي"], ["month", "شهري"]] as const).map(([key, label]) => (
+            <button key={key} onClick={() => setPeriod(key)} className={cn("rounded-xl border py-2 text-xs font-bold", period === key ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground")}>{label}</button>
+          ))}
+        </div>
 
         {board.isLoading ? (
           <div className="flex justify-center py-10">
