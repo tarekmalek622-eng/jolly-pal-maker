@@ -315,6 +315,26 @@
   50% { opacity: 1; }
 }
 
+.room-immersive::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(to bottom, var(--background) 0%, transparent 22%, transparent 68%, var(--background) 100%);
+  opacity: 0.52;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .room-immersive img {
+    animation: room-background-drift 18s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes room-background-drift {
+  from { transform: scale(1.01); }
+  to { transform: scale(1.05) translateY(-0.75%); }
+}
+
 @utility room-frame {
   position: relative;
   border-radius: 1.25rem;

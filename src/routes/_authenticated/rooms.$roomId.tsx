@@ -46,6 +46,8 @@ import { useVoiceRoomContext } from "@/components/VoiceRoomProvider";
 import { BadgeStrip } from "@/components/BadgeStrip";
 import { closeWheelRound, getMyRoomBadgePermissions, removeRoomParticipant } from "@/lib/rooms.functions";
 import { cn } from "@/lib/utils";
+import roomAuroraBackground from "@/assets/room-aurora-bg.jpg";
+import { VipName } from "@/components/VipName";
 
 export const Route = createFileRoute("/_authenticated/rooms/$roomId")({
   head: () => ({
@@ -426,65 +428,35 @@ function RoomPage() {
   return (
     <AppShell
       hideNav
+      fullBleed
       header={
-        <div className="relative">
-          <div className="absolute top-0.5 start-4">
-            <BadgeStrip userId={userId} rank="عضو" count={0} />
-          </div>
-        <header className="sticky top-0 z-30 bg-background/85 px-4 pb-3 pt-5 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setLeaveOpen(true)} className="p-1" aria-label="تصغير أو خروج">
+        <header className="fixed inset-x-0 top-0 z-40 mx-auto max-w-lg px-3 pb-3 pt-3 text-foreground">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-border/50 bg-background/65 p-2 backdrop-blur-xl">
+            <button onClick={() => setLeaveOpen(true)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface/80" aria-label="تصغير أو خروج">
               <ArrowRight className="h-5 w-5" />
             </button>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold">{room.data.name}</p>
-              <p className="text-[10px] text-muted-foreground">
-                #{room.data.room_code} · {(members.data?.length ?? 0)} متواجد ·{" "}
-                {voice.status === "connected"
-                  ? "الصوت متصل"
-                  : voice.status === "connecting"
-                    ? "جارٍ الاتصال"
-                    : voice.status === "reconnecting"
-                      ? "إعادة الاتصال..."
-                      : voice.status === "unconfigured"
-                        ? "الصوت غير مُفعّل بعد"
-                        : voice.status === "error"
-                          ? "تعذر الاتصال بالصوت"
-                          : "غير متصل"}
-              </p>
+            <div className="min-w-0 text-center">
+              <p className="truncate text-sm font-black">{room.data.name}</p>
+              <div className="mt-0.5 flex items-center justify-center gap-1.5 text-[9px] text-muted-foreground">
+                <span>ID: {room.data.room_code}</span><span>•</span><span>{members.data?.length ?? 0} متواجد</span>
+                <span className={cn("h-1.5 w-1.5 rounded-full", voice.status === "connected" ? "bg-success" : "bg-destructive")} />
+              </div>
             </div>
-            <button onClick={() => setCosmeticsOpen(true)} className="p-1" aria-label="تزيين الغرفة">
-              <Sparkles className="h-5 w-5" />
-            </button>
-            <button onClick={() => setCupOpen(true)} className="p-1" aria-label="كأس الغرفة">
-              <Trophy className="h-5 w-5" />
-            </button>
-            {canManage && (
-              <>
-                <button onClick={() => setRequestsOpen(true)} className="relative p-1" aria-label="طلبات المايك">
-                  <Hand className="h-5 w-5" />
-                  {(requests.data?.length ?? 0) > 0 && (
-                    <span className="absolute -top-1 -end-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-accent-foreground">
-                      {requests.data?.length}
-                    </span>
-                  )}
-                </button>
-                <button onClick={() => setManageOpen(true)} className="p-1" aria-label="إدارة الغرفة">
-                  <Settings className="h-5 w-5" />
-                </button>
-              </>
-            )}
+            <div className="flex shrink-0 gap-1">
+              <button onClick={() => setCupOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15" aria-label="كأس الغرفة"><Trophy className="h-4 w-4 text-primary" /></button>
+              <button onClick={() => setCosmeticsOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80" aria-label="تزيين الغرفة"><Sparkles className="h-4 w-4" /></button>
+              {canManage && <button onClick={() => setManageOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80" aria-label="إدارة الغرفة"><Settings className="h-4 w-4" /></button>}
+            </div>
           </div>
-          {voice.status === "unconfigured" && (
-            <p className="mt-2 rounded-xl bg-surface p-2 text-[10px] text-muted-foreground">
-              الصوت المباشر ينتظر مفاتيح خدمة الصوت من الإدارة — بقية الغرفة تعمل بشكل كامل.
-            </p>
-          )}
+          <div className="mt-1 flex justify-between px-1"><BadgeStrip userId={userId} rank="عضو" count={0} />{canManage && (requests.data?.length ?? 0) > 0 && <button onClick={() => setRequestsOpen(true)} className="rounded-full bg-accent px-2 py-1 text-[9px] font-bold text-accent-foreground">{requests.data?.length} طلب مايك</button>}</div>
         </header>
-        </div>
       }
     >
-      <RoomBackground url={room.data.background_url} />
+      <div className="room-immersive fixed inset-0 -z-10 mx-auto max-w-lg overflow-hidden">
+        <img src={roomAuroraBackground} width={768} height={1536} alt="خلفية شفق قطبي للغرفة" className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-background/20" />
+      </div>
+      {room.data.background_url && <RoomBackground url={room.data.background_url} />}
 
       {room.data.theme && (
         <CosmeticImage
@@ -493,7 +465,7 @@ function RoomPage() {
         />
       )}
 
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-5 gap-x-1 gap-y-4 px-2 pt-28 sm:px-4">
         {(mics.data ?? []).map((seat) => {
           const person = personOf(seat.user_id);
           const speaking = person ? voice.speakingIds.includes(person.id) : false;
@@ -507,11 +479,11 @@ function RoomPage() {
                 }
                 setSeatSheet(seat.id);
               }}
-              className="flex flex-col items-center gap-1"
+              className="flex min-w-0 flex-col items-center gap-1.5"
             >
               <div
                 className={cn(
-                  "relative flex h-14 w-14 items-center justify-center rounded-full border",
+                  "relative flex h-14 w-14 items-center justify-center rounded-full border sm:h-16 sm:w-16",
                   speaking ? "border-success ring-2 ring-success/50" : "border-border",
                   "bg-surface",
                 )}
@@ -535,15 +507,13 @@ function RoomPage() {
                   </span>
                 )}
               </div>
-              <span className="w-full truncate text-center text-[10px] text-muted-foreground">
-                {person?.display_name ?? `مايك ${seat.seat_index}`}
-              </span>
+              {person ? <VipName name={person.display_name} vipLevel={person.vip_level} className="w-full truncate text-center text-[9px]" /> : <span className="w-full truncate text-center text-[9px] text-foreground/75">NO.{seat.seat_index}</span>}
             </button>
           );
         })}
       </div>
 
-      <section className="mt-5 space-y-2 pb-28">
+      <section className="mx-3 mt-5 space-y-2 pb-44">
         {(messages.data ?? []).map((m) => {
           const person = personOf(m.user_id);
           const isGift = m.kind === "gift";
@@ -551,8 +521,8 @@ function RoomPage() {
             <div
               key={m.id}
               className={cn(
-                "flex items-start gap-2 rounded-2xl p-2.5",
-                isGift ? "gradient-rose text-primary-foreground" : "bg-surface",
+                "flex items-start gap-2 rounded-xl border border-border/30 p-2.5 backdrop-blur-md",
+                isGift ? "gradient-rose text-primary-foreground" : "bg-background/45",
               )}
             >
               <UserAvatar src={person?.avatar_url} name={person?.display_name} size={28} vipLevel={person?.vip_level ?? 0} />
@@ -565,7 +535,7 @@ function RoomPage() {
         })}
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 mx-auto max-w-lg border-t border-border bg-background/95 p-3 backdrop-blur-xl">
+      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg border-t border-border/50 bg-background/75 p-2.5 backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <Input
             value={text}
@@ -575,9 +545,9 @@ function RoomPage() {
             }}
             placeholder={room.data.chat_locked && !canManage ? "الدردشة مغلقة" : "اكتب رسالة..."}
             disabled={room.data.chat_locked && !canManage}
-            className="h-11 flex-1 rounded-2xl bg-surface text-sm"
+            className="h-11 flex-1 rounded-full border-border/50 bg-surface/70 text-sm"
           />
-          <Button onClick={() => void sendMessage()} className="h-11 w-11 rounded-2xl gradient-gold p-0 text-primary-foreground">
+          <Button onClick={() => void sendMessage()} className="h-11 w-11 rounded-full gradient-gold p-0 text-primary-foreground">
             <Send className="h-4 w-4" />
           </Button>
         </div>
@@ -587,23 +557,23 @@ function RoomPage() {
             onClick={() => {
               voice.toggleMic().catch((e: unknown) => toast.error(e instanceof Error ? e.message : "تعذر تشغيل المايك"));
             }}
-            className={cn("h-11 flex-1 rounded-2xl text-xs", voice.micEnabled && "border-success text-success")}
+            className={cn("h-10 flex-1 rounded-full px-2 text-[10px]", voice.micEnabled && "border-success text-success")}
           >
             {voice.micEnabled ? <Mic className="me-1 h-4 w-4" /> : <MicOff className="me-1 h-4 w-4" />}
             {voice.micEnabled ? "المايك مفتوح" : "المايك مغلق"}
           </Button>
-          <Button variant="outline" onClick={voice.toggleSpeaker} className="h-11 flex-1 rounded-2xl text-xs">
+          <Button variant="outline" onClick={voice.toggleSpeaker} className="h-10 flex-1 rounded-full px-2 text-[10px]">
             {voice.speakerEnabled ? <Volume2 className="me-1 h-4 w-4" /> : <VolumeX className="me-1 h-4 w-4" />}
             {voice.speakerEnabled ? "السماعة" : "صامت"}
           </Button>
           {!mySeat && (
-            <Button variant="outline" onClick={() => requestMic.mutate()} className="h-11 flex-1 rounded-2xl text-xs">
+            <Button variant="outline" onClick={() => requestMic.mutate()} className="h-10 flex-1 rounded-full px-2 text-[10px]">
               <Hand className="me-1 h-4 w-4" /> طلب مايك
             </Button>
           )}
           <Button
             onClick={() => setGiftOpen(true)}
-            className="h-11 flex-1 rounded-2xl gradient-rose text-xs font-bold text-primary-foreground"
+            className="h-10 flex-1 rounded-full gradient-rose px-2 text-[10px] font-bold text-primary-foreground"
           >
             <Gift className="me-1 h-4 w-4" /> هدية
           </Button>
@@ -626,7 +596,7 @@ function RoomPage() {
       </div>
 
       {/* أزرار عائمة أسفل يسار الغرفة: عجلة الحظ + تشغيل الموسيقى */}
-      <div className="fixed bottom-40 left-3 z-30 flex flex-col items-center gap-2">
+      <div className="fixed bottom-36 left-2 z-30 flex flex-col items-center gap-2">
         <button
           type="button"
           onClick={() => {
@@ -634,7 +604,7 @@ function RoomPage() {
             setDominoOpen(true);
           }}
           aria-label="عجلة الحظ والألعاب"
-          className="flex h-14 w-14 flex-col items-center justify-center rounded-2xl border border-primary/50 bg-background/80 shadow-lg backdrop-blur-xl"
+          className="flex h-14 w-14 flex-col items-center justify-center rounded-xl border border-primary/60 bg-background/65 shadow-glow backdrop-blur-xl"
         >
           <FerrisWheel className="h-6 w-6 text-primary" />
           <span className="mt-0.5 text-[8px] font-bold text-primary">العجلة</span>
