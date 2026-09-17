@@ -328,7 +328,17 @@ export const adminUpsertVipLevel = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("vip_levels").upsert(data);
+    const payload = {
+      level: data.level,
+      name: data.name,
+      price: data.price,
+      duration_days: data.duration_days,
+      badge_url: data.badge_url ?? null,
+      frame_url: data.frame_url ?? null,
+      name_effect: data.name_effect ?? null,
+      is_active: data.is_active,
+    };
+    const { error } = await supabaseAdmin.from("vip_levels").upsert(payload);
     if (error) throw new Error(error.message);
     await log(context.userId, String(data.level), "upsert_vip_level", "", data.name);
     return { ok: true };
