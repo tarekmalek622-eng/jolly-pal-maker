@@ -1055,3 +1055,64 @@ export const adminResendRoomMessage = createServerFn({ method: "POST" })
     await log(context.userId, source.data.room_id, "admin_room_message_resent", data.messageId, inserted.data.id);
     return inserted.data;
   });
+
+/* ---------------- بنرات الرئيسية (إعلانات / أحداث / مسابقات) ---------------- */
+
+const bannerSchema = z.object({
+  id: z.string().uuid().nullable().optional(),
+  title: z.string().min(2).max(80),
+  subtitle: z.string().max(200).nullable().optional(),
+  imageUrl: z.string().max(500).nullable().optional(),
+  linkUrl: z.string().max(500).nullable().optional(),
+  kind: z.enum(["ad", "event", "contest"]),
+  startsAt: z.string().max(40).nullable().optional(),
+  endsAt: z.string().max(40).nullable().optional(),
+  isActive: z.boolean(),
+  sortOrder: z.number().int().min(0).max(999),
+});
+
+export const adminUpsertBanner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => bannerSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const row = {
+      title: data.title,
+      subtitle: data.subtitle ?? null,
+      image_url: data.imageUrl ?? null,
+      link_url: data.linkUrl ?? null,
+      kind: data.kind,
+      starts_at: data.startsAt || null,
+      ends_at: data.endsAt || null,
+      is_active: data.isActive,
+      sort_order: data.sortOrder,
+      created_by: context.userId,
+    };
+    const db = supabaseAdmin as unknown as {
+      from: (t: string) => {
+        insert: (v: unknown) => { select: (c: string) => { maybeSingle: () => Promise<{ data: { id: string } | null; error: { message: string } | null }> } };
+        update: (v: unknown) => { eq: (c: string, v2: string) => { select: (c2: string) => { maybeSingle: () => Promise<{ data: { id: string } | null; error: { message: string } | null }> } } };
+        delete: () => { eq: (c: string, v2: string) => Promise<{ error: { message: string } | null }> };
+      };
+    };
+    const result = data.id
+      ? await db.from("banners").update(row).eq("id", data.id).select("id").maybeSingle()
+      : await db.from("banners").insert(row).select("id").maybeSingle();
+    if (result.error || !result.data) throw new Error(result.error?.message ?? "تعذر حفظ البنر");
+    await log(context.userId, result.data.id, data.id ? "admin_banner_updated" : "admin_banner_created", "", data.title);
+    return result.data;
+  });
+
+export const adminDeleteBanner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as unknown as { from: (t: string) => { delete: () => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> } } };
+    const { error } = await db.from("banners").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await log(context.userId, data.id, "admin_banner_deleted", "", "");
+    return { ok: true };
+  });
