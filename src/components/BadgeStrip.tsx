@@ -44,8 +44,9 @@ export function BadgeStrip({ count, rank, className, userId }: BadgeStripProps) 
   });
   const shownCount = summary.data?.count ?? count;
   const shownRank = summary.data?.rank ?? rank;
-  if (!shownCount && !shownRank) return null;
-  
+  const roomOwner = summary.data?.roomOwner ?? false;
+  if (!shownCount && !shownRank && !roomOwner) return null;
+
   return (
     <div className={cn(
       "flex items-center gap-1.5 rounded-full bg-background/60 px-2 py-0.5 text-[9px] font-bold backdrop-blur-md border border-white/10 shadow-sm transition-all",
@@ -53,6 +54,13 @@ export function BadgeStrip({ count, rank, className, userId }: BadgeStripProps) 
     )}>
       <Award className="h-3 w-3 text-primary" />
       {shownRank && <span>{shownRank}</span>}
+      {roomOwner && (
+        <span className="flex items-center gap-0.5 text-primary">
+          <span className="opacity-60">|</span>
+          <Crown className="h-3 w-3" />
+          مالك غرفة
+        </span>
+      )}
       {shownCount !== undefined && (
         <span className="flex items-center gap-0.5">
           <span className="opacity-60">|</span>
