@@ -739,6 +739,38 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_gift_totals: {
+        Row: {
+          gift_id: string
+          quantity: number
+          total_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          gift_id: string
+          quantity?: number
+          total_value?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          gift_id?: string
+          quantity?: number
+          total_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_gift_totals_gift_id_fkey"
+            columns: ["gift_id"]
+            isOneToOne: false
+            referencedRelation: "gifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
