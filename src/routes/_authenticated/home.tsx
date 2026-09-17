@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useSupabaseSession, useMyProfile, useWallet } from "@/hooks/use-session";
 import { RoomCard, type RoomRow } from "@/components/RoomCard";
 import { EmptyState } from "@/components/AppShell";
+import { HomeBanners } from "@/components/HomeBanners";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
@@ -178,6 +179,8 @@ function HomePage() {
         </section>
       ) : (
         <div className="space-y-7">
+          <HomeBanners />
+
           <section>
             <SectionTitle icon={Flame} title="الغرف" />
             <div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1">
