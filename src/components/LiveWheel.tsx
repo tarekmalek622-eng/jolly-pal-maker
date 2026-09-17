@@ -146,6 +146,8 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   }, []);
 
   const slots = round.data?.slots ?? [];
+  const roundRef = useRef<WheelRound | null>(null);
+  roundRef.current = round.data ?? null;
   const finished = round.data?.status === "finished";
   const remaining = round.data ? Math.max(0, Math.ceil((new Date(round.data.ends_at).getTime() - now) / 1000)) : 0;
 
