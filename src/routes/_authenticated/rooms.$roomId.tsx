@@ -478,7 +478,7 @@ function RoomPage() {
               <button onClick={() => setCupOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15" aria-label="كأس الغرفة"><Trophy className="h-4 w-4 text-primary" /></button>
               <button onClick={() => setCosmeticsOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80" aria-label="تزيين الغرفة"><Sparkles className="h-4 w-4" /></button>
               {canManage && <button onClick={() => {
-                setRoomNameDraft(room.data.name);
+                setRoomNameDraft(room.data?.name ?? "");
                 setRoomImageFile(null);
                 setRoomImagePreview(null);
                 setManageOpen(true);
