@@ -28,7 +28,7 @@ type GiftTotalRow = {
 const ROLE_BADGES: Partial<Record<Role, { label: string; note: string }>> = {
   super_admin: { label: "مالك التطبيق", note: "سوبر أدمن" },
   admin: { label: "مدير التطبيق", note: "إدارة موثقة" },
-  moderator: { label: "مشرف", note: "مساعد الإدارة" },
+  moderator: { label: "مساعد سوبر أدمن", note: "مشرف موثّق" },
   host: { label: "مضيف", note: "مضيف غرف موثّق" },
 };
 

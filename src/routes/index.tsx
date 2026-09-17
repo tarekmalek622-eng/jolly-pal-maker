@@ -35,8 +35,10 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "صوتك — انضم لغرف الدردشة الصوتية" },
       {
         property: "og:description",
-        content: "تسجيل سريع بدون كلمة مرور، غرف صوتية مباشرة، هدايا ومستويات وVIP.",
+        content: "تسجيل سريع برقم الهاتف وكلمة السر، غرف صوتية مباشرة، هدايا ومستويات وVIP.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Landing,

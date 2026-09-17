@@ -90,22 +90,6 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     },
   });
 
-  const players = useQuery({
-    queryKey: ["wheel-players", roundId, bets.data?.length ?? 0],
-    enabled: Boolean(bets.data?.length),
-    queryFn: async () => {
-      const ids = Array.from(new Set((bets.data ?? []).map((b) => b.user_id)));
-      const { data, error } = await db
-        .from("profiles")
-        .select("id, display_name, avatar_url")
-        .in("id", ids);
-      if (error) throw new Error(error.message);
-      return new Map(
-        ((data ?? []) as { id: string; display_name: string; avatar_url: string | null }[]).map((p) => [p.id, p]),
-      );
-    },
-  });
-
   const history = useQuery({
     queryKey: ["wheel-history"],
     refetchInterval: 15000,
@@ -257,11 +241,6 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     }
     return map;
   }, [slots, bets.data, userId]);
-
-  const myWin = useMemo(
-    () => (bets.data ?? []).filter((b) => b.user_id === userId).reduce((sum, b) => sum + Number(b.payout), 0),
-    [bets.data, userId],
-  );
 
   const myBet = useMemo(
     () => (bets.data ?? []).filter((b) => b.user_id === userId).reduce((sum, b) => sum + Number(b.amount), 0),
