@@ -585,19 +585,79 @@ function BadgeDefinitionsTab() {
   );
 }
 
+type AdminRoomRow = {
+  id: string;
+  name: string;
+  room_code: string;
+  member_count: number;
+  is_disabled: boolean;
+  is_active: boolean;
+  image_url: string | null;
+  owner_id: string;
+};
+
+function AdminRoomImage({ stored, preview }: { stored: string | null; preview: string | null }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    if (preview) {
+      setUrl(preview);
+      return () => {
+        active = false;
+      };
+    }
+    void resolveMediaUrl(stored).then((u) => active && setUrl(u));
+    return () => {
+      active = false;
+    };
+  }, [stored, preview]);
+
+  return (
+    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
+      {url && <img src={url} alt="" className="h-full w-full object-cover" />}
+    </div>
+  );
+}
+
 function RoomsTab() {
+  const { userId } = useSupabaseSession();
+  const [search, setSearch] = useState("");
+  const [onlyActive, setOnlyActive] = useState(true);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [nameDraft, setNameDraft] = useState("");
+  const [ownerDraft, setOwnerDraft] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   const rooms = useQuery({
-    queryKey: ["admin-rooms"],
+    queryKey: ["admin-rooms", onlyActive],
+    queryFn: async () => {
+      let query = supabase
+        .from("rooms")
+        .select("id, name, room_code, member_count, is_disabled, is_active, image_url, owner_id")
+        .order("member_count", { ascending: false })
+        .limit(100);
+      if (onlyActive) query = query.eq("is_active", true).eq("is_disabled", false);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as AdminRoomRow[];
+    },
+  });
+
+  const ownerIds = Array.from(new Set((rooms.data ?? []).map((r) => r.owner_id)));
+  const owners = useQuery({
+    queryKey: ["admin-room-owners", ownerIds.join(",")],
+    enabled: ownerIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("rooms")
-        .select("id, name, room_code, member_count, is_disabled")
-        .order("created_at", { ascending: false })
-        .limit(50);
+        .from("profiles")
+        .select("id, display_name, public_id")
+        .in("id", ownerIds);
       if (error) throw error;
       return data ?? [];
     },
   });
+  const ownerById = new Map((owners.data ?? []).map((o) => [o.id, o]));
 
   const toggle = useMutation({
     mutationFn: async ({ id, disabled }: { id: string; disabled: boolean }) =>
@@ -609,25 +669,143 @@ function RoomsTab() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
   });
 
+  const save = useMutation({
+    mutationFn: async (room: AdminRoomRow) => {
+      let imageUrl = room.image_url;
+      if (imageFile && userId) imageUrl = await uploadUserImage("rooms", userId, imageFile);
+      return adminUpdateRoomDetails({
+        data: {
+          roomId: room.id,
+          name: nameDraft.trim(),
+          imageUrl,
+          ownerPublicId: ownerDraft.trim() ? ownerDraft.trim() : null,
+        },
+      });
+    },
+    onSuccess: () => {
+      toast.success("تم حفظ بيانات الغرفة");
+      setEditing(null);
+      setImageFile(null);
+      setImagePreview(null);
+      setOwnerDraft("");
+      void rooms.refetch();
+      void owners.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  const term = search.trim().toLowerCase();
+  const list = (rooms.data ?? []).filter(
+    (r) => !term || r.name.toLowerCase().includes(term) || r.room_code.toLowerCase().includes(term),
+  );
+
+  function startEdit(room: AdminRoomRow) {
+    setEditing(room.id);
+    setNameDraft(room.name);
+    setOwnerDraft("");
+    setImageFile(null);
+    setImagePreview(null);
+  }
+
   return (
-    <div className="space-y-2">
-      {rooms.data?.map((r) => (
-        <div key={r.id} className="surface-card flex items-center gap-3 p-3">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{r.name}</p>
-            <p className="text-[10px] text-muted-foreground">
-              #{r.room_code} · {r.member_count} متواجد {r.is_disabled ? "· معطلة" : ""}
-            </p>
-          </div>
+    <div className="space-y-3">
+      <div className="surface-card space-y-2 p-3">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="ابحث باسم الغرفة أو رقمها"
+          className="h-10 rounded-xl"
+        />
+        <div className="flex gap-2">
           <Button
-            variant="outline"
-            onClick={() => toggle.mutate({ id: r.id, disabled: !r.is_disabled })}
-            className="h-9 rounded-xl px-3 text-[11px]"
+            variant={onlyActive ? "default" : "outline"}
+            onClick={() => setOnlyActive(true)}
+            className="h-9 flex-1 rounded-xl text-[11px]"
           >
-            {r.is_disabled ? "تفعيل" : "تعطيل"}
+            الغرف النشطة
+          </Button>
+          <Button
+            variant={onlyActive ? "outline" : "default"}
+            onClick={() => setOnlyActive(false)}
+            className="h-9 flex-1 rounded-xl text-[11px]"
+          >
+            كل الغرف
           </Button>
         </div>
-      ))}
+      </div>
+
+      {list.length === 0 && <EmptyState title="لا توجد غرف مطابقة" />}
+
+      {list.map((r) => {
+        const owner = ownerById.get(r.owner_id);
+        const isEditing = editing === r.id;
+        return (
+          <div key={r.id} className="surface-card space-y-3 p-3">
+            <div className="flex items-center gap-3">
+              <AdminRoomImage stored={r.image_url} preview={isEditing ? imagePreview : null} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{r.name}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  #{r.room_code} · {r.member_count} متواجد {r.is_disabled ? "· معطلة" : ""}
+                </p>
+                <p className="truncate text-[10px] text-muted-foreground">
+                  المالك: {owner?.display_name ?? "—"} {owner?.public_id ? `(${owner.public_id})` : ""}
+                </p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="outline"
+                  onClick={() => (isEditing ? setEditing(null) : startEdit(r))}
+                  className="h-8 rounded-xl px-3 text-[11px]"
+                >
+                  {isEditing ? "إلغاء" : "تعديل"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => toggle.mutate({ id: r.id, disabled: !r.is_disabled })}
+                  className="h-8 rounded-xl px-3 text-[11px]"
+                >
+                  {r.is_disabled ? "تفعيل" : "تعطيل"}
+                </Button>
+              </div>
+            </div>
+
+            {isEditing && (
+              <div className="space-y-2 border-t border-border/50 pt-3">
+                <Input
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  placeholder="اسم الغرفة"
+                  className="h-10 rounded-xl"
+                />
+                <Input
+                  value={ownerDraft}
+                  onChange={(e) => setOwnerDraft(e.target.value)}
+                  placeholder="معرّف المالك الجديد (اترك فارغًا للإبقاء)"
+                  className="h-10 rounded-xl"
+                />
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setImageFile(file);
+                    setImagePreview(file ? URL.createObjectURL(file) : null);
+                  }}
+                  className="w-full text-[11px]"
+                />
+                <Button
+                  onClick={() => save.mutate(r)}
+                  disabled={save.isPending || nameDraft.trim().length < 2}
+                  className="h-10 w-full rounded-xl text-[12px]"
+                >
+                  {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ التعديلات"}
+                </Button>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
