@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Ban, Crown, Flag, HeartHandshake, MessageCircle, UserPlus } from "lucide-react";
+import { ArrowRight, Ban, Crown, Flag, HeartHandshake, MessageCircle, MoreVertical, UserPlus, UserRoundCheck } from "lucide-react";
 import {
   RELATION_LABELS,
   RELATION_STYLES,
@@ -16,6 +16,14 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useSupabaseSession } from "@/hooks/use-session";
+import { ProfileShowcase } from "@/components/ProfileShowcase";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/u/$publicId")({
   head: () => ({
@@ -151,11 +159,38 @@ function UserPage() {
     <AppShell
       hideNav
       header={
-        <header className="sticky top-0 z-30 flex items-center gap-3 bg-background/85 px-4 py-4 backdrop-blur-xl">
-          <button onClick={() => void navigate({ to: "/home" })} className="p-1">
+        <header className="sticky top-0 z-30 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 bg-background/85 px-4 py-4 backdrop-blur-xl">
+          <Button variant="ghost" size="icon" onClick={() => void navigate({ to: "/home" })} aria-label="العودة">
             <ArrowRight className="h-5 w-5" />
-          </button>
-          <p className="font-bold">الملف الشخصي</p>
+          </Button>
+          <p className="truncate font-bold">الملف الشخصي</p>
+          {!isMe ? (
+            <DropdownMenu dir="rtl">
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="المزيد من الخيارات">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5">
+                <DropdownMenuItem onSelect={() => toggleFollow.mutate()}>
+                  <UserRoundCheck /> {relation.data?.following ? "إلغاء المتابعة" : "متابعة"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void navigate({ to: "/messages/$userId", params: { userId: target.id } })}>
+                  <MessageCircle /> إرسال رسالة
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setRelationOpen(true)}>
+                  <HeartHandshake /> طلب علاقة اجتماعية
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setReporting(true)}>
+                  <Flag /> إبلاغ الإدارة
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => block.mutate()}>
+                  <Ban /> حجب المستخدم
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : <span className="h-9 w-9" />}
         </header>
       }
     >
@@ -179,31 +214,11 @@ function UserPage() {
 
       {!isMe && (
         <>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Button
-              onClick={() => toggleFollow.mutate()}
-              className="h-12 rounded-2xl gradient-gold font-bold text-primary-foreground"
-            >
-              {relation.data?.following ? "إلغاء المتابعة" : "متابعة"}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => void navigate({ to: "/messages/$userId", params: { userId: target.id } })}
-              className="h-12 rounded-2xl"
-            >
-              <MessageCircle className="me-2 h-4 w-4" /> رسالة
-            </Button>
-            <Button variant="outline" disabled={relation.data?.friend || relation.data?.pending || addFriend.isPending} onClick={() => addFriend.mutate()} className="h-12 rounded-2xl">
+          <div className="mt-4">
+            <Button disabled={relation.data?.friend || relation.data?.pending || addFriend.isPending} onClick={() => addFriend.mutate()} className="h-12 w-full rounded-2xl gradient-gold font-bold text-primary-foreground">
               <UserPlus className="me-2 h-4 w-4" /> {relation.data?.friend ? "صديق" : relation.data?.pending ? "الطلب مرسل" : "طلب صداقة"}
             </Button>
-            <Button variant="outline" onClick={() => setReporting((v) => !v)} className="h-12 rounded-2xl">
-              <Flag className="me-2 h-4 w-4" /> إبلاغ
-            </Button>
           </div>
-
-          <Button variant="outline" onClick={() => setRelationOpen((v) => !v)} className="mt-3 h-12 w-full rounded-2xl">
-            <HeartHandshake className="me-2 h-4 w-4" /> طلب علاقة اجتماعية
-          </Button>
 
           {relationOpen && (
             <div className="mt-3 grid grid-cols-2 gap-2">
@@ -237,16 +252,9 @@ function UserPage() {
               </Button>
             </div>
           )}
-
-          <Button
-            variant="outline"
-            onClick={() => block.mutate()}
-            className="mt-4 h-12 w-full rounded-2xl border-destructive/40 text-destructive"
-          >
-            <Ban className="me-2 h-4 w-4" /> حجب المستخدم
-          </Button>
         </>
       )}
+      <ProfileShowcase userId={target.id} />
     </AppShell>
   );
 }
