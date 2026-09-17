@@ -23,6 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+import { BadgeStrip } from "@/components/BadgeStrip";
 } from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/u/$publicId")({
@@ -159,7 +160,10 @@ function UserPage() {
     <AppShell
       hideNav
       header={
-        <header className="sticky top-0 z-30 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 bg-background/85 px-4 py-4 backdrop-blur-xl">
+          <div className="absolute top-1 start-12">
+            <BadgeStrip rank={target?.level} count={0} />
+          </div>
+        <header className="sticky top-0 z-30 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 bg-background/85 px-4 pb-4 pt-6 backdrop-blur-xl">
           <Button variant="ghost" size="icon" onClick={() => void navigate({ to: "/home" })} aria-label="العودة">
             <ArrowRight className="h-5 w-5" />
           </Button>
