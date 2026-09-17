@@ -40,7 +40,7 @@ export function AdminBadgeCrest({
         </span>
         <span className="admin-crest-wing absolute -start-4 top-3 h-10 w-6 -rotate-12 border border-current bg-current/15" />
         <span className="admin-crest-wing absolute -end-4 top-3 h-10 w-6 rotate-12 border border-current bg-current/15" />
-        {imageUrl && variant === "image" ? (
+        {imageUrl ? (
           <img src={imageUrl} alt="" className="h-[72%] w-[72%] object-contain" loading="lazy" />
         ) : (
           <Shield className={compact ? "h-9 w-9" : "h-14 w-14"} fill="currentColor" fillOpacity={0.2} />
