@@ -451,11 +451,11 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             </div>
           </div>
 
-          {resultLeaderboard.length > 0 && (
+          <p className="mb-2 mt-3 text-center text-[11px] font-bold text-primary">
+            — — — أفضل 3 فائزين في الجولة — — —
+          </p>
+          {resultLeaderboard.length > 0 ? (
             <>
-              <p className="mb-2 mt-3 text-center text-[11px] font-bold text-primary">
-                — — — الترتيب من أرباح هذه الجولة — — —
-              </p>
               <div className="flex items-end justify-center gap-2">
                 {[1, 0, 2].map((idx) => {
                   const entry = resultLeaderboard[idx];
@@ -528,6 +528,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                 </div>
               )}
             </>
+          ) : (
+            <div className="rounded-2xl bg-surface-2 px-3 py-4 text-center text-xs text-muted-foreground">
+              لم يفز أي مشارك في هذه الجولة.
+            </div>
           )}
         </div>
       )}
