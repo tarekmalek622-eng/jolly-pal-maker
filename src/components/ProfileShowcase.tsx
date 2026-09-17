@@ -18,6 +18,9 @@ type BadgeRow = {
     threshold: number;
     sort_order: number;
     style_key: string;
+    image_url: string | null;
+    color_key: string;
+    display_variant: string;
   } | null;
 };
 
@@ -60,7 +63,7 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_badges")
-        .select("id, progress, awarded_at, badge_definitions(key, name, description, kind, threshold, sort_order, style_key)")
+        .select("id, progress, awarded_at, badge_definitions(key, name, description, kind, threshold, sort_order, style_key, image_url, color_key, display_variant)")
         .eq("user_id", userId)
         .order("awarded_at", { ascending: false });
       if (error) throw error;
@@ -126,7 +129,7 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
               if (!definition) return null;
               return (
                 <div key={badge.id} className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-surface-2 p-2">
-                  <AdminBadgeCrest name={definition.name} styleKey={definition.style_key} compact />
+                   <AdminBadgeCrest name={definition.name} styleKey={definition.color_key || definition.style_key} imageUrl={definition.image_url} variant={definition.display_variant} compact />
                 </div>
               );
             })}
@@ -135,7 +138,7 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
               if (!definition) return null;
               return (
                 <div key={badge.id} className="flex min-w-0 items-center gap-2 rounded-2xl bg-surface-2 p-2">
-                  <BadgeMark name={definition.name} />
+                   {definition.image_url ? <img src={definition.image_url} alt="" className="h-12 w-12 shrink-0 object-contain" loading="lazy" /> : <BadgeMark name={definition.name} />}
                   <span className="min-w-0">
                     <span className="block truncate text-[11px] font-bold">{definition.name}</span>
                     <span className="block truncate text-[9px] text-muted-foreground">

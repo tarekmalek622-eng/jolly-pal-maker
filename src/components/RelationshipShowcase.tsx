@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Crown, Gem, Heart, Sparkles } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +30,7 @@ type Person = {
 };
 
 export function RelationshipShowcase({ userId, own = false }: { userId: string; own?: boolean }) {
+  const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["relationship-showcase", userId],
     queryFn: async () => {
@@ -43,6 +45,15 @@ export function RelationshipShowcase({ userId, own = false }: { userId: string; 
       return { rows, people: (data ?? []) as Person[] };
     },
   });
+
+  useEffect(() => {
+    const channel = supabase.channel(`relationship-showcase-${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "relationships" }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["relationship-showcase", userId] });
+      })
+      .subscribe();
+    return () => void supabase.removeChannel(channel);
+  }, [queryClient, userId]);
 
   const people = new Map((query.data?.people ?? []).map((person) => [person.id, person]));
 
