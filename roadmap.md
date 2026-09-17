@@ -1,4 +1,4 @@
-- [ ] Test a soulmate relationship between two real accounts and verify both profiles
-- [ ] Verify the live participant count in a room
-- [ ] Add secure room name and image editing for the owner
-- [ ] Recheck TypeScript and the affected screens
+- [x] Test a soulmate relationship between two real accounts and verify both profiles
+- [x] Verify the live participant count in a room
+- [x] Add secure room name and image editing for the owner
+- [x] Recheck TypeScript and the affected screens
