@@ -1983,6 +1983,22 @@ function RelationshipSettings() {
     },
   });
   const [draft, setDraft] = useState<RelationFlags | null>(null);
+  const active = useQuery({
+    queryKey: ["admin-active-relationships"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("relationships")
+        .select("id, requester_id, partner_id, type, status, created_at")
+        .in("status", ["pending", "accepted"])
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      const ids = [...new Set((data ?? []).flatMap((row) => [row.requester_id, row.partner_id]))];
+      if (ids.length === 0) return { rows: data ?? [], names: new Map<string, string>() };
+      const profiles = await supabase.from("profiles").select("id, display_name, public_id").in("id", ids);
+      if (profiles.error) throw profiles.error;
+      return { rows: data ?? [], names: new Map((profiles.data ?? []).map((person) => [person.id, `${person.display_name} · ${person.public_id}`])) };
+    },
+  });
   const state = draft ?? query.data ?? null;
 
   const save = useMutation({
@@ -1996,6 +2012,11 @@ function RelationshipSettings() {
       void query.refetch();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+  const forceEnd = useMutation({
+    mutationFn: (relationshipId: string) => adminEndRelationship({ data: { relationshipId } }),
+    onSuccess: () => { toast.success("تم إنهاء العلاقة وتسجيل الإجراء"); void active.refetch(); },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "تعذر إنهاء العلاقة"),
   });
 
   if (!state) return null;
@@ -2024,6 +2045,22 @@ function RelationshipSettings() {
       >
         حفظ إعدادات العلاقات
       </Button>
+      <div className="mt-4 border-t border-border pt-3">
+        <p className="mb-2 text-xs font-black">العلاقات والطلبات الحالية</p>
+        <div className="max-h-72 space-y-2 overflow-y-auto">
+          {(active.data?.rows ?? []).map((row) => (
+            <div key={row.id} className="rounded-xl bg-surface-2 p-2 text-[10px]">
+              <p className="truncate font-bold">{active.data?.names.get(row.requester_id) ?? row.requester_id}</p>
+              <p className="truncate text-muted-foreground">مع {active.data?.names.get(row.partner_id) ?? row.partner_id}</p>
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <span>{relationLabels[row.type]} · {row.status === "accepted" ? "مقبولة" : "معلقة"}</span>
+                <Button variant="outline" disabled={forceEnd.isPending} onClick={() => forceEnd.mutate(row.id)} className="h-7 rounded-lg px-2 text-[9px] text-destructive">إنهاء إداري</Button>
+              </div>
+            </div>
+          ))}
+          {!active.isLoading && (active.data?.rows.length ?? 0) === 0 && <p className="py-4 text-center text-[10px] text-muted-foreground">لا توجد علاقات حالية</p>}
+        </div>
+      </div>
     </div>
   );
 }
