@@ -23,8 +23,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-import { BadgeStrip } from "@/components/BadgeStrip";
 } from "@/components/ui/dropdown-menu";
+import { BadgeStrip } from "@/components/BadgeStrip";
 
 export const Route = createFileRoute("/_authenticated/u/$publicId")({
   head: () => ({
@@ -160,6 +160,7 @@ function UserPage() {
     <AppShell
       hideNav
       header={
+        <div className="relative">
           <div className="absolute top-1 start-12">
             <BadgeStrip rank={target?.level} count={0} />
           </div>
@@ -196,6 +197,7 @@ function UserPage() {
             </DropdownMenu>
           ) : <span className="h-9 w-9" />}
         </header>
+        </div>
       }
     >
       <div className="surface-card p-5 text-center">

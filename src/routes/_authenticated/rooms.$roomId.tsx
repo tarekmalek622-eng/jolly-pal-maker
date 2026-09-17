@@ -422,6 +422,7 @@ function RoomPage() {
     <AppShell
       hideNav
       header={
+        <div className="relative">
           <div className="absolute top-0.5 start-4">
             <BadgeStrip rank="1" count={0} />
           </div>
@@ -475,6 +476,7 @@ function RoomPage() {
             </p>
           )}
         </header>
+        </div>
       }
     >
       <RoomBackground url={room.data.background_url} />
