@@ -31,6 +31,11 @@ import {
   adminSetSuspended,
   adminSetRoomDisabled,
   adminUpdateRoomDetails,
+  adminCreateRoom,
+  adminSetRoomModerator,
+  adminRemoveRoomMember,
+  adminDeleteRoomMessage,
+  adminResendRoomMessage,
   adminResolveReport,
   adminUpsertGift,
   adminDeleteGift,
@@ -71,6 +76,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const TABS = [
   { key: "users", label: "المستخدمون", icon: Users },
   { key: "rooms", label: "الغرف", icon: Sofa },
+  { key: "roomMessages", label: "رسائل الغرف", icon: ScrollText },
   { key: "badges", label: "الشارات", icon: Award },
   { key: "gifts", label: "الهدايا", icon: Gift },
   { key: "store", label: "المتجر", icon: ShoppingBag },
@@ -168,6 +174,7 @@ function AdminPage() {
 
       {tab === "users" && <UsersTab />}
       {tab === "rooms" && <RoomsTab />}
+      {tab === "roomMessages" && <RoomMessagesTab />}
       {tab === "badges" && <BadgeDefinitionsTab />}
       {tab === "gifts" && <GiftsTab />}
       {tab === "store" && <StoreTab />}
@@ -1023,6 +1030,8 @@ function RoomsTab() {
         </div>
       </div>
 
+      <RoomCreateCard onCreated={() => void rooms.refetch()} />
+
       {list.length === 0 && <EmptyState title="لا توجد غرف مطابقة" />}
 
       {list.map((r) => {
@@ -1090,6 +1099,7 @@ function RoomsTab() {
                 >
                   {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ التعديلات"}
                 </Button>
+                <RoomTeamPanel roomId={r.id} ownerId={r.owner_id} />
               </div>
             )}
           </div>
