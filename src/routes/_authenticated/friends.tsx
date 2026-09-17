@@ -85,9 +85,10 @@ function FriendsPage() {
       .channel(`social-${userId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "friend_requests" }, () => void data.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "friends" }, () => void data.refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "relationships" }, () => void relations.refetch())
       .subscribe();
     return () => void supabase.removeChannel(channel);
-  }, [userId, data]);
+  }, [userId, data, relations]);
 
   const respond = useMutation({
     mutationFn: async ({ id, accept }: { id: string; accept: boolean }) => {

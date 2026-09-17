@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BadgeStrip } from "@/components/BadgeStrip";
+import { RelationshipShowcase } from "@/components/RelationshipShowcase";
 
 export const Route = createFileRoute("/_authenticated/u/$publicId")({
   head: () => ({
@@ -260,6 +261,7 @@ function UserPage() {
           )}
         </>
       )}
+      <RelationshipShowcase userId={target.id} />
       <ProfileShowcase userId={target.id} />
     </AppShell>
   );

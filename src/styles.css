@@ -181,6 +181,26 @@
   box-shadow: var(--shadow-card);
 }
 
+@utility relationship-soulmate {
+  border-color: color-mix(in oklab, var(--color-accent) 45%, var(--color-border));
+  background: linear-gradient(145deg, color-mix(in oklab, var(--color-accent) 20%, var(--color-surface)), var(--color-surface));
+}
+
+@utility relationship-favorite {
+  border-color: color-mix(in oklab, var(--color-primary) 55%, var(--color-border));
+  background: linear-gradient(145deg, color-mix(in oklab, var(--color-primary) 18%, var(--color-surface)), var(--color-surface));
+}
+
+@utility relationship-close {
+  border-color: color-mix(in oklab, var(--color-success) 45%, var(--color-border));
+  background: linear-gradient(145deg, color-mix(in oklab, var(--color-success) 18%, var(--color-surface)), var(--color-surface));
+}
+
+@utility relationship-duo {
+  border-color: color-mix(in oklab, var(--color-vip) 50%, var(--color-border));
+  background: linear-gradient(145deg, color-mix(in oklab, var(--color-vip) 22%, var(--color-surface)), var(--color-surface));
+}
+
 .admin-crest {
   clip-path: polygon(50% 0, 88% 16%, 100% 54%, 78% 88%, 50% 100%, 22% 88%, 0 54%, 12% 16%);
 }

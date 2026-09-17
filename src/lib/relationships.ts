@@ -34,12 +34,12 @@ const anyClient = supabase as unknown as {
   rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 };
 
-export async function fetchMyRelationships(userId: string): Promise<RelationshipRow[]> {
+export async function fetchMyRelationships(userId: string, acceptedOnly = false): Promise<RelationshipRow[]> {
   const { data, error } = await anyClient
     .from("relationships")
     .select("id, requester_id, partner_id, type, status, started_at, created_at")
     .or(`requester_id.eq.${userId},partner_id.eq.${userId}`)
-    .in("status", ["pending", "accepted"])
+    .in("status", acceptedOnly ? ["accepted"] : ["pending", "accepted"])
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as RelationshipRow[];
@@ -47,6 +47,11 @@ export async function fetchMyRelationships(userId: string): Promise<Relationship
 
 export async function requestRelationship(partnerId: string, type: RelationType) {
   const { error } = await anyClient.rpc("request_relationship", { _partner_id: partnerId, _type: type });
+  if (error) throw new Error(error.message);
+}
+
+export async function replaceRelationship(partnerId: string, type: RelationType) {
+  const { error } = await supabase.rpc("replace_relationship", { _partner_id: partnerId, _type: type });
   if (error) throw new Error(error.message);
 }
 
