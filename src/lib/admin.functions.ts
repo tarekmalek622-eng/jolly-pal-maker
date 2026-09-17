@@ -466,6 +466,48 @@ export const adminSetUserRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminSetUserBadge = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ userId: z.string().uuid(), badgeId: z.string().uuid(), grant: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: badge, error: badgeError } = await supabaseAdmin
+      .from("badge_definitions")
+      .select("id, name, kind")
+      .eq("id", data.badgeId)
+      .eq("kind", "administrative")
+      .eq("is_active", true)
+      .maybeSingle();
+    if (badgeError) throw new Error(badgeError.message);
+    if (!badge) throw new Error("الشارة الإدارية غير متاحة");
+
+    if (data.grant) {
+      const { error } = await supabaseAdmin
+        .from("user_badges")
+        .upsert({ user_id: data.userId, badge_id: data.badgeId, progress: 1 }, { onConflict: "user_id,badge_id" });
+      if (error) throw new Error(error.message);
+      await supabaseAdmin.from("notifications").insert({
+        user_id: data.userId,
+        kind: "admin_badge",
+        title: "تم منحك شارة إدارية",
+        body: badge.name,
+        metadata: { badge_id: badge.id },
+      });
+    } else {
+      const { error } = await supabaseAdmin
+        .from("user_badges")
+        .delete()
+        .eq("user_id", data.userId)
+        .eq("badge_id", data.badgeId);
+      if (error) throw new Error(error.message);
+    }
+    await log(context.userId, data.userId, data.grant ? "grant_admin_badge" : "revoke_admin_badge", "", badge.name);
+    return { ok: true };
+  });
+
 export const adminUpsertQuizQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>

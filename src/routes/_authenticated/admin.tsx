@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Coins,
+  Award,
   CreditCard,
   Crown,
   Flag,
@@ -46,9 +47,11 @@ import {
   adminSetPaymentAccounts,
   adminUpsertQuizQuestion,
   adminSetUserRole,
+  adminSetUserBadge,
   adminUpdateUserIdentity,
 } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
+import { AdminBadgeCrest } from "@/components/AdminBadgeCrest";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -154,6 +157,7 @@ function UsersTab() {
   const [editing, setEditing] = useState<string | null>(null);
   const [idDraft, setIdDraft] = useState<Record<string, string>>({});
   const [nameDraft, setNameDraft] = useState<Record<string, string>>({});
+  const [badgeUser, setBadgeUser] = useState<string | null>(null);
   const { userId } = useSupabaseSession();
 
   const isSuper = useQuery({
@@ -184,6 +188,41 @@ function UsersTab() {
       void roles.refetch();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
+  });
+
+  const badgeDefinitions = useQuery({
+    queryKey: ["admin-badge-definitions"],
+    enabled: isSuper.data === true,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("badge_definitions")
+        .select("id, name, style_key, sort_order")
+        .eq("kind", "administrative")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const assignedBadges = useQuery({
+    queryKey: ["admin-user-badges", badgeUser],
+    enabled: Boolean(badgeUser && isSuper.data === true),
+    queryFn: async () => {
+      if (!badgeUser) return [];
+      const { data, error } = await supabase.from("user_badges").select("badge_id").eq("user_id", badgeUser);
+      if (error) throw error;
+      return (data ?? []).map((row) => row.badge_id);
+    },
+  });
+
+  const setBadge = useMutation({
+    mutationFn: async (input: { userId: string; badgeId: string; grant: boolean }) => adminSetUserBadge({ data: input }),
+    onSuccess: () => {
+      toast.success("تم تحديث الشارة");
+      void assignedBadges.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر تحديث الشارة"),
   });
 
   const users = useQuery({
@@ -338,12 +377,15 @@ function UsersTab() {
             )}
           </div>
           {isSuper.data === true && (
-            <div className="mt-2 flex gap-1">
+            <div className="mt-2 space-y-2">
+            <div className="flex gap-1">
               {ROLES.map((r) => {
                 const has = (roles.data ?? []).some((x) => x.user_id === u.id && x.role === r.key);
                 return (
-                  <button
+                  <Button
                     key={r.key}
+                    type="button"
+                    variant="ghost"
                     disabled={setRole.isPending}
                     onClick={() => setRole.mutate({ userId: u.id, role: r.key, grant: !has })}
                     className={cn(
@@ -354,9 +396,39 @@ function UsersTab() {
                     )}
                   >
                     {r.label}
-                  </button>
+                  </Button>
                 );
               })}
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setBadgeUser((current) => current === u.id ? null : u.id)}
+              className="h-10 w-full rounded-xl text-[11px]"
+            >
+              <Award className="me-1.5 h-4 w-4" /> إدارة الشارات الإدارية
+            </Button>
+            {badgeUser === u.id && (
+              <div className="grid max-h-80 grid-cols-3 gap-2 overflow-y-auto rounded-2xl border border-border bg-surface-2 p-2">
+                {(badgeDefinitions.data ?? []).map((badge) => {
+                  const has = (assignedBadges.data ?? []).includes(badge.id);
+                  return (
+                    <Button
+                      key={badge.id}
+                      type="button"
+                      variant="ghost"
+                      disabled={setBadge.isPending || assignedBadges.isLoading}
+                      onClick={() => setBadge.mutate({ userId: u.id, badgeId: badge.id, grant: !has })}
+                      className={cn(
+                        "h-auto min-h-32 rounded-2xl border p-2",
+                        has ? "border-primary bg-primary/10" : "border-border bg-surface",
+                      )}
+                    >
+                      <AdminBadgeCrest name={badge.name} styleKey={badge.style_key} compact />
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
             </div>
           )}
         </div>
