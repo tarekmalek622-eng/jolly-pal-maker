@@ -90,29 +90,13 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     },
   });
 
-  const players = useQuery({
-    queryKey: ["wheel-players", roundId, bets.data?.length ?? 0],
-    enabled: Boolean(bets.data?.length),
-    queryFn: async () => {
-      const ids = Array.from(new Set((bets.data ?? []).map((b) => b.user_id)));
-      const { data, error } = await db
-        .from("profiles")
-        .select("id, display_name, avatar_url")
-        .in("id", ids);
-      if (error) throw new Error(error.message);
-      return new Map(
-        ((data ?? []) as { id: string; display_name: string; avatar_url: string | null }[]).map((p) => [p.id, p]),
-      );
-    },
-  });
-
   const history = useQuery({
     queryKey: ["wheel-history"],
     refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await db
         .from("wheel_rounds")
-        .select("id, round_no, winning_key, slots, settled_at")
+        .select("id, round_no, status, winning_key, slots, started_at, ends_at, settled_at")
         .eq("status", "finished")
         .order("created_at", { ascending: false })
         .limit(12);
@@ -139,6 +123,36 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     },
   });
   const todayWin = todayQuery.data ?? 0;
+
+  const resultRound = round.data?.status === "finished" ? round.data : history.data?.[0] ?? null;
+  const resultRoundId = resultRound?.id ?? null;
+  const resultBets = useQuery({
+    queryKey: ["wheel-result-bets", resultRoundId],
+    enabled: Boolean(resultRoundId),
+    refetchInterval: resultRoundId === roundId ? 1800 : false,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("wheel_bets")
+        .select("id, round_id, user_id, slot_key, amount, payout")
+        .eq("round_id", resultRoundId)
+        .order("created_at", { ascending: true });
+      if (error) throw new Error(error.message);
+      return (data ?? []) as WheelBet[];
+    },
+  });
+
+  const resultPlayers = useQuery({
+    queryKey: ["wheel-result-players", resultRoundId, resultBets.data?.length ?? 0],
+    enabled: Boolean(resultBets.data?.length),
+    queryFn: async () => {
+      const ids = Array.from(new Set((resultBets.data ?? []).map((bet) => bet.user_id)));
+      const { data, error } = await db.from("profiles").select("id, display_name, avatar_url").in("id", ids);
+      if (error) throw new Error(error.message);
+      return new Map(
+        ((data ?? []) as { id: string; display_name: string; avatar_url: string | null }[]).map((profile) => [profile.id, profile]),
+      );
+    },
+  });
 
   useEffect(() => {
     const t = window.setInterval(() => setNow(Date.now()), 250);
@@ -228,26 +242,30 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     return map;
   }, [slots, bets.data, userId]);
 
-  const myWin = useMemo(
-    () => (bets.data ?? []).filter((b) => b.user_id === userId).reduce((sum, b) => sum + Number(b.payout), 0),
-    [bets.data, userId],
-  );
-
   const myBet = useMemo(
     () => (bets.data ?? []).filter((b) => b.user_id === userId).reduce((sum, b) => sum + Number(b.amount), 0),
     [bets.data, userId],
   );
 
-  const leaderboard = useMemo(() => {
+  const resultLeaderboard = useMemo(() => {
     const map = new Map<string, number>();
-    for (const b of bets.data ?? []) {
+    for (const b of resultBets.data ?? []) {
       if (Number(b.payout) <= 0) continue;
       map.set(b.user_id, (map.get(b.user_id) ?? 0) + Number(b.payout));
     }
     return Array.from(map.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8);
-  }, [bets.data]);
+  }, [resultBets.data]);
+
+  const resultMyWin = useMemo(
+    () => (resultBets.data ?? []).filter((bet) => bet.user_id === userId).reduce((sum, bet) => sum + Number(bet.payout), 0),
+    [resultBets.data, userId],
+  );
+  const resultMyBet = useMemo(
+    () => (resultBets.data ?? []).filter((bet) => bet.user_id === userId).reduce((sum, bet) => sum + Number(bet.amount), 0),
+    [resultBets.data, userId],
+  );
 
   if (round.isLoading) {
     return (
@@ -266,6 +284,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   }
 
   const winning = slots.find((s) => s.key === round.data?.winning_key);
+  const resultWinning = resultRound?.slots.find((slot) => slot.key === resultRound.winning_key);
 
   return (
     <div className="space-y-2">
@@ -404,45 +423,45 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
         </div>
 
         {/* لافتة الفوز الكبير */}
-        {finished && !spinning && myWin > 0 && (
+        {resultRound && !spinning && resultMyWin > 0 && (
           <div className="mt-2 animate-scale-in rounded-2xl gradient-gold px-4 py-3 text-center text-primary-foreground shadow-[0_0_30px_-8px_oklch(0.82_0.16_85/0.85)]">
             <p className="text-xl font-extrabold tracking-[0.2em]">BIG WIN</p>
-            <p className="text-sm font-bold">+{myWin.toLocaleString("en-US")} كوينز</p>
+            <p className="text-sm font-bold">+{resultMyWin.toLocaleString("en-US")} كوينز</p>
           </div>
         )}
       </div>
 
       {/* نتيجة سحب الجولة وترتيب الأرباح */}
-      {finished && !spinning && (
+      {resultRound && !spinning && (
         <div className="surface-card animate-scale-in p-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold">نتيجة سحب الجولة {round.data?.round_no}</span>
+            <span className="font-bold">نتيجة سحب الجولة {resultRound.round_no}</span>
             <span className="font-bold text-primary">
-              {winning?.label} {winning?.emoji}
+              {resultWinning?.label} {resultWinning?.emoji}
             </span>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2 text-center">
             <div className="rounded-2xl bg-surface-2 py-2">
               <p className="text-[10px] text-muted-foreground">رهانك هذه الجولة</p>
-              <p className="text-sm font-bold">{myBet.toLocaleString("en-US")}</p>
+              <p className="text-sm font-bold">{resultMyBet.toLocaleString("en-US")}</p>
             </div>
             <div className="rounded-2xl bg-surface-2 py-2">
               <p className="text-[10px] text-muted-foreground">أرباح هذه الجولة</p>
-              <p className="text-sm font-bold text-success">{myWin.toLocaleString("en-US")}</p>
+              <p className="text-sm font-bold text-success">{resultMyWin.toLocaleString("en-US")}</p>
             </div>
           </div>
 
-          {leaderboard.length > 0 && (
+          <p className="mb-2 mt-3 text-center text-[11px] font-bold text-primary">
+            — — — أفضل 3 فائزين في الجولة — — —
+          </p>
+          {resultLeaderboard.length > 0 ? (
             <>
-              <p className="mb-2 mt-3 text-center text-[11px] font-bold text-primary">
-                — — — الترتيب من أرباح هذه الجولة — — —
-              </p>
               <div className="flex items-end justify-center gap-2">
                 {[1, 0, 2].map((idx) => {
-                  const entry = leaderboard[idx];
+                  const entry = resultLeaderboard[idx];
                   if (!entry) return null;
                   const [uid, total] = entry;
-                  const pl = players.data?.get(uid);
+                  const pl = resultPlayers.data?.get(uid);
                   const first = idx === 0;
                   const rankColor =
                     idx === 0 ? "border-primary" : idx === 1 ? "border-muted-foreground" : "border-warning";
@@ -494,10 +513,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                   );
                 })}
               </div>
-              {leaderboard.length > 3 && (
+              {resultLeaderboard.length > 3 && (
                 <div className="mt-2 space-y-1">
-                  {leaderboard.slice(3).map(([uid, total], i) => {
-                    const pl = players.data?.get(uid);
+                  {resultLeaderboard.slice(3).map(([uid, total], i) => {
+                    const pl = resultPlayers.data?.get(uid);
                     return (
                       <div key={uid} className="flex items-center gap-2 text-xs">
                         <span className="w-4 font-bold text-muted-foreground">{i + 4}</span>
@@ -509,6 +528,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                 </div>
               )}
             </>
+          ) : (
+            <div className="rounded-2xl bg-surface-2 px-3 py-4 text-center text-xs text-muted-foreground">
+              لم يفز أي مشارك في هذه الجولة.
+            </div>
           )}
         </div>
       )}

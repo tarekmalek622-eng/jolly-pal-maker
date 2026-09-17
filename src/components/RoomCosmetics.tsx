@@ -69,8 +69,8 @@ export function RoomCosmetics({
   const save = useMutation({
     mutationFn: async (userItemId: string | null) => apply({ data: { roomId, userItemId, target } }),
     onSuccess: () => {
-      toast.success("تم تطبيق التزيين داخل الغرفة");
       onApplied();
+      onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التطبيق"),
   });

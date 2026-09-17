@@ -18,6 +18,7 @@ import { useIsAdmin, useMyProfile, useSupabaseSession, useWallet } from "@/hooks
 import { uploadUserImage } from "@/lib/media";
 import { screenProfilePhoto } from "@/lib/moderation.functions";
 import { clearDeviceCredentials } from "@/lib/device-account";
+import { ProfileShowcase } from "@/components/ProfileShowcase";
 
 export const Route = createFileRoute("/_authenticated/me")({
   head: () => ({
@@ -87,7 +88,6 @@ function MePage() {
       toast.error(error.message);
       return;
     }
-    toast.success(equip ? "تم تطبيق العنصر" : "تم إزالة العنصر");
     void myItems.refetch();
     void profile.refetch();
   }
@@ -305,6 +305,8 @@ function MePage() {
           </div>
         )}
       </div>
+
+      {userId && <ProfileShowcase userId={userId} own />}
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <Link to="/wallet" className="surface-card flex items-center gap-3 p-4">
