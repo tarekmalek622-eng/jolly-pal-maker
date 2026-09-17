@@ -922,31 +922,41 @@ export const adminCreateRoom = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId);
-    const rpc = context.supabase as unknown as Rpc;
-    const created = await rpc.rpc("create_room", {
-      _name: data.name,
-      _description: data.description,
-      _category: data.category,
-      _room_type: data.roomType,
-      _password: data.roomType === "private" ? data.password : null,
-      _mic_count: data.micCount,
-      _image_url: data.imageUrl,
-      _background_url: null,
-    });
-    if (created.error) throw new Error((created.error as { message?: string }).message ?? "تعذر إنشاء الغرفة");
-    const room = created.data as { id: string; room_code: string; name: string } | null;
-    if (!room) throw new Error("تعذر إنشاء الغرفة");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     let ownerId = context.userId;
     if (data.ownerPublicId) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const owner = await supabaseAdmin.from("profiles").select("id").eq("public_id", data.ownerPublicId).maybeSingle();
       if (owner.error) throw new Error(owner.error.message);
       if (!owner.data) throw new Error("لا يوجد مستخدم بهذا المعرّف");
       ownerId = owner.data.id;
-      const moved = await supabaseAdmin.from("rooms").update({ owner_id: ownerId }).eq("id", room.id);
-      if (moved.error) throw new Error(moved.error.message);
     }
+
+    const mics = Math.min(16, Math.max(4, data.micCount));
+    const code = await (supabaseAdmin as unknown as Rpc).rpc("gen_room_code", {});
+    if (code.error) throw new Error((code.error as { message?: string }).message ?? "تعذر توليد رقم الغرفة");
+
+    const created = await supabaseAdmin
+      .from("rooms")
+      .insert({
+        room_code: String(code.data),
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        room_type: data.roomType,
+        password: data.roomType === "private" && data.password ? data.password : null,
+        mic_count: mics,
+        owner_id: ownerId,
+        image_url: data.imageUrl,
+      })
+      .select("id, room_code, name")
+      .single();
+    if (created.error) throw new Error(created.error.message);
+    const room = created.data as { id: string; room_code: string; name: string };
+
+    const seats = Array.from({ length: mics }, (_, i) => ({ room_id: room.id, seat_index: i + 1 }));
+    const mic = await supabaseAdmin.from("room_mics").insert(seats);
+    if (mic.error) throw new Error(mic.error.message);
 
     await log(context.userId, room.id, "admin_room_created", "", JSON.stringify({ name: room.name, code: room.room_code, owner_id: ownerId }));
     return room;

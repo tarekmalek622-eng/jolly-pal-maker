@@ -627,6 +627,16 @@ function AdminRoomImage({ stored, preview }: { stored: string | null; preview: s
   );
 }
 
+/** جلب أسماء المستخدمين لقائمة معرّفات (لا توجد علاقة PostgREST مع الملفات) */
+async function withProfiles(ids: string[]) {
+  const unique = Array.from(new Set(ids));
+  if (unique.length === 0) return [] as { user_id: string; profiles: { display_name: string; public_id: string } | null }[];
+  const { data, error } = await supabase.from("profiles").select("id, display_name, public_id").in("id", unique);
+  if (error) throw error;
+  const map = new Map((data ?? []).map((p) => [p.id, { display_name: p.display_name, public_id: p.public_id }]));
+  return unique.map((id) => ({ user_id: id, profiles: map.get(id) ?? null }));
+}
+
 /** إنشاء غرفة جديدة من لوحة الإدارة */
 function RoomCreateCard({ onCreated }: { onCreated: () => void }) {
   const { userId } = useSupabaseSession();
@@ -712,25 +722,18 @@ function RoomTeamPanel({ roomId, ownerId }: { roomId: string; ownerId: string })
   const moderators = useQuery({
     queryKey: ["admin-room-mods", roomId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("room_moderators")
-        .select("user_id, profiles:user_id(display_name, public_id)")
-        .eq("room_id", roomId);
+      const { data, error } = await supabase.from("room_moderators").select("user_id").eq("room_id", roomId);
       if (error) throw error;
-      return (data ?? []) as unknown as { user_id: string; profiles: { display_name: string; public_id: string } | null }[];
+      return withProfiles((data ?? []).map((r) => r.user_id));
     },
   });
 
   const members = useQuery({
     queryKey: ["admin-room-members", roomId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("room_members")
-        .select("user_id, profiles:user_id(display_name, public_id)")
-        .eq("room_id", roomId)
-        .limit(60);
+      const { data, error } = await supabase.from("room_members").select("user_id").eq("room_id", roomId).limit(60);
       if (error) throw error;
-      return (data ?? []) as unknown as { user_id: string; profiles: { display_name: string; public_id: string } | null }[];
+      return withProfiles((data ?? []).map((r) => r.user_id));
     },
   });
 
@@ -830,19 +833,15 @@ function RoomMessagesTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("room_messages")
-        .select("id, body, kind, created_at, user_id, profiles:user_id(display_name, public_id)")
+        .select("id, body, kind, created_at, user_id")
         .eq("room_id", activeRoom)
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      return (data ?? []) as unknown as {
-        id: string;
-        body: string;
-        kind: string;
-        created_at: string;
-        user_id: string;
-        profiles: { display_name: string; public_id: string } | null;
-      }[];
+      const rows = (data ?? []) as { id: string; body: string; kind: string; created_at: string; user_id: string }[];
+      const people = await withProfiles(rows.map((r) => r.user_id));
+      const byId = new Map(people.map((p) => [p.user_id, p.profiles]));
+      return rows.map((r) => ({ ...r, profiles: byId.get(r.user_id) ?? null }));
     },
   });
 
@@ -883,6 +882,7 @@ function RoomMessagesTab() {
       </div>
 
       {messages.isLoading && <div className="h-20 animate-pulse rounded-2xl bg-surface-2" />}
+      {messages.isError && <p className="text-[11px] text-destructive">{(messages.error as Error).message}</p>}
       {messages.isSuccess && (messages.data ?? []).length === 0 && <EmptyState title="لا توجد رسائل في هذه الغرفة" />}
       {(messages.data ?? []).map((m) => (
         <div key={m.id} className="surface-card space-y-2 p-3">
