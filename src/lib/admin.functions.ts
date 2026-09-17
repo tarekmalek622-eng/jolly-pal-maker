@@ -902,3 +902,146 @@ export const adminUpdateUserIdentity = createServerFn({ method: "POST" })
     );
     return { ok: true, changed: true };
   });
+
+/** إنشاء غرفة جديدة من لوحة الإدارة — تُنشأ بحساب الإدارة ثم يمكن إسنادها لمالك آخر */
+export const adminCreateRoom = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        name: z.string().trim().min(2, "اسم الغرفة قصير").max(30, "اسم الغرفة طويل"),
+        description: z.string().trim().max(200).nullable(),
+        category: z.string().trim().min(1).max(30),
+        roomType: z.enum(["public", "private"]),
+        password: z.string().trim().max(30).nullable(),
+        micCount: z.number().int().min(1).max(20),
+        imageUrl: z.string().trim().max(500).nullable(),
+        ownerPublicId: z.string().trim().max(30).nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const rpc = context.supabase as unknown as Rpc;
+    const created = await rpc.rpc("create_room", {
+      _name: data.name,
+      _description: data.description,
+      _category: data.category,
+      _room_type: data.roomType,
+      _password: data.roomType === "private" ? data.password : null,
+      _mic_count: data.micCount,
+      _image_url: data.imageUrl,
+      _background_url: null,
+    });
+    if (created.error) throw new Error((created.error as { message?: string }).message ?? "تعذر إنشاء الغرفة");
+    const room = created.data as { id: string; room_code: string; name: string } | null;
+    if (!room) throw new Error("تعذر إنشاء الغرفة");
+
+    let ownerId = context.userId;
+    if (data.ownerPublicId) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const owner = await supabaseAdmin.from("profiles").select("id").eq("public_id", data.ownerPublicId).maybeSingle();
+      if (owner.error) throw new Error(owner.error.message);
+      if (!owner.data) throw new Error("لا يوجد مستخدم بهذا المعرّف");
+      ownerId = owner.data.id;
+      const moved = await supabaseAdmin.from("rooms").update({ owner_id: ownerId }).eq("id", room.id);
+      if (moved.error) throw new Error(moved.error.message);
+    }
+
+    await log(context.userId, room.id, "admin_room_created", "", JSON.stringify({ name: room.name, code: room.room_code, owner_id: ownerId }));
+    return room;
+  });
+
+/** منح أو سحب صلاحية مشرف داخل غرفة محددة */
+export const adminSetRoomModerator = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ roomId: z.string().uuid(), publicId: z.string().trim().min(3).max(30), enable: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const target = await supabaseAdmin.from("profiles").select("id").eq("public_id", data.publicId).maybeSingle();
+    if (target.error) throw new Error(target.error.message);
+    if (!target.data) throw new Error("لا يوجد مستخدم بهذا المعرّف");
+    if (data.enable) {
+      const { error } = await supabaseAdmin
+        .from("room_moderators")
+        .upsert({ room_id: data.roomId, user_id: target.data.id }, { onConflict: "room_id,user_id" });
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabaseAdmin
+        .from("room_moderators")
+        .delete()
+        .eq("room_id", data.roomId)
+        .eq("user_id", target.data.id);
+      if (error) throw new Error(error.message);
+    }
+    await log(context.userId, data.roomId, data.enable ? "admin_room_mod_added" : "admin_room_mod_removed", "", target.data.id);
+    return { ok: true };
+  });
+
+/** إخراج مشارك من الغرفة وإنزاله من المايك */
+export const adminRemoveRoomMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid(), userId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const room = await supabaseAdmin.from("rooms").select("owner_id").eq("id", data.roomId).maybeSingle();
+    if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
+    if (room.data.owner_id === data.userId) throw new Error("لا يمكن إخراج مالك الغرفة");
+    await supabaseAdmin.from("room_mics").update({ user_id: null }).eq("room_id", data.roomId).eq("user_id", data.userId);
+    const { error } = await supabaseAdmin.from("room_members").delete().eq("room_id", data.roomId).eq("user_id", data.userId);
+    if (error) throw new Error(error.message);
+    await log(context.userId, data.roomId, "admin_room_member_removed", data.userId, "");
+    return { ok: true };
+  });
+
+/** حذف رسالة من دردشة الغرفة */
+export const adminDeleteRoomMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ messageId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const previous = await supabaseAdmin
+      .from("room_messages")
+      .select("id, room_id, user_id, body")
+      .eq("id", data.messageId)
+      .maybeSingle();
+    if (previous.error || !previous.data) throw new Error("الرسالة غير موجودة");
+    const { error } = await supabaseAdmin.from("room_messages").delete().eq("id", data.messageId);
+    if (error) throw new Error(error.message);
+    await log(context.userId, previous.data.room_id, "admin_room_message_deleted", previous.data.body, "");
+    return { ok: true };
+  });
+
+/** إعادة إرسال رسالة داخل نفس الغرفة باسم صاحبها الأصلي */
+export const adminResendRoomMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ messageId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const source = await supabaseAdmin
+      .from("room_messages")
+      .select("room_id, user_id, body, kind, metadata")
+      .eq("id", data.messageId)
+      .maybeSingle();
+    if (source.error || !source.data) throw new Error("الرسالة غير موجودة");
+    const inserted = await supabaseAdmin
+      .from("room_messages")
+      .insert({
+        room_id: source.data.room_id,
+        user_id: source.data.user_id,
+        body: source.data.body,
+        kind: source.data.kind,
+        metadata: source.data.metadata,
+      })
+      .select("id")
+      .maybeSingle();
+    if (inserted.error || !inserted.data) throw new Error(inserted.error?.message ?? "تعذر إعادة الإرسال");
+    await log(context.userId, source.data.room_id, "admin_room_message_resent", data.messageId, inserted.data.id);
+    return inserted.data;
+  });
