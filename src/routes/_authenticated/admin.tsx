@@ -382,8 +382,10 @@ function UsersTab() {
               {ROLES.map((r) => {
                 const has = (roles.data ?? []).some((x) => x.user_id === u.id && x.role === r.key);
                 return (
-                  <button
+                  <Button
                     key={r.key}
+                    type="button"
+                    variant="ghost"
                     disabled={setRole.isPending}
                     onClick={() => setRole.mutate({ userId: u.id, role: r.key, grant: !has })}
                     className={cn(
@@ -394,7 +396,7 @@ function UsersTab() {
                     )}
                   >
                     {r.label}
-                  </button>
+                  </Button>
                 );
               })}
             </div>

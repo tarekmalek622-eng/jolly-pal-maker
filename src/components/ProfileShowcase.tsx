@@ -28,11 +28,11 @@ type GiftTotalRow = {
   gifts: GiftMediaRow | null;
 };
 
-const ROLE_BADGES: Partial<Record<Role, { label: string; note: string }>> = {
-  super_admin: { label: "مالك التطبيق", note: "سوبر أدمن" },
-  admin: { label: "مدير التطبيق", note: "إدارة موثقة" },
-  moderator: { label: "مساعد سوبر أدمن", note: "مشرف موثّق" },
-  host: { label: "مضيف", note: "مضيف غرف موثّق" },
+const ROLE_BADGES: Partial<Record<Role, { label: string; note: string; styleKey: string }>> = {
+  super_admin: { label: "سوبر أدمن", note: "مالك التطبيق", styleKey: "imperial" },
+  admin: { label: "مدير التطبيق", note: "إدارة موثقة", styleKey: "royal" },
+  moderator: { label: "مساعد سوبر أدمن", note: "مشرف موثّق", styleKey: "crimson" },
+  host: { label: "مضيف", note: "مضيف غرف موثّق", styleKey: "emerald" },
 };
 
 function BadgeMark({ name, role }: { name: string; role?: boolean }) {
@@ -84,7 +84,7 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
 
   const roleBadges = Array.from(new Set(roles.data ?? []))
     .map((role) => ROLE_BADGES[role])
-    .filter((role): role is { label: string; note: string } => Boolean(role));
+    .filter((role): role is { label: string; note: string; styleKey: string } => Boolean(role));
   const earned = (badges.data ?? []).filter((badge) => badge.badge_definitions);
   const administrative = earned.filter((badge) => badge.badge_definitions?.kind === "administrative");
   const achievements = earned.filter((badge) => badge.badge_definitions?.kind !== "administrative");
@@ -117,12 +117,8 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
         ) : (
           <div className="mt-3 grid grid-cols-2 gap-2">
             {roleBadges.map((role) => (
-              <div key={`${role.label}-${role.note}`} className="flex min-w-0 items-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-2">
-                <BadgeMark name={role.label} role />
-                <span className="min-w-0">
-                  <span className="block truncate text-[11px] font-bold text-primary">{role.label}</span>
-                  <span className="block truncate text-[9px] text-muted-foreground">{role.note}</span>
-                </span>
+              <div key={`${role.label}-${role.note}`} className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-primary/5 p-2">
+                <AdminBadgeCrest name={`${role.label} · ${role.note}`} styleKey={role.styleKey} compact />
               </div>
             ))}
             {administrative.map((badge) => {
