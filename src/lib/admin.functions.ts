@@ -602,7 +602,7 @@ export const adminEndRelationship = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ relationshipId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId);
-    const { data: ended, error } = await (context.supabase as Rpc).rpc("admin_end_relationship", {
+    const { data: ended, error } = await (context.supabase as unknown as Rpc).rpc("admin_end_relationship", {
       _relationship_id: data.relationshipId,
     });
     if (error) throw new Error(error instanceof Error ? error.message : "تعذر إنهاء العلاقة");
