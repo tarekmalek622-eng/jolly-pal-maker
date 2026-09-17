@@ -15,8 +15,8 @@ export function AppShell({
   fullBleed?: boolean;
 }) {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto flex min-h-screen max-w-lg flex-col">
+    <div className={fullBleed ? "min-h-screen bg-transparent" : "min-h-screen bg-background"}>
+      <div className={fullBleed ? "mx-auto flex min-h-screen max-w-lg flex-col bg-transparent" : "mx-auto flex min-h-screen max-w-lg flex-col"}>
         {header}
         <main className={fullBleed ? "flex-1" : "flex-1 px-4 pb-28 pt-2"}>{children}</main>
       </div>
