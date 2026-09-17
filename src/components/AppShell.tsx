@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { BottomNav } from "@/components/BottomNav";
+import { BadgeStrip } from "@/components/BadgeStrip";
+import { useSupabaseSession, useMyProfile } from "@/hooks/use-session";
 
 export function AppShell({
   children,
@@ -22,8 +24,14 @@ export function AppShell({
 }
 
 export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
+  const { userId } = useSupabaseSession();
+  const profile = useMyProfile(userId);
+  
   return (
-    <header className="sticky top-0 z-30 bg-background/85 px-4 py-4 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 bg-background/85 px-4 pb-4 pt-6 backdrop-blur-xl">
+      <div className="absolute top-1 start-4">
+        <BadgeStrip rank={profile.data?.level} count={0} />
+      </div>
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold">{title}</h1>

@@ -71,7 +71,7 @@ const TABS = [
   { key: "gifts", label: "الهدايا", icon: Gift },
   { key: "store", label: "المتجر", icon: ShoppingBag },
   { key: "vip", label: "VIP", icon: Crown },
-  { key: "cvip", label: "CVIP", icon: Gem },
+  { key: "cvip", label: "SVIP", icon: Gem },
   { key: "coins", label: "الكوينز", icon: Coins },
   { key: "topups", label: "طلبات الشحن", icon: CreditCard },
   { key: "games", label: "الألعاب", icon: Gamepad2 },
@@ -1400,7 +1400,7 @@ function CvipTab() {
   return (
     <div className="space-y-3">
       <div className="surface-card space-y-2 p-3">
-        <p className="text-sm font-bold">{form.id ? "تعديل خطة CVIP" : "إضافة خطة CVIP"}</p>
+        <p className="text-sm font-bold">{form.id ? "تعديل خطة SVIP" : "إضافة خطة SVIP"}</p>
         <div className="grid grid-cols-2 gap-2">
           <Field label="الاسم" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
           <Field label="السعر" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />

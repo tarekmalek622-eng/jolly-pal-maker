@@ -105,7 +105,7 @@ export function VipCvipSheet({
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             {mode === "vip" ? <Crown className="h-4 w-4 text-primary" /> : <Sparkles className="h-4 w-4 text-accent" />}
-            {mode === "vip" ? "مميزات VIP" : "مميزات CVIP"}
+            {mode === "vip" ? "مميزات VIP" : "مميزات SVIP"}
           </SheetTitle>
         </SheetHeader>
 
@@ -115,8 +115,8 @@ export function VipCvipSheet({
               ? `مستواك الحالي: VIP ${currentVip}`
               : "لم تفعّل VIP بعد"
             : isCvip
-              ? `CVIP مفعّل${cvipExpiresAt ? ` حتى ${new Date(cvipExpiresAt).toLocaleDateString("ar-EG")}` : ""}`
-              : "CVIP غير مفعّل"}
+              ? `SVIP مفعّل${cvipExpiresAt ? ` حتى ${new Date(cvipExpiresAt).toLocaleDateString("ar-EG")}` : ""}`
+              : "SVIP غير مفعّل"}
         </p>
 
         {loading ? (
@@ -153,7 +153,7 @@ export function VipCvipSheet({
                   </div>
                 ))
               : (cvip.data ?? []).map((c) => (
-                  <div key={c.id} className="cvip-showcase p-4">
+                  <div key={c.id} className="svip-showcase p-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-bold">{c.name}</p>
                       <span className="flex items-center gap-1 text-xs">
@@ -183,7 +183,7 @@ export function VipCvipSheet({
               <p className="py-6 text-center text-xs text-muted-foreground">لا توجد مستويات VIP مفعّلة من الإدارة.</p>
             )}
             {mode === "cvip" && (cvip.data ?? []).length === 0 && (
-              <p className="py-6 text-center text-xs text-muted-foreground">لا توجد خطط CVIP مفعّلة من الإدارة.</p>
+              <p className="py-6 text-center text-xs text-muted-foreground">لا توجد خطط SVIP مفعّلة من الإدارة.</p>
             )}
           </div>
         )}

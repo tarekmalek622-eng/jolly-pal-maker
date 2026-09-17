@@ -145,11 +145,11 @@ function StorePage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("تم تفعيل CVIP ✨");
+      toast.success("تم تفعيل SVIP ✨");
       refresh();
       void profile.refetch();
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر تفعيل CVIP"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر تفعيل SVIP"),
   });
 
   const owned = new Set((myItems.data ?? []).map((i) => i.item_id));
@@ -172,7 +172,7 @@ function StorePage() {
       }
     >
       <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-surface p-1">
-        {([["items", "العناصر", ShoppingBag], ["vip", "VIP", Crown], ["cvip", "CVIP", Gem]] as const).map(([key, label, Icon]) => (
+        {([["items", "العناصر", ShoppingBag], ["vip", "VIP", Crown], ["cvip", "SVIP", Gem]] as const).map(([key, label, Icon]) => (
           <Button
             key={key}
             variant="ghost"
@@ -288,9 +288,9 @@ function StorePage() {
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="cvip-showcase overflow-hidden p-5 text-center">
+          <div className="svip-showcase overflow-hidden p-5 text-center">
             <Gem className="mx-auto h-8 w-8 text-accent" />
-            <h2 className="mt-2 text-xl font-black">عضوية CVIP</h2>
+            <h2 className="mt-2 text-xl font-black">عضوية SVIP</h2>
             <p className="mt-1 text-xs text-muted-foreground">هوية مستقلة، متجر خاص، هدايا وتأثيرات حصرية.</p>
           </div>
           {(cvip.data ?? []).map((plan) => {

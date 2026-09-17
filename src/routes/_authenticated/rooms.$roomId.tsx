@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/sheet";
 import { useSupabaseSession } from "@/hooks/use-session";
 import { useVoiceRoomContext } from "@/components/VoiceRoomProvider";
+import { BadgeStrip } from "@/components/BadgeStrip";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/rooms/$roomId")({
@@ -421,7 +422,10 @@ function RoomPage() {
     <AppShell
       hideNav
       header={
-        <header className="sticky top-0 z-30 bg-background/85 px-4 py-3 backdrop-blur-xl">
+          <div className="absolute top-0.5 start-4">
+            <BadgeStrip rank="1" count={0} />
+          </div>
+        <header className="sticky top-0 z-30 bg-background/85 px-4 pb-3 pt-5 backdrop-blur-xl">
           <div className="flex items-center gap-3">
             <button onClick={() => setLeaveOpen(true)} className="p-1" aria-label="تصغير أو خروج">
               <ArrowRight className="h-5 w-5" />

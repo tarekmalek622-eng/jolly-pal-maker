@@ -33,7 +33,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   love: "حب",
   celebration: "احتفالات",
   vip: "VIP",
-  cvip: "CVIP",
+  cvip: "SVIP",
   rare: "نادر",
   legendary: "أسطوري",
   cars: "سيارات",
