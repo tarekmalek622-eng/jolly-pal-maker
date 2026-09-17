@@ -246,7 +246,7 @@ function RoomPage() {
       if (!gift) return;
       const nameOf = (id?: string) => (names ?? []).find((p) => p.id === id)?.display_name ?? "مستخدم";
       setGiftQueue((prev) => [
-        ...prev,
+        ...prev.slice(-7),
         {
           key: row.id ?? `${row.gift_id}-${Date.now()}`,
           gift: gift as GiftMediaRow,
