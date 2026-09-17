@@ -258,7 +258,7 @@ function MePage() {
           <button
             type="button"
             onClick={() => setPrivSheet("cvip")}
-            className="cvip-showcase flex items-center gap-2 p-3 text-start transition-transform active:scale-[0.98]"
+            className="svip-showcase flex items-center gap-2 p-3 text-start transition-transform active:scale-[0.98]"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-background/30">
               <Sparkles className="h-4.5 w-4.5 text-accent" />

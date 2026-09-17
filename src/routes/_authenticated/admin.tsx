@@ -1400,7 +1400,7 @@ function CvipTab() {
   return (
     <div className="space-y-3">
       <div className="surface-card space-y-2 p-3">
-        <p className="text-sm font-bold">{form.id ? "تعديل خطة CVIP" : "إضافة خطة CVIP"}</p>
+        <p className="text-sm font-bold">{form.id ? "تعديل خطة SVIP" : "إضافة خطة SVIP"}</p>
         <div className="grid grid-cols-2 gap-2">
           <Field label="الاسم" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
           <Field label="السعر" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
