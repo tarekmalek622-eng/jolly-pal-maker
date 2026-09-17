@@ -71,6 +71,7 @@ export type Database = {
           key: string
           kind: string
           name: string
+          permissions: string[]
           sort_order: number
           style_key: string
           threshold: number
@@ -84,6 +85,7 @@ export type Database = {
           key: string
           kind?: string
           name: string
+          permissions?: string[]
           sort_order?: number
           style_key?: string
           threshold: number
@@ -97,6 +99,7 @@ export type Database = {
           key?: string
           kind?: string
           name?: string
+          permissions?: string[]
           sort_order?: number
           style_key?: string
           threshold?: number
@@ -1433,6 +1436,11 @@ export type Database = {
         Returns: number
       }
       award_gift_badges: { Args: { _user_id: string }; Returns: number }
+      badge_close_wheel_round: { Args: { _room_id: string }; Returns: string }
+      badge_remove_room_participant: {
+        Args: { _room_id: string; _target_id: string }
+        Returns: boolean
+      }
       create_room: {
         Args: {
           _background_url?: string
@@ -1541,6 +1549,10 @@ export type Database = {
       gen_public_id: { Args: never; Returns: string }
       gen_room_code: { Args: never; Returns: string }
       gift_stats: { Args: { _since?: string }; Returns: Json }
+      has_badge_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       mark_direct_messages_read: {
