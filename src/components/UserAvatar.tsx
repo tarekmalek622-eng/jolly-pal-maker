@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { resolveMediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
+import { getVipFrame } from "@/lib/vip-frames";
 
 type Props = {
   src?: string | null | undefined;
@@ -38,10 +39,12 @@ export function UserAvatar({ src, name, size = 48, vipLevel = 0, frame, online, 
 
   const initial = (name ?? "؟").trim().charAt(0);
   // إطارات متحركة: إطار النار يرتجف ويتوهّج، وباقي الإطارات توهّج ناعم
-  const frameKey = String(frame ?? "");
+  const fallbackFrame = getVipFrame(vipLevel);
+  const activeFrame = frameUrl ?? fallbackFrame;
+  const frameKey = String(frame ?? fallbackFrame ?? "");
   const frameAnim = /frame-03|fire|نار/i.test(frameKey)
     ? "animate-frame-fire"
-    : frameUrl
+    : activeFrame
       ? "animate-frame-glow"
       : "";
 
@@ -61,13 +64,13 @@ export function UserAvatar({ src, name, size = 48, vipLevel = 0, frame, online, 
           </div>
         )}
       </div>
-      {frameUrl && (
+      {activeFrame && (
         <img
-          src={frameUrl}
+          src={activeFrame}
           alt=""
           aria-hidden
           className={cn(
-            "pointer-events-none absolute -inset-[16%] h-[132%] w-[132%] max-w-none object-contain",
+            "pointer-events-none absolute left-1/2 top-1/2 z-10 h-[154%] w-[154%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain",
             frameAnim,
           )}
           loading="lazy"

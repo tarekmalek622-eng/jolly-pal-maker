@@ -7,16 +7,18 @@ export function AppShell({
   children,
   header,
   hideNav,
+  fullBleed = false,
 }: {
   children: ReactNode;
   header?: ReactNode;
   hideNav?: boolean;
+  fullBleed?: boolean;
 }) {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen max-w-lg flex-col">
         {header}
-        <main className="flex-1 px-4 pb-28 pt-2">{children}</main>
+        <main className={fullBleed ? "flex-1" : "flex-1 px-4 pb-28 pt-2"}>{children}</main>
       </div>
       {!hideNav && <BottomNav />}
     </div>

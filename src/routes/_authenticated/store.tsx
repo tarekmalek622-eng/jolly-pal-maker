@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { StoreItemCard } from "@/components/StoreItemCard";
 import { useMyProfile, useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
+import { getVipFrame, getVipName } from "@/lib/vip-frames";
 
 export const Route = createFileRoute("/_authenticated/store")({
   head: () => ({
@@ -263,13 +264,17 @@ function StorePage() {
             return (
               <div key={v.level} className={cn("surface-card p-4", `vip-tier-${v.level}`)}>
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <img src={getVipFrame(v.level) ?? ""} width={64} height={64} alt={`إطار VIP ${v.level}`} className="h-16 w-16 shrink-0 object-contain" />
+                    <div className="min-w-0">
                     <p className="flex items-center gap-2 text-base font-black">
-                      <Crown className="h-5 w-5 text-primary" /> {v.name}
+                      <Crown className="h-5 w-5 text-primary" /> VIP {v.level}
                     </p>
+                    <p className="truncate text-[10px] font-bold text-primary">{getVipName(v.level)}</p>
                     <p className="mt-1 text-[11px] text-muted-foreground">
                       {v.duration_days} يوم · {v.price.toLocaleString("en-US")} كوينز
                     </p>
+                    </div>
                   </div>
                   <Button
                     disabled={current || buyVip.isPending}
