@@ -882,6 +882,7 @@ function RoomMessagesTab() {
       </div>
 
       {messages.isLoading && <div className="h-20 animate-pulse rounded-2xl bg-surface-2" />}
+      {messages.isError && <p className="text-[11px] text-destructive">{(messages.error as Error).message}</p>}
       {messages.isSuccess && (messages.data ?? []).length === 0 && <EmptyState title="لا توجد رسائل في هذه الغرفة" />}
       {(messages.data ?? []).map((m) => (
         <div key={m.id} className="surface-card space-y-2 p-3">
