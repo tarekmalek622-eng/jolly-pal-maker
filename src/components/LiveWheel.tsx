@@ -149,17 +149,28 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const finished = round.data?.status === "finished";
   const remaining = round.data ? Math.max(0, Math.ceil((new Date(round.data.ends_at).getTime() - now) / 1000)) : 0;
 
-  // عند تسوية الجولة: المؤشر يلف على كل الفواكه 5 ثوانٍ ثم يتوقف على الفائزة
+  // عند تسوية الجولة: المؤشر يلف على كل الفواكه ٤ ثوانٍ ثم يتوقف على الفائزة
+  const roundKey = `${round.data?.id ?? ""}:${round.data?.status ?? ""}:${round.data?.winning_key ?? ""}`;
+  const afterSpin = useRef<() => void>(() => {});
+  afterSpin.current = () => {
+    refreshMoney();
+    void history.refetch();
+  };
   useEffect(() => {
-    const data = round.data;
-    if (!data || data.status !== "finished" || !data.winning_key) return;
-    if (lastSettled.current === data.id) return;
-    lastSettled.current = data.id;
+    const [id, status, key] = roundKey.split(":");
+    const data = roundRef.current;
+    if (!id || status !== "finished" || !key || !data) return;
+    if (lastSettled.current === id) return;
+    lastSettled.current = id;
+    // نتيجة قديمة (فُتحت الصفحة بعد انتهاء الجولة): تُعرض بدون تعطيل المراهنة
+    const settledAgo = Date.now() - new Date(data.settled_at ?? data.ends_at).getTime();
+    const target = Math.max(0, data.slots.findIndex((s) => s.key === key));
+    if (settledAgo > 15_000) {
+      setHighlight(target);
+      return;
+    }
     const count = Math.max(1, data.slots.length);
-    const target = Math.max(0, data.slots.findIndex((s) => s.key === data.winning_key));
-    const laps = 3;
-    const steps = count * laps + ((target - highlight + count) % count);
-    // توزيع زمني بتباطؤ تدريجي يجمع 4000 مللي ثانية بالضبط
+    const steps = count * 3 + 1;
     const weights = Array.from({ length: steps }, (_, i) => 1 + Math.pow(i / Math.max(1, steps - 1), 2.6) * 9);
     const sum = weights.reduce((a, b) => a + b, 0);
     const delays = weights.map((w) => (w / sum) * 4000);
@@ -174,14 +185,17 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
       } else {
         setHighlight(target);
         setSpinning(false);
-        refreshMoney();
-        void history.refetch();
+        afterSpin.current();
       }
     };
     timer = window.setTimeout(tick, delays[0] ?? 120);
-    return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [round.data, refreshMoney, history]);
+    // أمان: لا تترك اللعبة عالقة في وضع "جاري السحب" أبدًا
+    const guard = window.setTimeout(() => setSpinning(false), 6000);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(guard);
+    };
+  }, [roundKey]);
 
   const place = useMutation({
     mutationFn: async (slotKey: string) => {
