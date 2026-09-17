@@ -196,7 +196,7 @@ function UsersTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("badge_definitions")
-        .select("id, name, style_key, sort_order")
+        .select("id, name, description, style_key, sort_order, permissions")
         .eq("kind", "administrative")
         .eq("is_active", true)
         .order("sort_order");
@@ -424,6 +424,7 @@ function UsersTab() {
                       )}
                     >
                       <AdminBadgeCrest name={badge.name} styleKey={badge.style_key} compact />
+                      <span className="mt-1 line-clamp-2 text-[8px] text-muted-foreground">{badge.description}</span>
                     </Button>
                   );
                 })}

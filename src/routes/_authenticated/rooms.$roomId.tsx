@@ -44,6 +44,7 @@ import {
 import { useSupabaseSession } from "@/hooks/use-session";
 import { useVoiceRoomContext } from "@/components/VoiceRoomProvider";
 import { BadgeStrip } from "@/components/BadgeStrip";
+import { closeWheelRound, getMyRoomBadgePermissions, removeRoomParticipant } from "@/lib/rooms.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/rooms/$roomId")({
@@ -187,7 +188,13 @@ function RoomPage() {
   });
 
   const isOwner = room.data?.owner_id === userId;
-  const canManage = isOwner || (moderators.data ?? []).includes(userId ?? "");
+  const badgePermissions = useQuery({
+    queryKey: ["my-room-badge-permissions", userId],
+    enabled: Boolean(userId),
+    queryFn: () => getMyRoomBadgePermissions(),
+  });
+  const canRemoveParticipants = isOwner || Boolean(badgePermissions.data?.participantRemove);
+  const canManage = isOwner || (moderators.data ?? []).includes(userId ?? "") || canRemoveParticipants;
   const mySeat = (mics.data ?? []).find((m) => m.user_id === userId) ?? null;
   const { voice, enterRoom, minimizeRoom, exitRoom, minimized } = useVoiceRoomContext();
   const canPublish = Boolean(mySeat && !mySeat.is_muted);
@@ -357,9 +364,7 @@ function RoomPage() {
 
   const kick = useMutation({
     mutationFn: async (target: string) => {
-      await supabase.from("room_mics").update({ user_id: null }).eq("room_id", roomId).eq("user_id", target);
-      const { error } = await supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", target);
-      if (error) throw error;
+      await removeRoomParticipant({ data: { roomId, targetId: target } });
     },
     onSuccess: () => {
       toast.success("تم طرد المستخدم");
@@ -690,6 +695,7 @@ function RoomPage() {
         roomId={roomId}
         userId={userId}
         isOwner={isOwner}
+        canCustomize={Boolean(badgePermissions.data?.roomBackground)}
         open={cosmeticsOpen}
         onOpenChange={setCosmeticsOpen}
         onApplied={() => {
@@ -853,6 +859,17 @@ function RoomPage() {
             ))}
           </div>
           <div className="pb-6">
+            {roomGame === "wheel" && badgePermissions.data?.wheelClose && (
+              <Button
+                variant="outline"
+                onClick={() => void closeWheelRound({ data: { roomId } })
+                  .then(() => toast.success("تم إغلاق الجولة وتسوية النتيجة"))
+                  .catch((error: unknown) => toast.error(error instanceof Error ? error.message : "تعذر إغلاق الجولة"))}
+                className="mb-3 h-10 w-full rounded-xl"
+              >
+                إغلاق الجولة الآن
+              </Button>
+            )}
             {roomGame === "wheel" ? <LiveWheel roomId={roomId} /> : <DominoGame roomId={roomId} />}
           </div>
         </SheetContent>
