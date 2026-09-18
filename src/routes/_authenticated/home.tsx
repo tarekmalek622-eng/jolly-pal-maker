@@ -10,6 +10,8 @@ import { useSupabaseSession, useMyProfile, useWallet } from "@/hooks/use-session
 import { RoomCard, type RoomRow } from "@/components/RoomCard";
 import { EmptyState } from "@/components/AppShell";
 import { HomeBanners } from "@/components/HomeBanners";
+import { AppCup } from "@/components/AppCup";
+import { FourDayEvent } from "@/components/FourDayEvent";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
@@ -180,6 +182,8 @@ function HomePage() {
       ) : (
         <div className="space-y-7">
           <HomeBanners />
+          <FourDayEvent />
+          <AppCup />
 
           <section>
             <SectionTitle icon={Flame} title="الغرف" />
