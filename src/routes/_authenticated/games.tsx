@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Dices, Loader2, Sparkles, Spade, HelpCircle, Flame, LayoutGrid, Cherry } from "lucide-react";
+import { Dices, Loader2, Sparkles, Spade, HelpCircle, Flame, LayoutGrid, Cherry, Trophy, Gamepad2 } from "lucide-react";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +59,7 @@ function GamesPage() {
   const wallet = useWallet(userId);
   const refresh = useRefreshMoney();
   const [game, setGame] = useState<GameKey>("domino");
+  const [gamesOpen, setGamesOpen] = useState(false);
   const [bet, setBet] = useState(10_000_000);
   const [guess, setGuess] = useState(6);
   const [challenge, setChallenge] = useState<"reflex" | "memory" | "luck">("reflex");
