@@ -33,7 +33,8 @@ export const adminAdjustCoins = createServerFn({ method: "POST" })
     z
       .object({
         userId: z.string().uuid(),
-        amount: z.number().int().min(-1_000_000_000).max(1_000_000_000),
+        // الحد الأعلى للتعديل الإداري: ١٠٠ تريليون كوينز في العملية الواحدة
+        amount: z.number().int().min(-100_000_000_000_000).max(100_000_000_000_000),
         reason: z.string().min(1).max(200),
       })
       .parse(input),
