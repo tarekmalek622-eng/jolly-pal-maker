@@ -255,7 +255,9 @@ export function GiftSheet({
                       <GiftThumb gift={g} size={40} />
                     </div>
                     <p className="mt-1 truncate text-[10px] font-semibold">{g.name}</p>
-                    <p className="text-[10px] text-primary">{g.price.toLocaleString("en-US")}</p>
+                    <p className="text-[10px] text-primary" title={`${formatFull(g.price)} كوينز`}>
+                      {formatCompact(g.price)}
+                    </p>
                   </button>
                 ))}
               </div>
