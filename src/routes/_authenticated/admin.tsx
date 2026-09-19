@@ -3383,7 +3383,7 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
   });
 
   const lookup = useMutation({
-    mutationFn: async () => lookupWelcomeUser({ data: { publicId: publicId.trim() } }),
+    mutationFn: async (id?: string) => lookupWelcomeUser({ data: { publicId: (id ?? publicId).trim() } }),
     onSuccess: (res) =>
       setFound({ profile: res.profile as unknown as WelcomeProfile, alreadyClaimed: res.alreadyClaimed }),
     onError: (e) => {
@@ -3397,7 +3397,7 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
   useEffect(() => {
     if (!prefill) return;
     setPublicId(prefill);
-    lookupRef.current.mutate();
+    lookupRef.current.mutate(prefill);
   }, [prefill]);
 
   const send = useMutation({
