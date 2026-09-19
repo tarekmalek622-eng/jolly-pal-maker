@@ -29,6 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { GiftSheet, type GiftTarget } from "@/components/GiftSheet";
+import { LuckyBagSheet, LuckyBagStrip } from "@/components/LuckyBag";
 import { GiftOverlay, type GiftMediaRow, type GiftShowEvent } from "@/components/GiftMedia";
 import { RoomSupporters } from "@/components/RoomSupporters";
 import { RoomCosmetics, CosmeticImage } from "@/components/RoomCosmetics";
@@ -101,6 +102,7 @@ function RoomPage() {
   const [cosmeticsOpen, setCosmeticsOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [vipOpen, setVipOpen] = useState(false);
+  const [luckyOpen, setLuckyOpen] = useState(false);
   const myProfile = useMyProfile(userId);
   const musicRef = useRef<HTMLInputElement>(null);
   const roomImageRef = useRef<HTMLInputElement>(null);
@@ -590,6 +592,9 @@ function RoomPage() {
       </section>
 
       <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg border-t border-border/50 bg-background/75 p-2.5 backdrop-blur-xl">
+        <div className="mb-2">
+          <LuckyBagStrip roomId={roomId} />
+        </div>
         <div className="flex items-center gap-2">
           <Input
             value={text}

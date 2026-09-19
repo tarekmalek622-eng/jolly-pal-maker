@@ -35,7 +35,7 @@ const db = supabase as unknown as {
   rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: any; error: { message: string } | null }>;
 };
 
-const BET_STEPS = [100_000, 1_000_000, 10_000_000, 30_000_000];
+const BET_STEPS = [10_000_000, 50_000_000, 100_000_000, 200_000_000];
 
 /** تسمية مختصرة للمستويات الكبيرة */
 function betLabel(n: number) {
