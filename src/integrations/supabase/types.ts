@@ -1083,6 +1083,7 @@ export type Database = {
           profile_background_url: string | null
           public_id: string
           updated_at: string
+          vip_expires_at: string | null
           vip_level: number
           xp: number
         }
@@ -1107,6 +1108,7 @@ export type Database = {
           profile_background_url?: string | null
           public_id: string
           updated_at?: string
+          vip_expires_at?: string | null
           vip_level?: number
           xp?: number
         }
@@ -1131,6 +1133,7 @@ export type Database = {
           profile_background_url?: string | null
           public_id?: string
           updated_at?: string
+          vip_expires_at?: string | null
           vip_level?: number
           xp?: number
         }
@@ -1887,6 +1890,7 @@ export type Database = {
           profile_background_url: string | null
           public_id: string
           updated_at: string
+          vip_expires_at: string | null
           vip_level: number
           xp: number
         }
@@ -1897,6 +1901,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      expire_due_vip: { Args: never; Returns: number }
       gen_public_id: { Args: never; Returns: string }
       gen_room_code: { Args: never; Returns: string }
       gift_stats: { Args: { _since?: string }; Returns: Json }
@@ -1941,6 +1946,7 @@ export type Database = {
           profile_background_url: string | null
           public_id: string
           updated_at: string
+          vip_expires_at: string | null
           vip_level: number
           xp: number
         }
@@ -1991,6 +1997,7 @@ export type Database = {
           profile_background_url: string | null
           public_id: string
           updated_at: string
+          vip_expires_at: string | null
           vip_level: number
           xp: number
         }
@@ -2215,6 +2222,7 @@ export type Database = {
           profile_background_url: string | null
           public_id: string
           updated_at: string
+          vip_expires_at: string | null
           vip_level: number
           xp: number
         }
