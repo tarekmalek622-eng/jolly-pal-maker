@@ -18,6 +18,7 @@ import { useIsAdmin, useMyProfile, useSupabaseSession, useWallet } from "@/hooks
 import { uploadUserImage } from "@/lib/media";
 import { screenProfilePhoto } from "@/lib/moderation.functions";
 import { clearDeviceCredentials } from "@/lib/device-account";
+import { levelProgress } from "@/lib/levels";
 import { ProfileShowcase } from "@/components/ProfileShowcase";
 import { RelationshipShowcase } from "@/components/RelationshipShowcase";
 
@@ -156,7 +157,7 @@ function MePage() {
   }
 
   const p = profile.data;
-  const xpForNext = ((p?.level ?? 1) ) * 500;
+  const progress = levelProgress(p?.xp ?? 0);
 
   return (
     <AppShell header={<PageHeader title="ملفي" />}>
@@ -204,7 +205,7 @@ function MePage() {
             </div>
             <VipId publicId={p?.public_id ?? "—"} vipLevel={p?.vip_level ?? 0} />
             <div className="mt-1 flex flex-wrap gap-1.5">
-              <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px]">مستوى {p?.level ?? 1}</span>
+              <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px]">مستوى {progress.level}</span>
               {(p?.vip_level ?? 0) > 0 && (
                 <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
                   <Crown className="h-3 w-3" /> VIP {p?.vip_level}
@@ -223,11 +224,12 @@ function MePage() {
           <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
             <div
               className="h-full gradient-gold"
-              style={{ width: `${Math.min(100, ((p?.xp ?? 0) % 500) / 5)}%` }}
+              style={{ width: `${progress.percent}%` }}
             />
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            XP {(p?.xp ?? 0).toLocaleString("en-US")} / {xpForNext.toLocaleString("en-US")}
+            الخبرة {progress.intoLevel.toLocaleString("en-US")} / {progress.needed.toLocaleString("en-US")} للمستوى{" "}
+            {progress.level + 1} · بلا حد أقصى
           </p>
         </div>
 

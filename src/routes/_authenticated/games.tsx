@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DominoGame } from "@/components/DominoGame";
 import { LiveWheel } from "@/components/LiveWheel";
+import { AppCup } from "@/components/AppCup";
+import { FourDayEvent } from "@/components/FourDayEvent";
 import { supabase } from "@/integrations/supabase/client";
 import { playDice, spinWheel, playCards, startQuiz, answerQuiz, playChallenge } from "@/lib/games.functions";
 import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-session";
@@ -183,9 +185,14 @@ function GamesPage() {
   return (
     <AppShell
       header={
-        <PageHeader title="الألعاب" subtitle={`رصيدك: ${(wallet.data?.coins ?? 0).toLocaleString("en-US")} كوينز`} />
+        <PageHeader title="الاستكشاف" subtitle={`رصيدك: ${(wallet.data?.coins ?? 0).toLocaleString("en-US")} كوينز`} />
       }
     >
+      <div className="mb-4 space-y-4">
+        <FourDayEvent />
+        <AppCup />
+      </div>
+
       {tabs.length === 0 ? (
         <EmptyState title="كل الألعاب موقوفة حاليًا" />
       ) : (

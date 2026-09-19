@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { resolveMediaUrl } from "@/lib/media";
 import { toast } from "sonner";
 import {
@@ -103,6 +103,21 @@ function RoomPage() {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [vipOpen, setVipOpen] = useState(false);
   const [luckyOpen, setLuckyOpen] = useState(false);
+  const [roomSettingsOpen, setRoomSettingsOpen] = useState(false);
+  const [giftFxEnabled, setGiftFxEnabled] = useState(true);
+  const giftFxRef = useRef(true);
+  useEffect(() => {
+    const saved = typeof window === "undefined" ? null : window.localStorage.getItem("sawtak-gift-fx");
+    const on = saved !== "off";
+    setGiftFxEnabled(on);
+    giftFxRef.current = on;
+  }, []);
+  const setGiftFx = (on: boolean) => {
+    setGiftFxEnabled(on);
+    giftFxRef.current = on;
+    if (!on) setGiftQueue([]);
+    if (typeof window !== "undefined") window.localStorage.setItem("sawtak-gift-fx", on ? "on" : "off");
+  };
   const myProfile = useMyProfile(userId);
   const musicRef = useRef<HTMLInputElement>(null);
   const roomImageRef = useRef<HTMLInputElement>(null);
@@ -283,7 +298,7 @@ function RoomPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "room_mics", filter: `room_id=eq.${roomId}` }, () => void mics.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "room_members", filter: `room_id=eq.${roomId}` }, () => void members.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "mic_requests", filter: `room_id=eq.${roomId}` }, () => void requests.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions" }, (payload) => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions", filter: `room_id=eq.${roomId}` }, (payload) => {
         void messages.refetch();
         const row = payload.new as {
           id?: string;
@@ -293,7 +308,7 @@ function RoomPage() {
           receiver_id?: string;
           quantity?: number;
         } | null;
-        if (payload.eventType === "INSERT" && row?.room_id === roomId) void enqueueGift(row);
+        if (payload.eventType === "INSERT" && row?.room_id === roomId && giftFxRef.current) void enqueueGift(row);
       })
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
@@ -610,40 +625,33 @@ function RoomPage() {
             <Send className="h-4 w-4" />
           </Button>
         </div>
-        <div className="mt-2 flex items-center gap-2">
-          <Button
-            variant="outline"
+        <div className="mt-2 flex items-center justify-center gap-3">
+          <RoundControl
+            label={voice.micEnabled ? "المايك مفتوح" : "المايك مغلق"}
+            active={voice.micEnabled}
             onClick={() => {
               voice.toggleMic().catch((e: unknown) => toast.error(e instanceof Error ? e.message : "تعذر تشغيل المايك"));
             }}
-            className={cn("h-10 flex-1 rounded-full px-2 text-[10px]", voice.micEnabled && "border-success text-success")}
           >
-            {voice.micEnabled ? <Mic className="me-1 h-4 w-4" /> : <MicOff className="me-1 h-4 w-4" />}
-            {voice.micEnabled ? "المايك مفتوح" : "المايك مغلق"}
-          </Button>
-          <Button variant="outline" onClick={voice.toggleSpeaker} className="h-10 flex-1 rounded-full px-2 text-[10px]">
-            {voice.speakerEnabled ? <Volume2 className="me-1 h-4 w-4" /> : <VolumeX className="me-1 h-4 w-4" />}
-            {voice.speakerEnabled ? "السماعة" : "صامت"}
-          </Button>
+            {voice.micEnabled ? <Mic className="h-4.5 w-4.5" /> : <MicOff className="h-4.5 w-4.5" />}
+          </RoundControl>
+          <RoundControl label={voice.speakerEnabled ? "السماعة" : "صامت"} active={voice.speakerEnabled} onClick={voice.toggleSpeaker}>
+            {voice.speakerEnabled ? <Volume2 className="h-4.5 w-4.5" /> : <VolumeX className="h-4.5 w-4.5" />}
+          </RoundControl>
           {!mySeat && (
-            <Button variant="outline" onClick={() => requestMic.mutate()} className="h-10 flex-1 rounded-full px-2 text-[10px]">
-              <Hand className="me-1 h-4 w-4" /> طلب مايك
-            </Button>
+            <RoundControl label="طلب مايك" onClick={() => requestMic.mutate()}>
+              <Hand className="h-4.5 w-4.5" />
+            </RoundControl>
           )}
-          <Button
-            onClick={() => setLuckyOpen(true)}
-            variant="outline"
-            className="h-10 flex-1 rounded-full px-2 text-[10px] font-bold"
-            aria-label="حقيبة الحظ"
-          >
-            <span className="me-1 text-base leading-none">🧧</span> حقيبة الحظ
-          </Button>
-          <Button
-            onClick={() => setGiftOpen(true)}
-            className="h-10 flex-1 rounded-full gradient-rose px-2 text-[10px] font-bold text-primary-foreground"
-          >
-            <Gift className="me-1 h-4 w-4" /> هدية
-          </Button>
+          <RoundControl label="حقيبة الحظ" onClick={() => setLuckyOpen(true)}>
+            <span className="text-base leading-none">🧧</span>
+          </RoundControl>
+          <RoundControl label="هدية" tone="gift" onClick={() => setGiftOpen(true)}>
+            <Gift className="h-4.5 w-4.5" />
+          </RoundControl>
+          <RoundControl label="إعدادات الغرفة" onClick={() => setRoomSettingsOpen(true)}>
+            <Settings className="h-4.5 w-4.5" />
+          </RoundControl>
         </div>
         <input
           ref={musicRef}
@@ -725,14 +733,57 @@ function RoomPage() {
             <Button
               variant="outline"
               onClick={() => {
-                exitRoom();
-                setLeaveOpen(false);
-                void navigate({ to: "/home" });
+                void (async () => {
+                  minimizedRef.current = false;
+                  if (userId) {
+                    // الخروج النهائي: إنزال الحساب من المايك وإزالة العضوية فورًا
+                    await supabase.from("room_mics").update({ user_id: null, is_muted: false }).eq("room_id", roomId).eq("user_id", userId);
+                    await supabase.from("mic_requests").delete().eq("room_id", roomId).eq("user_id", userId);
+                    await supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", userId);
+                  }
+                  exitRoom();
+                  setLeaveOpen(false);
+                  void navigate({ to: "/home" });
+                })();
               }}
               className="h-12 w-full rounded-2xl border-destructive/40 text-destructive"
             >
               خروج من الغرفة
             </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* إعدادات الغرفة للجميع: إيقاف تأثير الهدايا */}
+      <Sheet open={roomSettingsOpen} onOpenChange={setRoomSettingsOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle className="text-start">إعدادات الغرفة</SheetTitle>
+          </SheetHeader>
+          <div className="mt-3 space-y-3 pb-4">
+            <button
+              type="button"
+              onClick={() => setGiftFx(!giftFxEnabled)}
+              className="flex w-full items-center justify-between rounded-2xl border border-border/60 bg-surface/70 p-4 text-start"
+            >
+              <span className="text-sm font-bold">تأثيرات الهدايا</span>
+              <span className={cn("rounded-full px-3 py-1 text-[11px] font-bold", giftFxEnabled ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive")}>
+                {giftFxEnabled ? "مفعّلة" : "موقوفة"}
+              </span>
+            </button>
+            <p className="text-[11px] text-muted-foreground">
+              إيقاف التأثيرات يخفي الفيديو والصوت لكل الهدايا داخل الغرف ويجعل التطبيق أسرع — الإعداد خاص بك فقط.
+            </p>
+            <button
+              type="button"
+              onClick={voice.toggleSpeaker}
+              className="flex w-full items-center justify-between rounded-2xl border border-border/60 bg-surface/70 p-4 text-start"
+            >
+              <span className="text-sm font-bold">الاستماع للغرفة</span>
+              <span className={cn("rounded-full px-3 py-1 text-[11px] font-bold", voice.speakerEnabled ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive")}>
+                {voice.speakerEnabled ? "مفتوح" : "مغلق"}
+              </span>
+            </button>
           </div>
         </SheetContent>
       </Sheet>
@@ -1157,6 +1208,40 @@ function SeatBtn({
       )}
     >
       {label}
+    </button>
+  );
+}
+
+/* أزرار التحكم المدوّرة الصغيرة أسفل الغرفة */
+function RoundControl({
+  label,
+  children,
+  onClick,
+  active,
+  tone,
+}: {
+  label: string;
+  children: ReactNode;
+  onClick: () => void;
+  active?: boolean;
+  tone?: "gift";
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className={cn(
+        "grid h-10 w-10 shrink-0 place-items-center rounded-full border transition-colors",
+        tone === "gift"
+          ? "gradient-rose border-transparent text-primary-foreground"
+          : active
+            ? "border-success/60 bg-success/15 text-success"
+            : "border-border/60 bg-surface/70 text-muted-foreground",
+      )}
+    >
+      {children}
     </button>
   );
 }
