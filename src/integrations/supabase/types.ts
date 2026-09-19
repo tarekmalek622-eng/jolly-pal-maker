@@ -1780,6 +1780,7 @@ export type Database = {
         Returns: number
       }
       award_gift_badges: { Args: { _user_id: string }; Returns: number }
+      break_app_stats: { Args: { _period: string }; Returns: Json }
       create_lucky_bag: {
         Args: {
           _message?: string
