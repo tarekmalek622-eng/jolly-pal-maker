@@ -298,7 +298,7 @@ function RoomPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "room_mics", filter: `room_id=eq.${roomId}` }, () => void mics.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "room_members", filter: `room_id=eq.${roomId}` }, () => void members.refetch())
       .on("postgres_changes", { event: "*", schema: "public", table: "mic_requests", filter: `room_id=eq.${roomId}` }, () => void requests.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions" }, (payload) => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions", filter: `room_id=eq.${roomId}` }, (payload) => {
         void messages.refetch();
         const row = payload.new as {
           id?: string;
@@ -308,7 +308,7 @@ function RoomPage() {
           receiver_id?: string;
           quantity?: number;
         } | null;
-        if (payload.eventType === "INSERT" && row?.room_id === roomId) void enqueueGift(row);
+        if (payload.eventType === "INSERT" && row?.room_id === roomId && giftFxRef.current) void enqueueGift(row);
       })
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
