@@ -820,6 +820,7 @@ export type Database = {
           created_at: string
           display_scale: number
           duration_ms: number
+          emoji: string | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -840,6 +841,7 @@ export type Database = {
           created_at?: string
           display_scale?: number
           duration_ms?: number
+          emoji?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -860,6 +862,7 @@ export type Database = {
           created_at?: string
           display_scale?: number
           duration_ms?: number
+          emoji?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
