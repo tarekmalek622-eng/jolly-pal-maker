@@ -3392,11 +3392,19 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
     },
   });
 
+  const lookupRef = useRef(lookup);
+  lookupRef.current = lookup;
+  useEffect(() => {
+    if (!prefill) return;
+    setPublicId(prefill);
+    lookupRef.current.mutate();
+  }, [prefill]);
+
   const send = useMutation({
-    mutationFn: async (userId: string) =>
+    mutationFn: async (targetId: string) =>
       sendWelcomePackage({
         data: {
-          userId,
+          userId: targetId,
           ...(device.trim() ? { deviceIdentifier: device.trim() } : {}),
           ...(video.trim() ? { videoUrl: video.trim() } : {}),
         },
