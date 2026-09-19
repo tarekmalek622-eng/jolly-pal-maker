@@ -26,13 +26,21 @@ export const createCoinPurchaseRequest = createServerFn({ method: "POST" })
     if (pkgError) throw new Error(pkgError.message);
     if (!pkg || !pkg.is_active) throw new Error("الباقة غير متوفرة");
 
+    // إلغاء الطلبات المعلّقة الأقدم من 24 ساعة تلقائيًا حتى لا يعلق المستخدم
+    await supabaseAdmin
+      .from("coin_purchase_requests")
+      .update({ status: "cancelled" } as never)
+      .eq("user_id", context.userId)
+      .eq("status", "pending")
+      .lt("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
     const { count, error: countError } = await supabaseAdmin
       .from("coin_purchase_requests")
       .select("id", { count: "exact", head: true })
       .eq("user_id", context.userId)
       .eq("status", "pending");
     if (countError) throw new Error(countError.message);
-    if ((count ?? 0) >= 3) throw new Error("لديك طلبات قيد المراجعة — انتظر تأكيدها أولًا");
+    if ((count ?? 0) >= 3) throw new Error("لديك 3 طلبات قيد المراجعة حاليًا — يمكنك إلغاء أحدها أو انتظار تأكيدها");
 
     const payload = {
       user_id: context.userId,
