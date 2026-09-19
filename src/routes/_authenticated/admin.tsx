@@ -3426,6 +3426,22 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
         <p className="mt-1 text-[10px] text-muted-foreground">
           1,000,000,000 كوينز + VIP 3 لمدة 7 أيام + معرّف من 6 أرقام — مرة واحدة فقط لكل مستخدم ولكل جهاز.
         </p>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="flex-1 text-[10px] text-muted-foreground">
+            حسابات لديها صلاحية الترحيبية: {(managers.data ?? []).length}
+          </span>
+          {(managers.data ?? []).some((m) => m.user_id === userId) ? (
+            <span className="rounded-full bg-primary/15 px-2 py-1 text-[10px] font-bold text-primary">حسابك مضاف ✓</span>
+          ) : (
+            <Button
+              onClick={() => joinTeam.mutate()}
+              disabled={joinTeam.isPending || !userId}
+              className="h-9 rounded-xl gradient-gold px-3 text-[11px] font-bold text-primary-foreground"
+            >
+              {joinTeam.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "أضف حسابي"}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2 rounded-2xl border border-border bg-surface p-3">
