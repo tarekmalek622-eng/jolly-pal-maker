@@ -1911,6 +1911,7 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      level_for_xp: { Args: { _xp: number }; Returns: number }
       lock_relationship_slot: {
         Args: {
           _type: Database["public"]["Enums"]["relation_type"]
@@ -2297,6 +2298,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      xp_total_for_level: { Args: { _level: number }; Returns: number }
     }
     Enums: {
       app_role:
