@@ -25,7 +25,15 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function RoundLine({ round, onRecover, busy }: { round: GameRoundRow; onRecover?: () => void; busy?: boolean }) {
+function RoundLine({
+  round,
+  onRecover,
+  busy,
+}: {
+  round: GameRoundRow;
+  onRecover?: (() => void) | undefined;
+  busy?: boolean | undefined;
+}) {
   return (
     <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-surface px-3 py-2">
       <div className="min-w-0">
