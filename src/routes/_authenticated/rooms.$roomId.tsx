@@ -631,6 +631,14 @@ function RoomPage() {
             </Button>
           )}
           <Button
+            onClick={() => setLuckyOpen(true)}
+            variant="outline"
+            className="h-10 flex-1 rounded-full px-2 text-[10px] font-bold"
+            aria-label="حقيبة الحظ"
+          >
+            <span className="me-1 text-base leading-none">🧧</span> حقيبة الحظ
+          </Button>
+          <Button
             onClick={() => setGiftOpen(true)}
             className="h-10 flex-1 rounded-full gradient-rose px-2 text-[10px] font-bold text-primary-foreground"
           >
@@ -752,6 +760,8 @@ function RoomPage() {
       />
 
       <RoomSupporters roomId={roomId} open={cupOpen} onOpenChange={setCupOpen} />
+
+      <LuckyBagSheet roomId={roomId} open={luckyOpen} onOpenChange={setLuckyOpen} />
 
       <GiftSheet
         key={giftTargetId ?? "all"}

@@ -48,7 +48,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const { userId } = useSupabaseSession();
   const wallet = useWallet(userId);
   const refreshMoney = useRefreshMoney();
-  const [amount, setAmount] = useState(100_000);
+  const [amount, setAmount] = useState(10_000_000);
   const [now, setNow] = useState(() => Date.now());
   const [highlight, setHighlight] = useState(0);
   const [spinning, setSpinning] = useState(false);
