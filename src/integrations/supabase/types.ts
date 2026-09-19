@@ -2163,7 +2163,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "super_admin" | "admin" | "moderator" | "host" | "user"
+      app_role:
+        | "super_admin"
+        | "admin"
+        | "moderator"
+        | "host"
+        | "user"
+        | "welcome_manager"
       friend_status: "pending" | "accepted" | "rejected"
       gender_type: "male" | "female"
       relation_type: "couple" | "soulmate" | "favorite_friend" | "close_friend"
@@ -2295,7 +2301,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "admin", "moderator", "host", "user"],
+      app_role: [
+        "super_admin",
+        "admin",
+        "moderator",
+        "host",
+        "user",
+        "welcome_manager",
+      ],
       friend_status: ["pending", "accepted", "rejected"],
       gender_type: ["male", "female"],
       relation_type: ["couple", "soulmate", "favorite_friend", "close_friend"],
