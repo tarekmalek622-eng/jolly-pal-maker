@@ -237,7 +237,11 @@ function UsersTab() {
   });
 
   const setRole = useMutation({
-    mutationFn: async (input: { userId: string; role: "admin" | "moderator" | "host"; grant: boolean }) =>
+    mutationFn: async (input: {
+      userId: string;
+      role: "admin" | "moderator" | "host" | "welcome_manager";
+      grant: boolean;
+    }) =>
       adminSetUserRole({ data: input }),
     onSuccess: () => {
       toast.success("تم تحديث الصلاحية");
