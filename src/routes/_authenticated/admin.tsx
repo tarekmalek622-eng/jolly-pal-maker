@@ -3349,11 +3349,30 @@ type WelcomeClaimRow = {
 };
 
 /** لوحة الترحيبية: البحث بالمعرّف، إرسال الهدية مرة واحدة لكل مستخدم وجهاز، وسجل الاستلام. */
-function WelcomeTab() {
-  const [publicId, setPublicId] = useState("");
+function WelcomeTab({ prefill }: { prefill?: string | null }) {
+  const [publicId, setPublicId] = useState(prefill ?? "");
   const [device, setDevice] = useState("");
   const [video, setVideo] = useState("");
   const [found, setFound] = useState<{ profile: WelcomeProfile; alreadyClaimed: boolean } | null>(null);
+  const { userId } = useSupabaseSession();
+
+  const managers = useQuery({
+    queryKey: ["welcome-managers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("user_roles").select("user_id").eq("role", "welcome_manager");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const joinTeam = useMutation({
+    mutationFn: async () => adminSetUserRole({ data: { userId: userId!, role: "welcome_manager", grant: true } }),
+    onSuccess: async () => {
+      toast.success("تمت إضافة حسابك إلى فريق الترحيبية");
+      await managers.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر إضافة الحساب"),
+  });
 
   const claims = useQuery({
     queryKey: ["admin-welcome-claims"],
