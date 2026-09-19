@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Coins,
@@ -3436,7 +3436,7 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
           className="h-11 rounded-2xl"
         />
         <Button
-          onClick={() => lookup.mutate()}
+          onClick={() => lookup.mutate(publicId.trim())}
           disabled={lookup.isPending || publicId.trim().length < 3}
           variant="outline"
           className="h-11 w-full rounded-2xl"
