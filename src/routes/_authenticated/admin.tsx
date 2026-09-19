@@ -9,6 +9,7 @@ import {
   Crown,
   Flag,
   Gamepad2,
+  Activity,
   Gem,
   Gift,
   HelpCircle,
@@ -66,6 +67,7 @@ import {
 } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 import { AdminBadgeCrest } from "@/components/AdminBadgeCrest";
+import { GameMonitorTab } from "@/components/GameMonitorTab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -92,6 +94,7 @@ const TABS = [
   { key: "coins", label: "الكوينز", icon: Coins },
   { key: "topups", label: "طلبات الشحن", icon: CreditCard },
   { key: "games", label: "الألعاب", icon: Gamepad2 },
+  { key: "gameEngine", label: "لوحة اللعبة", icon: Activity },
   { key: "quiz", label: "الأسئلة", icon: HelpCircle },
   { key: "reports", label: "الإبلاغات", icon: Flag },
   { key: "welcome", label: "الترحيبية", icon: PartyPopper },
@@ -189,6 +192,7 @@ function AdminPage() {
           }}
         />
       )}
+      {tab === "gameEngine" && <GameMonitorTab />}
       {tab === "rooms" && <RoomsTab />}
       {tab === "roomMessages" && <RoomMessagesTab />}
       {tab === "banners" && <BannersTab />}
