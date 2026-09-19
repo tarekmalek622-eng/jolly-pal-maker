@@ -144,7 +144,45 @@ export function GameMonitorTab() {
         ) : (
           <p className="text-[11px] text-muted-foreground">لا توجد جولة مفتوحة</p>
         )}
+
+        {data.current && (data.current.status === "betting" || data.current.status === "waiting") && (
+          <div className="mt-2 rounded-2xl border border-border bg-surface p-3">
+            <p className="text-[11px] font-black">
+              النتيجة القادمة:{" "}
+              {data.forced_key
+                ? (data.slots.find((x) => x.key === data.forced_key)?.label ?? data.forced_key)
+                : "عشوائية (لم تُحدَّد)"}
+            </p>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              اختر عنصرًا لتحديد نتيجة هذه الجولة، أو «عشوائي» لتعود للسحب التلقائي. لا يراها اللاعبون قبل الإعلان.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {data.slots.map((slot) => (
+                <Button
+                  key={slot.key}
+                  size="sm"
+                  variant={data.forced_key === slot.key ? "default" : "outline"}
+                  disabled={forceMutation.isPending}
+                  onClick={() => forceMutation.mutate({ roundId: data.current!.id, slotKey: slot.key })}
+                  className="h-8 rounded-xl px-3 text-[11px]"
+                >
+                  {slot.label} ×{slot.multiplier}
+                </Button>
+              ))}
+              <Button
+                size="sm"
+                variant={data.forced_key ? "outline" : "default"}
+                disabled={forceMutation.isPending}
+                onClick={() => forceMutation.mutate({ roundId: data.current!.id, slotKey: null })}
+                className="h-8 rounded-xl px-3 text-[11px]"
+              >
+                عشوائي
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
+
 
       <div>
         <p className="mb-2 text-xs font-black">إحصائيات آخر {data.stats.rounds} جولة</p>
