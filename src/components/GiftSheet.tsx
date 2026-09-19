@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Coins, Loader2, Search, Users, X } from "lucide-react";
+import { Coins, Loader2, Search, Send, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { GiftPlayer, GiftThumb, type GiftMediaRow } from "@/components/GiftMedia";
 import { useRefreshMoney, useWallet, useSupabaseSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
+import { formatCompact, formatFull } from "@/lib/format";
 
 /** الأنواع المولّدة لا تعرف الأعمدة الجديدة بعد. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,23 +28,29 @@ type GiftRow = GiftMediaRow & { price: number; category: string; required_vip: n
 
 const CATEGORY_LABELS: Record<string, string> = {
   all: "الكل",
+  flowers: "🌹 ورد",
+  kings: "👑 ملوك",
+  diamond: "💎 ألماس",
+  cars: "🚗 سيارات",
+  luxury: "✈️ فخامة",
+  boxes: "🎁 صناديق",
+  legendary: "🔥 أسطوري",
   general: "عام",
   romantic: "رومانسي",
-  flowers: "ورود",
   love: "حب",
   celebration: "احتفالات",
   vip: "VIP",
   cvip: "SVIP",
   rare: "نادر",
-  legendary: "أسطوري",
-  cars: "سيارات",
   gold: "ذهب",
-  diamond: "ألماس",
   occasions: "مناسبات",
   games: "ألعاب",
   animated: "متحركة",
   free: "مجاني",
 };
+
+/** ترتيب ثابت للتصنيفات الأساسية حتى لا تتغير أماكن الأزرار. */
+const CATEGORY_ORDER = ["all", "flowers", "kings", "diamond", "cars", "luxury", "boxes", "legendary"];
 
 export function GiftSheet({
   open,
@@ -68,7 +75,7 @@ export function GiftSheet({
   const [quantity, setQuantity] = useState(1);
   const [category, setCategory] = useState("all");
   const [search, setSearch] = useState("");
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const sendingRef = useRef(false);
 
   const gifts = useQuery<GiftRow[]>({
     queryKey: ["gifts-catalog"],
@@ -90,7 +97,9 @@ export function GiftSheet({
   const categories = useMemo(() => {
     const set = new Set<string>();
     (gifts.data ?? []).forEach((g) => set.add(g.category));
-    return ["all", ...Array.from(set)];
+    const known = CATEGORY_ORDER.filter((c) => c === "all" || set.has(c));
+    const extra = Array.from(set).filter((c) => !CATEGORY_ORDER.includes(c));
+    return [...known, ...extra];
   }, [gifts.data]);
 
   const visibleGifts = useMemo(() => {
@@ -116,29 +125,29 @@ export function GiftSheet({
 
   const send = useMutation({
     mutationFn: async () => {
-      if (selected.length === 0) throw new Error("اختر مستلمًا واحدًا على الأقل");
-      if (!giftId) throw new Error("اختر الهدية");
-      const { error } = await db.rpc("send_gift_bulk", {
-        _gift_id: giftId,
-        _receiver_ids: selected,
-        _room_id: roomId ?? null,
-        _quantity: quantity,
-      });
-      if (error) throw error;
+      if (sendingRef.current) throw new Error("جارٍ إرسال الهدية بالفعل");
+      sendingRef.current = true;
+      try {
+        if (selected.length === 0) throw new Error("اختر مستلمًا واحدًا على الأقل");
+        if (!giftId) throw new Error("اختر الهدية");
+        const { error } = await db.rpc("send_gift_bulk", {
+          _gift_id: giftId,
+          _receiver_ids: selected,
+          _room_id: roomId ?? null,
+          _quantity: quantity,
+        });
+        if (error) throw error;
+      } finally {
+        sendingRef.current = false;
+      }
     },
     onSuccess: async () => {
       toast.success(selected.length > 1 ? `تم إرسال الهدية إلى ${selected.length} مستخدم 🎉` : "تم إرسال الهدية 🎉");
       if (selectedGift) await onSent?.(selectedGift.name);
       refresh();
-      setConfirmOpen(false);
-      onOpenChange(false);
-      setGiftId(null);
       setQuantity(1);
     },
-    onError: (e) => {
-      setConfirmOpen(false);
-      toast.error(e instanceof Error ? e.message : "تعذر إرسال الهدية");
-    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر إرسال الهدية"),
   });
 
   return (
@@ -246,7 +255,9 @@ export function GiftSheet({
                       <GiftThumb gift={g} size={40} />
                     </div>
                     <p className="mt-1 truncate text-[10px] font-semibold">{g.name}</p>
-                    <p className="text-[10px] text-primary">{g.price.toLocaleString("en-US")}</p>
+                    <p className="text-[10px] text-primary" title={`${formatFull(g.price)} كوينز`}>
+                      {formatCompact(g.price)}
+                    </p>
                   </button>
                 ))}
               </div>
@@ -283,63 +294,42 @@ export function GiftSheet({
             </div>
 
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-surface p-3 text-sm">
-              <span className="text-muted-foreground">رصيدك: {(wallet.data?.coins ?? 0).toLocaleString("en-US")}</span>
-              <span className="flex items-center gap-1 font-bold">
-                <Coins className="h-4 w-4 text-primary" /> {total.toLocaleString("en-US")}
+              <span className="text-muted-foreground">رصيدك: {formatCompact(wallet.data?.coins ?? 0)}</span>
+              <span className="flex items-center gap-1 font-bold" title={`${formatFull(total)} كوينز`}>
+                <Coins className="h-4 w-4 text-primary" /> {formatCompact(total)}
               </span>
             </div>
+          </div>
 
-            <Button
-              onClick={() => setConfirmOpen(true)}
+          {/* زر إرسال ثابت على يسار الشاشة — إرسال مباشر بدون تأكيد إضافي */}
+          {open && (
+            <button
+              type="button"
+              onClick={() => !send.isPending && send.mutate()}
               disabled={send.isPending || selected.length === 0 || !giftId}
-              className="mt-4 h-13 w-full rounded-2xl gradient-gold py-4 font-bold text-primary-foreground"
+              className={cn(
+                "fixed bottom-6 left-4 z-[60] flex h-14 min-w-14 items-center gap-2 rounded-full px-4 text-xs font-black shadow-2xl transition-transform active:scale-95",
+                send.isPending || selected.length === 0 || !giftId
+                  ? "bg-surface-2 text-muted-foreground"
+                  : "gradient-gold text-primary-foreground",
+              )}
             >
-              {selected.length > 1 ? `إرسال إلى ${selected.length} مستخدم` : "إرسال"}
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* تأكيد الإرسال */}
-      <Sheet open={confirmOpen} onOpenChange={(v) => !send.isPending && setConfirmOpen(v)}>
-        <SheetContent side="bottom" className="rounded-t-3xl">
-          <SheetHeader>
-            <SheetTitle>تأكيد الإرسال</SheetTitle>
-          </SheetHeader>
-          <div className="space-y-2 pb-6 text-sm">
-            <Row label="الهدية" value={selectedGift?.name ?? "-"} />
-            <Row label="عدد المستلمين" value={String(selected.length)} />
-            <Row label="الكمية لكل مستلم" value={`×${quantity}`} />
-            <Row label="التكلفة الإجمالية" value={`${total.toLocaleString("en-US")} كوينز`} />
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setConfirmOpen(false)}
-                disabled={send.isPending}
-                className="h-12 flex-1 rounded-2xl"
-              >
-                <X className="h-4 w-4" /> إلغاء
-              </Button>
-              <Button
-                onClick={() => send.mutate()}
-                disabled={send.isPending}
-                className="h-12 flex-1 rounded-2xl gradient-gold font-bold text-primary-foreground"
-              >
-                {send.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "تأكيد"}
-              </Button>
-            </div>
-          </div>
+              {send.isPending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <Send className="h-5 w-5" />
+                  <span className="leading-tight">
+                    إرسال
+                    {selected.length > 1 ? ` ×${selected.length}` : ""}
+                    <span className="block text-[9px] font-bold opacity-80">{formatCompact(total)}</span>
+                  </span>
+                </>
+              )}
+            </button>
+          )}
         </SheetContent>
       </Sheet>
     </>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between rounded-xl bg-surface px-3 py-2">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-bold">{value}</span>
-    </div>
   );
 }

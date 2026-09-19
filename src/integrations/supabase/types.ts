@@ -481,7 +481,9 @@ export type Database = {
           ends_at: string
           id: string
           image_url: string | null
+          points_note: string | null
           ranking_kind: string
+          rules: string | null
           starts_at: string
           status: string
           subtitle: string | null
@@ -495,7 +497,9 @@ export type Database = {
           ends_at: string
           id?: string
           image_url?: string | null
+          points_note?: string | null
           ranking_kind: string
+          rules?: string | null
           starts_at: string
           status?: string
           subtitle?: string | null
@@ -509,7 +513,9 @@ export type Database = {
           ends_at?: string
           id?: string
           image_url?: string | null
+          points_note?: string | null
           ranking_kind?: string
+          rules?: string | null
           starts_at?: string
           status?: string
           subtitle?: string | null
@@ -1774,6 +1780,7 @@ export type Database = {
         Returns: number
       }
       award_gift_badges: { Args: { _user_id: string }; Returns: number }
+      break_app_stats: { Args: { _period: string }; Returns: Json }
       create_lucky_bag: {
         Args: {
           _message?: string

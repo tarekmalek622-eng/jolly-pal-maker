@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Coins,
@@ -103,6 +103,7 @@ function AdminPage() {
   const isAdmin = useIsAdmin(userId);
   const navigate = useNavigate();
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("users");
+  const [welcomePrefill, setWelcomePrefill] = useState<string | null>(null);
   const ownerBadge = useQuery({
     queryKey: ["admin-owner-badge", userId],
     enabled: Boolean(userId),
@@ -180,7 +181,14 @@ function AdminPage() {
         </div>
       </div>
 
-      {tab === "users" && <UsersTab />}
+      {tab === "users" && (
+        <UsersTab
+          onWelcome={(publicId) => {
+            setWelcomePrefill(publicId);
+            setTab("welcome");
+          }}
+        />
+      )}
       {tab === "rooms" && <RoomsTab />}
       {tab === "roomMessages" && <RoomMessagesTab />}
       {tab === "banners" && <BannersTab />}
@@ -194,7 +202,7 @@ function AdminPage() {
       {tab === "games" && <GamesTab />}
       {tab === "quiz" && <QuizTab />}
       {tab === "reports" && <ReportsTab />}
-      {tab === "welcome" && <WelcomeTab />}
+      {tab === "welcome" && <WelcomeTab prefill={welcomePrefill} />}
       {tab === "logs" && <LogsTab />}
     </AppShell>
   );
@@ -207,7 +215,7 @@ const ROLES = [
   { key: "welcome_manager", label: "مسؤول الترحيبية" },
 ] as const;
 
-function UsersTab() {
+function UsersTab({ onWelcome }: { onWelcome?: (publicId: string) => void }) {
   const [term, setTerm] = useState("");
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<string | null>(null);
@@ -436,6 +444,13 @@ function UsersTab() {
               </Button>
             )}
           </div>
+          <Button
+            variant="outline"
+            onClick={() => onWelcome?.(u.public_id)}
+            className="mt-2 h-10 w-full rounded-xl border-primary/40 text-[11px] font-bold text-primary"
+          >
+            <PartyPopper className="me-1.5 h-4 w-4" /> مسؤولية الترحيبية
+          </Button>
           {isSuper.data === true && (
             <div className="mt-2 space-y-2">
             <div className="flex gap-1">
@@ -3334,11 +3349,30 @@ type WelcomeClaimRow = {
 };
 
 /** لوحة الترحيبية: البحث بالمعرّف، إرسال الهدية مرة واحدة لكل مستخدم وجهاز، وسجل الاستلام. */
-function WelcomeTab() {
-  const [publicId, setPublicId] = useState("");
+function WelcomeTab({ prefill }: { prefill?: string | null }) {
+  const [publicId, setPublicId] = useState(prefill ?? "");
   const [device, setDevice] = useState("");
   const [video, setVideo] = useState("");
   const [found, setFound] = useState<{ profile: WelcomeProfile; alreadyClaimed: boolean } | null>(null);
+  const { userId } = useSupabaseSession();
+
+  const managers = useQuery({
+    queryKey: ["welcome-managers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("user_roles").select("user_id").eq("role", "welcome_manager");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const joinTeam = useMutation({
+    mutationFn: async () => adminSetUserRole({ data: { userId: userId!, role: "welcome_manager", grant: true } }),
+    onSuccess: async () => {
+      toast.success("تمت إضافة حسابك إلى فريق الترحيبية");
+      await managers.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر إضافة الحساب"),
+  });
 
   const claims = useQuery({
     queryKey: ["admin-welcome-claims"],
@@ -3349,7 +3383,7 @@ function WelcomeTab() {
   });
 
   const lookup = useMutation({
-    mutationFn: async () => lookupWelcomeUser({ data: { publicId: publicId.trim() } }),
+    mutationFn: async (id?: string) => lookupWelcomeUser({ data: { publicId: (id ?? publicId).trim() } }),
     onSuccess: (res) =>
       setFound({ profile: res.profile as unknown as WelcomeProfile, alreadyClaimed: res.alreadyClaimed }),
     onError: (e) => {
@@ -3358,11 +3392,19 @@ function WelcomeTab() {
     },
   });
 
+  const lookupRef = useRef(lookup);
+  lookupRef.current = lookup;
+  useEffect(() => {
+    if (!prefill) return;
+    setPublicId(prefill);
+    lookupRef.current.mutate(prefill);
+  }, [prefill]);
+
   const send = useMutation({
-    mutationFn: async (userId: string) =>
+    mutationFn: async (targetId: string) =>
       sendWelcomePackage({
         data: {
-          userId,
+          userId: targetId,
           ...(device.trim() ? { deviceIdentifier: device.trim() } : {}),
           ...(video.trim() ? { videoUrl: video.trim() } : {}),
         },
@@ -3384,6 +3426,22 @@ function WelcomeTab() {
         <p className="mt-1 text-[10px] text-muted-foreground">
           1,000,000,000 كوينز + VIP 3 لمدة 7 أيام + معرّف من 6 أرقام — مرة واحدة فقط لكل مستخدم ولكل جهاز.
         </p>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="flex-1 text-[10px] text-muted-foreground">
+            حسابات لديها صلاحية الترحيبية: {(managers.data ?? []).length}
+          </span>
+          {(managers.data ?? []).some((m) => m.user_id === userId) ? (
+            <span className="rounded-full bg-primary/15 px-2 py-1 text-[10px] font-bold text-primary">حسابك مضاف ✓</span>
+          ) : (
+            <Button
+              onClick={() => joinTeam.mutate()}
+              disabled={joinTeam.isPending || !userId}
+              className="h-9 rounded-xl gradient-gold px-3 text-[11px] font-bold text-primary-foreground"
+            >
+              {joinTeam.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "أضف حسابي"}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2 rounded-2xl border border-border bg-surface p-3">
@@ -3394,7 +3452,7 @@ function WelcomeTab() {
           className="h-11 rounded-2xl"
         />
         <Button
-          onClick={() => lookup.mutate()}
+          onClick={() => lookup.mutate(publicId.trim())}
           disabled={lookup.isPending || publicId.trim().length < 3}
           variant="outline"
           className="h-11 w-full rounded-2xl"
