@@ -2,12 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Dices, Loader2, Sparkles, Spade, HelpCircle, Flame, LayoutGrid } from "lucide-react";
+import { Dices, Loader2, Sparkles, Spade, HelpCircle, Flame, LayoutGrid, Cherry } from "lucide-react";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DominoGame } from "@/components/DominoGame";
 import { LiveWheel } from "@/components/LiveWheel";
+import { Game77 } from "@/components/Game77";
 import { AppCup } from "@/components/AppCup";
 import { FourDayEvent } from "@/components/FourDayEvent";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,12 +36,13 @@ export const Route = createFileRoute("/_authenticated/games")({
   component: GamesPage,
 });
 
-type GameKey = "domino" | "dice" | "wheel" | "cards" | "quiz" | "challenge";
+type GameKey = "domino" | "dice" | "wheel" | "seven77" | "cards" | "quiz" | "challenge";
 
 const GAME_TABS: { key: GameKey; label: string; icon: typeof Dices; flag: string }[] = [
   { key: "domino", label: "دومينو", icon: LayoutGrid, flag: "domino" },
   { key: "dice", label: "النرد", icon: Dices, flag: "dice" },
   { key: "wheel", label: "العجلة", icon: Sparkles, flag: "wheel" },
+  { key: "seven77", label: "لعبة 77", icon: Cherry, flag: "seven77" },
   { key: "cards", label: "الورق", icon: Spade, flag: "cards" },
   { key: "quiz", label: "الأسئلة", icon: HelpCircle, flag: "quiz" },
   { key: "challenge", label: "التحديات", icon: Flame, flag: "quiz" },
@@ -58,7 +60,7 @@ function GamesPage() {
   const wallet = useWallet(userId);
   const refresh = useRefreshMoney();
   const [game, setGame] = useState<GameKey>("domino");
-  const [bet, setBet] = useState(100);
+  const [bet, setBet] = useState(10_000_000);
   const [guess, setGuess] = useState(6);
   const [challenge, setChallenge] = useState<"reflex" | "memory" | "luck">("reflex");
   const [result, setResult] = useState<string | null>(null);
@@ -171,6 +173,9 @@ function GamesPage() {
 
   const flags = settings.data?.games ?? {};
   const limits = settings.data?.limits ?? { min_bet: 50, max_bet: 5000 };
+  const betSteps = Array.from(
+    new Set([limits.min_bet, limits.min_bet * 2, limits.min_bet * 5, limits.min_bet * 10, limits.max_bet]),
+  ).filter((n) => n >= limits.min_bet && n <= limits.max_bet);
   const tabs = GAME_TABS.filter((t) => flags[t.flag] !== false);
   const active = tabs.some((t) => t.key === game) ? game : tabs[0]?.key;
 
@@ -228,14 +233,18 @@ function GamesPage() {
 
           {active === "domino" && <DominoGame roomId={search.room ?? null} />}
           {active === "wheel" && <LiveWheel roomId={search.room ?? null} />}
+          {active === "seven77" && (
+            <div className="mb-3">
+              <Game77 bet={bet} onSettled={afterPlay} />
+            </div>
+          )}
 
           <div className={cn("surface-card p-5", (active === "domino" || active === "wheel") && "hidden")}>
             <p className="text-sm font-bold">
               مبلغ الرهان (بين {limits.min_bet.toLocaleString("en-US")} و {limits.max_bet.toLocaleString("en-US")})
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {[50, 100, 500, 1000, 5000]
-                .filter((n) => n >= limits.min_bet && n <= limits.max_bet)
+              {betSteps
                 .map((n) => (
                   <button
                     key={n}
@@ -310,7 +319,11 @@ function GamesPage() {
               </>
             )}
 
-            {active === "quiz" && quiz ? (
+            {active === "seven77" ? (
+              <p className="mt-5 text-[11px] text-muted-foreground">
+                اختر مبلغ الرهان من الأعلى ثم اضغط «دوّر» داخل لوحة اللعبة.
+              </p>
+            ) : active === "quiz" && quiz ? (
               <div className="mt-5 space-y-2">
                 <p className="text-sm font-bold">{quiz.question}</p>
                 {quiz.choices.map((choice, index) => (
@@ -372,7 +385,9 @@ function GamesPage() {
                             ? "الورق"
                             : s.game === "quiz"
                               ? "الأسئلة"
-                              : "التحديات"}
+                              : s.game === "seven77"
+                                ? "لعبة 77"
+                                : "التحديات"}
                   </p>
                   <p className="text-[10px] text-muted-foreground">
                     {new Date(s.created_at).toLocaleString("ar")}

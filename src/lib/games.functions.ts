@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const betSchema = z.object({ bet: z.number().int().min(10).max(100000) });
+const betSchema = z.object({ bet: z.number().int().min(10).max(200_000_000) });
 
 const WHEEL: { label: string; multiplier: number; weight: number }[] = [
   { label: "لا شيء", multiplier: 0, weight: 34 },
@@ -40,7 +40,7 @@ async function settle(
   });
 }
 
-async function assertGameEnabled(game: "dice" | "wheel" | "cards" | "quiz" | "challenge", bet: number) {
+async function assertGameEnabled(game: "dice" | "wheel" | "cards" | "quiz" | "challenge" | "seven77", bet: number) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin.from("app_settings").select("key, value").in("key", ["games", "limits"]);
   const map = new Map((data ?? []).map((r) => [r.key, r.value as Record<string, unknown>]));
@@ -324,4 +324,64 @@ export const dominoCancel = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await rpcAdmin("domino_cancel", { _uid: context.userId, _game_id: data.gameId });
     return { ok: true };
+  });
+
+/* ---------------- لعبة 77 (ثلاث بكرات) — التسوية على السيرفر ---------------- */
+
+const REELS_77: { key: string; emoji: string; label: string; weight: number }[] = [
+  { key: "seven", emoji: "7️⃣", label: "سبعة", weight: 6 },
+  { key: "diamond", emoji: "💎", label: "ألماس", weight: 8 },
+  { key: "star", emoji: "⭐", label: "نجمة", weight: 12 },
+  { key: "bell", emoji: "🔔", label: "جرس", weight: 16 },
+  { key: "lemon", emoji: "🍋", label: "ليمون", weight: 22 },
+  { key: "cherry", emoji: "🍒", label: "كرز", weight: 36 },
+];
+
+function spinReel() {
+  const total = REELS_77.reduce((sum, r) => sum + r.weight, 0);
+  let ticket = Math.random() * total;
+  for (const r of REELS_77) {
+    ticket -= r.weight;
+    if (ticket <= 0) return r;
+  }
+  return REELS_77[REELS_77.length - 1]!;
+}
+
+export const play77 = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => betSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await assertGameEnabled("seven77", data.bet);
+    const reels = [spinReel(), spinReel(), spinReel()];
+    const keys = reels.map((r) => r.key);
+    const sevens = keys.filter((k) => k === "seven").length;
+    const allSame = keys[0] === keys[1] && keys[1] === keys[2];
+    const pairCount = new Set(keys).size === 2;
+
+    let multiplier = 0;
+    let label = "لا ربح";
+    if (allSame && keys[0] === "seven") {
+      multiplier = 77;
+      label = "٧٧٧ الجائزة الكبرى";
+    } else if (allSame) {
+      multiplier = 7;
+      label = "ثلاثة متشابهة";
+    } else if (sevens === 2) {
+      multiplier = 6;
+      label = "سبعتان";
+    } else if (sevens === 1) {
+      multiplier = 0.8;
+      label = "سبعة واحدة";
+    } else if (pairCount) {
+      multiplier = 0.4;
+      label = "زوج متشابه";
+    }
+
+    const payout = Math.floor(data.bet * multiplier);
+    await settle(context.userId, data.bet, payout, `seven77:${label}`, "seven77", {
+      reels: reels.map((r) => r.emoji),
+      multiplier,
+      label,
+    });
+    return { reels: reels.map((r) => r.emoji), multiplier, label, payout };
   });
