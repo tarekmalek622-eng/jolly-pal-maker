@@ -18,6 +18,7 @@ import { useIsAdmin, useMyProfile, useSupabaseSession, useWallet } from "@/hooks
 import { uploadUserImage } from "@/lib/media";
 import { screenProfilePhoto } from "@/lib/moderation.functions";
 import { clearDeviceCredentials } from "@/lib/device-account";
+import { levelProgress } from "@/lib/levels";
 import { ProfileShowcase } from "@/components/ProfileShowcase";
 import { RelationshipShowcase } from "@/components/RelationshipShowcase";
 
