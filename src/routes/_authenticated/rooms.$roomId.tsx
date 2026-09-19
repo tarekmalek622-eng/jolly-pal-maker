@@ -733,14 +733,57 @@ function RoomPage() {
             <Button
               variant="outline"
               onClick={() => {
-                exitRoom();
-                setLeaveOpen(false);
-                void navigate({ to: "/home" });
+                void (async () => {
+                  minimizedRef.current = false;
+                  if (userId) {
+                    // الخروج النهائي: إنزال الحساب من المايك وإزالة العضوية فورًا
+                    await supabase.from("room_mics").update({ user_id: null, is_muted: false }).eq("room_id", roomId).eq("user_id", userId);
+                    await supabase.from("mic_requests").delete().eq("room_id", roomId).eq("user_id", userId);
+                    await supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", userId);
+                  }
+                  exitRoom();
+                  setLeaveOpen(false);
+                  void navigate({ to: "/home" });
+                })();
               }}
               className="h-12 w-full rounded-2xl border-destructive/40 text-destructive"
             >
               خروج من الغرفة
             </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* إعدادات الغرفة للجميع: إيقاف تأثير الهدايا */}
+      <Sheet open={roomSettingsOpen} onOpenChange={setRoomSettingsOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle className="text-start">إعدادات الغرفة</SheetTitle>
+          </SheetHeader>
+          <div className="mt-3 space-y-3 pb-4">
+            <button
+              type="button"
+              onClick={() => setGiftFx(!giftFxEnabled)}
+              className="flex w-full items-center justify-between rounded-2xl border border-border/60 bg-surface/70 p-4 text-start"
+            >
+              <span className="text-sm font-bold">تأثيرات الهدايا</span>
+              <span className={cn("rounded-full px-3 py-1 text-[11px] font-bold", giftFxEnabled ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive")}>
+                {giftFxEnabled ? "مفعّلة" : "موقوفة"}
+              </span>
+            </button>
+            <p className="text-[11px] text-muted-foreground">
+              إيقاف التأثيرات يخفي الفيديو والصوت لكل الهدايا داخل الغرف ويجعل التطبيق أسرع — الإعداد خاص بك فقط.
+            </p>
+            <button
+              type="button"
+              onClick={voice.toggleSpeaker}
+              className="flex w-full items-center justify-between rounded-2xl border border-border/60 bg-surface/70 p-4 text-start"
+            >
+              <span className="text-sm font-bold">الاستماع للغرفة</span>
+              <span className={cn("rounded-full px-3 py-1 text-[11px] font-bold", voice.speakerEnabled ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive")}>
+                {voice.speakerEnabled ? "مفتوح" : "مغلق"}
+              </span>
+            </button>
           </div>
         </SheetContent>
       </Sheet>
