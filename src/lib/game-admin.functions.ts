@@ -63,6 +63,8 @@ export interface GameMonitorData {
   };
   top: GameTopRow[];
   recovery: { id: string; action: string; created_at: string; new_value: string | null }[];
+  slots: { key: string; label: string; multiplier: number }[];
+  forced_key: string | null;
 }
 
 const ROUND_COLS =
@@ -137,9 +139,23 @@ export const getGameMonitor = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(20);
 
+    const current = (currentRes.data ?? null) as GameRoundRow | null;
+    let slots: GameMonitorData["slots"] = [];
+    if (current) {
+      const slotsRes = await supabaseAdmin.from("wheel_rounds").select("slots").eq("id", current.id).maybeSingle();
+      const raw = (slotsRes.data?.slots ?? []) as { key?: string; label?: string; multiplier?: number }[];
+      slots = (Array.isArray(raw) ? raw : []).map((s) => ({
+        key: String(s.key ?? ""),
+        label: String(s.label ?? s.key ?? ""),
+        multiplier: Number(s.multiplier ?? 0),
+      }));
+    }
+
     return {
       session,
-      current: (currentRes.data ?? null) as GameRoundRow | null,
+      current,
+      slots,
+      forced_key: current?.winning_key ?? null,
       recent: rounds,
       failed: (failedRes.data ?? []) as GameRoundRow[],
       stats: {
@@ -195,4 +211,47 @@ export const adminSettleGameDay = createServerFn({ method: "POST" })
       new_value: JSON.stringify(res.data ?? {}),
     });
     return { rewarded: Number(res.data ?? 0) };
+  });
+
+export const adminSetWheelWinner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ roundId: z.string().uuid(), slotKey: z.string().trim().min(1).max(40).nullable() })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const round = await supabaseAdmin
+      .from("wheel_rounds")
+      .select("id, status, slots, winning_key")
+      .eq("id", data.roundId)
+      .maybeSingle();
+    if (round.error || !round.data) throw new Error("الجولة غير موجودة");
+    if (!["betting", "waiting"].includes(round.data.status)) {
+      throw new Error("لا يمكن تحديد النتيجة بعد إغلاق الرهان");
+    }
+    if (data.slotKey) {
+      const keys = ((round.data.slots ?? []) as { key?: string }[]).map((s) => String(s.key ?? ""));
+      if (!keys.includes(data.slotKey)) throw new Error("هذا العنصر غير موجود في الجولة");
+    }
+
+    const updated = await supabaseAdmin
+      .from("wheel_rounds")
+      .update({ winning_key: data.slotKey })
+      .eq("id", data.roundId)
+      .select("id, winning_key")
+      .maybeSingle();
+    if (updated.error || !updated.data) throw new Error(updated.error?.message ?? "تعذر التحديد");
+
+    await supabaseAdmin.from("audit_logs").insert({
+      actor_id: context.userId,
+      target_id: data.roundId,
+      action: "admin_wheel_force_result",
+      old_value: JSON.stringify({ winning_key: round.data.winning_key }),
+      new_value: JSON.stringify({ winning_key: updated.data.winning_key }),
+    });
+    return { winning_key: updated.data.winning_key as string | null };
   });
