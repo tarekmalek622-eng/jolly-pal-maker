@@ -9,8 +9,7 @@ import { Input } from "@/components/ui/input";
 import { DominoGame } from "@/components/DominoGame";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Game77 } from "@/components/Game77";
-import { AppCup } from "@/components/AppCup";
-import { FourDayEvent } from "@/components/FourDayEvent";
+import { EventsRail } from "@/components/EventsRail";
 import { supabase } from "@/integrations/supabase/client";
 import { playDice, spinWheel, playCards, startQuiz, answerQuiz, playChallenge } from "@/lib/games.functions";
 import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-session";
@@ -194,11 +193,36 @@ function GamesPage() {
       }
     >
       <div className="mb-4 space-y-4">
-        <FourDayEvent />
-        <AppCup />
+        <EventsRail />
+        <Link
+          to="/cup"
+          className="flex items-center gap-3 rounded-3xl border border-amber-400/30 bg-gradient-to-l from-amber-400/15 to-surface p-3 active:scale-[0.99]"
+        >
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-amber-400/15">
+            <Trophy className="h-5 w-5 text-amber-400" />
+          </span>
+          <span className="flex-1">
+            <b className="block text-sm font-black">كأس التطبيق</b>
+            <span className="text-[10px] text-muted-foreground">الداعمون والمستلمون والشاحنون ومكاسب الألعاب</span>
+          </span>
+          <span className="text-xs text-amber-400">عرض</span>
+        </Link>
+        <button
+          onClick={() => setGamesOpen((v) => !v)}
+          className="flex w-full items-center gap-3 rounded-3xl border border-border bg-surface p-3 text-start active:scale-[0.99]"
+        >
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-surface-2">
+            <Gamepad2 className="h-5 w-5 text-primary" />
+          </span>
+          <span className="flex-1">
+            <b className="block text-sm font-black">الألعاب</b>
+            <span className="text-[10px] text-muted-foreground">الدومينو والعجلة و77 والنرد والورق والأسئلة والتحديات</span>
+          </span>
+          <span className="text-xs text-primary">{gamesOpen ? "إخفاء" : "فتح"}</span>
+        </button>
       </div>
 
-      {tabs.length === 0 ? (
+      {!gamesOpen ? null : tabs.length === 0 ? (
         <EmptyState title="كل الألعاب موقوفة حاليًا" />
       ) : (
         <>
