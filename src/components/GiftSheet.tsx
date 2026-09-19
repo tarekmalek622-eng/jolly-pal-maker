@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Coins, Loader2, Search, Users, X } from "lucide-react";
+import { Coins, Loader2, Search, Send, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { GiftPlayer, GiftThumb, type GiftMediaRow } from "@/components/GiftMedia";
 import { useRefreshMoney, useWallet, useSupabaseSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
+import { formatCompact, formatFull } from "@/lib/format";
 
 /** الأنواع المولّدة لا تعرف الأعمدة الجديدة بعد. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
