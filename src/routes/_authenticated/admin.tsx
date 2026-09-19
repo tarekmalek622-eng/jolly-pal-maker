@@ -103,6 +103,7 @@ function AdminPage() {
   const isAdmin = useIsAdmin(userId);
   const navigate = useNavigate();
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("users");
+  const [welcomePrefill, setWelcomePrefill] = useState<string | null>(null);
   const ownerBadge = useQuery({
     queryKey: ["admin-owner-badge", userId],
     enabled: Boolean(userId),
@@ -180,7 +181,14 @@ function AdminPage() {
         </div>
       </div>
 
-      {tab === "users" && <UsersTab />}
+      {tab === "users" && (
+        <UsersTab
+          onWelcome={(publicId) => {
+            setWelcomePrefill(publicId);
+            setTab("welcome");
+          }}
+        />
+      )}
       {tab === "rooms" && <RoomsTab />}
       {tab === "roomMessages" && <RoomMessagesTab />}
       {tab === "banners" && <BannersTab />}
@@ -194,7 +202,7 @@ function AdminPage() {
       {tab === "games" && <GamesTab />}
       {tab === "quiz" && <QuizTab />}
       {tab === "reports" && <ReportsTab />}
-      {tab === "welcome" && <WelcomeTab />}
+      {tab === "welcome" && <WelcomeTab prefill={welcomePrefill} />}
       {tab === "logs" && <LogsTab />}
     </AppShell>
   );
@@ -207,7 +215,7 @@ const ROLES = [
   { key: "welcome_manager", label: "مسؤول الترحيبية" },
 ] as const;
 
-function UsersTab() {
+function UsersTab({ onWelcome }: { onWelcome?: (publicId: string) => void }) {
   const [term, setTerm] = useState("");
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<string | null>(null);
