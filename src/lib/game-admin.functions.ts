@@ -135,7 +135,7 @@ export const getGameMonitor = createServerFn({ method: "POST" })
     const recoveryRes = await supabaseAdmin
       .from("audit_logs")
       .select("id, action, created_at, new_value")
-      .in("action", ["admin_wheel_close", "wheel_recover", "wheel_settle_day", "admin_wheel_settle_day"])
+      .in("action", ["admin_wheel_close", "wheel_recover", "wheel_settle_day", "admin_wheel_settle_day", "admin_wheel_force_result"])
       .order("created_at", { ascending: false })
       .limit(20);
 
