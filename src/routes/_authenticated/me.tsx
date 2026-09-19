@@ -156,7 +156,7 @@ function MePage() {
   }
 
   const p = profile.data;
-  const xpForNext = ((p?.level ?? 1) ) * 500;
+  const progress = levelProgress(p?.xp ?? 0);
 
   return (
     <AppShell header={<PageHeader title="ملفي" />}>
