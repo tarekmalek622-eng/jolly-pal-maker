@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
+import { formatCompact, formatFull } from "@/lib/format";
 
 export type WheelSlot = { key: string; label: string; emoji: string; multiplier: number; weight?: number };
 
@@ -18,6 +19,27 @@ type WheelRound = {
   winning_key: string | null;
   ends_at: string;
   settled_at: string | null;
+};
+
+type SlotTotal = { total: number; players: number };
+
+type WheelState = {
+  round: WheelRound | null;
+  session?: { id: string; date: string; round: number; max_rounds: number; status: string } | null;
+  slot_totals?: Record<string, SlotTotal>;
+  mine?: Record<string, number>;
+  my_payout?: number;
+};
+
+type DailyTopRow = {
+  user_id: string;
+  public_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  total_bet: number;
+  gross_win: number;
+  net_result: number;
+  rank: number;
 };
 
 type WheelBet = {
@@ -54,39 +76,50 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const [spinning, setSpinning] = useState(false);
   const lastSettled = useRef<string | null>(null);
 
-  const round = useQuery({
-    queryKey: ["wheel-round"],
+  // استعلام واحد مجمّع من السيرفر: الجولة + إجماليات كل فاكهة + رهاني.
+  // لا تُنقل آلاف الرهانات إلى الهاتف، فلا تهنيج مهما كان عدد المراهنين.
+  const state = useQuery({
+    queryKey: ["wheel-state"],
     refetchInterval: 1800,
     refetchIntervalInBackground: false,
     queryFn: async () => {
-      const { data, error } = await db.rpc("wheel_tick");
-      if (!error) return (Array.isArray(data) ? data[0] : data) as WheelRound | null;
-      // اللعبة موقوفة من الإدارة: نعرض آخر جولة ونتيجتها بدل شاشة تحميل دائمة
+      const { data, error } = await db.rpc("wheel_round_state");
+      if (!error) return data as WheelState | null;
       const last = await db
         .from("wheel_rounds")
-        .select("id, round_no, status, slots, winning_key, started_at, ends_at")
+        .select("id, session_round_no, round_no, status, slots, winning_key, ends_at, settled_at")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (last.error) throw new Error(error.message);
-      return (last.data ?? null) as WheelRound | null;
+      if (!last.data) return null;
+      return { round: { ...last.data, round_no: last.data.session_round_no ?? last.data.round_no } } as WheelState;
     },
   });
 
+  const round = useMemo(
+    () => ({
+      data: state.data?.round ?? null,
+      isLoading: state.isLoading,
+      isError: state.isError,
+      error: state.error,
+    }),
+    [state.data, state.isLoading, state.isError, state.error],
+  );
   const roundId = round.data?.id ?? null;
+  const slotTotals = state.data?.slot_totals ?? {};
+  const mineTotals = state.data?.mine ?? {};
+  const session = state.data?.session ?? null;
 
-  const bets = useQuery({
-    queryKey: ["wheel-bets", roundId],
-    enabled: Boolean(roundId),
-    refetchInterval: 1800,
+  // أفضل 10 لاعبين اليوم — صافي النتيجة الحقيقي من قاعدة البيانات
+  const dailyTop = useQuery({
+    queryKey: ["wheel-daily-top"],
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
     queryFn: async () => {
-      const { data, error } = await db
-        .from("wheel_bets")
-        .select("id, round_id, user_id, slot_key, amount, payout")
-        .eq("round_id", roundId)
-        .order("created_at", { ascending: true });
+      const { data, error } = await db.rpc("wheel_daily_top", { _limit: 10 });
       if (error) throw new Error(error.message);
-      return (data ?? []) as WheelBet[];
+      return (data ?? []) as DailyTopRow[];
     },
   });
 
@@ -105,27 +138,13 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     },
   });
 
-  // إجمالي أرباح اليوم من العجلة (من السيرفر)
-  const todayQuery = useQuery({
-    queryKey: ["wheel-today", userId],
-    enabled: Boolean(userId),
-    refetchInterval: 20000,
-    queryFn: async () => {
-      const since = new Date();
-      since.setHours(0, 0, 0, 0);
-      const { data, error } = await db
-        .from("wheel_bets")
-        .select("payout")
-        .eq("user_id", userId)
-        .gte("created_at", since.toISOString());
-      if (error) throw new Error(error.message);
-      return (data ?? []).reduce((sum: number, r: { payout: number }) => sum + Number(r.payout), 0);
-    },
-  });
-  const todayWin = todayQuery.data ?? 0;
+  // أرباح اليوم وصافي نتيجتي: من ترتيب اليوم المحسوب على السيرفر
+  const myToday = (dailyTop.data ?? []).find((row) => row.user_id === userId) ?? null;
+  const todayWin = Number(myToday?.gross_win ?? 0);
 
   const resultRound = round.data?.status === "finished" ? round.data : history.data?.[0] ?? null;
   const resultRoundId = resultRound?.id ?? null;
+  // أعلى الرهانات الفائزة فقط (٢٠ صفًا كحد أقصى) بدل تحميل رهانات الجولة كلها
   const resultBets = useQuery({
     queryKey: ["wheel-result-bets", resultRoundId],
     enabled: Boolean(resultRoundId),
@@ -135,9 +154,31 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
         .from("wheel_bets")
         .select("id, round_id, user_id, slot_key, amount, payout")
         .eq("round_id", resultRoundId)
-        .order("created_at", { ascending: true });
+        .gt("payout", 0)
+        .order("payout", { ascending: false })
+        .limit(20);
       if (error) throw new Error(error.message);
       return (data ?? []) as WheelBet[];
+    },
+  });
+
+  const myResult = useQuery({
+    queryKey: ["wheel-my-result", resultRoundId, userId],
+    enabled: Boolean(resultRoundId && userId),
+    refetchInterval: resultRoundId === roundId ? 1800 : false,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("wheel_bets")
+        .select("amount, payout")
+        .eq("round_id", resultRoundId)
+        .eq("user_id", userId)
+        .limit(200);
+      if (error) throw new Error(error.message);
+      const rows = (data ?? []) as { amount: number; payout: number }[];
+      return {
+        bet: rows.reduce((s, r) => s + Number(r.amount), 0),
+        win: rows.reduce((s, r) => s + Number(r.payout), 0),
+      };
     },
   });
 
@@ -224,27 +265,28 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     },
     onSuccess: () => {
       refreshMoney();
-      void bets.refetch();
+      void state.refetch();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر تسجيل الرهان"),
   });
 
+  // الإجماليات تأتي مجمّعة من السيرفر — لا عنصر واجهة لكل رهان
   const perSlot = useMemo(() => {
     const map = new Map<string, { total: number; mine: number; players: number }>();
-    for (const s of slots) map.set(s.key, { total: 0, mine: 0, players: 0 });
-    for (const b of bets.data ?? []) {
-      const e = map.get(b.slot_key) ?? { total: 0, mine: 0, players: 0 };
-      e.total += Number(b.amount);
-      if (b.user_id === userId) e.mine += Number(b.amount);
-      e.players += 1;
-      map.set(b.slot_key, e);
+    for (const s of slots) {
+      const agg = slotTotals[s.key];
+      map.set(s.key, {
+        total: Number(agg?.total ?? 0),
+        players: Number(agg?.players ?? 0),
+        mine: Number(mineTotals[s.key] ?? 0),
+      });
     }
     return map;
-  }, [slots, bets.data, userId]);
+  }, [slots, slotTotals, mineTotals]);
 
   const myBet = useMemo(
-    () => (bets.data ?? []).filter((b) => b.user_id === userId).reduce((sum, b) => sum + Number(b.amount), 0),
-    [bets.data, userId],
+    () => Object.values(mineTotals).reduce((sum, v) => sum + Number(v), 0),
+    [mineTotals],
   );
 
   const resultLeaderboard = useMemo(() => {
@@ -258,14 +300,8 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
       .slice(0, 8);
   }, [resultBets.data]);
 
-  const resultMyWin = useMemo(
-    () => (resultBets.data ?? []).filter((bet) => bet.user_id === userId).reduce((sum, bet) => sum + Number(bet.payout), 0),
-    [resultBets.data, userId],
-  );
-  const resultMyBet = useMemo(
-    () => (resultBets.data ?? []).filter((bet) => bet.user_id === userId).reduce((sum, bet) => sum + Number(bet.amount), 0),
-    [resultBets.data, userId],
-  );
+  const resultMyWin = Number(myResult.data?.win ?? 0);
+  const resultMyBet = Number(myResult.data?.bet ?? 0);
 
   if (round.isLoading) {
     return (
@@ -292,7 +328,8 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
       <div className="wheel-board relative overflow-hidden rounded-3xl p-3">
         <div className="flex items-center justify-between gap-2">
           <span className="wheel-cabin-cap rounded-full px-3 py-1 text-[11px] font-extrabold">
-            اليوم الجولة {round.data?.round_no ?? "-"}
+            جولة {round.data?.round_no ?? "-"}
+            {session ? ` / ${session.max_rounds}` : ""}
           </span>
           <span
             className={cn(
@@ -535,6 +572,58 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
           )}
         </div>
       )}
+      {/* 🏆 كأس اليوم — أفضل ١٠ حسب صافي النتيجة */}
+      <div className="surface-card p-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-extrabold text-primary">🏆 كأس اليوم — أفضل 10</p>
+          <span className="text-[10px] text-muted-foreground">صافي النتيجة = الأرباح − الرهانات</span>
+        </div>
+        {(dailyTop.data ?? []).length === 0 ? (
+          <p className="mt-3 rounded-2xl bg-surface-2 py-3 text-center text-[11px] text-muted-foreground">
+            لا نتائج اليوم بعد — أول رهان يفتح الترتيب.
+          </p>
+        ) : (
+          <div className="mt-2 space-y-1">
+            {(dailyTop.data ?? []).map((row) => (
+              <div
+                key={row.user_id}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-2 py-1.5 text-[11px]",
+                  row.user_id === userId ? "bg-primary/10" : "bg-surface-2",
+                )}
+              >
+                <span className="w-5 text-center font-extrabold text-primary">
+                  {row.rank === 1 ? "🥇" : row.rank === 2 ? "🥈" : row.rank === 3 ? "🥉" : row.rank}
+                </span>
+                {row.avatar_url ? (
+                  <img
+                    src={row.avatar_url}
+                    alt={row.display_name}
+                    loading="lazy"
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 rounded-lg object-cover"
+                  />
+                ) : (
+                  <span className="h-7 w-7 rounded-lg bg-surface-3" />
+                )}
+                <span className="min-w-0 flex-1 truncate font-bold">{row.display_name}</span>
+                <span className="text-[10px] text-muted-foreground">#{row.public_id}</span>
+                <span className="text-[10px] text-muted-foreground" title="الأرباح الإجمالية">
+                  {formatCompact(row.gross_win)}
+                </span>
+                <span
+                  className={cn("font-extrabold", Number(row.net_result) >= 0 ? "text-success" : "text-destructive")}
+                  title={`${formatFull(row.net_result)} كوينز`}
+                >
+                  {Number(row.net_result) >= 0 ? "+" : "−"}
+                  {formatCompact(Math.abs(Number(row.net_result)))}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

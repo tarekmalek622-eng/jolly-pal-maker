@@ -1593,9 +1593,11 @@ export type Database = {
         Row: {
           badge_url: string | null
           duration_days: number
+          entrance_animation: string | null
           frame_url: string | null
           is_active: boolean
           level: number
+          mic_protection: number
           name: string
           name_effect: string | null
           perks: Json
@@ -1606,9 +1608,11 @@ export type Database = {
         Insert: {
           badge_url?: string | null
           duration_days?: number
+          entrance_animation?: string | null
           frame_url?: string | null
           is_active?: boolean
           level: number
+          mic_protection?: number
           name: string
           name_effect?: string | null
           perks?: Json
@@ -1619,9 +1623,11 @@ export type Database = {
         Update: {
           badge_url?: string | null
           duration_days?: number
+          entrance_animation?: string | null
           frame_url?: string | null
           is_active?: boolean
           level?: number
+          mic_protection?: number
           name?: string
           name_effect?: string | null
           perks?: Json
@@ -1715,39 +1721,157 @@ export type Database = {
           },
         ]
       }
+      wheel_daily_results: {
+        Row: {
+          created_at: string
+          id: string
+          net_result: number
+          rank: number | null
+          reward_coins: number
+          rewarded_at: string | null
+          session_id: string
+          total_bet: number
+          total_payout: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          net_result?: number
+          rank?: number | null
+          reward_coins?: number
+          rewarded_at?: string | null
+          session_id: string
+          total_bet?: number
+          total_payout?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          net_result?: number
+          rank?: number | null
+          reward_coins?: number
+          rewarded_at?: string | null
+          session_id?: string
+          total_bet?: number
+          total_payout?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wheel_daily_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "wheel_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wheel_rounds: {
         Row: {
+          attempts: number
           created_at: string
           ends_at: string
           id: string
+          last_error: string | null
+          processing_started_at: string | null
           round_no: number
+          session_id: string | null
+          session_round_no: number | null
           settled_at: string | null
           slots: Json
           started_at: string
           status: string
+          total_amount: number
+          total_bets: number
+          total_payout: number
           winning_key: string | null
         }
         Insert: {
+          attempts?: number
           created_at?: string
           ends_at: string
           id?: string
+          last_error?: string | null
+          processing_started_at?: string | null
           round_no?: number
+          session_id?: string | null
+          session_round_no?: number | null
           settled_at?: string | null
           slots: Json
           started_at?: string
           status?: string
+          total_amount?: number
+          total_bets?: number
+          total_payout?: number
           winning_key?: string | null
         }
         Update: {
+          attempts?: number
           created_at?: string
           ends_at?: string
           id?: string
+          last_error?: string | null
+          processing_started_at?: string | null
           round_no?: number
+          session_id?: string | null
+          session_round_no?: number | null
           settled_at?: string | null
           slots?: Json
           started_at?: string
           status?: string
+          total_amount?: number
+          total_bets?: number
+          total_payout?: number
           winning_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wheel_rounds_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "wheel_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wheel_sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          max_rounds: number
+          session_date: string
+          settled_at: string | null
+          started_at: string
+          status: string
+          total_rounds: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          max_rounds?: number
+          session_date: string
+          settled_at?: string | null
+          started_at?: string
+          status?: string
+          total_rounds?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          max_rounds?: number
+          session_date?: string
+          settled_at?: string | null
+          started_at?: string
+          status?: string
+          total_rounds?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2283,19 +2407,63 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      wheel_settings: { Args: never; Returns: Json }
-      wheel_settle: { Args: { _round_id: string }; Returns: undefined }
-      wheel_tick: {
+      wheel_daily_top: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          gross_win: number
+          net_result: number
+          public_id: string
+          rank: number
+          total_bet: number
+          user_id: string
+        }[]
+      }
+      wheel_round_state: { Args: never; Returns: Json }
+      wheel_session_today: {
         Args: never
         Returns: {
           created_at: string
+          ended_at: string | null
+          id: string
+          max_rounds: number
+          session_date: string
+          settled_at: string | null
+          started_at: string
+          status: string
+          total_rounds: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wheel_sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      wheel_settings: { Args: never; Returns: Json }
+      wheel_settle: { Args: { _round_id: string }; Returns: undefined }
+      wheel_settle_day: { Args: { _session_id: string }; Returns: number }
+      wheel_tick: {
+        Args: never
+        Returns: {
+          attempts: number
+          created_at: string
           ends_at: string
           id: string
+          last_error: string | null
+          processing_started_at: string | null
           round_no: number
+          session_id: string | null
+          session_round_no: number | null
           settled_at: string | null
           slots: Json
           started_at: string
           status: string
+          total_amount: number
+          total_bets: number
+          total_payout: number
           winning_key: string | null
         }
         SetofOptions: {
