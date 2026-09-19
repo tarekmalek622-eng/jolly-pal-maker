@@ -1211,3 +1211,37 @@ function SeatBtn({
     </button>
   );
 }
+
+/* أزرار التحكم المدوّرة الصغيرة أسفل الغرفة */
+function RoundControl({
+  label,
+  children,
+  onClick,
+  active,
+  tone,
+}: {
+  label: string;
+  children: ReactNode;
+  onClick: () => void;
+  active?: boolean;
+  tone?: "gift";
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className={cn(
+        "grid h-10 w-10 shrink-0 place-items-center rounded-full border transition-colors",
+        tone === "gift"
+          ? "gradient-rose border-transparent text-primary-foreground"
+          : active
+            ? "border-success/60 bg-success/15 text-success"
+            : "border-border/60 bg-surface/70 text-muted-foreground",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
