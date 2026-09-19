@@ -27,6 +27,13 @@ type GiftRow = GiftMediaRow & { price: number; category: string; required_vip: n
 
 const CATEGORY_LABELS: Record<string, string> = {
   all: "الكل",
+  flowers: "🌹 ورد",
+  kings: "👑 ملوك",
+  diamond: "💎 ألماس",
+  cars: "🚗 سيارات",
+  luxury: "✈️ فخامة",
+  boxes: "🎁 صناديق",
+  legendary: "🔥 أسطوري",
   general: "عام",
   romantic: "رومانسي",
   flowers: "ورود",
