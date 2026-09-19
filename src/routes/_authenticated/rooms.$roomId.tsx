@@ -610,40 +610,33 @@ function RoomPage() {
             <Send className="h-4 w-4" />
           </Button>
         </div>
-        <div className="mt-2 flex items-center gap-2">
-          <Button
-            variant="outline"
+        <div className="mt-2 flex items-center justify-center gap-3">
+          <RoundControl
+            label={voice.micEnabled ? "المايك مفتوح" : "المايك مغلق"}
+            active={voice.micEnabled}
             onClick={() => {
               voice.toggleMic().catch((e: unknown) => toast.error(e instanceof Error ? e.message : "تعذر تشغيل المايك"));
             }}
-            className={cn("h-10 flex-1 rounded-full px-2 text-[10px]", voice.micEnabled && "border-success text-success")}
           >
-            {voice.micEnabled ? <Mic className="me-1 h-4 w-4" /> : <MicOff className="me-1 h-4 w-4" />}
-            {voice.micEnabled ? "المايك مفتوح" : "المايك مغلق"}
-          </Button>
-          <Button variant="outline" onClick={voice.toggleSpeaker} className="h-10 flex-1 rounded-full px-2 text-[10px]">
-            {voice.speakerEnabled ? <Volume2 className="me-1 h-4 w-4" /> : <VolumeX className="me-1 h-4 w-4" />}
-            {voice.speakerEnabled ? "السماعة" : "صامت"}
-          </Button>
+            {voice.micEnabled ? <Mic className="h-4.5 w-4.5" /> : <MicOff className="h-4.5 w-4.5" />}
+          </RoundControl>
+          <RoundControl label={voice.speakerEnabled ? "السماعة" : "صامت"} active={voice.speakerEnabled} onClick={voice.toggleSpeaker}>
+            {voice.speakerEnabled ? <Volume2 className="h-4.5 w-4.5" /> : <VolumeX className="h-4.5 w-4.5" />}
+          </RoundControl>
           {!mySeat && (
-            <Button variant="outline" onClick={() => requestMic.mutate()} className="h-10 flex-1 rounded-full px-2 text-[10px]">
-              <Hand className="me-1 h-4 w-4" /> طلب مايك
-            </Button>
+            <RoundControl label="طلب مايك" onClick={() => requestMic.mutate()}>
+              <Hand className="h-4.5 w-4.5" />
+            </RoundControl>
           )}
-          <Button
-            onClick={() => setLuckyOpen(true)}
-            variant="outline"
-            className="h-10 flex-1 rounded-full px-2 text-[10px] font-bold"
-            aria-label="حقيبة الحظ"
-          >
-            <span className="me-1 text-base leading-none">🧧</span> حقيبة الحظ
-          </Button>
-          <Button
-            onClick={() => setGiftOpen(true)}
-            className="h-10 flex-1 rounded-full gradient-rose px-2 text-[10px] font-bold text-primary-foreground"
-          >
-            <Gift className="me-1 h-4 w-4" /> هدية
-          </Button>
+          <RoundControl label="حقيبة الحظ" onClick={() => setLuckyOpen(true)}>
+            <span className="text-base leading-none">🧧</span>
+          </RoundControl>
+          <RoundControl label="هدية" tone="gift" onClick={() => setGiftOpen(true)}>
+            <Gift className="h-4.5 w-4.5" />
+          </RoundControl>
+          <RoundControl label="إعدادات الغرفة" onClick={() => setRoomSettingsOpen(true)}>
+            <Settings className="h-4.5 w-4.5" />
+          </RoundControl>
         </div>
         <input
           ref={musicRef}
