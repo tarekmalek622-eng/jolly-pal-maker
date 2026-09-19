@@ -36,21 +36,20 @@ const CATEGORY_LABELS: Record<string, string> = {
   legendary: "🔥 أسطوري",
   general: "عام",
   romantic: "رومانسي",
-  flowers: "ورود",
   love: "حب",
   celebration: "احتفالات",
   vip: "VIP",
   cvip: "SVIP",
   rare: "نادر",
-  legendary: "أسطوري",
-  cars: "سيارات",
   gold: "ذهب",
-  diamond: "ألماس",
   occasions: "مناسبات",
   games: "ألعاب",
   animated: "متحركة",
   free: "مجاني",
 };
+
+/** ترتيب ثابت للتصنيفات الأساسية حتى لا تتغير أماكن الأزرار. */
+const CATEGORY_ORDER = ["all", "flowers", "kings", "diamond", "cars", "luxury", "boxes", "legendary"];
 
 export function GiftSheet({
   open,
