@@ -8,12 +8,17 @@ type Rpc = {
 
 /** الترحيبية متاحة للإدارة ولحاملي رتبة مسؤول الترحيبية فقط. */
 async function assertWelcomeManager(supabase: Rpc, userId: string) {
-  const [admin, manager] = await Promise.all([
-    supabase.rpc("is_admin", { _user_id: userId }),
-    supabase.rpc("has_role", { _user_id: userId, _role: "welcome_manager" }),
-  ]);
+  const admin = await supabase.rpc("is_admin", { _user_id: userId });
   if (admin.data === true) return;
-  if (manager.data === true) return;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabaseAdmin as any)
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "welcome_manager")
+    .limit(1);
+  if ((data ?? []).length > 0) return;
   throw new Error("هذه العملية لمسؤول الترحيبية أو الإدارة فقط");
 }
 
