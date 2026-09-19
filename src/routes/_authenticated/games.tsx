@@ -319,7 +319,11 @@ function GamesPage() {
               </>
             )}
 
-            {active === "quiz" && quiz ? (
+            {active === "seven77" ? (
+              <p className="mt-5 text-[11px] text-muted-foreground">
+                اختر مبلغ الرهان من الأعلى ثم اضغط «دوّر» داخل لوحة اللعبة.
+              </p>
+            ) : active === "quiz" && quiz ? (
               <div className="mt-5 space-y-2">
                 <p className="text-sm font-bold">{quiz.question}</p>
                 {quiz.choices.map((choice, index) => (
@@ -381,7 +385,9 @@ function GamesPage() {
                             ? "الورق"
                             : s.game === "quiz"
                               ? "الأسئلة"
-                              : "التحديات"}
+                              : s.game === "seven77"
+                                ? "لعبة 77"
+                                : "التحديات"}
                   </p>
                   <p className="text-[10px] text-muted-foreground">
                     {new Date(s.created_at).toLocaleString("ar")}
