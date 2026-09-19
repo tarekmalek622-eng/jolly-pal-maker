@@ -879,6 +879,88 @@ export type Database = {
         }
         Relationships: []
       }
+      lucky_bag_claims: {
+        Row: {
+          amount: number
+          bag_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bag_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bag_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lucky_bag_claims_bag_id_fkey"
+            columns: ["bag_id"]
+            isOneToOne: false
+            referencedRelation: "lucky_bags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lucky_bags: {
+        Row: {
+          claimed_count: number
+          created_at: string
+          expires_at: string
+          id: string
+          message: string | null
+          remaining_amount: number
+          room_id: string
+          sender_id: string
+          status: string
+          total_amount: number
+          winners_count: number
+        }
+        Insert: {
+          claimed_count?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          message?: string | null
+          remaining_amount: number
+          room_id: string
+          sender_id: string
+          status?: string
+          total_amount: number
+          winners_count: number
+        }
+        Update: {
+          claimed_count?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          message?: string | null
+          remaining_amount?: number
+          room_id?: string
+          sender_id?: string
+          status?: string
+          total_amount?: number
+          winners_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lucky_bags_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mic_requests: {
         Row: {
           created_at: string
@@ -1540,6 +1622,42 @@ export type Database = {
         }
         Relationships: []
       }
+      welcome_claims: {
+        Row: {
+          claimed_at: string
+          claimed_by: string | null
+          created_at: string
+          device_identifier: string | null
+          id: string
+          status: string
+          user_id: string
+          video_url: string | null
+          welcome_package: Json
+        }
+        Insert: {
+          claimed_at?: string
+          claimed_by?: string | null
+          created_at?: string
+          device_identifier?: string | null
+          id?: string
+          status?: string
+          user_id: string
+          video_url?: string | null
+          welcome_package?: Json
+        }
+        Update: {
+          claimed_at?: string
+          claimed_by?: string | null
+          created_at?: string
+          device_identifier?: string | null
+          id?: string
+          status?: string
+          user_id?: string
+          video_url?: string | null
+          welcome_package?: Json
+        }
+        Relationships: []
+      }
       wheel_bets: {
         Row: {
           amount: number
@@ -1653,6 +1771,15 @@ export type Database = {
         Returns: number
       }
       award_gift_badges: { Args: { _user_id: string }; Returns: number }
+      create_lucky_bag: {
+        Args: {
+          _message?: string
+          _room_id: string
+          _total: number
+          _winners: number
+        }
+        Returns: string
+      }
       create_room: {
         Args: {
           _background_url?: string
@@ -1790,6 +1917,7 @@ export type Database = {
         Args: { _sender_id: string }
         Returns: number
       }
+      open_lucky_bag: { Args: { _bag_id: string }; Returns: number }
       purchase_cvip: {
         Args: { _plan_id: string }
         Returns: {
