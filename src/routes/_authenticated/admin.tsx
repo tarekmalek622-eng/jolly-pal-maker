@@ -14,6 +14,7 @@ import {
   HelpCircle,
   Loader2,
   Megaphone,
+  PartyPopper,
   ScrollText,
   Trash2,
   ShoppingBag,
@@ -28,6 +29,7 @@ import { uploadGiftMedia, uploadUserImage, resolveMediaUrl, type GiftMediaKind }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsAdmin, useSupabaseSession } from "@/hooks/use-session";
+import { listWelcomeClaims, lookupWelcomeUser, sendWelcomePackage } from "@/lib/welcome.functions";
 import {
   adminAdjustCoins,
   adminSetSuspended,
@@ -92,6 +94,7 @@ const TABS = [
   { key: "games", label: "الألعاب", icon: Gamepad2 },
   { key: "quiz", label: "الأسئلة", icon: HelpCircle },
   { key: "reports", label: "الإبلاغات", icon: Flag },
+  { key: "welcome", label: "الترحيبية", icon: PartyPopper },
   { key: "logs", label: "السجل", icon: ScrollText },
 ] as const;
 
@@ -191,6 +194,7 @@ function AdminPage() {
       {tab === "games" && <GamesTab />}
       {tab === "quiz" && <QuizTab />}
       {tab === "reports" && <ReportsTab />}
+      {tab === "welcome" && <WelcomeTab />}
       {tab === "logs" && <LogsTab />}
     </AppShell>
   );
@@ -3300,6 +3304,161 @@ function BannersTab() {
       ))}
       {!banners.isLoading && (banners.data ?? []).length === 0 && (
         <EmptyState title="لا توجد بنرات" hint="أضف بنر إعلان أو حدث أو مسابقة ليظهر أعلى الصفحة الرئيسية" />
+      )}
+    </div>
+  );
+}
+
+type WelcomeProfile = {
+  id: string;
+  public_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  vip_level: number | null;
+};
+
+type WelcomeClaimRow = {
+  id: string;
+  user_id: string;
+  device_identifier: string | null;
+  claimed_at: string;
+  status: string;
+  video_url: string | null;
+  welcome_package: { coins?: number; vip_level?: number; vip_days?: number } | null;
+  profile: WelcomeProfile | null;
+};
+
+/** لوحة الترحيبية: البحث بالمعرّف، إرسال الهدية مرة واحدة لكل مستخدم وجهاز، وسجل الاستلام. */
+function WelcomeTab() {
+  const [publicId, setPublicId] = useState("");
+  const [device, setDevice] = useState("");
+  const [video, setVideo] = useState("");
+  const [found, setFound] = useState<{ profile: WelcomeProfile; alreadyClaimed: boolean } | null>(null);
+
+  const claims = useQuery({
+    queryKey: ["admin-welcome-claims"],
+    queryFn: async () => {
+      const res = await listWelcomeClaims({ data: {} });
+      return (res.claims ?? []) as unknown as WelcomeClaimRow[];
+    },
+  });
+
+  const lookup = useMutation({
+    mutationFn: async () => lookupWelcomeUser({ data: { publicId: publicId.trim() } }),
+    onSuccess: (res) =>
+      setFound({ profile: res.profile as unknown as WelcomeProfile, alreadyClaimed: res.alreadyClaimed }),
+    onError: (e) => {
+      setFound(null);
+      toast.error(e instanceof Error ? e.message : "تعذر البحث");
+    },
+  });
+
+  const send = useMutation({
+    mutationFn: async (userId: string) =>
+      sendWelcomePackage({
+        data: {
+          userId,
+          ...(device.trim() ? { deviceIdentifier: device.trim() } : {}),
+          ...(video.trim() ? { videoUrl: video.trim() } : {}),
+        },
+      }),
+    onSuccess: async () => {
+      toast.success("تم إرسال الترحيبية 🎁");
+      setFound(null);
+      setPublicId("");
+      setDevice("");
+      await claims.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر إرسال الترحيبية"),
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-2xl border border-primary/35 bg-primary/10 p-3">
+        <p className="text-xs font-black text-primary">هدية الترحيب</p>
+        <p className="mt-1 text-[10px] text-muted-foreground">
+          1,000,000,000 كوينز + VIP 3 لمدة 7 أيام + معرّف من 6 أرقام — مرة واحدة فقط لكل مستخدم ولكل جهاز.
+        </p>
+      </div>
+
+      <div className="space-y-2 rounded-2xl border border-border bg-surface p-3">
+        <Input
+          value={publicId}
+          onChange={(e) => setPublicId(e.target.value)}
+          placeholder="معرّف المستخدم (ID)"
+          className="h-11 rounded-2xl"
+        />
+        <Button
+          onClick={() => lookup.mutate()}
+          disabled={lookup.isPending || publicId.trim().length < 3}
+          variant="outline"
+          className="h-11 w-full rounded-2xl"
+        >
+          بحث
+        </Button>
+
+        {found && (
+          <div className="space-y-2 rounded-2xl border border-border bg-background/50 p-3">
+            <div className="flex items-center gap-2">
+              <UserAvatar src={found.profile.avatar_url} name={found.profile.display_name} size={36} vipLevel={found.profile.vip_level ?? 0} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-black">{found.profile.display_name ?? "مستخدم"}</p>
+                <p className="text-[10px] text-muted-foreground">ID: {found.profile.public_id}</p>
+              </div>
+            </div>
+            {found.alreadyClaimed ? (
+              <p className="text-[11px] text-destructive">هذا المستخدم استلم الترحيبية بالفعل</p>
+            ) : (
+              <>
+                <Input
+                  value={device}
+                  onChange={(e) => setDevice(e.target.value)}
+                  placeholder="بصمة الجهاز (اختياري)"
+                  className="h-10 rounded-2xl"
+                />
+                <Input
+                  value={video}
+                  onChange={(e) => setVideo(e.target.value)}
+                  placeholder="رابط فيديو الترحيب (اختياري)"
+                  className="h-10 rounded-2xl"
+                />
+                <Button
+                  onClick={() => send.mutate(found.profile.id)}
+                  disabled={send.isPending}
+                  className="h-11 w-full rounded-2xl gradient-gold font-extrabold text-primary-foreground"
+                >
+                  {send.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "إرسال الترحيبية"}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      <p className="text-[11px] font-bold text-muted-foreground">سجل الترحيبيات</p>
+      {claims.isLoading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </div>
+      ) : (claims.data ?? []).length === 0 ? (
+        <EmptyState title="لا توجد ترحيبيات بعد" />
+      ) : (
+        <div className="space-y-2">
+          {(claims.data ?? []).map((c) => (
+            <div key={c.id} className="flex items-center gap-2 rounded-2xl border border-border bg-surface p-2.5">
+              <UserAvatar src={c.profile?.avatar_url} name={c.profile?.display_name} size={32} vipLevel={c.profile?.vip_level ?? 0} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[11px] font-bold">{c.profile?.display_name ?? "مستخدم"}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  ID: {c.profile?.public_id ?? "-"} · {new Date(c.claimed_at).toLocaleString("ar-EG")}
+                </p>
+              </div>
+              <span className="text-[10px] font-extrabold text-primary">
+                {(c.welcome_package?.coins ?? 0).toLocaleString("en-US")}
+              </span>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
