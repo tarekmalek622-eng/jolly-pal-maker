@@ -5,7 +5,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatCompact, formatFull } from "@/lib/format";
-import { adminRecoverRound, adminSettleGameDay, getGameMonitor, type GameRoundRow } from "@/lib/game-admin.functions";
+import {
+  adminRecoverRound,
+  adminSetWheelWinner,
+  adminSettleGameDay,
+  getGameMonitor,
+  type GameRoundRow,
+} from "@/lib/game-admin.functions";
 
 const STATUS_LABEL: Record<string, string> = {
   waiting: "بالانتظار",
@@ -61,6 +67,7 @@ export function GameMonitorTab() {
   const fetchMonitor = useServerFn(getGameMonitor);
   const recover = useServerFn(adminRecoverRound);
   const settleDay = useServerFn(adminSettleGameDay);
+  const forceWinner = useServerFn(adminSetWheelWinner);
 
   const monitor = useQuery({
     queryKey: ["game-monitor"],
@@ -72,6 +79,15 @@ export function GameMonitorTab() {
     mutationFn: (roundId: string) => recover({ data: { roundId } }),
     onSuccess: () => {
       toast.success("تم استكمال الجولة");
+      void qc.invalidateQueries({ queryKey: ["game-monitor"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const forceMutation = useMutation({
+    mutationFn: (v: { roundId: string; slotKey: string | null }) => forceWinner({ data: v }),
+    onSuccess: (res) => {
+      toast.success(res.winning_key ? "تم تحديد نتيجة الجولة" : "عادت النتيجة للسحب العشوائي");
       void qc.invalidateQueries({ queryKey: ["game-monitor"] });
     },
     onError: (e: Error) => toast.error(e.message),
