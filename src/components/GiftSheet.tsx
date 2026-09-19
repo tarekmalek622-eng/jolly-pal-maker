@@ -291,63 +291,42 @@ export function GiftSheet({
             </div>
 
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-surface p-3 text-sm">
-              <span className="text-muted-foreground">رصيدك: {(wallet.data?.coins ?? 0).toLocaleString("en-US")}</span>
-              <span className="flex items-center gap-1 font-bold">
-                <Coins className="h-4 w-4 text-primary" /> {total.toLocaleString("en-US")}
+              <span className="text-muted-foreground">رصيدك: {formatCompact(wallet.data?.coins ?? 0)}</span>
+              <span className="flex items-center gap-1 font-bold" title={`${formatFull(total)} كوينز`}>
+                <Coins className="h-4 w-4 text-primary" /> {formatCompact(total)}
               </span>
             </div>
+          </div>
 
-            <Button
-              onClick={() => setConfirmOpen(true)}
+          {/* زر إرسال ثابت على يسار الشاشة — إرسال مباشر بدون تأكيد إضافي */}
+          {open && (
+            <button
+              type="button"
+              onClick={() => !send.isPending && send.mutate()}
               disabled={send.isPending || selected.length === 0 || !giftId}
-              className="mt-4 h-13 w-full rounded-2xl gradient-gold py-4 font-bold text-primary-foreground"
+              className={cn(
+                "fixed bottom-6 left-4 z-[60] flex h-14 min-w-14 items-center gap-2 rounded-full px-4 text-xs font-black shadow-2xl transition-transform active:scale-95",
+                send.isPending || selected.length === 0 || !giftId
+                  ? "bg-surface-2 text-muted-foreground"
+                  : "gradient-gold text-primary-foreground",
+              )}
             >
-              {selected.length > 1 ? `إرسال إلى ${selected.length} مستخدم` : "إرسال"}
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* تأكيد الإرسال */}
-      <Sheet open={confirmOpen} onOpenChange={(v) => !send.isPending && setConfirmOpen(v)}>
-        <SheetContent side="bottom" className="rounded-t-3xl">
-          <SheetHeader>
-            <SheetTitle>تأكيد الإرسال</SheetTitle>
-          </SheetHeader>
-          <div className="space-y-2 pb-6 text-sm">
-            <Row label="الهدية" value={selectedGift?.name ?? "-"} />
-            <Row label="عدد المستلمين" value={String(selected.length)} />
-            <Row label="الكمية لكل مستلم" value={`×${quantity}`} />
-            <Row label="التكلفة الإجمالية" value={`${total.toLocaleString("en-US")} كوينز`} />
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setConfirmOpen(false)}
-                disabled={send.isPending}
-                className="h-12 flex-1 rounded-2xl"
-              >
-                <X className="h-4 w-4" /> إلغاء
-              </Button>
-              <Button
-                onClick={() => send.mutate()}
-                disabled={send.isPending}
-                className="h-12 flex-1 rounded-2xl gradient-gold font-bold text-primary-foreground"
-              >
-                {send.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "تأكيد"}
-              </Button>
-            </div>
-          </div>
+              {send.isPending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <Send className="h-5 w-5" />
+                  <span className="leading-tight">
+                    إرسال
+                    {selected.length > 1 ? ` ×${selected.length}` : ""}
+                    <span className="block text-[9px] font-bold opacity-80">{formatCompact(total)}</span>
+                  </span>
+                </>
+              )}
+            </button>
+          )}
         </SheetContent>
       </Sheet>
     </>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between rounded-xl bg-surface px-3 py-2">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-bold">{value}</span>
-    </div>
   );
 }
