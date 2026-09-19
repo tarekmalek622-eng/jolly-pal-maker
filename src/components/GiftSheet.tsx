@@ -96,7 +96,9 @@ export function GiftSheet({
   const categories = useMemo(() => {
     const set = new Set<string>();
     (gifts.data ?? []).forEach((g) => set.add(g.category));
-    return ["all", ...Array.from(set)];
+    const known = CATEGORY_ORDER.filter((c) => c === "all" || set.has(c));
+    const extra = Array.from(set).filter((c) => !CATEGORY_ORDER.includes(c));
+    return [...known, ...extra];
   }, [gifts.data]);
 
   const visibleGifts = useMemo(() => {
@@ -122,29 +124,29 @@ export function GiftSheet({
 
   const send = useMutation({
     mutationFn: async () => {
-      if (selected.length === 0) throw new Error("اختر مستلمًا واحدًا على الأقل");
-      if (!giftId) throw new Error("اختر الهدية");
-      const { error } = await db.rpc("send_gift_bulk", {
-        _gift_id: giftId,
-        _receiver_ids: selected,
-        _room_id: roomId ?? null,
-        _quantity: quantity,
-      });
-      if (error) throw error;
+      if (sendingRef.current) throw new Error("جارٍ إرسال الهدية بالفعل");
+      sendingRef.current = true;
+      try {
+        if (selected.length === 0) throw new Error("اختر مستلمًا واحدًا على الأقل");
+        if (!giftId) throw new Error("اختر الهدية");
+        const { error } = await db.rpc("send_gift_bulk", {
+          _gift_id: giftId,
+          _receiver_ids: selected,
+          _room_id: roomId ?? null,
+          _quantity: quantity,
+        });
+        if (error) throw error;
+      } finally {
+        sendingRef.current = false;
+      }
     },
     onSuccess: async () => {
       toast.success(selected.length > 1 ? `تم إرسال الهدية إلى ${selected.length} مستخدم 🎉` : "تم إرسال الهدية 🎉");
       if (selectedGift) await onSent?.(selectedGift.name);
       refresh();
-      setConfirmOpen(false);
-      onOpenChange(false);
-      setGiftId(null);
       setQuantity(1);
     },
-    onError: (e) => {
-      setConfirmOpen(false);
-      toast.error(e instanceof Error ? e.message : "تعذر إرسال الهدية");
-    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر إرسال الهدية"),
   });
 
   return (
