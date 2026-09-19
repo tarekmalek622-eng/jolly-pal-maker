@@ -103,6 +103,21 @@ function RoomPage() {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [vipOpen, setVipOpen] = useState(false);
   const [luckyOpen, setLuckyOpen] = useState(false);
+  const [roomSettingsOpen, setRoomSettingsOpen] = useState(false);
+  const [giftFxEnabled, setGiftFxEnabled] = useState(true);
+  const giftFxRef = useRef(true);
+  useEffect(() => {
+    const saved = typeof window === "undefined" ? null : window.localStorage.getItem("sawtak-gift-fx");
+    const on = saved !== "off";
+    setGiftFxEnabled(on);
+    giftFxRef.current = on;
+  }, []);
+  const setGiftFx = (on: boolean) => {
+    setGiftFxEnabled(on);
+    giftFxRef.current = on;
+    if (!on) setGiftQueue([]);
+    if (typeof window !== "undefined") window.localStorage.setItem("sawtak-gift-fx", on ? "on" : "off");
+  };
   const myProfile = useMyProfile(userId);
   const musicRef = useRef<HTMLInputElement>(null);
   const roomImageRef = useRef<HTMLInputElement>(null);
