@@ -204,6 +204,7 @@ const ROLES = [
   { key: "admin", label: "إدارة" },
   { key: "moderator", label: "مشرف" },
   { key: "host", label: "مضيف" },
+  { key: "welcome_manager", label: "مسؤول الترحيبية" },
 ] as const;
 
 function UsersTab() {

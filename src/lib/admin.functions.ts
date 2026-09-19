@@ -538,7 +538,7 @@ export const adminSetUserRole = createServerFn({ method: "POST" })
     z
       .object({
         userId: z.string().uuid(),
-        role: z.enum(["super_admin", "admin", "moderator", "host", "user"]),
+        role: z.enum(["super_admin", "admin", "moderator", "host", "user", "welcome_manager"]),
         grant: z.boolean(),
       })
       .parse(input),
@@ -552,14 +552,14 @@ export const adminSetUserRole = createServerFn({ method: "POST" })
     if (data.grant) {
       const { error } = await supabaseAdmin
         .from("user_roles")
-        .upsert({ user_id: data.userId, role: data.role }, { onConflict: "user_id,role" });
+        .upsert({ user_id: data.userId, role: data.role } as never, { onConflict: "user_id,role" });
       if (error) throw new Error(error.message);
     } else {
       const { error } = await supabaseAdmin
         .from("user_roles")
         .delete()
         .eq("user_id", data.userId)
-        .eq("role", data.role);
+        .eq("role", data.role as never);
       if (error) throw new Error(error.message);
     }
     await log(context.userId, data.userId, data.grant ? "grant_role" : "revoke_role", "", data.role);
