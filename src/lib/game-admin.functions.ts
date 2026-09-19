@@ -36,7 +36,7 @@ export interface GameTopRow {
   gross_win: number;
   total_bet: number;
   net_result: number;
-  rounds: number;
+  rank: number;
 }
 
 export interface GameMonitorData {
@@ -154,7 +154,7 @@ export const getGameMonitor = createServerFn({ method: "POST" })
         losers,
         avg_settle_ms: avg,
       },
-      top: ((topRes.data ?? []) as GameTopRow[]) ?? [],
+      top: (topRes.data ?? []) as GameTopRow[],
       recovery: (recoveryRes.data ?? []) as GameMonitorData["recovery"],
     };
   });
@@ -194,5 +194,5 @@ export const adminSettleGameDay = createServerFn({ method: "POST" })
       old_value: "",
       new_value: JSON.stringify(res.data ?? {}),
     });
-    return (res.data ?? {}) as Record<string, unknown>;
+    return { rewarded: Number(res.data ?? 0) };
   });
