@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Coins, Loader2, Search, Users, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,7 +74,7 @@ export function GiftSheet({
   const [quantity, setQuantity] = useState(1);
   const [category, setCategory] = useState("all");
   const [search, setSearch] = useState("");
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const sendingRef = useRef(false);
 
   const gifts = useQuery<GiftRow[]>({
     queryKey: ["gifts-catalog"],
