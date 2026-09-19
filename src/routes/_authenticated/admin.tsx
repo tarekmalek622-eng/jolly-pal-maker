@@ -955,6 +955,7 @@ function RoomsTab() {
   const [onlyActive, setOnlyActive] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
   const [nameDraft, setNameDraft] = useState("");
+  const [codeDraft, setCodeDraft] = useState("");
   const [ownerDraft, setOwnerDraft] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -1009,6 +1010,7 @@ function RoomsTab() {
           name: nameDraft.trim(),
           imageUrl,
           ownerPublicId: ownerDraft.trim() ? ownerDraft.trim() : null,
+          roomCode: codeDraft.trim() ? codeDraft.trim() : null,
         },
       });
     },
@@ -1032,6 +1034,7 @@ function RoomsTab() {
   function startEdit(room: AdminRoomRow) {
     setEditing(room.id);
     setNameDraft(room.name);
+    setCodeDraft(room.room_code);
     setOwnerDraft("");
     setImageFile(null);
     setImagePreview(null);
@@ -1108,6 +1111,13 @@ function RoomsTab() {
                   value={nameDraft}
                   onChange={(e) => setNameDraft(e.target.value)}
                   placeholder="اسم الغرفة"
+                  className="h-10 rounded-xl"
+                />
+                <Input
+                  value={codeDraft}
+                  onChange={(e) => setCodeDraft(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  placeholder="معرّف الغرفة (أرقام 4-10)"
+                  inputMode="numeric"
                   className="h-10 rounded-xl"
                 />
                 <Input

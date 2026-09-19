@@ -133,6 +133,11 @@ export const adminUpdateRoomDetails = createServerFn({ method: "POST" })
         name: z.string().trim().min(2, "اسم الغرفة قصير").max(30, "اسم الغرفة طويل"),
         imageUrl: z.string().trim().max(500).nullable(),
         ownerPublicId: z.string().trim().max(30).nullable(),
+        roomCode: z
+          .string()
+          .trim()
+          .regex(/^[0-9]{4,10}$/, "معرّف الغرفة يجب أن يكون من 4 إلى 10 أرقام")
+          .nullish(),
       })
       .parse(input),
   )
@@ -142,10 +147,23 @@ export const adminUpdateRoomDetails = createServerFn({ method: "POST" })
 
     const previous = await supabaseAdmin
       .from("rooms")
-      .select("id, name, image_url, owner_id")
+      .select("id, name, image_url, owner_id, room_code")
       .eq("id", data.roomId)
       .maybeSingle();
     if (previous.error || !previous.data) throw new Error("الغرفة غير موجودة");
+
+    let roomCode = previous.data.room_code;
+    if (data.roomCode && data.roomCode !== roomCode) {
+      const taken = await supabaseAdmin
+        .from("rooms")
+        .select("id")
+        .eq("room_code", data.roomCode)
+        .neq("id", data.roomId)
+        .maybeSingle();
+      if (taken.error) throw new Error(taken.error.message);
+      if (taken.data) throw new Error("هذا المعرّف مستخدم في غرفة أخرى");
+      roomCode = data.roomCode;
+    }
 
     let ownerId = previous.data.owner_id;
     if (data.ownerPublicId) {
@@ -161,9 +179,9 @@ export const adminUpdateRoomDetails = createServerFn({ method: "POST" })
 
     const result = await supabaseAdmin
       .from("rooms")
-      .update({ name: data.name, image_url: data.imageUrl, owner_id: ownerId })
+      .update({ name: data.name, image_url: data.imageUrl, owner_id: ownerId, room_code: roomCode })
       .eq("id", data.roomId)
-      .select("id, name, image_url, owner_id")
+      .select("id, name, image_url, owner_id, room_code")
       .maybeSingle();
     if (result.error || !result.data) throw new Error(result.error?.message ?? "تعذر تعديل الغرفة");
 
@@ -171,8 +189,8 @@ export const adminUpdateRoomDetails = createServerFn({ method: "POST" })
       context.userId,
       data.roomId,
       "admin_room_details",
-      JSON.stringify({ name: previous.data.name, image_url: previous.data.image_url, owner_id: previous.data.owner_id }),
-      JSON.stringify({ name: result.data.name, image_url: result.data.image_url, owner_id: result.data.owner_id }),
+      JSON.stringify({ name: previous.data.name, image_url: previous.data.image_url, owner_id: previous.data.owner_id, room_code: previous.data.room_code }),
+      JSON.stringify({ name: result.data.name, image_url: result.data.image_url, owner_id: result.data.owner_id, room_code: result.data.room_code }),
     );
     return result.data;
   });
@@ -918,6 +936,11 @@ export const adminCreateRoom = createServerFn({ method: "POST" })
         micCount: z.number().int().min(1).max(20),
         imageUrl: z.string().trim().max(500).nullable(),
         ownerPublicId: z.string().trim().max(30).nullable(),
+        roomCode: z
+          .string()
+          .trim()
+          .regex(/^[0-9]{4,10}$/, "معرّف الغرفة يجب أن يكون من 4 إلى 10 أرقام")
+          .nullish(),
       })
       .parse(input),
   )
