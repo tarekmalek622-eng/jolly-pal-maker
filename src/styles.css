@@ -494,3 +494,23 @@ iframe[title*="Lovable"] {
   background: linear-gradient(180deg, oklch(0.62 0.2 22), oklch(0.52 0.19 20));
   color: oklch(0.99 0.01 90);
 }
+
+/* حقيبة الحظ: ظرف أحمر بلمسات ذهبية */
+.lucky-envelope {
+  background: linear-gradient(160deg, oklch(0.55 0.2 22), oklch(0.42 0.18 18));
+  border: 1px solid oklch(0.82 0.16 85 / 0.55);
+  box-shadow: 0 8px 22px oklch(0.3 0.12 20 / 0.35);
+}
+.lucky-win {
+  animation: lucky-pop 0.35s ease-out;
+}
+@keyframes lucky-pop {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
