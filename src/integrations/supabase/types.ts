@@ -481,7 +481,9 @@ export type Database = {
           ends_at: string
           id: string
           image_url: string | null
+          points_note: string | null
           ranking_kind: string
+          rules: string | null
           starts_at: string
           status: string
           subtitle: string | null
@@ -495,7 +497,9 @@ export type Database = {
           ends_at: string
           id?: string
           image_url?: string | null
+          points_note?: string | null
           ranking_kind: string
+          rules?: string | null
           starts_at: string
           status?: string
           subtitle?: string | null
@@ -509,7 +513,9 @@ export type Database = {
           ends_at?: string
           id?: string
           image_url?: string | null
+          points_note?: string | null
           ranking_kind?: string
+          rules?: string | null
           starts_at?: string
           status?: string
           subtitle?: string | null
