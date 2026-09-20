@@ -55,6 +55,7 @@ import { cn } from "@/lib/utils";
 import roomAuroraBackground from "@/assets/room-aurora-bg.jpg";
 import { VipName } from "@/components/VipName";
 import { VipCvipSheet } from "@/components/VipCvipSheet";
+import { RoomPanels } from "@/components/RoomPanels";
 import { Crown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/rooms/$roomId")({
