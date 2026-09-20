@@ -26,8 +26,8 @@ const RARITY_ART: Record<string, { ring: string; bg: string }> = {
 };
 
 /** بطاقة الهدية المصمّمة: تُستخدم لكل هدية لا تحتوي ملف صورة مرفوعًا. */
-export function GiftArt({ gift, size = 48, className }: { gift: GiftMediaRow; size?: number; className?: string }) {
-  const art = RARITY_ART[gift.rarity ?? "common"] ?? RARITY_ART.common!;
+export function GiftArt({ gift, size = 48, className }: { gift: GiftMediaRow; size?: number; className?: string | undefined }) {
+  const art = RARITY_ART[gift.rarity ?? "common"] ?? RARITY_ART["common"]!;
   const glyph = gift.emoji && gift.emoji.trim() ? gift.emoji : "🎁";
   return (
     <div
