@@ -34,6 +34,8 @@ import { GiftOverlay, type GiftMediaRow, type GiftShowEvent } from "@/components
 import { RoomSupporters } from "@/components/RoomSupporters";
 import { RoomCosmetics, CosmeticImage } from "@/components/RoomCosmetics";
 import { DominoGame } from "@/components/DominoGame";
+import { Game77 } from "@/components/Game77";
+import { formatCompact } from "@/lib/format";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
