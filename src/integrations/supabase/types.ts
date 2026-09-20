@@ -2054,6 +2054,7 @@ export type Database = {
         Args: { _sender_id: string }
         Returns: number
       }
+      mic_protection_for: { Args: { _user_id: string }; Returns: number }
       open_lucky_bag: { Args: { _bag_id: string }; Returns: number }
       purchase_cvip: {
         Args: { _plan_id: string }
