@@ -326,10 +326,24 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   return (
     <div className="space-y-2">
       {/* لوح العجلة — نفس تخطيط الصور المرجعية */}
-      <div className="wheel-board relative overflow-hidden rounded-3xl p-3">
-        <div className="flex items-center justify-between gap-2">
+      <div className="wheel-board relative overflow-hidden rounded-3xl p-3 pt-2">
+        {/* زينة الأعلام مثل التصميم */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-between px-2 opacity-80">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <span
+              key={`flag-${i}`}
+              className="h-4 w-4 rounded-b-[3px]"
+              style={{
+                clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+                background: ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6"][i % 4],
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative flex items-center justify-between gap-2 pt-3">
           <span className="wheel-cabin-cap rounded-full px-3 py-1 text-[11px] font-extrabold">
-            جولة {round.data?.round_no ?? "-"}
+            اليوم الجولة {round.data?.round_no ?? "-"}
             {session ? ` / ${session.max_rounds}` : ""}
           </span>
           <span
@@ -342,9 +356,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
           </span>
           <span className="wheel-chip flex h-8 items-center gap-1 rounded-full border px-2.5 text-[11px] font-extrabold">
             <Trophy className="h-3.5 w-3.5" />
-            {(wallet.data?.coins ?? 0).toLocaleString("en-US")}
+            {formatCompact(wallet.data?.coins ?? 0)}
           </span>
         </div>
+
 
         {/* هيكل العجلة: أسلاك + كبائن الفواكه حولها + قلب العدّاد */}
         <div className="relative mx-auto mt-3 aspect-square w-full max-w-[360px] sm:max-w-[460px]">
