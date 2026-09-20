@@ -29,7 +29,8 @@ export function AdminBadgeCrest({
   crestKey?: string | null;
 }) {
   const palette = STYLES[styleIndex(styleKey)];
-  const art = badgeArt(crestKey) ?? (imageUrl && imageUrl.startsWith("/") ? imageUrl : null);
+  const art =
+    (imageUrl && imageUrl.startsWith("/") ? imageUrl : null) ?? badgeArt(crestKey, styleKey);
   if (art) {
     return (
       <div className={cn("relative flex flex-col items-center text-center", compact ? "w-24" : "w-full")}>

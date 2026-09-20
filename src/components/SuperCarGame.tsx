@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Timer, Trophy } from "lucide-react";
+import { AlarmClock, Loader2, Trophy, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
@@ -53,14 +53,40 @@ const db = supabase as unknown as {
   rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: any; error: { message: string } | null }>;
 };
 
-const CHIPS = [10_000, 100_000, 1_000_000, 10_000_000, 50_000_000, 100_000_000, 200_000_000];
+/** شرائح الرهان بتصميم عملات الصور */
+const CHIPS: { value: number; ring: string; face: string }[] = [
+  { value: 100, ring: "border-sky-200", face: "bg-gradient-to-b from-sky-400 to-blue-700" },
+  { value: 1_000, ring: "border-emerald-200", face: "bg-gradient-to-b from-emerald-400 to-green-700" },
+  { value: 10_000, ring: "border-amber-200/70", face: "bg-gradient-to-b from-amber-800 to-stone-900" },
+  { value: 100_000, ring: "border-orange-200", face: "bg-gradient-to-b from-orange-400 to-amber-700" },
+  { value: 1_000_000, ring: "border-rose-200", face: "bg-gradient-to-b from-rose-500 to-red-800" },
+  { value: 10_000_000, ring: "border-fuchsia-200", face: "bg-gradient-to-b from-fuchsia-500 to-purple-800" },
+  { value: 100_000_000, ring: "border-yellow-200", face: "bg-gradient-to-b from-yellow-400 to-amber-600" },
+];
+
+/** ترتيب الخانات داخل الدائرة كما في التصميم: صفّان في كل سطر */
+const GRID_ORDER = ["arrow", "wing", "suv", "flags", "crown", "horse", "diamond", "shield", "lion", "bolt"];
+
+/** مواقع الشعارات حول الحلبة */
+const RING = [
+  { key: "arrow", top: "4%", left: "50%" },
+  { key: "wing", top: "12%", left: "24%" },
+  { key: "suv", top: "12%", left: "76%" },
+  { key: "flags", top: "34%", left: "8%" },
+  { key: "crown", top: "34%", left: "92%" },
+  { key: "horse", top: "62%", left: "6%" },
+  { key: "diamond", top: "62%", left: "94%" },
+  { key: "shield", top: "84%", left: "22%" },
+  { key: "lion", top: "84%", left: "78%" },
+  { key: "bolt", top: "94%", left: "50%" },
+];
 
 /** ماكينة سباق السيارات — جولات ونتائج من السيرفر بالكامل */
 export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
   const { userId } = useSupabaseSession();
   const wallet = useWallet(userId);
   const refreshMoney = useRefreshMoney();
-  const [chip, setChip] = useState(10_000_000);
+  const [chip, setChip] = useState(100_000);
   const [now, setNow] = useState(() => Date.now());
 
   const state = useQuery({
@@ -99,10 +125,25 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
   const winners = state.data?.top ?? [];
 
   const slots = useMemo(() => (round?.slots ?? []).filter((s) => s.bettable !== false), [round?.slots]);
+  const ordered = useMemo(() => {
+    const byKey = new Map(slots.map((s) => [s.key, s]));
+    const inOrder = GRID_ORDER.map((k) => byKey.get(k)).filter(Boolean) as CarSlot[];
+    const rest = slots.filter((s) => !GRID_ORDER.includes(s.key));
+    return [...inOrder, ...rest];
+  }, [slots]);
+
   const secondsLeft = round ? Math.max(0, Math.ceil((new Date(round.ends_at).getTime() - now) / 1000)) : 0;
   const betting = round?.status === "betting" && secondsLeft > 0;
   const revealed = !!round?.winning_key;
   const winningSlot = round?.slots?.find((s) => s.key === round.winning_key) ?? null;
+  const players = useMemo(
+    () => Object.values(totals).reduce((a, t) => a + Number(t?.players ?? 0), 0),
+    [totals],
+  );
+  const dayWin = useMemo(
+    () => (daily.data ?? []).find((r) => r.user_id === userId)?.gross_win ?? 0,
+    [daily.data, userId],
+  );
 
   const bet = useMutation({
     mutationFn: async (slotKey: string) => {
@@ -125,142 +166,211 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
 
   return (
     <div className="space-y-3">
-      {/* شريط أعلى: الجولة والمؤقّت والرصيد */}
-      <div className="flex items-center justify-between rounded-2xl border border-amber-500/40 bg-gradient-to-l from-amber-950/70 to-stone-950/80 px-3 py-2">
-        <div className="flex items-center gap-2 text-amber-200">
-          <Trophy className="h-4 w-4" />
-          <span className="text-sm font-bold">
-            الجولة {round?.round_no ?? 0}
-            {session ? ` / ${session.max_rounds}` : ""}
+      {/* قاعة اللعبة */}
+      <div className="relative overflow-hidden rounded-[1.75rem] border border-amber-700/50 bg-[radial-gradient(circle_at_50%_0%,rgba(120,53,15,0.85),rgba(28,10,10,0.98))] p-3 pb-4">
+        {/* لافتة الجولة */}
+        <div className="relative mx-auto mb-2 w-fit rounded-full border-2 border-amber-400/70 bg-gradient-to-b from-amber-600/40 to-stone-950/70 px-6 py-1">
+          <span className="text-sm font-black text-amber-100">
+            الجولة <span className="text-amber-300">{round?.round_no ?? 0}</span>
+            {session ? <span className="text-[10px] text-amber-200/70"> / {session.max_rounds}</span> : null}
           </span>
         </div>
-        <div className="flex items-center gap-1 rounded-full bg-black/40 px-3 py-1 text-amber-300">
-          <Timer className="h-3.5 w-3.5" />
-          <span className="text-sm font-bold tabular-nums">{betting ? `${secondsLeft}s` : "النتيجة"}</span>
-        </div>
-        <span className="text-xs text-amber-100/80" title={formatFull(wallet.data?.coins ?? 0)}>
-          {formatCompact(wallet.data?.coins ?? 0)}
-        </span>
-      </div>
 
-      {/* حلبة الرهان — شبكة السيارات */}
-      <div className="relative overflow-hidden rounded-[2rem] border-4 border-amber-600/70 bg-gradient-to-b from-emerald-900 via-emerald-800 to-emerald-950 p-3 shadow-[0_0_40px_-10px_rgba(245,158,11,0.5)]">
-        <div className="grid grid-cols-4 gap-2">
-          {slots.map((slot) => {
-            const t = totals[slot.key];
-            const my = Number(mine[slot.key] ?? 0);
-            const isWinner = revealed && round?.winning_key === slot.key;
-            const art = carArt(slot.key);
+        {/* الحلبة الدائرية */}
+        <div className="relative mx-auto aspect-square w-full max-w-[26rem]">
+          {/* الإطار الخارجي العنابي */}
+          <div className="absolute inset-0 rounded-full border-[10px] border-rose-900/90 bg-gradient-to-b from-rose-900/60 to-stone-950/60 shadow-[0_0_40px_-6px_rgba(245,158,11,0.55)]" />
+          {/* شعارات محيط الحلبة */}
+          {RING.map((spot) => {
+            const art = carArt(spot.key);
+            const isWinner = revealed && round?.winning_key === spot.key;
             return (
-              <button
-                key={slot.key}
-                type="button"
-                disabled={!betting || bet.isPending}
-                onClick={() => bet.mutate(slot.key)}
+              <div
+                key={spot.key}
                 className={cn(
-                  "relative flex flex-col items-center gap-1 rounded-xl border-2 p-2 transition",
-                  isWinner
-                    ? "border-amber-300 bg-amber-400/25 shadow-[0_0_24px_rgba(252,211,77,0.8)]"
-                    : "border-emerald-300/30 bg-emerald-950/40",
-                  betting ? "active:scale-95" : "opacity-80",
+                  "absolute z-10 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full transition",
+                  isWinner && "scale-125 drop-shadow-[0_0_12px_rgba(252,211,77,0.95)]",
                 )}
+                style={{ top: spot.top, left: spot.left }}
               >
-                {art ? (
-                  <img src={art} alt={slot.label} loading="lazy" width={64} height={64} className="h-10 w-10 object-contain drop-shadow" />
-                ) : (
-                  <span className="text-2xl">🏎️</span>
-                )}
-                <span className="text-[11px] font-bold text-amber-200">X{slot.multiplier}</span>
-                {my > 0 && (
-                  <span className="absolute -top-2 -left-1 rounded-full bg-rose-600 px-1.5 text-[10px] font-bold text-white">
-                    {formatCompact(my)}
-                  </span>
-                )}
-                {t && t.total > 0 && (
-                  <span className="text-[9px] text-emerald-200/80">
-                    {formatCompact(t.total)} · {t.players}
-                  </span>
-                )}
-              </button>
+                {art && <img src={art} alt="" loading="lazy" width={64} height={64} className="h-full w-full object-contain" />}
+              </div>
             );
           })}
+
+          {/* الدائرة الخضراء */}
+          <div className="absolute inset-[14%] overflow-hidden rounded-full border-[3px] border-amber-300/80 bg-[radial-gradient(circle_at_50%_30%,#12855a,#065f46_60%,#03311f)] shadow-inner">
+            <div className="grid h-full grid-cols-2 grid-rows-5">
+              {ordered.map((slot) => {
+                const t = totals[slot.key];
+                const my = Number(mine[slot.key] ?? 0);
+                const isWinner = revealed && round?.winning_key === slot.key;
+                const art = carArt(slot.key);
+                return (
+                  <button
+                    key={slot.key}
+                    type="button"
+                    disabled={!betting || bet.isPending}
+                    onClick={() => bet.mutate(slot.key)}
+                    className={cn(
+                      "relative flex items-center justify-center gap-1 border border-emerald-200/15 transition",
+                      isWinner && "bg-amber-400/25 shadow-[inset_0_0_22px_rgba(252,211,77,0.75)]",
+                      betting ? "active:scale-95" : "opacity-95",
+                    )}
+                  >
+                    {art && (
+                      <img
+                        src={art}
+                        alt={slot.label}
+                        loading="lazy"
+                        width={64}
+                        height={64}
+                        className="h-6 w-6 shrink-0 object-contain drop-shadow"
+                      />
+                    )}
+                    <span className="text-[13px] font-black text-white/95 drop-shadow">X{slot.multiplier}</span>
+                    {my > 0 && (
+                      <span className="absolute -top-0.5 right-1 rounded-full bg-rose-600 px-1 text-[9px] font-black text-white shadow">
+                        {formatCompact(my)}
+                      </span>
+                    )}
+                    {t && t.total > 0 && (
+                      <span className="absolute bottom-0.5 left-1 text-[8px] text-emerald-100/70">
+                        {formatCompact(t.total)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* مؤقّت الجولة */}
+          <div className="absolute top-1 left-1 z-20 flex h-14 w-14 flex-col items-center justify-center rounded-full border-[3px] border-amber-300/90 bg-gradient-to-b from-amber-500 to-amber-800 text-stone-950 shadow-[0_0_18px_rgba(252,211,77,0.6)]">
+            <AlarmClock className="h-3.5 w-3.5" />
+            <span className="text-base font-black tabular-nums">{betting ? secondsLeft : "—"}</span>
+          </div>
+
+          {/* عدّاد اللاعبين */}
+          <div className="absolute top-1 right-1 z-20 flex items-center gap-1 rounded-full border border-amber-300/70 bg-emerald-900/90 px-2 py-1 text-[11px] font-bold text-amber-100">
+            <Users className="h-3.5 w-3.5 text-emerald-300" />
+            {players}
+          </div>
+
+          {/* لوحة النتيجة */}
+          {revealed && (
+            <div className="absolute inset-x-0 bottom-0 z-30 rounded-b-full rounded-t-[2rem] border-t-4 border-amber-400/80 bg-gradient-to-b from-rose-950/95 to-stone-950/98 px-4 pt-3 pb-6 text-center">
+              <div className="mx-auto w-fit rounded-md border-2 border-amber-300/80 bg-gradient-to-b from-rose-700 to-rose-900 px-5 py-0.5 text-xs font-black text-amber-100 shadow">
+                الجولة {round?.round_no}
+              </div>
+              <div className="mt-2 flex flex-col items-center">
+                {carArt(round?.winning_key) && (
+                  <img
+                    src={carArt(round?.winning_key) as string}
+                    alt={winningSlot?.label ?? ""}
+                    loading="lazy"
+                    width={96}
+                    height={96}
+                    className="h-14 w-14 object-contain drop-shadow-[0_0_20px_rgba(252,211,77,0.95)]"
+                  />
+                )}
+                <span className="mt-1 text-lg font-black text-amber-300 drop-shadow">
+                  X{winningSlot?.multiplier ?? 0}
+                </span>
+                <span className="text-[11px] text-amber-100/80">{winningSlot?.label ?? ""}</span>
+                <span className={cn("mt-1 text-xs font-bold", myPayout > 0 ? "text-emerald-300" : "text-stone-300")}>
+                  {myPayout > 0
+                    ? `ربحت ${formatCompact(myPayout)} 🎉`
+                    : myTotal > 0
+                      ? "لم تربح هذه الجولة"
+                      : "لم تختر أي سيارة في هذه الجولة"}
+                </span>
+              </div>
+              {winners.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-[10px] text-amber-200/80">أفضل الفائزين في هذه الجولة</p>
+                  <div className="mt-1 flex items-center justify-center gap-3">
+                    {winners.slice(0, 3).map((w) => (
+                      <div key={w.public_id} className="flex flex-col items-center">
+                        <UserAvatar src={w.avatar_url} name={w.display_name} className="h-9 w-9 ring-2 ring-amber-300/70" />
+                        <span className="max-w-16 truncate text-[10px] text-amber-100">{w.display_name}</span>
+                        <span className="text-[10px] font-black text-amber-300">{formatCompact(w.payout)} 💎</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* لوحة النتيجة */}
-        {revealed && (
-          <div className="mt-3 rounded-2xl border-2 border-amber-400/70 bg-gradient-to-b from-rose-950/90 to-stone-950/90 p-3 text-center">
-            <p className="text-xs text-amber-200">نتيجة الجولة {round?.round_no}</p>
-            <div className="mt-1 flex items-center justify-center gap-2">
-              {carArt(round?.winning_key) && (
-                <img
-                  src={carArt(round?.winning_key) as string}
-                  alt={winningSlot?.label ?? ""}
-                  loading="lazy"
-                  width={80}
-                  height={80}
-                  className="h-14 w-14 object-contain drop-shadow-[0_0_14px_rgba(252,211,77,0.9)]"
-                />
+        {/* شرائح الرهان */}
+        <div className="mt-3 flex items-center justify-center gap-2 overflow-x-auto pb-1">
+          {CHIPS.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              onClick={() => setChip(c.value)}
+              className={cn(
+                "flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-[3px] text-[11px] font-black text-white shadow-lg transition",
+                c.ring,
+                c.face,
+                chip === c.value
+                  ? "scale-110 shadow-[0_0_18px_rgba(252,211,77,0.85)] ring-2 ring-amber-200"
+                  : "opacity-80",
               )}
-              <div>
-                <p className="font-bold text-amber-100">{winningSlot?.label ?? round?.winning_key}</p>
-                <p className="text-sm font-extrabold text-amber-300">X{winningSlot?.multiplier ?? 0}</p>
-              </div>
-            </div>
-            <p className={cn("mt-1 text-sm font-bold", myPayout > 0 ? "text-emerald-300" : "text-stone-300")}>
-              {myPayout > 0 ? `ربحت ${formatCompact(myPayout)} كوينز 🎉` : myTotal > 0 ? "لم تربح هذه الجولة" : "لم تراهن في هذه الجولة"}
+            >
+              {formatCompact(c.value)}
+            </button>
+          ))}
+          {bet.isPending && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-300" />}
+        </div>
+
+        {/* لوحتا مكاسب اليوم والرصيد */}
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="rounded-2xl border-2 border-amber-400/50 bg-gradient-to-b from-rose-700/70 to-rose-950/80 px-3 py-2 text-center">
+            <p className="text-[10px] text-amber-100/90">مكاسب اليوم</p>
+            <p className="text-sm font-black text-amber-200" title={formatFull(dayWin)}>
+              {formatCompact(dayWin)}
             </p>
-            {winners.length > 0 && (
-              <div className="mt-2 flex items-center justify-center gap-3">
-                {winners.map((w) => (
-                  <div key={w.public_id} className="flex flex-col items-center">
-                    <UserAvatar src={w.avatar_url} name={w.display_name} className="h-9 w-9" />
-                    <span className="max-w-16 truncate text-[10px] text-amber-100">{w.display_name}</span>
-                    <span className="text-[10px] font-bold text-amber-300">{formatCompact(w.payout)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+          </div>
+          <div className="rounded-2xl border-2 border-amber-400/50 bg-gradient-to-b from-rose-700/70 to-rose-950/80 px-3 py-2 text-center">
+            <p className="text-[10px] text-amber-100/90">رصيدي</p>
+            <p className="text-sm font-black text-amber-200" title={formatFull(wallet.data?.coins ?? 0)}>
+              {formatCompact(wallet.data?.coins ?? 0)} 💎
+            </p>
+          </div>
+        </div>
+
+        {/* شريط النتائج السابقة */}
+        {history.length > 0 && (
+          <div className="mt-2 flex items-center gap-1 overflow-x-auto rounded-xl border border-amber-700/40 bg-stone-950/80 p-2">
+            {history.map((key, i) => {
+              const art = carArt(key);
+              return (
+                <div key={`${key ?? "none"}-${i}`} className="relative shrink-0">
+                  {art ? (
+                    <img src={art} alt="" loading="lazy" width={40} height={40} className="h-7 w-7 object-contain" />
+                  ) : (
+                    <span className="block w-7 text-center text-xs text-stone-500">—</span>
+                  )}
+                  {i === 0 && (
+                    <span className="absolute -bottom-1 left-0 rounded-sm bg-emerald-600 px-1 text-[7px] font-black text-white">
+                      NEW
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* شرائح الرهان */}
-      <div className="flex flex-wrap items-center gap-2">
-        {CHIPS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setChip(c)}
-            className={cn(
-              "h-10 w-14 rounded-full border-2 text-xs font-bold transition",
-              chip === c
-                ? "border-amber-300 bg-amber-500/30 text-amber-100 shadow-[0_0_14px_rgba(252,211,77,0.6)]"
-                : "border-stone-600 bg-stone-900/60 text-stone-300",
-            )}
-          >
-            {formatCompact(c)}
-          </button>
-        ))}
-        {bet.isPending && <Loader2 className="h-4 w-4 animate-spin text-amber-300" />}
-      </div>
-
-      {/* شريط النتائج السابقة */}
-      {history.length > 0 && (
-        <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-stone-700 bg-stone-950/70 p-2">
-          {history.map((key, i) => {
-            const art = carArt(key);
-            return art ? (
-              <img key={`${key}-${i}`} src={art} alt="" loading="lazy" width={40} height={40} className="h-7 w-7 shrink-0 object-contain" />
-            ) : (
-              <span key={`none-${i}`} className="shrink-0 text-xs text-stone-500">—</span>
-            );
-          })}
-        </div>
-      )}
-
       {/* كأس اليوم */}
       <div className="rounded-2xl border border-amber-600/40 bg-stone-950/70 p-3">
-        <p className="mb-2 text-sm font-bold text-amber-200">🏆 كأس اليوم — أفضل 10</p>
+        <p className="mb-2 flex items-center gap-1 text-sm font-bold text-amber-200">
+          <Trophy className="h-4 w-4" /> كأس اليوم — أفضل 10
+        </p>
         {daily.isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin text-amber-300" />
         ) : (daily.data ?? []).length === 0 ? (
