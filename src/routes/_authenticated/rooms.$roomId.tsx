@@ -799,6 +799,17 @@ function RoomPage() {
           <div className="mt-3 space-y-3 pb-4">
             <button
               type="button"
+              onClick={() => {
+                setRoomSettingsOpen(false);
+                setRoomPanelsOpen(true);
+              }}
+              className="flex w-full items-center justify-between rounded-2xl border border-primary/40 bg-primary/10 p-4 text-start"
+            >
+              <span className="text-sm font-bold text-primary">لوحة الغرفة</span>
+              <span className="text-[11px] text-muted-foreground">المعلومات · الأعضاء · النشاطات · صندوق الكنز · الجوائز</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setGiftFx(!giftFxEnabled)}
               className="flex w-full items-center justify-between rounded-2xl border border-border/60 bg-surface/70 p-4 text-start"
             >
