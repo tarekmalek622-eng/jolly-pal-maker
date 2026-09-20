@@ -393,6 +393,56 @@ export type Database = {
         }
         Relationships: []
       }
+      crown_messages: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          kind: string
+          metadata: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          kind?: string
+          metadata?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          kind?: string
+          metadata?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crown_messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "cup_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cup_event_payouts: {
         Row: {
           beneficiary_user_id: string
@@ -2082,6 +2132,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      events_tick: { Args: never; Returns: number }
       expire_due_vip: { Args: never; Returns: number }
       gen_public_id: { Args: never; Returns: string }
       gen_room_code: { Args: never; Returns: string }
