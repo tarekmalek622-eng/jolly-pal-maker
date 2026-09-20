@@ -55,6 +55,7 @@ import { cn } from "@/lib/utils";
 import roomAuroraBackground from "@/assets/room-aurora-bg.jpg";
 import { VipName } from "@/components/VipName";
 import { VipCvipSheet } from "@/components/VipCvipSheet";
+import { RoomPanels } from "@/components/RoomPanels";
 import { Crown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/rooms/$roomId")({
@@ -112,6 +113,7 @@ function RoomPage() {
   const [vipOpen, setVipOpen] = useState(false);
   const [luckyOpen, setLuckyOpen] = useState(false);
   const [roomSettingsOpen, setRoomSettingsOpen] = useState(false);
+  const [roomPanelsOpen, setRoomPanelsOpen] = useState(false);
   const [giftFxEnabled, setGiftFxEnabled] = useState(true);
   const giftFxRef = useRef(true);
   useEffect(() => {
@@ -797,6 +799,17 @@ function RoomPage() {
           <div className="mt-3 space-y-3 pb-4">
             <button
               type="button"
+              onClick={() => {
+                setRoomSettingsOpen(false);
+                setRoomPanelsOpen(true);
+              }}
+              className="flex w-full items-center justify-between rounded-2xl border border-primary/40 bg-primary/10 p-4 text-start"
+            >
+              <span className="text-sm font-bold text-primary">لوحة الغرفة</span>
+              <span className="text-[11px] text-muted-foreground">المعلومات · الأعضاء · النشاطات · صندوق الكنز · الجوائز</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setGiftFx(!giftFxEnabled)}
               className="flex w-full items-center justify-between rounded-2xl border border-border/60 bg-surface/70 p-4 text-start"
             >
@@ -821,6 +834,15 @@ function RoomPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <RoomPanels
+        roomId={roomId}
+        userId={userId}
+        isOwner={isOwner}
+        canManage={isOwner || (moderators.data ?? []).includes(userId ?? "")}
+        open={roomPanelsOpen}
+        onOpenChange={setRoomPanelsOpen}
+      />
 
       <RoomCosmetics
         roomId={roomId}

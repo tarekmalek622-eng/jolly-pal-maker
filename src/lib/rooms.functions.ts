@@ -184,3 +184,77 @@ export const applyRoomCosmetic = createServerFn({ method: "POST" })
 
     return { ok: true, imageUrl };
   });
+
+/** حفظ إعدادات صندوق الكنز وجوائز الغرف — للإدارة فقط */
+export const adminSetRoomSystemsSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        treasure: z.object({
+          enabled: z.boolean(),
+          levels: z
+            .array(
+              z.object({
+                level: z.number().int().min(1).max(20),
+                name: z.string().trim().min(1).max(40),
+                target: z.number().int().min(1),
+                prizes: z.array(z.object({ rank: z.number().int().min(1).max(20), coins: z.number().int().min(0) })).max(20),
+              }),
+            )
+            .min(1)
+            .max(20),
+        }),
+        rewards: z.object({
+          min_weekly_cup: z.number().int().min(0),
+          tiers: z
+            .array(
+              z.object({
+                revenue: z.number().int().min(0),
+                owner_coins: z.number().int().min(0),
+                admin_coins: z.number().int().min(0),
+                admins_min: z.number().int().min(0),
+                admins_max: z.number().int().min(0),
+                percent: z.number().int().min(0).max(100),
+                weekly_cap: z.number().int().min(0),
+              }),
+            )
+            .min(1)
+            .max(30),
+        }),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const admin = await context.supabase.rpc("is_admin", { _user_id: context.userId });
+    if (admin.error || admin.data !== true) throw new Error("هذا الإجراء للإدارة فقط");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const res = await supabaseAdmin
+      .from("app_settings")
+      .upsert([
+        { key: "room_treasure", value: data.treasure },
+        { key: "room_rewards", value: data.rewards },
+      ] as never);
+    if (res.error) throw new Error(res.error.message);
+    await supabaseAdmin.from("audit_logs").insert({
+      actor_id: context.userId,
+      action: "room_systems_settings_updated",
+      new_value: data as never,
+    });
+    return { ok: true };
+  });
+
+/** تسوية مكافآت أسبوع لغرفة مسجّلة — للإدارة فقط */
+export const adminSettleRoomRewardWeek = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ roomId: z.string().uuid(), weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const admin = await context.supabase.rpc("is_admin", { _user_id: context.userId });
+    if (admin.error || admin.data !== true) throw new Error("هذا الإجراء للإدارة فقط");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const res = await supabaseAdmin.rpc("room_reward_settle_week", { _room_id: data.roomId, _week_start: data.weekStart });
+    if (res.error) throw new Error(res.error.message);
+    return { weekId: res.data as unknown as string };
+  });
