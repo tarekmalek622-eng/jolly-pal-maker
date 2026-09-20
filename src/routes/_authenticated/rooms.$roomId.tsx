@@ -112,6 +112,7 @@ function RoomPage() {
   const [vipOpen, setVipOpen] = useState(false);
   const [luckyOpen, setLuckyOpen] = useState(false);
   const [roomSettingsOpen, setRoomSettingsOpen] = useState(false);
+  const [roomPanelsOpen, setRoomPanelsOpen] = useState(false);
   const [giftFxEnabled, setGiftFxEnabled] = useState(true);
   const giftFxRef = useRef(true);
   useEffect(() => {
