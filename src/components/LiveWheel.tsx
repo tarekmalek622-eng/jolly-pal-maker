@@ -9,6 +9,8 @@ import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-sess
 import { cn } from "@/lib/utils";
 import { formatCompact, formatFull } from "@/lib/format";
 import { wheelArt } from "@/lib/wheel-art";
+import mascot from "@/assets/wheel/mascot-lion.png";
+
 
 export type WheelSlot = { key: string; label: string; emoji: string; multiplier: number; weight?: number };
 
