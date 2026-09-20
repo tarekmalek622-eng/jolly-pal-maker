@@ -6,6 +6,7 @@ const cache = new Map<string, { url: string; expires: number }>();
 export async function resolveMediaUrl(stored: string | null | undefined): Promise<string | null> {
   if (!stored) return null;
   if (stored.startsWith("http")) return stored;
+  if (stored.startsWith("/")) return stored;
 
   const cached = cache.get(stored);
   if (cached && cached.expires > Date.now()) return cached.url;
