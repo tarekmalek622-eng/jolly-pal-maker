@@ -56,6 +56,7 @@ import roomAuroraBackground from "@/assets/room-aurora-bg.jpg";
 import { VipName } from "@/components/VipName";
 import { VipCvipSheet } from "@/components/VipCvipSheet";
 import { RoomPanels } from "@/components/RoomPanels";
+import { RoomTreasureFloat } from "@/components/RoomTreasureFloat";
 import { Crown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/rooms/$roomId")({
@@ -114,6 +115,7 @@ function RoomPage() {
   const [luckyOpen, setLuckyOpen] = useState(false);
   const [roomSettingsOpen, setRoomSettingsOpen] = useState(false);
   const [roomPanelsOpen, setRoomPanelsOpen] = useState(false);
+  const [roomPanelsTab, setRoomPanelsTab] = useState<"info" | "members" | "activities" | "treasure" | "rewards">("info");
   const [giftFxEnabled, setGiftFxEnabled] = useState(true);
   const giftFxRef = useRef(true);
   useEffect(() => {
@@ -706,8 +708,15 @@ function RoomPage() {
         />
       </div>
 
-      {/* أزرار عائمة أسفل يسار الغرفة: عجلة الحظ + تشغيل الموسيقى */}
+      {/* أزرار عائمة أسفل يسار الغرفة: صندوق الكنز + عجلة الحظ + تشغيل الموسيقى */}
       <div className="fixed bottom-36 left-2 z-30 flex flex-col items-center gap-2">
+        <RoomTreasureFloat
+          roomId={roomId}
+          onOpen={() => {
+            setRoomPanelsTab("treasure");
+            setRoomPanelsOpen(true);
+          }}
+        />
         <button
           type="button"
           onClick={() => setVipOpen(true)}
@@ -801,6 +810,7 @@ function RoomPage() {
               type="button"
               onClick={() => {
                 setRoomSettingsOpen(false);
+                setRoomPanelsTab("info");
                 setRoomPanelsOpen(true);
               }}
               className="flex w-full items-center justify-between rounded-2xl border border-primary/40 bg-primary/10 p-4 text-start"
@@ -842,6 +852,7 @@ function RoomPage() {
         canManage={isOwner || (moderators.data ?? []).includes(userId ?? "")}
         open={roomPanelsOpen}
         onOpenChange={setRoomPanelsOpen}
+        initialTab={roomPanelsTab}
       />
 
       <RoomCosmetics
