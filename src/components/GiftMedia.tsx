@@ -14,7 +14,40 @@ export type GiftMediaRow = {
   duration_ms?: number | null;
   display_scale?: number | null;
   rarity?: string | null;
+  emoji?: string | null;
+  category?: string | null;
 };
+
+const RARITY_ART: Record<string, { ring: string; bg: string }> = {
+  common: { ring: "border-slate-400/60", bg: "from-slate-500/35 to-slate-900/60" },
+  rare: { ring: "border-sky-400/70", bg: "from-sky-500/35 to-slate-900/70" },
+  epic: { ring: "border-fuchsia-400/70", bg: "from-fuchsia-500/35 to-purple-950/70" },
+  legendary: { ring: "border-amber-300/80", bg: "from-amber-400/40 to-amber-900/70" },
+};
+
+/** بطاقة الهدية المصمّمة: تُستخدم لكل هدية لا تحتوي ملف صورة مرفوعًا. */
+export function GiftArt({ gift, size = 48, className }: { gift: GiftMediaRow; size?: number; className?: string | undefined }) {
+  const art = RARITY_ART[gift.rarity ?? "common"] ?? RARITY_ART["common"]!;
+  const glyph = gift.emoji && gift.emoji.trim() ? gift.emoji : "🎁";
+  return (
+    <div
+      className={cn(
+        "relative grid shrink-0 place-items-center overflow-hidden rounded-2xl border bg-gradient-to-b",
+        art.ring,
+        art.bg,
+        className,
+      )}
+      style={{ width: size, height: size }}
+      aria-label={gift.name}
+    >
+      <span className="absolute -top-1/3 h-1/2 w-[140%] rotate-12 bg-white/10 blur-[6px]" />
+      <span className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,0.22),transparent_60%)]" />
+      <span className="relative leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]" style={{ fontSize: size * 0.54 }}>
+        {glyph}
+      </span>
+    </div>
+  );
+}
 
 /** يحوّل مسارات التخزين إلى روابط قابلة للعرض ويعيد التحميل عند التغيير. */
 export function useGiftUrls(gift: GiftMediaRow | null | undefined) {
@@ -63,13 +96,7 @@ export function GiftThumb({ gift, size = 48, className }: { gift: GiftMediaRow; 
   }, [gift.animation_url, gift.thumb_url, gift.image_url]);
 
   const src = sources[sourceIndex] ?? null;
-  if (!src) {
-    return (
-      <div className={cn("flex items-center justify-center rounded-xl bg-surface text-lg", className)} style={{ width: size, height: size }}>
-        🎁
-      </div>
-    );
-  }
+  if (!src) return <GiftArt gift={gift} size={size} className={className} />;
   return (
     <img
       src={src}
@@ -143,7 +170,7 @@ export function GiftPlayer({
   ) : urls.thumb ? (
     <img src={urls.thumb} alt={gift.name} className="h-full w-full object-contain" decoding="async" />
   ) : (
-    <div className="flex h-full w-full items-center justify-center text-5xl">🎁</div>
+    <GiftArt gift={gift} size={200} className="h-full w-full" />
   );
 
   return (

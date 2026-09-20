@@ -83,7 +83,7 @@ export function GiftSheet({
       const { data, error } = await db
         .from("gifts")
         .select(
-          "id, name, image_url, thumb_url, animation_url, video_url, sound_url, sound_enabled, duration_ms, display_scale, price, rarity, category, required_vip",
+          "id, name, emoji, image_url, thumb_url, animation_url, video_url, sound_url, sound_enabled, duration_ms, display_scale, price, rarity, category, required_vip",
         )
         .eq("is_active", true)
         .order("sort_order")
@@ -136,7 +136,10 @@ export function GiftSheet({
           _room_id: roomId ?? null,
           _quantity: quantity,
         });
-        if (error) throw error;
+        if (error) {
+          const info = error as { message?: string; details?: string; hint?: string };
+          throw new Error(info.message || info.details || info.hint || "تعذر إرسال الهدية");
+        }
       } finally {
         sendingRef.current = false;
       }

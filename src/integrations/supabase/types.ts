@@ -1679,6 +1679,7 @@ export type Database = {
       }
       room_support_registrations: {
         Row: {
+          admin_ids: string[]
           created_at: string
           id: string
           registered_by: string
@@ -1687,6 +1688,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admin_ids?: string[]
           created_at?: string
           id?: string
           registered_by: string
@@ -1695,6 +1697,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admin_ids?: string[]
           created_at?: string
           id?: string
           registered_by?: string
@@ -2911,6 +2914,25 @@ export type Database = {
       room_support_register: {
         Args: { _room_id: string }
         Returns: {
+          admin_ids: string[]
+          created_at: string
+          id: string
+          registered_by: string
+          room_id: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "room_support_registrations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      room_support_set_admins: {
+        Args: { _ids: string[]; _room_id: string }
+        Returns: {
+          admin_ids: string[]
           created_at: string
           id: string
           registered_by: string
