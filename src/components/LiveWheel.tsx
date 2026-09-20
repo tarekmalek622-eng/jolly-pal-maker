@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 import { formatCompact, formatFull } from "@/lib/format";
+import { wheelArt } from "@/lib/wheel-art";
 
 export type WheelSlot = { key: string; label: string; emoji: string; multiplier: number; weight?: number };
 
