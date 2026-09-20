@@ -35,6 +35,7 @@ import { RoomSupporters } from "@/components/RoomSupporters";
 import { RoomCosmetics, CosmeticImage } from "@/components/RoomCosmetics";
 import { DominoGame } from "@/components/DominoGame";
 import { Game77 } from "@/components/Game77";
+import { SuperCarGame } from "@/components/SuperCarGame";
 import { formatCompact } from "@/lib/format";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Button } from "@/components/ui/button";
@@ -102,7 +103,7 @@ function RoomPage() {
   const [manageOpen, setManageOpen] = useState(false);
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [dominoOpen, setDominoOpen] = useState(false);
-  const [roomGame, setRoomGame] = useState<"wheel" | "seven77" | "domino">("wheel");
+  const [roomGame, setRoomGame] = useState<"wheel" | "seven77" | "supercar" | "domino">("wheel");
   const [roomBet77, setRoomBet77] = useState(10_000_000);
   const [seatSheet, setSeatSheet] = useState<string | null>(null);
   const [cupOpen, setCupOpen] = useState(false);
@@ -1034,6 +1035,8 @@ function RoomPage() {
                 </div>
                 <Game77 bet={roomBet77} />
               </div>
+            ) : roomGame === "supercar" ? (
+              <SuperCarGame roomId={roomId} />
             ) : (
               <DominoGame roomId={roomId} />
             )}
