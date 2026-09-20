@@ -2,6 +2,24 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export type CrownWinner = {
+  rank: number;
+  coins: number;
+  score?: number;
+  name: string;
+  public_id?: string | null;
+  avatar_url?: string | null;
+};
+
+export type CrownMeta = {
+  event?: string;
+  event_id?: string;
+  starts_at?: string;
+  ends_at?: string;
+  top_prize?: number | null;
+  winners?: CrownWinner[];
+};
+
 export type CrownMessage = {
   id: string;
   title: string;
@@ -9,6 +27,8 @@ export type CrownMessage = {
   image_url: string | null;
   kind: string;
   created_at: string;
+  event_id?: string | null;
+  metadata?: CrownMeta | null;
 };
 
 /** رسائل التاج — رسائل رسمية من التطبيق لكل المستخدمين. */
