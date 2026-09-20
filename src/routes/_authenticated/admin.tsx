@@ -208,6 +208,7 @@ function AdminPage() {
       {tab === "quiz" && <QuizTab />}
       {tab === "reports" && <ReportsTab />}
       {tab === "welcome" && <WelcomeTab prefill={welcomePrefill} />}
+      {tab === "roomSystems" && <AdminRoomSystemsTab />}
       {tab === "logs" && <LogsTab />}
     </AppShell>
   );
