@@ -34,6 +34,8 @@ import { GiftOverlay, type GiftMediaRow, type GiftShowEvent } from "@/components
 import { RoomSupporters } from "@/components/RoomSupporters";
 import { RoomCosmetics, CosmeticImage } from "@/components/RoomCosmetics";
 import { DominoGame } from "@/components/DominoGame";
+import { Game77 } from "@/components/Game77";
+import { formatCompact } from "@/lib/format";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,7 +98,8 @@ function RoomPage() {
   const [manageOpen, setManageOpen] = useState(false);
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [dominoOpen, setDominoOpen] = useState(false);
-  const [roomGame, setRoomGame] = useState<"wheel" | "domino">("wheel");
+  const [roomGame, setRoomGame] = useState<"wheel" | "seven77" | "domino">("wheel");
+  const [roomBet77, setRoomBet77] = useState(10_000_000);
   const [seatSheet, setSeatSheet] = useState<string | null>(null);
   const [cupOpen, setCupOpen] = useState(false);
   const [cosmeticsOpen, setCosmeticsOpen] = useState(false);
@@ -976,6 +979,7 @@ function RoomPage() {
             {(
               [
                 { key: "wheel" as const, label: "🎡 عجلة الحظ" },
+                { key: "seven77" as const, label: "7️⃣ لعبة 77" },
                 { key: "domino" as const, label: "🁣 دومينو" },
               ]
             ).map((t) => (
@@ -983,7 +987,7 @@ function RoomPage() {
                 key={t.key}
                 onClick={() => setRoomGame(t.key)}
                 className={cn(
-                  "flex-1 rounded-xl px-3 py-2 text-xs font-bold transition-colors",
+                  "flex-1 rounded-xl px-2 py-2 text-[11px] font-bold transition-colors",
                   roomGame === t.key ? "gradient-gold text-primary-foreground" : "text-muted-foreground",
                 )}
               >
@@ -1003,7 +1007,31 @@ function RoomPage() {
                 إغلاق الجولة الآن
               </Button>
             )}
-            {roomGame === "wheel" ? <LiveWheel roomId={roomId} /> : <DominoGame roomId={roomId} />}
+            {roomGame === "wheel" ? (
+              <LiveWheel roomId={roomId} />
+            ) : roomGame === "seven77" ? (
+              <div>
+                <div className="mb-3 flex gap-2">
+                  {[10_000_000, 50_000_000, 100_000_000, 200_000_000].map((b) => (
+                    <button
+                      key={b}
+                      onClick={() => setRoomBet77(b)}
+                      className={cn(
+                        "flex-1 rounded-xl border px-2 py-2 text-[11px] font-bold",
+                        roomBet77 === b
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border bg-surface-2 text-muted-foreground",
+                      )}
+                    >
+                      {formatCompact(b)}
+                    </button>
+                  ))}
+                </div>
+                <Game77 bet={roomBet77} />
+              </div>
+            ) : (
+              <DominoGame roomId={roomId} />
+            )}
           </div>
         </SheetContent>
       </Sheet>

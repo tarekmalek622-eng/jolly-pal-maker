@@ -61,7 +61,7 @@ export const playDice = createServerFn({ method: "POST" })
     betSchema.extend({ guess: z.number().int().min(1).max(6) }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const roll = 1 + Math.floor(Math.random() * 6);
+    const roll = 1 + Math.floor(secureRandom() * 6);
     const won = roll === data.guess;
     const payout = won ? data.bet * 5 : 0;
     await assertGameEnabled("dice", data.bet);
@@ -74,7 +74,7 @@ export const spinWheel = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => betSchema.parse(input))
   .handler(async ({ data, context }) => {
     const total = WHEEL.reduce((sum, slot) => sum + slot.weight, 0);
-    let ticket = Math.random() * total;
+    let ticket = secureRandom() * total;
     let chosen = WHEEL[0]!;
     for (const slot of WHEEL) {
       ticket -= slot.weight;
@@ -98,8 +98,8 @@ const CARD_NAMES = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K",
 const SUITS = ["♠", "♥", "♦", "♣"];
 
 function drawCard() {
-  const rank = Math.floor(Math.random() * CARD_NAMES.length);
-  const suit = SUITS[Math.floor(Math.random() * SUITS.length)]!;
+  const rank = Math.floor(secureRandom() * CARD_NAMES.length);
+  const suit = SUITS[Math.floor(secureRandom() * SUITS.length)]!;
   return { rank, label: `${CARD_NAMES[rank]}${suit}` };
 }
 
@@ -136,7 +136,7 @@ export const startQuiz = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const pool = questions ?? [];
     if (pool.length === 0) throw new Error("لا توجد أسئلة متاحة");
-    const q = pool[Math.floor(Math.random() * pool.length)]!;
+    const q = pool[Math.floor(secureRandom() * pool.length)]!;
 
     const { data: session, error: sessionError } = await supabaseAdmin
       .from("game_sessions")
@@ -216,7 +216,7 @@ export const playChallenge = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertGameEnabled("challenge", data.bet);
     const config = CHALLENGES.find((c) => c.key === data.challenge)!;
-    const won = Math.random() < config.odds;
+    const won = secureRandom() < config.odds;
     const payout = won ? data.bet * config.multiplier : 0;
     await settle(context.userId, data.bet, payout, `challenge:${config.key}`, "challenge", {
       challenge: config.key,
@@ -337,9 +337,16 @@ const REELS_77: { key: string; emoji: string; label: string; weight: number }[] 
   { key: "cherry", emoji: "🍒", label: "كرز", weight: 36 },
 ];
 
+/** عدد عشوائي آمن بين 0 و1 من مولّد التشفير (لا يعتمد على Math.random). */
+function secureRandom() {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return buf[0]! / 2 ** 32;
+}
+
 function spinReel() {
   const total = REELS_77.reduce((sum, r) => sum + r.weight, 0);
-  let ticket = Math.random() * total;
+  let ticket = secureRandom() * total;
   for (const r of REELS_77) {
     ticket -= r.weight;
     if (ticket <= 0) return r;
