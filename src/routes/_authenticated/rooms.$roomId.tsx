@@ -537,9 +537,14 @@ function RoomPage() {
       )}
 
       <div className="grid grid-cols-5 gap-x-1 gap-y-4 px-2 pt-28 sm:px-4">
-        {(mics.data ?? []).map((seat) => {
+        {(mics.data ?? []).map((seat, idx) => {
           const person = personOf(seat.user_id);
           const speaking = person ? voice.speakingIds.includes(person.id) : false;
+          const list = mics.data ?? [];
+          const next = list[idx + 1];
+          const sameRow = (idx + 1) % 5 !== 0;
+          const linkedNext =
+            sameRow && seat.user_id && next?.user_id ? coupleKeys.has(pairKey(seat.user_id, next.user_id)) : false;
           return (
             <button
               key={seat.id}
@@ -550,8 +555,13 @@ function RoomPage() {
                 }
                 setSeatSheet(seat.id);
               }}
-              className="flex min-w-0 flex-col items-center gap-1.5"
+              className="relative flex min-w-0 flex-col items-center gap-1.5"
             >
+              {linkedNext && (
+                <span className="pointer-events-none absolute -start-2 top-4 z-20 text-base drop-shadow-[0_0_6px_rgba(244,63,94,0.9)]">
+                  ❤️
+                </span>
+              )}
               <div
                 className={cn(
                   "relative flex h-14 w-14 items-center justify-center rounded-full border sm:h-16 sm:w-16",
