@@ -636,3 +636,19 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     </div>
   );
 }
+
+function SlotIcon({ slotKey, emoji, size }: { slotKey: string; emoji?: string; size: number }) {
+  const src = wheelArt(slotKey);
+  if (!src) return <span className="emoji" style={{ fontSize: size }}>{emoji ?? "؟"}</span>;
+  return (
+    <img
+      src={src}
+      alt=""
+      loading="lazy"
+      width={size}
+      height={size}
+      className="shrink-0 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]"
+      style={{ width: size, height: size }}
+    />
+  );
+}
