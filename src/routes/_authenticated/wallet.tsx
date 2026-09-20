@@ -166,6 +166,25 @@ function WalletPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const supportCoins = (wallet.data as { support_coins?: number } | undefined)?.support_coins ?? 0;
+  const [convertAmount, setConvertAmount] = useState("");
+
+  const convert = useMutation({
+    mutationFn: async () => {
+      const amount = Math.floor(Number(convertAmount) || 0);
+      if (amount <= 0) throw new Error("حدد مبلغًا للاستبدال");
+      const { error } = await supabase.rpc("convert_support_balance", { _amount: amount });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("تم استبدال رصيد الدعم ✅");
+      setConvertAmount("");
+      void wallet.refetch();
+      void transactions.refetch();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <AppShell header={<PageHeader title="المحفظة" subtitle="رصيدك وسجل معاملاتك" />}>
       <div className="surface-card gradient-gold p-5 text-primary-foreground">
@@ -183,6 +202,44 @@ function WalletPage() {
           <span>استُلم: {(wallet.data?.total_received ?? 0).toLocaleString("en-US")}</span>
         </div>
       </div>
+
+      <section className="surface-card mt-4 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground">رصيد الدعم</p>
+            <p className="text-2xl font-black text-primary">{supportCoins.toLocaleString("en-US")}</p>
+          </div>
+          <span className="rounded-full bg-surface-2 px-3 py-1 text-[10px] text-muted-foreground">
+            حصتك من الهدايا المستلمة
+          </span>
+        </div>
+        <div className="mt-3 flex gap-2">
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={convertAmount}
+            onChange={(e) => setConvertAmount(e.target.value)}
+            placeholder="المبلغ المطلوب استبداله"
+            className="h-11 flex-1 rounded-2xl bg-surface-2"
+          />
+          <Button
+            disabled={convert.isPending || supportCoins <= 0}
+            onClick={() => convert.mutate()}
+            className="h-11 rounded-2xl gradient-gold px-4 font-bold text-primary-foreground"
+          >
+            {convert.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "استبدال"}
+          </Button>
+        </div>
+        <button
+          onClick={() => setConvertAmount(String(supportCoins))}
+          className="mt-2 text-[11px] font-bold text-primary"
+        >
+          استبدال كل الرصيد
+        </button>
+        <p className="mt-1 text-[10px] text-muted-foreground">
+          الاستبدال يحوّل رصيد الدعم إلى رصيد قابل للاستخدام في الهدايا والألعاب والمتجر، وكل عملية تُسجَّل في سجل معاملاتك.
+        </p>
+      </section>
 
       <section className="mt-6">
         <h2 className="mb-1 text-sm font-bold">حزم الشحن</h2>
