@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Crown, Gift, Loader2, Sparkles, Trophy, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +46,7 @@ type RewardsState = {
   tiers: { revenue: number; owner_coins: number; admin_coins: number; admins_min: number; admins_max: number; percent: number; weekly_cap: number }[];
   min_weekly_cup: number;
   registration: string;
+  admin_ids: string[] | null;
   last_settlement: { week_start?: string; revenue?: number; owner_coins?: number; admin_coins?: number };
 };
 
@@ -56,6 +57,7 @@ export function RoomPanels({
   canManage,
   open,
   onOpenChange,
+  initialTab = "info",
 }: {
   roomId: string;
   userId: string | null;
@@ -63,8 +65,13 @@ export function RoomPanels({
   canManage: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  initialTab?: TabKey;
 }) {
-  const [tab, setTab] = useState<TabKey>("info");
+  const [tab, setTab] = useState<TabKey>(initialTab);
+
+  useEffect(() => {
+    if (open) setTab(initialTab);
+  }, [open, initialTab]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -493,6 +500,36 @@ function RewardsPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean })
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التسجيل"),
   });
 
+  const mods = useQuery({
+    queryKey: ["room-reward-mods", roomId],
+    enabled: isOwner,
+    queryFn: async () => {
+      const rows = await supabase.from("room_moderators").select("user_id").eq("room_id", roomId);
+      if (rows.error) throw new Error(rows.error.message);
+      const ids = (rows.data ?? []).map((r) => r.user_id);
+      if (ids.length === 0) return [] as { id: string; display_name: string; avatar_url: string | null }[];
+      const people = await supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids);
+      if (people.error) throw new Error(people.error.message);
+      return people.data ?? [];
+    },
+  });
+
+  const [picked, setPicked] = useState<string[] | null>(null);
+  const chosen = picked ?? (state.data?.admin_ids ?? []);
+
+  const saveAdmins = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("room_support_set_admins", { _room_id: roomId, _ids: chosen });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("تم حفظ قائمة المشرفين المستفيدين");
+      setPicked(null);
+      void state.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
   if (state.isLoading) return <Loading />;
   const s = state.data;
   if (!s) return <p className="py-8 text-center text-xs text-muted-foreground">تعذر تحميل جوائز الغرفة.</p>;
@@ -522,6 +559,54 @@ function RewardsPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean })
           </Button>
         )}
       </div>
+
+      {isOwner && (
+        <div className="rounded-2xl border border-border/60 bg-surface/70 p-3">
+          <p className="flex items-center gap-1.5 text-xs font-bold">
+            <Users className="h-3.5 w-3.5 text-primary" /> المشرفون المستفيدون من مكافأة الدعم
+          </p>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            اختر من مشرفي غرفتك (20 كحد أقصى). إن لم تختر أحدًا تُقسَّم المكافأة على كل المشرفين بالتساوي.
+          </p>
+          {mods.isLoading ? (
+            <Loading />
+          ) : (mods.data ?? []).length === 0 ? (
+            <p className="py-3 text-center text-[11px] text-muted-foreground">لا يوجد مشرفون في الغرفة بعد.</p>
+          ) : (
+            <div className="mt-2 space-y-1.5">
+              {(mods.data ?? []).map((m) => {
+                const on = chosen.includes(m.id);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() =>
+                      setPicked(on ? chosen.filter((x) => x !== m.id) : chosen.length >= 20 ? chosen : [...chosen, m.id])
+                    }
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-xl border p-2 text-start",
+                      on ? "border-primary bg-primary/10" : "border-border bg-surface-2",
+                    )}
+                  >
+                    <UserAvatar src={m.avatar_url} name={m.display_name} size={30} />
+                    <span className="min-w-0 flex-1 truncate text-[11px] font-bold">{m.display_name}</span>
+                    <span className={cn("text-[10px] font-bold", on ? "text-primary" : "text-muted-foreground")}>
+                      {on ? "مستفيد" : "إضافة"}
+                    </span>
+                  </button>
+                );
+              })}
+              <Button
+                disabled={saveAdmins.isPending}
+                onClick={() => saveAdmins.mutate()}
+                className="h-10 w-full rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
+              >
+                حفظ القائمة ({chosen.length})
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {s.tier?.owner_coins !== undefined && (
         <div className="rounded-2xl border border-border/60 bg-surface/70 p-3 text-[11px]">
