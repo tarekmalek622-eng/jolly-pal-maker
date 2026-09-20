@@ -88,6 +88,10 @@ type Person = {
   mic_decoration_url: string | null;
 };
 
+function pairKey(a: string, b: string) {
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
+}
+
 function RoomPage() {
   const { roomId } = Route.useParams();
   const { userId } = useSupabaseSession();
