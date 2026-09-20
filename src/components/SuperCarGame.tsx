@@ -134,8 +134,38 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
 
   const secondsLeft = round ? Math.max(0, Math.ceil((new Date(round.ends_at).getTime() - now) / 1000)) : 0;
   const betting = round?.status === "betting" && secondsLeft > 0;
-  const revealed = !!round?.winning_key;
+
+  // تشويق ٣ ثوانٍ قبل ظهور النتيجة (النتيجة نفسها محسومة في السيرفر)
+  const [shownRound, setShownRound] = useState<string | null>(null);
+  const [drumCount, setDrumCount] = useState(0);
+  const roundId = round?.id ?? null;
+  const winKey = round?.winning_key ?? null;
+  const settledAt = round?.settled_at ?? round?.ends_at ?? null;
+  useEffect(() => {
+    if (!roundId || !winKey) return;
+    if (shownRound === roundId) return;
+    // نتيجة قديمة (فُتحت الشاشة بعد انتهاء الجولة): تُعرض فورًا
+    if (settledAt && Date.now() - new Date(settledAt).getTime() > 10_000) {
+      setShownRound(roundId);
+      return;
+    }
+    setDrumCount(3);
+    const iv = window.setInterval(() => setDrumCount((c) => Math.max(0, c - 1)), 1000);
+    const to = window.setTimeout(() => {
+      setShownRound(roundId);
+      setDrumCount(0);
+      refreshMoney();
+    }, 3000);
+    return () => {
+      window.clearInterval(iv);
+      window.clearTimeout(to);
+    };
+  }, [roundId, winKey, settledAt, shownRound, refreshMoney]);
+
+  const revealed = Boolean(winKey) && shownRound === roundId;
+  const drumroll = Boolean(winKey) && shownRound !== roundId;
   const winningSlot = round?.slots?.find((s) => s.key === round.winning_key) ?? null;
+
   const players = useMemo(
     () => Object.values(totals).reduce((a, t) => a + Number(t?.players ?? 0), 0),
     [totals],
