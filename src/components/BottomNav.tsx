@@ -1,6 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Home, Compass, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getCrownUnread } from "@/lib/crown.functions";
 
 const items = [
   { to: "/home", label: "الرئيسية", icon: Home },
@@ -11,22 +14,36 @@ const items = [
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const fetchUnread = useServerFn(getCrownUnread);
+  const unread = useQuery({
+    queryKey: ["crown-unread"],
+    queryFn: () => fetchUnread(),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+  const hasCrown = (unread.data?.unread ?? 0) > 0;
 
   return (
     <nav className="fixed bottom-0 start-0 end-0 z-40 mx-auto max-w-lg">
       <div className="glass safe-bottom mx-3 mb-2 flex items-center justify-between rounded-3xl px-2 pt-2">
         {items.map(({ to, label, icon: Icon }) => {
           const active = pathname === to || pathname.startsWith(`${to}/`);
+          const dot = to === "/messages" && hasCrown;
           return (
             <Link
               key={to}
               to={to}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 rounded-2xl py-2 text-[11px] transition-colors",
+                "relative flex flex-1 flex-col items-center gap-1 rounded-2xl py-2 text-[11px] transition-colors",
                 active ? "text-primary" : "text-muted-foreground",
               )}
             >
-              <Icon className={cn("h-5 w-5 transition-transform", active && "scale-110")} />
+              <span className="relative">
+                <Icon className={cn("h-5 w-5 transition-transform", active && "scale-110")} />
+                {dot && (
+                  <span className="absolute -end-1 -top-0.5 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background" />
+                )}
+              </span>
               <span>{label}</span>
             </Link>
           );

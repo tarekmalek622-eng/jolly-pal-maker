@@ -85,3 +85,37 @@ export const publishCrownMessage = createServerFn({ method: "POST" })
     });
     return row as CrownMessage;
   });
+
+/** عدد رسائل التاج الجديدة التي لم يفتحها المستخدم بعد. */
+export const getCrownUnread = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = context.supabase as any;
+    const { data: read } = await sb
+      .from("crown_reads")
+      .select("last_seen_at")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    const since = read?.last_seen_at ?? "1970-01-01T00:00:00Z";
+    const { count, error } = await sb
+      .from("crown_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true)
+      .gt("created_at", since);
+    if (error) throw new Error(error.message);
+    return { unread: count ?? 0 };
+  });
+
+/** تسجيل فتح رسائل التاج — يُخفي نقطة الإشعار ولا يتكرر. */
+export const markCrownRead = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const now = new Date().toISOString();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (context.supabase as any)
+      .from("crown_reads")
+      .upsert({ user_id: context.userId, last_seen_at: now, updated_at: now }, { onConflict: "user_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useEffect } from "react";
 import { Crown, Loader2 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
-import { listCrownMessages } from "@/lib/crown.functions";
+import { listCrownMessages, markCrownRead } from "@/lib/crown.functions";
 import { eventArt } from "@/lib/event-art";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatCompact, formatFull } from "@/lib/format";
@@ -34,11 +35,18 @@ const KIND_LABEL: Record<string, string> = {
 
 function CrownPage() {
   const fetchMessages = useServerFn(listCrownMessages);
+  const markRead = useServerFn(markCrownRead);
+  const queryClient = useQueryClient();
   const messages = useQuery({
     queryKey: ["crown-messages"],
     queryFn: () => fetchMessages(),
     staleTime: 30_000,
   });
+
+  useEffect(() => {
+    void markRead().then(() => queryClient.invalidateQueries({ queryKey: ["crown-unread"] }));
+  }, [markRead, queryClient]);
+
 
   return (
     <AppShell>

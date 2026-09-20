@@ -168,6 +168,7 @@ function WalletPage() {
 
   const supportCoins = (wallet.data as { support_coins?: number } | undefined)?.support_coins ?? 0;
   const [convertAmount, setConvertAmount] = useState("");
+  const [mode, setMode] = useState<"topup" | "convert">("topup");
 
   const convert = useMutation({
     mutationFn: async () => {
@@ -203,7 +204,25 @@ function WalletPage() {
         </div>
       </div>
 
-      <section className="surface-card mt-4 p-4">
+      <div className="mt-4 flex gap-2 rounded-2xl bg-surface-2 p-1">
+        {([
+          { key: "topup" as const, label: "شحن" },
+          { key: "convert" as const, label: "استبدال" },
+        ]).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setMode(t.key)}
+            className={cn(
+              "flex-1 rounded-xl py-2 text-xs font-bold transition-colors",
+              mode === t.key ? "gradient-gold text-primary-foreground" : "text-muted-foreground",
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <section className={cn("surface-card mt-4 p-4", mode !== "convert" && "hidden")}>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground">رصيد الدعم</p>
@@ -241,7 +260,7 @@ function WalletPage() {
         </p>
       </section>
 
-      <section className="mt-6">
+      <section className={cn("mt-6", mode !== "topup" && "hidden")}>
         <h2 className="mb-1 text-sm font-bold">حزم الشحن</h2>
         <p className="mb-3 text-[11px] text-muted-foreground">
           حوّل المبلغ على {accounts.vodafone_cash ? `فودافون كاش ${accounts.vodafone_cash}` : "فودافون كاش"}
@@ -272,7 +291,7 @@ function WalletPage() {
         </div>
       </section>
 
-      {(requests.data ?? []).length > 0 && (
+      {mode === "topup" && (requests.data ?? []).length > 0 && (
         <section className="mt-6">
           <h2 className="mb-3 text-sm font-bold">طلبات الشحن</h2>
           <div className="space-y-2">
