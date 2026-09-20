@@ -81,6 +81,7 @@ function MePage() {
   });
 
   const [equipping, setEquipping] = useState<string | null>(null);
+  const [bagTab, setBagTab] = useState<string>("all");
 
   async function toggleEquip(userItemId: string, equip: boolean) {
     setEquipping(userItemId);
@@ -380,8 +381,41 @@ function MePage() {
               حقيبتك فارغة — اشترِ عناصر من المتجر لتظهر هنا.
             </p>
           ) : (
-            <div className="mt-3 grid grid-cols-3 gap-2 pb-4">
-              {myItems.data?.map((it) => {
+            <>
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                {BAG_SECTIONS.map((s) => {
+                  const count =
+                    s.key === "all"
+                      ? (myItems.data?.length ?? 0)
+                      : (myItems.data ?? []).filter(
+                          (i) => (i.store_items as { category?: string } | null)?.category === s.key,
+                        ).length;
+                  if (count === 0 && s.key !== "all") return null;
+                  return (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={() => setBagTab(s.key)}
+                      className={cn(
+                        "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold transition-colors",
+                        bagTab === s.key
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border bg-surface-2 text-muted-foreground",
+                      )}
+                    >
+                      {s.label} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 pb-4">
+                {(myItems.data ?? [])
+                  .filter(
+                    (i) =>
+                      bagTab === "all" ||
+                      (i.store_items as { category?: string } | null)?.category === bagTab,
+                  )
+                  .map((it) => {
                 const si = it.store_items as { name?: string; category?: string; image_url?: string | null } | null;
                 return (
                   <div key={it.id} className="surface-card overflow-hidden">
@@ -407,9 +441,10 @@ function MePage() {
                       </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                 );
+               })}
+              </div>
+            </>
           )}
         </SheetContent>
       </Sheet>
@@ -424,3 +459,14 @@ function MePage() {
     </AppShell>
   );
 }
+
+const BAG_SECTIONS: { key: string; label: string }[] = [
+  { key: "all", label: "الكل" },
+  { key: "profile_frame", label: "الإطارات" },
+  { key: "profile_background", label: "خلفيات الملف" },
+  { key: "room_background", label: "خلفيات الغرف" },
+  { key: "mic_decoration", label: "زينة المايك" },
+  { key: "room_decoration", label: "زينة الغرفة" },
+  { key: "badge", label: "الشارات" },
+  { key: "effect", label: "التأثيرات" },
+];

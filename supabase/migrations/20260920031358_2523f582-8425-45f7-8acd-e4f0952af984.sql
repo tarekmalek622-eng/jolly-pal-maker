@@ -1,0 +1,1 @@
+revoke execute on function public.mic_protection_for(uuid) from authenticated;
