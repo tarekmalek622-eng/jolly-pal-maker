@@ -49,7 +49,7 @@ async function assertGameEnabled(game: "dice" | "wheel" | "cards" | "quiz" | "ch
   if (games[key] === false) throw new Error("هذه اللعبة موقوفة حاليًا");
   const limits = (map.get("limits") ?? {}) as { min_bet?: number; max_bet?: number };
   const min = limits.min_bet ?? 10;
-  const max = limits.max_bet ?? 100000;
+  const max = limits.max_bet ?? 200_000_000;
   if (bet < min || bet > max) {
     throw new Error(`الرهان يجب أن يكون بين ${min} و ${max} كوينز`);
   }
