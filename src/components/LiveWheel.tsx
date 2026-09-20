@@ -9,6 +9,8 @@ import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-sess
 import { cn } from "@/lib/utils";
 import { formatCompact, formatFull } from "@/lib/format";
 import { wheelArt } from "@/lib/wheel-art";
+import mascot from "@/assets/wheel/mascot-lion.png";
+
 
 export type WheelSlot = { key: string; label: string; emoji: string; multiplier: number; weight?: number };
 
@@ -326,10 +328,24 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   return (
     <div className="space-y-2">
       {/* لوح العجلة — نفس تخطيط الصور المرجعية */}
-      <div className="wheel-board relative overflow-hidden rounded-3xl p-3">
-        <div className="flex items-center justify-between gap-2">
+      <div className="wheel-board relative overflow-hidden rounded-3xl p-3 pt-2">
+        {/* زينة الأعلام مثل التصميم */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-between px-2 opacity-80">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <span
+              key={`flag-${i}`}
+              className="h-4 w-4 rounded-b-[3px]"
+              style={{
+                clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+                background: ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6"][i % 4],
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative flex items-center justify-between gap-2 pt-3">
           <span className="wheel-cabin-cap rounded-full px-3 py-1 text-[11px] font-extrabold">
-            جولة {round.data?.round_no ?? "-"}
+            اليوم الجولة {round.data?.round_no ?? "-"}
             {session ? ` / ${session.max_rounds}` : ""}
           </span>
           <span
@@ -342,9 +358,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
           </span>
           <span className="wheel-chip flex h-8 items-center gap-1 rounded-full border px-2.5 text-[11px] font-extrabold">
             <Trophy className="h-3.5 w-3.5" />
-            {(wallet.data?.coins ?? 0).toLocaleString("en-US")}
+            {formatCompact(wallet.data?.coins ?? 0)}
           </span>
         </div>
+
 
         {/* هيكل العجلة: أسلاك + كبائن الفواكه حولها + قلب العدّاد */}
         <div className="relative mx-auto mt-3 aspect-square w-full max-w-[360px] sm:max-w-[460px]">
@@ -411,8 +428,18 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             );
           })}
 
+          {/* الأسد الودود فوق قلب العجلة */}
+          <img
+            src={mascot}
+            alt=""
+            loading="lazy"
+            width={816}
+            height={816}
+            className="pointer-events-none absolute left-1/2 top-[20%] z-10 h-[20%] -translate-x-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]"
+          />
+
           {/* قلب العجلة: مدة الاختيار / الفاكهة الفائزة */}
-          <div className="wheel-hub absolute inset-[35%] flex flex-col items-center justify-center rounded-full border-[6px] text-center">
+          <div className="wheel-hub absolute inset-[35%] top-[38%] z-10 flex flex-col items-center justify-center rounded-full border-[6px] text-center">
             <span className="text-[10px] font-bold">
               {spinning ? "جاري السحب" : finished ? "الفائزة" : "مُدة الاختيار"}
             </span>
@@ -429,62 +456,84 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             </span>
             {finished && !spinning && winning && <span className="text-[10px] font-bold">x{winning.multiplier}</span>}
           </div>
+
         </div>
 
-        {/* قاعدة العجلة مثل الصورة */}
-        <div className="relative mx-auto -mt-1 h-3 w-[72%] rounded-full bg-[oklch(0.7_0.13_240)] shadow-[0_4px_10px_-4px_rgba(0,0,0,0.5)]" />
-
-        {/* شرائح الرهان مثل الصور */}
-        <div className="mt-3 flex items-center justify-center gap-2">
-          {BET_STEPS.map((n) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => setAmount(n)}
-              className={cn(
-                "wheel-chip flex h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl border-[3px] text-xs font-black transition-all",
-                amount === n && "wheel-chip-active scale-105 shadow-[0_0_16px_-2px_oklch(0.78_0.17_75/0.9)]",
-              )}
-            >
-              <Coins className="h-4 w-4" />
-              {betLabel(n)}
-            </button>
-          ))}
+        {/* منصّتا الجانبين + قاعدة العجلة الزرقاء مع عملات الرهان */}
+        <div className="relative mt-1">
+          <div className="pointer-events-none absolute -top-6 flex w-full items-end justify-between px-1">
+            <span className="wheel-pedestal flex flex-col items-center rounded-lg px-2 py-0.5">
+              <span className="emoji text-xl leading-none">🥗</span>
+              <span className="text-[9px] font-black">Salad</span>
+            </span>
+            <span className="wheel-pedestal flex flex-col items-center rounded-lg px-2 py-0.5">
+              <span className="emoji text-xl leading-none">🍕</span>
+              <span className="text-[9px] font-black">Pizza</span>
+            </span>
+          </div>
+          <div className="wheel-platform flex items-center justify-center gap-2 rounded-2xl px-2 py-2">
+            {BET_STEPS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setAmount(n)}
+                className={cn(
+                  "wheel-chip flex h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl border-[3px] text-xs font-black transition-all",
+                  amount === n && "wheel-chip-active scale-105 shadow-[0_0_16px_-2px_oklch(0.78_0.17_75/0.9)]",
+                )}
+              >
+                <Coins className="h-4 w-4" />
+                {betLabel(n)}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* شريط الرصيد وأرباح اليوم */}
+        {/* شريط أرباح اليوم والرصيد كما في التصميم */}
         <div className="wheel-bar mt-2 flex items-center gap-2 rounded-2xl px-2 py-2">
-          <div className="flex flex-1 items-center justify-between rounded-xl bg-background/25 px-2.5 py-1.5">
-            <span className="text-[10px]">أرباح اليوم</span>
-            <span className="text-xs font-extrabold" title={formatFull(todayWin ?? 0)}>
+          <div className="flex flex-1 items-center justify-between rounded-full bg-white/90 px-3 py-1.5 text-stone-800">
+            <span className="text-[10px] font-bold">رصيدي</span>
+            <span className="flex items-center gap-1 text-xs font-black" title={formatFull(wallet.data?.coins ?? 0)}>
+              <Coins className="h-3.5 w-3.5 text-amber-500" />
+              {formatCompact(wallet.data?.coins ?? 0)}
+            </span>
+          </div>
+          <div className="flex flex-1 items-center justify-between rounded-full bg-white/90 px-3 py-1.5 text-stone-800">
+            <span className="text-[10px] font-bold">أرباح اليوم</span>
+            <span className="text-xs font-black" title={formatFull(todayWin ?? 0)}>
               {formatCompact(todayWin ?? 0)}
             </span>
           </div>
-          <div className="flex flex-1 items-center justify-between rounded-xl bg-background/25 px-2.5 py-1.5">
-            <span className="text-[10px]">رهانك</span>
-            <span className="text-xs font-extrabold" title={formatFull(myBet)}>
+          <div className="flex shrink-0 flex-col items-center rounded-full bg-white/90 px-2 py-1 text-stone-800">
+            <span className="text-[9px] font-bold">رهانك</span>
+            <span className="text-[11px] font-black" title={formatFull(myBet)}>
               {formatCompact(myBet)}
             </span>
           </div>
         </div>
 
+
         {/* شريط نتائج الجولات السابقة */}
         <div className="wheel-bar mt-2 flex items-center gap-2 overflow-x-auto rounded-2xl px-3 py-2">
           <span className="shrink-0 text-[10px] font-extrabold">النتيجة</span>
-          {(history.data ?? []).map((r) => {
+          {(history.data ?? []).map((r, i) => {
             const slot = (r.slots ?? []).find((x) => x.key === r.winning_key);
             return (
-              <span
-                key={r.id}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background/25 text-sm"
-                title={`الجولة ${r.round_no}`}
-              >
-                {slot ? <SlotIcon slotKey={slot.key} emoji={slot.emoji} size={20} /> : "؟"}
+              <span key={r.id} className="relative shrink-0" title={`الجولة ${r.round_no}`}>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white/70 bg-white text-sm">
+                  {slot ? <SlotIcon slotKey={slot.key} emoji={slot.emoji} size={20} /> : "؟"}
+                </span>
+                {i === 0 && (
+                  <span className="absolute -top-1 -left-1 rounded-sm bg-amber-400 px-1 text-[7px] font-black text-stone-900 shadow">
+                    New
+                  </span>
+                )}
               </span>
             );
           })}
           {(history.data?.length ?? 0) === 0 && <span className="text-[10px] opacity-80">لا جولات سابقة</span>}
         </div>
+
 
         {/* لافتة الفوز الكبير */}
         {resultRound && !spinning && resultMyWin > 0 && (
