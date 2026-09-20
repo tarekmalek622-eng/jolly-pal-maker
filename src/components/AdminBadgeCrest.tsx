@@ -1,5 +1,6 @@
 import { Crown, Shield, Sparkles, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { badgeArt } from "@/lib/badge-art";
 
 const STYLES = [
   "from-primary/35 via-warning/20 to-destructive/25 border-primary/50 text-primary",
@@ -18,14 +19,37 @@ export function AdminBadgeCrest({
   compact = false,
   imageUrl,
   variant = "crest",
+  crestKey,
 }: {
   name: string;
   styleKey?: string;
   compact?: boolean;
   imageUrl?: string | null;
   variant?: string;
+  crestKey?: string | null;
 }) {
   const palette = STYLES[styleIndex(styleKey)];
+  const art = badgeArt(crestKey) ?? (imageUrl && imageUrl.startsWith("/") ? imageUrl : null);
+  if (art) {
+    return (
+      <div className={cn("relative flex flex-col items-center text-center", compact ? "w-24" : "w-full")}>
+        <img
+          src={art}
+          alt={name}
+          loading="lazy"
+          className={cn("drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]", compact ? "h-20 w-20" : "h-28 w-28", "object-contain")}
+        />
+        <span
+          className={cn(
+            "relative z-20 -mt-2 line-clamp-2 min-w-full rounded-full border border-primary/45 bg-background/90 px-2 py-1 font-black leading-tight text-primary shadow-glow",
+            compact ? "text-[9px]" : "text-[11px]",
+          )}
+        >
+          {name}
+        </span>
+      </div>
+    );
+  }
   return (
     <div className={cn("relative flex flex-col items-center text-center", compact ? "w-24" : "w-full")}>
       <div
