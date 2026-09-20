@@ -135,42 +135,20 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
             {own ? "أرسل الهدايا لفتح شارات جديدة." : "لم يفتح شارات بعد."}
           </p>
         ) : (
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {ownedRoom.data && (
-              <div className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-primary/5 p-2">
-                <AdminBadgeCrest name={`مالك غرفة · ${ownedRoom.data.name}`} styleKey="royal" compact />
-              </div>
+          <>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {badgeTiles.slice(0, badgesOpen ? badgeTiles.length : 2)}
+            </div>
+            {badgeTiles.length > 2 && (
+              <button
+                onClick={() => setBadgesOpen((v) => !v)}
+                className="mt-3 flex w-full items-center justify-center gap-1 rounded-2xl border border-primary/30 bg-surface-2 py-2 text-[11px] font-bold text-primary"
+              >
+                {badgesOpen ? "إخفاء الشارات" : `عرض المزيد (${badgeTiles.length - 2})`}
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", badgesOpen && "rotate-180")} />
+              </button>
             )}
-            {roleBadges.map((role) => (
-              <div key={`${role.label}-${role.note}`} className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-primary/5 p-2">
-                <AdminBadgeCrest name={`${role.label} · ${role.note}`} styleKey={role.styleKey} compact />
-              </div>
-            ))}
-            {administrative.map((badge) => {
-              const definition = badge.badge_definitions;
-              if (!definition) return null;
-              return (
-                <div key={badge.id} className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-surface-2 p-2">
-                   <AdminBadgeCrest name={definition.name} styleKey={definition.color_key || definition.style_key} imageUrl={definition.image_url} variant={definition.display_variant} compact />
-                </div>
-              );
-            })}
-            {achievements.map((badge) => {
-              const definition = badge.badge_definitions;
-              if (!definition) return null;
-              return (
-                <div key={badge.id} className="flex min-w-0 items-center gap-2 rounded-2xl bg-surface-2 p-2">
-                   {definition.image_url ? <img src={definition.image_url} alt="" className="h-12 w-12 shrink-0 object-contain" loading="lazy" /> : <BadgeMark name={definition.name} />}
-                  <span className="min-w-0">
-                    <span className="block truncate text-[11px] font-bold">{definition.name}</span>
-                    <span className="block truncate text-[9px] text-muted-foreground">
-                      {definition.threshold.toLocaleString("en-US")} كوينز
-                    </span>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+          </>
         )}
       </section>
 
