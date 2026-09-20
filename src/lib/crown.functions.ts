@@ -2,6 +2,24 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export type CrownWinner = {
+  rank: number;
+  coins: number;
+  score?: number;
+  name: string;
+  public_id?: string | null;
+  avatar_url?: string | null;
+};
+
+export type CrownMeta = {
+  event?: string;
+  event_id?: string;
+  starts_at?: string;
+  ends_at?: string;
+  top_prize?: number | null;
+  winners?: CrownWinner[];
+};
+
 export type CrownMessage = {
   id: string;
   title: string;
@@ -9,6 +27,8 @@ export type CrownMessage = {
   image_url: string | null;
   kind: string;
   created_at: string;
+  event_id?: string | null;
+  metadata?: CrownMeta | null;
 };
 
 /** رسائل التاج — رسائل رسمية من التطبيق لكل المستخدمين. */
@@ -18,7 +38,7 @@ export const listCrownMessages = createServerFn({ method: "GET" })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (context.supabase as any)
       .from("crown_messages")
-      .select("id, title, body, image_url, kind, created_at")
+      .select("id, title, body, image_url, kind, created_at, event_id, metadata")
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(50);
@@ -53,7 +73,7 @@ export const publishCrownMessage = createServerFn({ method: "POST" })
         kind: data.kind,
         created_by: context.userId,
       })
-      .select("id, title, body, image_url, kind, created_at")
+      .select("id, title, body, image_url, kind, created_at, event_id, metadata")
       .single();
     if (error) throw new Error(error.message);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
