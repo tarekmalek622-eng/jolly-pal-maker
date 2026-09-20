@@ -102,7 +102,14 @@ function MessagesPage() {
       >
         <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/20 text-lg">👑</span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold">رسائل التاج</span>
+          <span className="flex items-center gap-2 text-sm font-bold">
+            رسائل التاج
+            {(crownUnread.data?.unread ?? 0) > 0 && (
+              <span className="rounded-full bg-destructive px-2 py-0.5 text-[10px] font-black text-white">
+                {crownUnread.data?.unread}
+              </span>
+            )}
+          </span>
           <span className="block text-[11px] text-muted-foreground">رسائل رسمية من صوتك: نتائج الأحداث والإعلانات</span>
         </span>
       </Link>
