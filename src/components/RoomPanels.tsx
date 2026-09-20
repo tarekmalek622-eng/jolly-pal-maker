@@ -425,7 +425,7 @@ function TreasurePanel({ roomId }: { roomId: string }) {
             {s.contributors.slice(0, 10).map((c, i) => (
               <div key={c.user_id} className="flex items-center gap-2 rounded-2xl border border-border/60 bg-surface/70 p-2">
                 <span className="w-4 text-center text-[11px] font-black text-primary">{i + 1}</span>
-                <UserAvatar url={c.avatar_url} name={c.display_name ?? ""} size={30} />
+                <UserAvatar src={c.avatar_url} name={c.display_name ?? ""} size={30} />
                 <p className="min-w-0 flex-1 truncate text-xs font-bold">{c.display_name ?? "مستخدم"}</p>
                 <p className="text-[11px] font-bold text-primary">{formatCompact(Number(c.amount))}</p>
               </div>
