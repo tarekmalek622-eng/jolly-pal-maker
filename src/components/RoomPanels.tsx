@@ -209,7 +209,7 @@ function MembersPanel({ roomId }: { roomId: string }) {
         const p = m.profiles as unknown as { display_name: string; avatar_url: string | null; frame_url: string | null; vip_level: number; level: number } | null;
         return (
           <div key={m.user_id} className="flex items-center gap-2 rounded-2xl border border-border/60 bg-surface/70 p-2">
-            <UserAvatar url={p?.avatar_url ?? null} frameUrl={p?.frame_url ?? null} name={p?.display_name ?? ""} size={36} />
+            <UserAvatar src={p?.avatar_url ?? null} frame={p?.frame_url ?? null} vipLevel={p?.vip_level ?? 0} name={p?.display_name ?? ""} size={36} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-bold">{p?.display_name ?? "مستخدم"}</p>
               <p className="text-[10px] text-muted-foreground">
