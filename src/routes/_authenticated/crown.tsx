@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Crown, Loader2 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { listCrownMessages } from "@/lib/crown.functions";
-import { resolveMediaUrl } from "@/lib/media";
+import { eventArt } from "@/lib/event-art";
 
 export const Route = createFileRoute("/_authenticated/crown")({
   head: () => ({
@@ -61,7 +61,7 @@ function CrownPage() {
               </header>
               {m.image_url ? (
                 <img
-                  src={resolveMediaUrl(m.image_url) ?? undefined}
+                  src={eventArt(m.image_url)}
                   alt={m.title}
                   loading="lazy"
                   width={1024}
