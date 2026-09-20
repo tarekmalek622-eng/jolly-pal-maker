@@ -35,13 +35,14 @@ export const Route = createFileRoute("/_authenticated/games")({
   component: GamesPage,
 });
 
-type GameKey = "domino" | "dice" | "wheel" | "seven77" | "cards" | "quiz" | "challenge";
+type GameKey = "domino" | "dice" | "wheel" | "seven77" | "supercar" | "cards" | "quiz" | "challenge";
 
 const GAME_TABS: { key: GameKey; label: string; icon: typeof Dices; flag: string }[] = [
   { key: "domino", label: "دومينو", icon: LayoutGrid, flag: "domino" },
   { key: "dice", label: "النرد", icon: Dices, flag: "dice" },
   { key: "wheel", label: "العجلة", icon: Sparkles, flag: "wheel" },
   { key: "seven77", label: "لعبة 77", icon: Cherry, flag: "seven77" },
+  { key: "supercar", label: "سباق السيارات", icon: Sparkles, flag: "supercar" },
   { key: "cards", label: "الورق", icon: Spade, flag: "cards" },
   { key: "quiz", label: "الأسئلة", icon: HelpCircle, flag: "quiz" },
   { key: "challenge", label: "التحديات", icon: Flame, flag: "quiz" },
@@ -263,8 +264,14 @@ function GamesPage() {
               <Game77 bet={bet} onSettled={afterPlay} />
             </div>
           )}
+          {active === "supercar" && <SuperCarGame roomId={search.room ?? null} />}
 
-          <div className={cn("surface-card p-5", (active === "domino" || active === "wheel") && "hidden")}>
+          <div
+            className={cn(
+              "surface-card p-5",
+              (active === "domino" || active === "wheel" || active === "supercar") && "hidden",
+            )}
+          >
             <p className="text-sm font-bold">
               مبلغ الرهان (بين {limits.min_bet.toLocaleString("en-US")} و {limits.max_bet.toLocaleString("en-US")})
             </p>
