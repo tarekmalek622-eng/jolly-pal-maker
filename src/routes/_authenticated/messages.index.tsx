@@ -96,6 +96,16 @@ function MessagesPage() {
         </div>
       }
     >
+      <Link
+        to="/crown"
+        className="mb-3 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-gradient-to-l from-amber-500/15 to-transparent px-3 py-3"
+      >
+        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/20 text-lg">👑</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold">رسائل التاج</span>
+          <span className="block text-[11px] text-muted-foreground">رسائل رسمية من صوتك: نتائج الأحداث والإعلانات</span>
+        </span>
+      </Link>
       {threads.isLoading ? (
         <div className="flex justify-center py-10">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
