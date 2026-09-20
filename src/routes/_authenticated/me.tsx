@@ -459,3 +459,14 @@ function MePage() {
     </AppShell>
   );
 }
+
+const BAG_SECTIONS: { key: string; label: string }[] = [
+  { key: "all", label: "الكل" },
+  { key: "profile_frame", label: "الإطارات" },
+  { key: "profile_background", label: "خلفيات الملف" },
+  { key: "room_background", label: "خلفيات الغرف" },
+  { key: "mic_decoration", label: "زينة المايك" },
+  { key: "room_decoration", label: "زينة الغرفة" },
+  { key: "badge", label: "الشارات" },
+  { key: "effect", label: "التأثيرات" },
+];
