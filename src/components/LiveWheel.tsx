@@ -516,20 +516,24 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
         {/* شريط نتائج الجولات السابقة */}
         <div className="wheel-bar mt-2 flex items-center gap-2 overflow-x-auto rounded-2xl px-3 py-2">
           <span className="shrink-0 text-[10px] font-extrabold">النتيجة</span>
-          {(history.data ?? []).map((r) => {
+          {(history.data ?? []).map((r, i) => {
             const slot = (r.slots ?? []).find((x) => x.key === r.winning_key);
             return (
-              <span
-                key={r.id}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background/25 text-sm"
-                title={`الجولة ${r.round_no}`}
-              >
-                {slot ? <SlotIcon slotKey={slot.key} emoji={slot.emoji} size={20} /> : "؟"}
+              <span key={r.id} className="relative shrink-0" title={`الجولة ${r.round_no}`}>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white/70 bg-white text-sm">
+                  {slot ? <SlotIcon slotKey={slot.key} emoji={slot.emoji} size={20} /> : "؟"}
+                </span>
+                {i === 0 && (
+                  <span className="absolute -top-1 -left-1 rounded-sm bg-amber-400 px-1 text-[7px] font-black text-stone-900 shadow">
+                    New
+                  </span>
+                )}
               </span>
             );
           })}
           {(history.data?.length ?? 0) === 0 && <span className="text-[10px] opacity-80">لا جولات سابقة</span>}
         </div>
+
 
         {/* لافتة الفوز الكبير */}
         {resultRound && !spinning && resultMyWin > 0 && (
