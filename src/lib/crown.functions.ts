@@ -38,7 +38,7 @@ export const listCrownMessages = createServerFn({ method: "GET" })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (context.supabase as any)
       .from("crown_messages")
-      .select("id, title, body, image_url, kind, created_at")
+      .select("id, title, body, image_url, kind, created_at, event_id, metadata")
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(50);
@@ -73,7 +73,7 @@ export const publishCrownMessage = createServerFn({ method: "POST" })
         kind: data.kind,
         created_by: context.userId,
       })
-      .select("id, title, body, image_url, kind, created_at")
+      .select("id, title, body, image_url, kind, created_at, event_id, metadata")
       .single();
     if (error) throw new Error(error.message);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
