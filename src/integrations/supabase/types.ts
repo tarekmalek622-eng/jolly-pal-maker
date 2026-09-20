@@ -1584,6 +1584,161 @@ export type Database = {
         }
         Relationships: []
       }
+      supercar_bets: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          payout: number
+          room_id: string | null
+          round_id: string
+          slot_key: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          payout?: number
+          room_id?: string | null
+          round_id: string
+          slot_key: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          payout?: number
+          room_id?: string | null
+          round_id?: string
+          slot_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supercar_bets_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supercar_bets_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "supercar_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supercar_rounds: {
+        Row: {
+          attempts: number
+          created_at: string
+          ends_at: string
+          id: string
+          last_error: string | null
+          processing_started_at: string | null
+          round_no: number
+          session_id: string | null
+          session_round_no: number | null
+          settled_at: string | null
+          slots: Json
+          started_at: string
+          status: string
+          total_amount: number
+          total_bets: number
+          total_payout: number
+          winning_key: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          ends_at: string
+          id?: string
+          last_error?: string | null
+          processing_started_at?: string | null
+          round_no?: number
+          session_id?: string | null
+          session_round_no?: number | null
+          settled_at?: string | null
+          slots?: Json
+          started_at?: string
+          status?: string
+          total_amount?: number
+          total_bets?: number
+          total_payout?: number
+          winning_key?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          ends_at?: string
+          id?: string
+          last_error?: string | null
+          processing_started_at?: string | null
+          round_no?: number
+          session_id?: string | null
+          session_round_no?: number | null
+          settled_at?: string | null
+          slots?: Json
+          started_at?: string
+          status?: string
+          total_amount?: number
+          total_bets?: number
+          total_payout?: number
+          winning_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supercar_rounds_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "supercar_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supercar_sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          max_rounds: number
+          session_date: string
+          settled_at: string | null
+          started_at: string
+          status: string
+          total_rounds: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          max_rounds?: number
+          session_date: string
+          settled_at?: string | null
+          started_at?: string
+          status?: string
+          total_rounds?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          max_rounds?: number
+          session_date?: string
+          settled_at?: string | null
+          started_at?: string
+          status?: string
+          total_rounds?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           awarded_at: string
@@ -2471,6 +2626,90 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      supercar_bet: {
+        Args: { _amount: number; _room_id?: string; _slot_key: string }
+        Returns: {
+          amount: number
+          created_at: string
+          id: string
+          payout: number
+          room_id: string | null
+          round_id: string
+          slot_key: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "supercar_bets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      supercar_daily_top: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          gross_win: number
+          net_result: number
+          public_id: string
+          rank: number
+          total_bet: number
+          user_id: string
+        }[]
+      }
+      supercar_round_state: { Args: never; Returns: Json }
+      supercar_session_today: {
+        Args: never
+        Returns: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          max_rounds: number
+          session_date: string
+          settled_at: string | null
+          started_at: string
+          status: string
+          total_rounds: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "supercar_sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      supercar_settings: { Args: never; Returns: Json }
+      supercar_settle: { Args: { _round_id: string }; Returns: undefined }
+      supercar_tick: {
+        Args: never
+        Returns: {
+          attempts: number
+          created_at: string
+          ends_at: string
+          id: string
+          last_error: string | null
+          processing_started_at: string | null
+          round_no: number
+          session_id: string | null
+          session_round_no: number | null
+          settled_at: string | null
+          slots: Json
+          started_at: string
+          status: string
+          total_amount: number
+          total_bets: number
+          total_payout: number
+          winning_key: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "supercar_rounds"
           isOneToOne: true
           isSetofReturn: false
         }
