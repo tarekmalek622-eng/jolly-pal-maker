@@ -10,6 +10,8 @@ export type RelationshipRow = {
   status: "pending" | "accepted" | "rejected" | "ended";
   started_at: string | null;
   created_at: string;
+  points: number;
+  level: number;
 };
 
 export const RELATION_LABELS: Record<RelationType, string> = {
@@ -37,7 +39,7 @@ const anyClient = supabase as unknown as {
 export async function fetchMyRelationships(userId: string, acceptedOnly = false): Promise<RelationshipRow[]> {
   const { data, error } = await anyClient
     .from("relationships")
-    .select("id, requester_id, partner_id, type, status, started_at, created_at")
+    .select("id, requester_id, partner_id, type, status, started_at, created_at, points, level")
     .or(`requester_id.eq.${userId},partner_id.eq.${userId}`)
     .in("status", acceptedOnly ? ["accepted"] : ["pending", "accepted"])
     .order("created_at", { ascending: false });
