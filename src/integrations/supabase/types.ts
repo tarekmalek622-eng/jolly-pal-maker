@@ -443,6 +443,24 @@ export type Database = {
           },
         ]
       }
+      crown_reads: {
+        Row: {
+          last_seen_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          last_seen_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          last_seen_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cup_event_payouts: {
         Row: {
           beneficiary_user_id: string
