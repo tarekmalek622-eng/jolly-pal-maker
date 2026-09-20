@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Award, Crown, Gem, ShieldCheck, Sparkles } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { Award, ChevronDown, Crown, Gem, ShieldCheck, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { GiftThumb, type GiftMediaRow } from "@/components/GiftMedia";
 import { AdminBadgeCrest } from "@/components/AdminBadgeCrest";
@@ -49,6 +51,7 @@ function BadgeMark({ name, role }: { name: string; role?: boolean }) {
 }
 
 export function ProfileShowcase({ userId, own = false }: { userId: string; own?: boolean }) {
+  const [badgesOpen, setBadgesOpen] = useState(false);
   const roles = useQuery({
     queryKey: ["profile-role-badges", userId],
     queryFn: async () => {
@@ -109,6 +112,57 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
   const administrative = earned.filter((badge) => badge.badge_definitions?.kind === "administrative");
   const achievements = earned.filter((badge) => badge.badge_definitions?.kind !== "administrative");
   const received = (gifts.data ?? []).filter((gift) => gift.gifts);
+
+  const badgeTiles: ReactNode[] = [];
+  if (ownedRoom.data) {
+    badgeTiles.push(
+      <div key="room-owner" className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-primary/5 p-2">
+        <AdminBadgeCrest name={`مالك غرفة · ${ownedRoom.data.name}`} styleKey="royal" crestKey="room_owner" compact />
+      </div>,
+    );
+  }
+  roleBadges.forEach((role) => {
+    badgeTiles.push(
+      <div key={`role-${role.roleKey}`} className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-primary/5 p-2">
+        <AdminBadgeCrest name={`${role.label} · ${role.note}`} styleKey={role.styleKey} crestKey={role.roleKey} compact />
+      </div>,
+    );
+  });
+  administrative.forEach((badge) => {
+    const definition = badge.badge_definitions;
+    if (!definition) return;
+    badgeTiles.push(
+      <div key={badge.id} className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-surface-2 p-2">
+        <AdminBadgeCrest
+          name={definition.name}
+          styleKey={definition.color_key || definition.style_key}
+          imageUrl={definition.image_url}
+          crestKey={definition.key}
+          variant={definition.display_variant}
+          compact
+        />
+      </div>,
+    );
+  });
+  achievements.forEach((badge) => {
+    const definition = badge.badge_definitions;
+    if (!definition) return;
+    badgeTiles.push(
+      <div key={badge.id} className="flex min-w-0 items-center gap-2 rounded-2xl bg-surface-2 p-2">
+        {definition.image_url ? (
+          <img src={definition.image_url} alt="" className="h-12 w-12 shrink-0 object-contain" loading="lazy" />
+        ) : (
+          <BadgeMark name={definition.name} />
+        )}
+        <span className="min-w-0">
+          <span className="block truncate text-[11px] font-bold">{definition.name}</span>
+          <span className="block truncate text-[9px] text-muted-foreground">
+            {definition.threshold.toLocaleString("en-US")} كوينز
+          </span>
+        </span>
+      </div>,
+    );
+  });
 
   return (
     <div className="mt-4 space-y-4">
