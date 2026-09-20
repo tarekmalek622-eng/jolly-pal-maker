@@ -5,6 +5,10 @@ import { Crown, Loader2 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { listCrownMessages } from "@/lib/crown.functions";
 import { eventArt } from "@/lib/event-art";
+import { UserAvatar } from "@/components/UserAvatar";
+import { formatCompact, formatFull } from "@/lib/format";
+
+const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
 export const Route = createFileRoute("/_authenticated/crown")({
   head: () => ({
