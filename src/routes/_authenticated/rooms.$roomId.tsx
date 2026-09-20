@@ -164,6 +164,22 @@ function RoomPage() {
     [mics.data],
   );
 
+  const couples = useQuery({
+    queryKey: ["room-couples", roomId, seatUserIds.join(",")],
+    enabled: seatUserIds.length > 1,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("room_couples", { _room_id: roomId });
+      if (error) throw error;
+      return (data ?? []) as { user_a: string; user_b: string; type: string }[];
+    },
+  });
+
+  const coupleKeys = useMemo(
+    () => new Set((couples.data ?? []).map((c) => pairKey(c.user_a, c.user_b))),
+    [couples.data],
+  );
+
   const peopleIds = useMemo(() => {
     const set = new Set<string>([...(members.data ?? []), ...seatUserIds]);
     if (room.data?.owner_id) set.add(room.data.owner_id);
