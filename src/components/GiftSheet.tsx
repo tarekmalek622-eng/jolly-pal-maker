@@ -279,7 +279,7 @@ export function GiftSheet({
 
             <p className="mb-2 mt-4 text-xs font-bold text-muted-foreground">3) الكمية</p>
             <div className="flex gap-2">
-              {[1, 5, 10, 50, 99].map((n) => (
+              {[1, 10, 100, 500, 1000].map((n) => (
                 <button
                   key={n}
                   onClick={() => setQuantity(n)}
@@ -292,6 +292,16 @@ export function GiftSheet({
                 </button>
               ))}
             </div>
+            <input
+              type="number"
+              min={1}
+              inputMode="numeric"
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(1, Math.floor(Number(e.target.value) || 1)))}
+              className="mt-2 h-10 w-full rounded-xl border border-border bg-surface px-3 text-center text-sm font-bold"
+              placeholder="كمية مخصصة"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">لا يوجد حد للكمية — الرصيد فقط هو الحد.</p>
 
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-surface p-3 text-sm">
               <span className="text-muted-foreground">رصيدك: {formatCompact(wallet.data?.coins ?? 0)}</span>
