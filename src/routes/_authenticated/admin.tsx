@@ -68,6 +68,7 @@ import {
 import { cn } from "@/lib/utils";
 import { AdminBadgeCrest } from "@/components/AdminBadgeCrest";
 import { GameMonitorTab } from "@/components/GameMonitorTab";
+import { AdminRoomSystemsTab } from "@/components/AdminRoomSystemsTab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
