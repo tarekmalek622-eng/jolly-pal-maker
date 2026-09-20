@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 import { formatCompact, formatFull } from "@/lib/format";
+import { wheelArt } from "@/lib/wheel-art";
 
 export type WheelSlot = { key: string; label: string; emoji: string; multiplier: number; weight?: number };
 
@@ -386,7 +387,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                 )}
               >
                 <span className="flex items-center justify-between gap-1 px-1.5 py-1">
-                  <span className="emoji text-lg">{s.emoji}</span>
+                  <SlotIcon slotKey={s.key} emoji={s.emoji} size={26} />
                   <span className="wheel-cabin-cap rounded-md px-1.5 py-0.5 text-[10px] font-extrabold">
                     x{s.multiplier}
                   </span>
@@ -405,7 +406,15 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
               {spinning ? "جاري السحب" : finished ? "الفائزة" : "مُدة الاختيار"}
             </span>
             <span className={cn("text-3xl font-extrabold leading-none", spinning && "animate-pulse")}>
-              {spinning ? <span className="emoji">🎡</span> : finished ? <span className="emoji">{winning?.emoji ?? "🎡"}</span> : remaining}
+              {spinning ? (
+                <span className="emoji">🎡</span>
+              ) : finished && winning ? (
+                <SlotIcon slotKey={winning.key} emoji={winning.emoji} size={46} />
+              ) : finished ? (
+                <span className="emoji">🎡</span>
+              ) : (
+                remaining
+              )}
             </span>
             {finished && !spinning && winning && <span className="text-[10px] font-bold">x{winning.multiplier}</span>}
           </div>
@@ -449,10 +458,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             return (
               <span
                 key={r.id}
-                className="emoji flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background/25 text-sm"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background/25 text-sm"
                 title={`الجولة ${r.round_no}`}
               >
-                {slot?.emoji ?? "؟"}
+                {slot ? <SlotIcon slotKey={slot.key} emoji={slot.emoji} size={20} /> : "؟"}
               </span>
             );
           })}
@@ -473,8 +482,9 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
         <div className="surface-card animate-scale-in p-3">
           <div className="flex items-center justify-between text-xs">
             <span className="font-bold">نتيجة سحب الجولة {resultRound.round_no}</span>
-            <span className="font-bold text-primary">
-              {resultWinning?.label} {resultWinning?.emoji}
+            <span className="flex items-center gap-1 font-bold text-primary">
+              {resultWinning?.label}
+              {resultWinning && <SlotIcon slotKey={resultWinning.key} emoji={resultWinning.emoji} size={20} />}
             </span>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2 text-center">
@@ -625,5 +635,21 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
         )}
       </div>
     </div>
+  );
+}
+
+function SlotIcon({ slotKey, emoji, size }: { slotKey: string; emoji?: string; size: number }) {
+  const src = wheelArt(slotKey);
+  if (!src) return <span className="emoji" style={{ fontSize: size }}>{emoji ?? "؟"}</span>;
+  return (
+    <img
+      src={src}
+      alt=""
+      loading="lazy"
+      width={size}
+      height={size}
+      className="shrink-0 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]"
+      style={{ width: size, height: size }}
+    />
   );
 }
