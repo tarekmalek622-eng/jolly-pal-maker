@@ -134,8 +134,38 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
 
   const secondsLeft = round ? Math.max(0, Math.ceil((new Date(round.ends_at).getTime() - now) / 1000)) : 0;
   const betting = round?.status === "betting" && secondsLeft > 0;
-  const revealed = !!round?.winning_key;
+
+  // تشويق ٣ ثوانٍ قبل ظهور النتيجة (النتيجة نفسها محسومة في السيرفر)
+  const [shownRound, setShownRound] = useState<string | null>(null);
+  const [drumCount, setDrumCount] = useState(0);
+  const roundId = round?.id ?? null;
+  const winKey = round?.winning_key ?? null;
+  const settledAt = round?.settled_at ?? round?.ends_at ?? null;
+  useEffect(() => {
+    if (!roundId || !winKey) return;
+    if (shownRound === roundId) return;
+    // نتيجة قديمة (فُتحت الشاشة بعد انتهاء الجولة): تُعرض فورًا
+    if (settledAt && Date.now() - new Date(settledAt).getTime() > 10_000) {
+      setShownRound(roundId);
+      return;
+    }
+    setDrumCount(3);
+    const iv = window.setInterval(() => setDrumCount((c) => Math.max(0, c - 1)), 1000);
+    const to = window.setTimeout(() => {
+      setShownRound(roundId);
+      setDrumCount(0);
+      refreshMoney();
+    }, 3000);
+    return () => {
+      window.clearInterval(iv);
+      window.clearTimeout(to);
+    };
+  }, [roundId, winKey, settledAt, shownRound, refreshMoney]);
+
+  const revealed = Boolean(winKey) && shownRound === roundId;
+  const drumroll = Boolean(winKey) && shownRound !== roundId;
   const winningSlot = round?.slots?.find((s) => s.key === round.winning_key) ?? null;
+
   const players = useMemo(
     () => Object.values(totals).reduce((a, t) => a + Number(t?.players ?? 0), 0),
     [totals],
@@ -177,7 +207,7 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
         </div>
 
         {/* الحلبة الدائرية */}
-        <div className="relative mx-auto aspect-square w-full max-w-[26rem]">
+        <div className="relative mx-auto aspect-square w-full max-w-[22rem] sm:max-w-[30rem]">
           {/* الإطار الخارجي العنابي */}
           <div className="absolute inset-0 rounded-full border-[10px] border-rose-900/90 bg-gradient-to-b from-rose-900/60 to-stone-950/60 shadow-[0_0_40px_-6px_rgba(245,158,11,0.55)]" />
           {/* شعارات محيط الحلبة */}
@@ -188,8 +218,8 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
               <div
                 key={spot.key}
                 className={cn(
-                  "absolute z-10 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full transition",
-                  isWinner && "scale-125 drop-shadow-[0_0_12px_rgba(252,211,77,0.95)]",
+                  "absolute z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-amber-300/70 bg-stone-950/85 p-1 shadow-[0_2px_8px_rgba(0,0,0,0.6)] transition sm:h-11 sm:w-11",
+                  isWinner && "scale-125 border-amber-200 shadow-[0_0_16px_rgba(252,211,77,0.95)]",
                 )}
                 style={{ top: spot.top, left: spot.left }}
               >
@@ -199,8 +229,8 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
           })}
 
           {/* الدائرة الخضراء */}
-          <div className="absolute inset-[14%] overflow-hidden rounded-full border-[3px] border-amber-300/80 bg-[radial-gradient(circle_at_50%_30%,#12855a,#065f46_60%,#03311f)] shadow-inner">
-            <div className="grid h-full grid-cols-2 grid-rows-5">
+          <div className="absolute inset-[15%] overflow-hidden rounded-full border-[3px] border-amber-300/80 bg-[radial-gradient(circle_at_50%_30%,#12855a,#065f46_60%,#03311f)] shadow-inner">
+            <div className="grid h-full grid-cols-2 grid-rows-5 gap-[1px] p-[7%]">
               {ordered.map((slot) => {
                 const t = totals[slot.key];
                 const my = Number(mine[slot.key] ?? 0);
@@ -213,32 +243,33 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
                     disabled={!betting || bet.isPending}
                     onClick={() => bet.mutate(slot.key)}
                     className={cn(
-                      "relative flex items-center justify-center gap-1 border border-emerald-200/15 transition",
-                      isWinner && "bg-amber-400/25 shadow-[inset_0_0_22px_rgba(252,211,77,0.75)]",
+                      "flex min-w-0 flex-col items-center justify-center rounded-lg border border-emerald-200/20 bg-emerald-950/25 px-0.5 transition",
+                      isWinner && "border-amber-200 bg-amber-400/30 shadow-[inset_0_0_18px_rgba(252,211,77,0.8)]",
+                      my > 0 && !isWinner && "border-rose-300/60 bg-rose-900/25",
                       betting ? "active:scale-95" : "opacity-95",
                     )}
                   >
-                    {art && (
-                      <img
-                        src={art}
-                        alt={slot.label}
-                        loading="lazy"
-                        width={64}
-                        height={64}
-                        className="h-6 w-6 shrink-0 object-contain drop-shadow"
-                      />
-                    )}
-                    <span className="text-[13px] font-black text-white/95 drop-shadow">X{slot.multiplier}</span>
-                    {my > 0 && (
-                      <span className="absolute -top-0.5 right-1 rounded-full bg-rose-600 px-1 text-[9px] font-black text-white shadow">
-                        {formatCompact(my)}
+                    <span className="flex items-center justify-center gap-1">
+                      {art && (
+                        <img
+                          src={art}
+                          alt={slot.label}
+                          loading="lazy"
+                          width={64}
+                          height={64}
+                          className="h-6 w-6 shrink-0 object-contain drop-shadow sm:h-8 sm:w-8"
+                        />
+                      )}
+                      <span className="text-[13px] font-black leading-none text-white drop-shadow sm:text-base">
+                        X{slot.multiplier}
                       </span>
-                    )}
-                    {t && t.total > 0 && (
-                      <span className="absolute bottom-0.5 left-1 text-[8px] text-emerald-100/70">
-                        {formatCompact(t.total)}
+                    </span>
+                    <span className="mt-0.5 flex w-full items-center justify-center gap-1 text-[8px] font-bold leading-none sm:text-[10px]">
+                      <span className={cn("truncate", my > 0 ? "text-rose-200" : "text-emerald-200/50")}>
+                        أنت {my > 0 ? formatCompact(my) : "0"}
                       </span>
-                    )}
+                      <span className="truncate text-amber-200/70">{formatCompact(Number(t?.total ?? 0))}</span>
+                    </span>
                   </button>
                 );
               })}
@@ -246,9 +277,9 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
           </div>
 
           {/* مؤقّت الجولة */}
-          <div className="absolute top-1 left-1 z-20 flex h-14 w-14 flex-col items-center justify-center rounded-full border-[3px] border-amber-300/90 bg-gradient-to-b from-amber-500 to-amber-800 text-stone-950 shadow-[0_0_18px_rgba(252,211,77,0.6)]">
-            <AlarmClock className="h-3.5 w-3.5" />
-            <span className="text-base font-black tabular-nums">{betting ? secondsLeft : "—"}</span>
+          <div className="absolute top-0 left-0 z-20 flex h-12 w-12 flex-col items-center justify-center rounded-full border-[3px] border-amber-300/90 bg-gradient-to-b from-amber-500 to-amber-800 text-stone-950 shadow-[0_0_18px_rgba(252,211,77,0.6)] sm:h-16 sm:w-16">
+            <AlarmClock className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="text-sm font-black tabular-nums sm:text-xl">{betting ? secondsLeft : "—"}</span>
           </div>
 
           {/* عدّاد اللاعبين */}
@@ -257,9 +288,19 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
             {players}
           </div>
 
+          {/* تشويق ٣ ثوانٍ قبل كشف النتيجة */}
+          {drumroll && (
+            <div className="absolute inset-[15%] z-30 flex flex-col items-center justify-center rounded-full bg-stone-950/85 text-center backdrop-blur-sm">
+              <span className="text-xs font-bold text-amber-200">جاري كشف النتيجة</span>
+              <span className="animate-pulse text-5xl font-black text-amber-300 tabular-nums">{drumCount || 1}</span>
+              <Loader2 className="mt-1 h-4 w-4 animate-spin text-amber-300" />
+            </div>
+          )}
+
+
           {/* لوحة النتيجة */}
           {revealed && (
-            <div className="absolute inset-x-0 bottom-0 z-30 rounded-b-full rounded-t-[2rem] border-t-4 border-amber-400/80 bg-gradient-to-b from-rose-950/95 to-stone-950/98 px-4 pt-3 pb-6 text-center">
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center overflow-y-auto rounded-full border-[6px] border-amber-400/70 bg-gradient-to-b from-rose-950/95 to-stone-950/98 px-5 py-4 text-center">
               <div className="mx-auto w-fit rounded-md border-2 border-amber-300/80 bg-gradient-to-b from-rose-700 to-rose-900 px-5 py-0.5 text-xs font-black text-amber-100 shadow">
                 الجولة {round?.round_no}
               </div>
