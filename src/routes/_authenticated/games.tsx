@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { DominoGame } from "@/components/DominoGame";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Game77 } from "@/components/Game77";
+import { SuperCarGame } from "@/components/SuperCarGame";
 import { EventsRail } from "@/components/EventsRail";
 import { supabase } from "@/integrations/supabase/client";
 import { playDice, spinWheel, playCards, startQuiz, answerQuiz, playChallenge } from "@/lib/games.functions";
