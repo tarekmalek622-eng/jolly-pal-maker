@@ -426,8 +426,18 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             );
           })}
 
+          {/* الأسد الودود فوق قلب العجلة */}
+          <img
+            src={mascot}
+            alt=""
+            loading="lazy"
+            width={816}
+            height={816}
+            className="pointer-events-none absolute left-1/2 top-[20%] z-10 h-[20%] -translate-x-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]"
+          />
+
           {/* قلب العجلة: مدة الاختيار / الفاكهة الفائزة */}
-          <div className="wheel-hub absolute inset-[35%] flex flex-col items-center justify-center rounded-full border-[6px] text-center">
+          <div className="wheel-hub absolute inset-[35%] top-[38%] z-10 flex flex-col items-center justify-center rounded-full border-[6px] text-center">
             <span className="text-[10px] font-bold">
               {spinning ? "جاري السحب" : finished ? "الفائزة" : "مُدة الاختيار"}
             </span>
@@ -444,6 +454,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             </span>
             {finished && !spinning && winning && <span className="text-[10px] font-bold">x{winning.multiplier}</span>}
           </div>
+
         </div>
 
         {/* منصّتا الجانبين + قاعدة العجلة الزرقاء مع عملات الرهان */}
