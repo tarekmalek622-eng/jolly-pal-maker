@@ -984,6 +984,7 @@ function RoomPage() {
               [
                 { key: "wheel" as const, label: "🎡 عجلة الحظ" },
                 { key: "seven77" as const, label: "7️⃣ لعبة 77" },
+                { key: "supercar" as const, label: "🏎️ سباق السيارات" },
                 { key: "domino" as const, label: "🁣 دومينو" },
               ]
             ).map((t) => (
