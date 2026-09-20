@@ -337,9 +337,16 @@ const REELS_77: { key: string; emoji: string; label: string; weight: number }[] 
   { key: "cherry", emoji: "🍒", label: "كرز", weight: 36 },
 ];
 
+/** عدد عشوائي آمن بين 0 و1 من مولّد التشفير (لا يعتمد على Math.random). */
+function secureRandom() {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return buf[0]! / 2 ** 32;
+}
+
 function spinReel() {
   const total = REELS_77.reduce((sum, r) => sum + r.weight, 0);
-  let ticket = Math.random() * total;
+  let ticket = secureRandom() * total;
   for (const r of REELS_77) {
     ticket -= r.weight;
     if (ticket <= 0) return r;
