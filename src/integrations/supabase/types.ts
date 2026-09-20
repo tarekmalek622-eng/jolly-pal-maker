@@ -2214,6 +2214,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      room_couples: {
+        Args: { _room_id: string }
+        Returns: {
+          type: Database["public"]["Enums"]["relation_type"]
+          user_a: string
+          user_b: string
+        }[]
+      }
       room_cup_leaderboard: {
         Args: { _limit?: number; _period?: string; _room_id: string }
         Returns: {
