@@ -81,6 +81,7 @@ function MePage() {
   });
 
   const [equipping, setEquipping] = useState<string | null>(null);
+  const [bagTab, setBagTab] = useState<string>("all");
 
   async function toggleEquip(userItemId: string, equip: boolean) {
     setEquipping(userItemId);
