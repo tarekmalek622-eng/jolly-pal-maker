@@ -1398,6 +1398,56 @@ export type Database = {
         }
         Relationships: []
       }
+      room_activities: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          kind: string
+          room_id: string
+          starts_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          kind?: string
+          room_id: string
+          starts_at?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          kind?: string
+          room_id?: string
+          starts_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_activities_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_members: {
         Row: {
           id: string
@@ -1531,6 +1581,283 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "room_moderators_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_reward_payouts: {
+        Row: {
+          coins: number
+          created_at: string
+          id: string
+          role: string
+          room_id: string
+          user_id: string
+          week_id: string
+        }
+        Insert: {
+          coins?: number
+          created_at?: string
+          id?: string
+          role: string
+          room_id: string
+          user_id: string
+          week_id: string
+        }
+        Update: {
+          coins?: number
+          created_at?: string
+          id?: string
+          role?: string
+          room_id?: string
+          user_id?: string
+          week_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_reward_payouts_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_reward_payouts_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "room_reward_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_reward_weeks: {
+        Row: {
+          admin_coins: number
+          created_at: string
+          id: string
+          owner_coins: number
+          revenue: number
+          room_id: string
+          settled_at: string
+          status: string
+          week_start: string
+        }
+        Insert: {
+          admin_coins?: number
+          created_at?: string
+          id?: string
+          owner_coins?: number
+          revenue?: number
+          room_id: string
+          settled_at?: string
+          status?: string
+          week_start: string
+        }
+        Update: {
+          admin_coins?: number
+          created_at?: string
+          id?: string
+          owner_coins?: number
+          revenue?: number
+          room_id?: string
+          settled_at?: string
+          status?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_reward_weeks_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_support_registrations: {
+        Row: {
+          created_at: string
+          id: string
+          registered_by: string
+          room_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          registered_by: string
+          room_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          registered_by?: string
+          room_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_support_registrations_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_treasure: {
+        Row: {
+          created_at: string
+          last_opened_at: string | null
+          level: number
+          progress: number
+          room_id: string
+          total_opened: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          last_opened_at?: string | null
+          level?: number
+          progress?: number
+          room_id: string
+          total_opened?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          last_opened_at?: string | null
+          level?: number
+          progress?: number
+          room_id?: string
+          total_opened?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_treasure_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_treasure_contribs: {
+        Row: {
+          amount: number
+          room_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          room_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          room_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_treasure_contribs_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_treasure_opens: {
+        Row: {
+          created_at: string
+          id: string
+          level: number
+          room_id: string
+          target: number
+          total_prize: number
+          winners: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level: number
+          room_id: string
+          target: number
+          total_prize?: number
+          winners?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: number
+          room_id?: string
+          target?: number
+          total_prize?: number
+          winners?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_treasure_opens_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_treasure_payouts: {
+        Row: {
+          coins: number
+          contribution: number
+          created_at: string
+          id: string
+          open_id: string
+          rank: number
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          coins?: number
+          contribution?: number
+          created_at?: string
+          id?: string
+          open_id: string
+          rank: number
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          coins?: number
+          contribution?: number
+          created_at?: string
+          id?: string
+          open_id?: string
+          rank?: number
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_treasure_payouts_open_id_fkey"
+            columns: ["open_id"]
+            isOneToOne: false
+            referencedRelation: "room_treasure_opens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_treasure_payouts_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "rooms"
@@ -2211,6 +2538,10 @@ export type Database = {
       }
       award_gift_badges: { Args: { _user_id: string }; Returns: number }
       break_app_stats: { Args: { _period: string }; Returns: Json }
+      can_manage_room: {
+        Args: { _room_id: string; _user_id: string }
+        Returns: boolean
+      }
       convert_support_balance: {
         Args: { _amount: number }
         Returns: {
@@ -2571,6 +2902,36 @@ export type Database = {
           vip_level: number
         }[]
       }
+      room_reward_settle_week: {
+        Args: { _room_id: string; _week_start: string }
+        Returns: string
+      }
+      room_rewards_settings: { Args: never; Returns: Json }
+      room_rewards_state: { Args: { _room_id: string }; Returns: Json }
+      room_support_register: {
+        Args: { _room_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          registered_by: string
+          room_id: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "room_support_registrations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      room_treasure_open: {
+        Args: { _level: number; _room_id: string; _s: Json; _target: number }
+        Returns: undefined
+      }
+      room_treasure_settings: { Args: never; Returns: Json }
+      room_treasure_state: { Args: { _room_id: string }; Returns: Json }
+      room_week_start: { Args: never; Returns: string }
       send_direct_gift: {
         Args: { _gift_id: string; _quantity?: number; _receiver_id: string }
         Returns: {
