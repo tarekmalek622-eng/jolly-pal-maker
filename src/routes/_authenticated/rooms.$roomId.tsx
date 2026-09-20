@@ -96,7 +96,8 @@ function RoomPage() {
   const [manageOpen, setManageOpen] = useState(false);
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [dominoOpen, setDominoOpen] = useState(false);
-  const [roomGame, setRoomGame] = useState<"wheel" | "domino">("wheel");
+  const [roomGame, setRoomGame] = useState<"wheel" | "seven77" | "domino">("wheel");
+  const [roomBet77, setRoomBet77] = useState(10_000_000);
   const [seatSheet, setSeatSheet] = useState<string | null>(null);
   const [cupOpen, setCupOpen] = useState(false);
   const [cosmeticsOpen, setCosmeticsOpen] = useState(false);
