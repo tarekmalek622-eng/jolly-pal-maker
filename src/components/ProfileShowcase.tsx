@@ -100,8 +100,11 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
   });
 
   const roleBadges = Array.from(new Set(roles.data ?? []))
-    .map((role) => ROLE_BADGES[role])
-    .filter((role): role is { label: string; note: string; styleKey: string } => Boolean(role));
+    .map((role) => {
+      const def = ROLE_BADGES[role];
+      return def ? { ...def, roleKey: role } : null;
+    })
+    .filter((role): role is { label: string; note: string; styleKey: string; roleKey: Role } => Boolean(role));
   const earned = (badges.data ?? []).filter((badge) => badge.badge_definitions);
   const administrative = earned.filter((badge) => badge.badge_definitions?.kind === "administrative");
   const achievements = earned.filter((badge) => badge.badge_definitions?.kind !== "administrative");
