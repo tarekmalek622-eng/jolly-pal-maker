@@ -835,6 +835,15 @@ function RoomPage() {
         </SheetContent>
       </Sheet>
 
+      <RoomPanels
+        roomId={roomId}
+        userId={userId}
+        isOwner={isOwner}
+        canManage={isOwner || (moderators.data ?? []).includes(userId ?? "")}
+        open={roomPanelsOpen}
+        onOpenChange={setRoomPanelsOpen}
+      />
+
       <RoomCosmetics
         roomId={roomId}
         userId={userId}
