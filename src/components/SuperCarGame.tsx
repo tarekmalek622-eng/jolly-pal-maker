@@ -300,7 +300,7 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
 
           {/* لوحة النتيجة */}
           {revealed && (
-            <div className="absolute inset-x-0 bottom-0 z-30 rounded-b-full rounded-t-[2rem] border-t-4 border-amber-400/80 bg-gradient-to-b from-rose-950/95 to-stone-950/98 px-4 pt-3 pb-6 text-center">
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center overflow-y-auto rounded-full border-[6px] border-amber-400/70 bg-gradient-to-b from-rose-950/95 to-stone-950/98 px-5 py-4 text-center">
               <div className="mx-auto w-fit rounded-md border-2 border-amber-300/80 bg-gradient-to-b from-rose-700 to-rose-900 px-5 py-0.5 text-xs font-black text-amber-100 shadow">
                 الجولة {round?.round_no}
               </div>
