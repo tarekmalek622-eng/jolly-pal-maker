@@ -29,6 +29,9 @@ export const listEventCards = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // تسلسل تلقائي: إنهاء المنتهي وبدء التالي فورًا قبل العرض
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabaseAdmin as any).rpc("events_tick");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabaseAdmin as any)
       .from("cup_events")
