@@ -98,6 +98,7 @@ const TABS = [
   { key: "quiz", label: "الأسئلة", icon: HelpCircle },
   { key: "reports", label: "الإبلاغات", icon: Flag },
   { key: "welcome", label: "الترحيبية", icon: PartyPopper },
+  { key: "roomSystems", label: "أنظمة الغرفة", icon: Sofa },
   { key: "logs", label: "السجل", icon: ScrollText },
 ] as const;
 
