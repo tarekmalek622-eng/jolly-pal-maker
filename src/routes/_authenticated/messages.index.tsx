@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { getCrownUnread } from "@/lib/crown.functions";
 import { Loader2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState } from "@/components/AppShell";
@@ -30,6 +32,13 @@ type Row = {
 
 function MessagesPage() {
   const { userId } = useSupabaseSession();
+  const fetchCrownUnread = useServerFn(getCrownUnread);
+  const crownUnread = useQuery({
+    queryKey: ["crown-unread"],
+    queryFn: () => fetchCrownUnread(),
+    staleTime: 30_000,
+  });
+
 
   const threads = useQuery({
     queryKey: ["dm-threads", userId],
