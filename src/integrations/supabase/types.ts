@@ -1279,12 +1279,56 @@ export type Database = {
         }
         Relationships: []
       }
+      relationship_points_log: {
+        Row: {
+          amount: number
+          created_at: string
+          from_user: string
+          id: string
+          level_after: number
+          points: number
+          relationship_id: string
+          to_user: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          from_user: string
+          id?: string
+          level_after: number
+          points: number
+          relationship_id: string
+          to_user: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          from_user?: string
+          id?: string
+          level_after?: number
+          points?: number
+          relationship_id?: string
+          to_user?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relationship_points_log_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       relationships: {
         Row: {
           created_at: string
           ended_at: string | null
           id: string
+          last_level_at: string | null
+          level: number
           partner_id: string
+          points: number
           requester_id: string
           started_at: string | null
           status: string
@@ -1295,7 +1339,10 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           id?: string
+          last_level_at?: string | null
+          level?: number
           partner_id: string
+          points?: number
           requester_id: string
           started_at?: string | null
           status?: string
@@ -1306,7 +1353,10 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           id?: string
+          last_level_at?: string | null
+          level?: number
           partner_id?: string
+          points?: number
           requester_id?: string
           started_at?: string | null
           status?: string
@@ -2416,6 +2466,11 @@ export type Database = {
         }
       }
       refund_item: { Args: { _user_item_id: string }; Returns: number }
+      relationship_award: {
+        Args: { _a: string; _amount: number; _b: string }
+        Returns: undefined
+      }
+      relationship_level_for: { Args: { _points: number }; Returns: number }
       relationship_settings: { Args: never; Returns: Json }
       remove_friend: { Args: { _friend_id: string }; Returns: boolean }
       replace_relationship: {
@@ -2427,7 +2482,10 @@ export type Database = {
           created_at: string
           ended_at: string | null
           id: string
+          last_level_at: string | null
+          level: number
           partner_id: string
+          points: number
           requester_id: string
           started_at: string | null
           status: string
@@ -2450,7 +2508,10 @@ export type Database = {
           created_at: string
           ended_at: string | null
           id: string
+          last_level_at: string | null
+          level: number
           partner_id: string
+          points: number
           requester_id: string
           started_at: string | null
           status: string
@@ -2474,7 +2535,10 @@ export type Database = {
           created_at: string
           ended_at: string | null
           id: string
+          last_level_at: string | null
+          level: number
           partner_id: string
+          points: number
           requester_id: string
           started_at: string | null
           status: string

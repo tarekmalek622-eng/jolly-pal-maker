@@ -9,8 +9,10 @@ import {
   relationDurationLabel,
   RELATION_LABELS,
   RELATION_TYPES,
+  relationLevelInfo,
   type RelationType,
 } from "@/lib/relationships";
+import { formatCoins } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const VISUALS = {
@@ -73,8 +75,17 @@ export function RelationshipShowcase({ userId, own = false }: { userId: string; 
           const person = otherId ? people.get(otherId) : null;
           const visual = VISUALS[type];
           const Icon = visual.icon;
+          const info = row ? relationLevelInfo(row.points ?? 0) : null;
           return (
-            <div key={type} className={cn("relative min-h-40 overflow-hidden rounded-2xl border p-3", visual.className)}>
+            <div
+              key={type}
+              className={cn(
+                "relative min-h-40 overflow-hidden rounded-2xl border p-3",
+                visual.className,
+                info && row?.status === "accepted" && info.current.ring,
+                info && row?.status === "accepted" && info.current.glow,
+              )}
+            >
               <div className="flex items-center gap-1.5 text-[11px] font-black"><Icon className="h-3.5 w-3.5" />{RELATION_LABELS[type]}</div>
               {query.isLoading ? (
                 <div className="mt-4 h-16 animate-pulse rounded-xl bg-background/20" />
@@ -84,6 +95,21 @@ export function RelationshipShowcase({ userId, own = false }: { userId: string; 
                   <span className="mt-2 max-w-full truncate text-xs font-black">{person.display_name}</span>
                   <span className="text-[9px] opacity-75">ID: {person.public_id}</span>
                   <span className="mt-1 text-[9px] font-bold">{row.status === "pending" ? "بانتظار الموافقة" : relationDurationLabel(row.started_at) ?? "نشطة"}</span>
+                  {row.status === "accepted" && info && (
+                    <div className="mt-2 w-full">
+                      <div className={cn("mx-auto mb-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black", info.current.badge)}>
+                        {info.current.level === 7 && <Crown className="h-3 w-3" />}
+                        مستوى {info.current.level} · {info.current.name}
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-background/40">
+                        <div className="h-full rounded-full bg-gradient-to-r from-amber-300 to-rose-400" style={{ width: `${info.progress}%` }} />
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-[8px] opacity-80">
+                        <span>{formatCoins(info.points)} نقطة دعم</span>
+                        <span>{info.next ? `يتبقى ${formatCoins(info.remaining)}` : "أعلى مستوى"}</span>
+                      </div>
+                    </div>
+                  )}
                 </Link>
               ) : (
                 <div className="grid min-h-28 place-items-center text-center text-[10px] opacity-70">لم يتم اختيار شخص بعد</div>
