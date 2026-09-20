@@ -369,6 +369,7 @@ export type Database = {
       coin_wallets: {
         Row: {
           coins: number
+          support_coins: number
           total_received: number
           total_sent: number
           updated_at: string
@@ -376,6 +377,7 @@ export type Database = {
         }
         Insert: {
           coins?: number
+          support_coins?: number
           total_received?: number
           total_sent?: number
           updated_at?: string
@@ -383,6 +385,7 @@ export type Database = {
         }
         Update: {
           coins?: number
+          support_coins?: number
           total_received?: number
           total_sent?: number
           updated_at?: string
@@ -1032,6 +1035,36 @@ export type Database = {
           read_at?: string | null
           title?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      platform_revenue: {
+        Row: {
+          amount: number
+          created_at: string
+          from_user: string | null
+          id: string
+          reference: string | null
+          source: string
+          to_user: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          from_user?: string | null
+          id?: string
+          reference?: string | null
+          source: string
+          to_user?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          from_user?: string | null
+          id?: string
+          reference?: string | null
+          source?: string
+          to_user?: string | null
         }
         Relationships: []
       }
@@ -1905,6 +1938,23 @@ export type Database = {
       }
       award_gift_badges: { Args: { _user_id: string }; Returns: number }
       break_app_stats: { Args: { _period: string }; Returns: Json }
+      convert_support_balance: {
+        Args: { _amount: number }
+        Returns: {
+          coins: number
+          support_coins: number
+          total_received: number
+          total_sent: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "coin_wallets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_lucky_bag: {
         Args: {
           _message?: string
@@ -2397,6 +2447,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      wallet_settings: { Args: never; Returns: Json }
       wheel_bet: {
         Args: { _amount: number; _room_id?: string; _slot_key: string }
         Returns: {
