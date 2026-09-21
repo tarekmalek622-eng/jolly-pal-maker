@@ -21,6 +21,8 @@ import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedStoreRouteImport } from './routes/_authenticated/store'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events.$eventId'
+import { Route as AuthenticatedFamiliesIndexRouteImport } from './routes/_authenticated/families.index'
+import { Route as AuthenticatedFamiliesFamilyIdRouteImport } from './routes/_authenticated/families.$familyId'
 import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
 import { Route as AuthenticatedMessagesUserIdRouteImport } from './routes/_authenticated/messages.$userId'
 import { Route as AuthenticatedRoomsIndexRouteImport } from './routes/_authenticated/rooms.index'
@@ -87,6 +89,18 @@ const AuthenticatedEventsEventIdRoute =
     path: '/events/$eventId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFamiliesIndexRoute =
+  AuthenticatedFamiliesIndexRouteImport.update({
+    id: '/families/',
+    path: '/families/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFamiliesFamilyIdRoute =
+  AuthenticatedFamiliesFamilyIdRouteImport.update({
+    id: '/families/$familyId',
+    path: '/families/$familyId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMessagesIndexRoute =
   AuthenticatedMessagesIndexRouteImport.update({
     id: '/messages/',
@@ -128,9 +142,11 @@ export interface FileRoutesByFullPath {
   '/store': typeof AuthenticatedStoreRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
+  '/families/$familyId': typeof AuthenticatedFamiliesFamilyIdRoute
   '/messages/$userId': typeof AuthenticatedMessagesUserIdRoute
   '/rooms/$roomId': typeof AuthenticatedRoomsRoomIdRoute
   '/u/$publicId': typeof AuthenticatedUPublicIdRoute
+  '/families/': typeof AuthenticatedFamiliesIndexRoute
   '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/rooms/': typeof AuthenticatedRoomsIndexRoute
 }
@@ -146,9 +162,11 @@ export interface FileRoutesByTo {
   '/store': typeof AuthenticatedStoreRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
+  '/families/$familyId': typeof AuthenticatedFamiliesFamilyIdRoute
   '/messages/$userId': typeof AuthenticatedMessagesUserIdRoute
   '/rooms/$roomId': typeof AuthenticatedRoomsRoomIdRoute
   '/u/$publicId': typeof AuthenticatedUPublicIdRoute
+  '/families': typeof AuthenticatedFamiliesIndexRoute
   '/messages': typeof AuthenticatedMessagesIndexRoute
   '/rooms': typeof AuthenticatedRoomsIndexRoute
 }
@@ -166,9 +184,11 @@ export interface FileRoutesById {
   '/_authenticated/store': typeof AuthenticatedStoreRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
+  '/_authenticated/families/$familyId': typeof AuthenticatedFamiliesFamilyIdRoute
   '/_authenticated/messages/$userId': typeof AuthenticatedMessagesUserIdRoute
   '/_authenticated/rooms/$roomId': typeof AuthenticatedRoomsRoomIdRoute
   '/_authenticated/u/$publicId': typeof AuthenticatedUPublicIdRoute
+  '/_authenticated/families/': typeof AuthenticatedFamiliesIndexRoute
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/rooms/': typeof AuthenticatedRoomsIndexRoute
 }
@@ -186,9 +206,11 @@ export interface FileRouteTypes {
     | '/store'
     | '/wallet'
     | '/events/$eventId'
+    | '/families/$familyId'
     | '/messages/$userId'
     | '/rooms/$roomId'
     | '/u/$publicId'
+    | '/families/'
     | '/messages/'
     | '/rooms/'
   fileRoutesByTo: FileRoutesByTo
@@ -204,9 +226,11 @@ export interface FileRouteTypes {
     | '/store'
     | '/wallet'
     | '/events/$eventId'
+    | '/families/$familyId'
     | '/messages/$userId'
     | '/rooms/$roomId'
     | '/u/$publicId'
+    | '/families'
     | '/messages'
     | '/rooms'
   id:
@@ -223,9 +247,11 @@ export interface FileRouteTypes {
     | '/_authenticated/store'
     | '/_authenticated/wallet'
     | '/_authenticated/events/$eventId'
+    | '/_authenticated/families/$familyId'
     | '/_authenticated/messages/$userId'
     | '/_authenticated/rooms/$roomId'
     | '/_authenticated/u/$publicId'
+    | '/_authenticated/families/'
     | '/_authenticated/messages/'
     | '/_authenticated/rooms/'
   fileRoutesById: FileRoutesById
@@ -321,6 +347,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEventsEventIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/families/': {
+      id: '/_authenticated/families/'
+      path: '/families'
+      fullPath: '/families/'
+      preLoaderRoute: typeof AuthenticatedFamiliesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/families/$familyId': {
+      id: '/_authenticated/families/$familyId'
+      path: '/families/$familyId'
+      fullPath: '/families/$familyId'
+      preLoaderRoute: typeof AuthenticatedFamiliesFamilyIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/messages/': {
       id: '/_authenticated/messages/'
       path: '/messages'
@@ -370,9 +410,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStoreRoute: typeof AuthenticatedStoreRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedEventsEventIdRoute: typeof AuthenticatedEventsEventIdRoute
+  AuthenticatedFamiliesFamilyIdRoute: typeof AuthenticatedFamiliesFamilyIdRoute
   AuthenticatedMessagesUserIdRoute: typeof AuthenticatedMessagesUserIdRoute
   AuthenticatedRoomsRoomIdRoute: typeof AuthenticatedRoomsRoomIdRoute
   AuthenticatedUPublicIdRoute: typeof AuthenticatedUPublicIdRoute
+  AuthenticatedFamiliesIndexRoute: typeof AuthenticatedFamiliesIndexRoute
   AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
   AuthenticatedRoomsIndexRoute: typeof AuthenticatedRoomsIndexRoute
 }
@@ -388,9 +430,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStoreRoute: AuthenticatedStoreRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedEventsEventIdRoute: AuthenticatedEventsEventIdRoute,
+  AuthenticatedFamiliesFamilyIdRoute: AuthenticatedFamiliesFamilyIdRoute,
   AuthenticatedMessagesUserIdRoute: AuthenticatedMessagesUserIdRoute,
   AuthenticatedRoomsRoomIdRoute: AuthenticatedRoomsRoomIdRoute,
   AuthenticatedUPublicIdRoute: AuthenticatedUPublicIdRoute,
+  AuthenticatedFamiliesIndexRoute: AuthenticatedFamiliesIndexRoute,
   AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
   AuthenticatedRoomsIndexRoute: AuthenticatedRoomsIndexRoute,
 }

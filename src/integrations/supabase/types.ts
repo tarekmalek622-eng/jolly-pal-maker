@@ -740,6 +740,98 @@ export type Database = {
           },
         ]
       }
+      families: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          family_code: string
+          id: string
+          is_active: boolean
+          is_suspended: boolean
+          leader_id: string | null
+          level: number
+          logo_url: string | null
+          max_members: number
+          member_count: number
+          name: string
+          permissions: Json
+          points: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          family_code: string
+          id?: string
+          is_active?: boolean
+          is_suspended?: boolean
+          leader_id?: string | null
+          level?: number
+          logo_url?: string | null
+          max_members?: number
+          member_count?: number
+          name: string
+          permissions?: Json
+          points?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          family_code?: string
+          id?: string
+          is_active?: boolean
+          is_suspended?: boolean
+          leader_id?: string | null
+          level?: number
+          logo_url?: string | null
+          max_members?: number
+          member_count?: number
+          name?: string
+          permissions?: Json
+          points?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      family_members: {
+        Row: {
+          family_id: string
+          id: string
+          joined_at: string
+          points: number
+          role: string
+          user_id: string
+        }
+        Insert: {
+          family_id: string
+          id?: string
+          joined_at?: string
+          points?: number
+          role?: string
+          user_id: string
+        }
+        Update: {
+          family_id?: string
+          id?: string
+          joined_at?: string
+          points?: number
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
@@ -2691,6 +2783,10 @@ export type Database = {
       }
       events_tick: { Args: never; Returns: number }
       expire_due_vip: { Args: never; Returns: number }
+      family_level_for: { Args: { _points: number }; Returns: number }
+      family_settings: { Args: never; Returns: Json }
+      family_stats: { Args: { _family_id: string }; Returns: Json }
+      gen_family_code: { Args: never; Returns: string }
       gen_public_id: { Args: never; Returns: string }
       gen_room_code: { Args: never; Returns: string }
       gift_stats: { Args: { _since?: string }; Returns: Json }
