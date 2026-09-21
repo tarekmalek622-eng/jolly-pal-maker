@@ -35,6 +35,20 @@ type FamilyRow = {
 type FamilyLevel = { level: number; name: string; points: number; max_members: number; style: string };
 type FamilySettings = { enabled: boolean; max_deputies: number; default_max_members: number; levels: FamilyLevel[] };
 
+type FamilyPatch = {
+  familyId: string;
+  name?: string;
+  familyCode?: string;
+  logoUrl?: string | null;
+  description?: string | null;
+  leaderId?: string;
+  level?: number;
+  points?: number;
+  maxMembers?: number;
+  isActive?: boolean;
+  isSuspended?: boolean;
+};
+
 async function lookupProfile(publicId: string) {
   const { data, error } = await supabase
     .from("profiles")
