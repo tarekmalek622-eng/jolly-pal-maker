@@ -396,6 +396,7 @@ export type Database = {
       coin_wallets: {
         Row: {
           coins: number
+          recharge_points: number
           support_coins: number
           total_received: number
           total_sent: number
@@ -404,6 +405,7 @@ export type Database = {
         }
         Insert: {
           coins?: number
+          recharge_points?: number
           support_coins?: number
           total_received?: number
           total_sent?: number
@@ -412,6 +414,7 @@ export type Database = {
         }
         Update: {
           coins?: number
+          recharge_points?: number
           support_coins?: number
           total_received?: number
           total_sent?: number
@@ -1299,6 +1302,7 @@ export type Database = {
           country: string | null
           created_at: string
           cvip_expires_at: string | null
+          cvip_level: number
           display_name: string
           frame_url: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
@@ -1324,6 +1328,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           cvip_expires_at?: string | null
+          cvip_level?: number
           display_name: string
           frame_url?: string | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
@@ -1349,6 +1354,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           cvip_expires_at?: string | null
+          cvip_level?: number
           display_name?: string
           frame_url?: string | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
@@ -2061,6 +2067,7 @@ export type Database = {
       }
       store_items: {
         Row: {
+          art_key: string | null
           category: string
           created_at: string
           description: string | null
@@ -2075,6 +2082,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          art_key?: string | null
           category: string
           created_at?: string
           description?: string | null
@@ -2089,6 +2097,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          art_key?: string | null
           category?: string
           created_at?: string
           description?: string | null
@@ -2676,6 +2685,7 @@ export type Database = {
         Args: { _amount: number }
         Returns: {
           coins: number
+          recharge_points: number
           support_coins: number
           total_received: number
           total_sent: number
@@ -2750,6 +2760,10 @@ export type Database = {
         }[]
       }
       cup_window_start: { Args: { _period: string }; Returns: string }
+      cvip_apply: { Args: { _user_id: string }; Returns: number }
+      cvip_level_for: { Args: { _points: number }; Returns: number }
+      cvip_settings: { Args: never; Returns: Json }
+      cvip_state: { Args: never; Returns: Json }
       domino_cancel: {
         Args: { _game_id: string; _uid: string }
         Returns: undefined
@@ -2792,6 +2806,7 @@ export type Database = {
           country: string | null
           created_at: string
           cvip_expires_at: string | null
+          cvip_level: number
           display_name: string
           frame_url: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
@@ -2857,6 +2872,7 @@ export type Database = {
           country: string | null
           created_at: string
           cvip_expires_at: string | null
+          cvip_level: number
           display_name: string
           frame_url: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
@@ -2908,6 +2924,7 @@ export type Database = {
           country: string | null
           created_at: string
           cvip_expires_at: string | null
+          cvip_level: number
           display_name: string
           frame_url: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
@@ -3205,6 +3222,7 @@ export type Database = {
           country: string | null
           created_at: string
           cvip_expires_at: string | null
+          cvip_level: number
           display_name: string
           frame_url: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
