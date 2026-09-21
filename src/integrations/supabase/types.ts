@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_sections: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          note: string | null
+          sections: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          note?: string | null
+          sections?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          note?: string | null
+          sections?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -2615,6 +2642,11 @@ export type Database = {
         Args: { _relationship_id: string }
         Returns: boolean
       }
+      admin_has_section: {
+        Args: { _section: string; _user_id: string }
+        Returns: boolean
+      }
+      admin_sections_for: { Args: { _user_id: string }; Returns: string[] }
       admin_set_profile_suspended: {
         Args: { _suspended: boolean; _user_id: string }
         Returns: boolean
