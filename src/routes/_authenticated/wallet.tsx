@@ -170,6 +170,22 @@ function WalletPage() {
   const [convertAmount, setConvertAmount] = useState("");
   const [mode, setMode] = useState<"topup" | "convert">("topup");
 
+  const cvip = useQuery({
+    queryKey: ["cvip-state", userId],
+    enabled: !!userId,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("cvip_state");
+      if (error) throw new Error(error.message);
+      return data as unknown as {
+        recharge_points: number;
+        level: number;
+        next: { level: number; name: string; points: number } | null;
+      };
+    },
+  });
+
+
   const convert = useMutation({
     mutationFn: async () => {
       const amount = Math.floor(Number(convertAmount) || 0);
@@ -260,7 +276,48 @@ function WalletPage() {
         </p>
       </section>
 
+      <section className={cn("surface-card mt-4 p-4", mode !== "topup" && "hidden")}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground">نقاط الشحن</p>
+            <p className="text-2xl font-black text-primary">
+              {(cvip.data?.recharge_points ?? 0).toLocaleString("en-US")}
+            </p>
+          </div>
+          <span className="rounded-full gradient-gold px-3 py-1 text-[10px] font-bold text-primary-foreground">
+            {(cvip.data?.level ?? 0) > 0 ? `CVIP ${cvip.data?.level}` : "بدون CVIP"}
+          </span>
+        </div>
+        {cvip.data?.next ? (
+          <>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2">
+              <div
+                className="h-full gradient-gold"
+                style={{
+                  width: `${Math.min(
+                    100,
+                    Math.round(
+                      ((cvip.data.recharge_points ?? 0) / Math.max(1, cvip.data.next.points)) * 100,
+                    ),
+                  )}%`,
+                }}
+              />
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              باقي {Math.max(0, cvip.data.next.points - (cvip.data.recharge_points ?? 0)).toLocaleString("en-US")} نقطة
+              للوصول إلى {cvip.data.next.name}
+            </p>
+          </>
+        ) : (
+          <p className="mt-2 text-[11px] text-muted-foreground">وصلت إلى أعلى مستوى CVIP 👑</p>
+        )}
+        <p className="mt-1 text-[10px] text-muted-foreground">
+          كل كوينز تشحنها تُضيف نقطة شحن، وترقية CVIP تتم تلقائيًا عند الوصول للنقاط المطلوبة.
+        </p>
+      </section>
+
       <section className={cn("mt-6", mode !== "topup" && "hidden")}>
+
         <h2 className="mb-1 text-sm font-bold">حزم الشحن</h2>
         <p className="mb-3 text-[11px] text-muted-foreground">
           حوّل المبلغ على {accounts.vodafone_cash ? `فودافون كاش ${accounts.vodafone_cash}` : "فودافون كاش"}
