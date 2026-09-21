@@ -305,7 +305,7 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
                         {my > 0 ? formatCompact(my) : "—"}
                       </span>
                       {Number(t?.total ?? 0) > 0 && (
-                        <span className="truncate text-amber-200/70">/ {formatCompact(Number(t.total))}</span>
+                        <span className="truncate text-amber-200/70">/ {formatCompact(Number(t?.total ?? 0))}</span>
                       )}
                     </span>
                   </button>
