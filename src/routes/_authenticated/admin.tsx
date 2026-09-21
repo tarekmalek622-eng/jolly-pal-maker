@@ -212,6 +212,7 @@ function AdminPage() {
       {tab === "reports" && <ReportsTab />}
       {tab === "welcome" && <WelcomeTab prefill={welcomePrefill} />}
       {tab === "roomSystems" && <AdminRoomSystemsTab />}
+      {tab === "families" && <AdminFamiliesTab />}
       {tab === "logs" && <LogsTab />}
     </AppShell>
   );
