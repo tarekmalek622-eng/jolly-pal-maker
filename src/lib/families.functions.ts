@@ -154,7 +154,7 @@ export const adminUpdateFamily = createServerFn({ method: "POST" })
     }
 
     if (Object.keys(patch).length > 0) {
-      const { error } = await supabaseAdmin.from("families").update(patch).eq("id", data.familyId);
+      const { error } = await supabaseAdmin.from("families").update(patch as never).eq("id", data.familyId);
       if (error) throw new Error(error.message);
     }
 
