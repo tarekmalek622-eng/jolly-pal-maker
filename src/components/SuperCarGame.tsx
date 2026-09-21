@@ -64,6 +64,20 @@ const CHIPS: { value: number; ring: string; face: string }[] = [
   { value: 100_000_000, ring: "border-yellow-200", face: "bg-gradient-to-b from-yellow-400 to-amber-600" },
 ];
 
+/** كومة عملات صغيرة تمثّل مبلغ الرهان كما في التصميم */
+function chipStack(amount: number): { value: number; face: string; ring: string }[] {
+  const out: { value: number; face: string; ring: string }[] = [];
+  let rest = amount;
+  for (const c of [...CHIPS].reverse()) {
+    while (rest >= c.value && out.length < 4) {
+      out.push(c);
+      rest -= c.value;
+    }
+    if (out.length >= 4) break;
+  }
+  return out;
+}
+
 /** ترتيب الخانات داخل الدائرة كما في التصميم: صفّان في كل سطر */
 const GRID_ORDER = ["arrow", "wing", "suv", "flags", "crown", "horse", "diamond", "shield", "lion", "bolt"];
 
@@ -170,6 +184,11 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
     () => Object.values(totals).reduce((a, t) => a + Number(t?.players ?? 0), 0),
     [totals],
   );
+  const othersChips = useMemo(() => {
+    const all = Object.values(totals).reduce((a, t) => a + Number(t?.total ?? 0), 0);
+    const others = Math.max(0, all - Object.values(mine).reduce((a, b) => a + Number(b ?? 0), 0));
+    return others > 0 ? chipStack(others).slice(0, 3) : [];
+  }, [totals, mine]);
   const dayWin = useMemo(
     () => (daily.data ?? []).find((r) => r.user_id === userId)?.gross_win ?? 0,
     [daily.data, userId],
@@ -264,11 +283,30 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
                         X{slot.multiplier}
                       </span>
                     </span>
-                    <span className="mt-0.5 flex w-full items-center justify-center gap-1 text-[8px] font-bold leading-none sm:text-[10px]">
-                      <span className={cn("truncate", my > 0 ? "text-rose-200" : "text-emerald-200/50")}>
-                        أنت {my > 0 ? formatCompact(my) : "0"}
+                    {my > 0 && (
+                      <span className="pointer-events-none mt-0.5 flex items-center justify-center">
+                        {chipStack(my).map((c, i) => (
+                          <span
+                            key={`${slot.key}-chip-${i}`}
+                            className={cn(
+                              "grid h-4 w-4 place-items-center rounded-full border text-[6px] font-black text-white shadow sm:h-5 sm:w-5 sm:text-[7px]",
+                              c.ring,
+                              c.face,
+                              i > 0 && "-ms-1.5",
+                            )}
+                          >
+                            {formatCompact(c.value)}
+                          </span>
+                        ))}
                       </span>
-                      <span className="truncate text-amber-200/70">{formatCompact(Number(t?.total ?? 0))}</span>
+                    )}
+                    <span className="mt-0.5 flex w-full items-center justify-center gap-1 text-[8px] font-bold leading-none sm:text-[9px]">
+                      <span className={cn("truncate", my > 0 ? "text-rose-100" : "text-emerald-200/40")}>
+                        {my > 0 ? formatCompact(my) : "—"}
+                      </span>
+                      {Number(t?.total ?? 0) > 0 && (
+                        <span className="truncate text-amber-200/70">/ {formatCompact(Number(t?.total ?? 0))}</span>
+                      )}
                     </span>
                   </button>
                 );
@@ -282,10 +320,30 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
             <span className="text-sm font-black tabular-nums sm:text-xl">{betting ? secondsLeft : "—"}</span>
           </div>
 
-          {/* عدّاد اللاعبين */}
-          <div className="absolute top-1 right-1 z-20 flex items-center gap-1 rounded-full border border-amber-300/70 bg-emerald-900/90 px-2 py-1 text-[11px] font-bold text-amber-100">
-            <Users className="h-3.5 w-3.5 text-emerald-300" />
-            {players}
+          {/* فقاعة رهانات الآخرين */}
+          <div className="absolute -top-1 right-0 z-20 flex flex-col items-center">
+            <div className="flex items-center">
+              {othersChips.length > 0 ? (
+                othersChips.map((c, i) => (
+                  <span
+                    key={`others-${i}`}
+                    className={cn(
+                      "grid h-6 w-6 place-items-center rounded-full border text-[7px] font-black text-white shadow sm:h-7 sm:w-7 sm:text-[8px]",
+                      c.ring,
+                      c.face,
+                      i > 0 && "-ms-2.5",
+                    )}
+                  >
+                    {formatCompact(c.value)}
+                  </span>
+                ))
+              ) : (
+                <Users className="h-6 w-6 text-emerald-400 drop-shadow" />
+              )}
+            </div>
+            <span className="-mt-1 rounded-full border border-amber-300/80 bg-gradient-to-b from-rose-800 to-rose-950 px-2 py-0.5 text-[9px] font-black text-amber-200 shadow">
+              others {players > 0 ? players : ""}
+            </span>
           </div>
 
           {/* تشويق ٣ ثوانٍ قبل كشف النتيجة */}
@@ -293,6 +351,7 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
             <div className="absolute inset-[15%] z-30 flex flex-col items-center justify-center rounded-full bg-stone-950/85 text-center backdrop-blur-sm">
               <span className="text-xs font-bold text-amber-200">جاري كشف النتيجة</span>
               <span className="animate-pulse text-5xl font-black text-amber-300 tabular-nums">{drumCount || 1}</span>
+              <span className="text-xs font-black text-amber-200/80">{drumCount || 1}S</span>
               <Loader2 className="mt-1 h-4 w-4 animate-spin text-amber-300" />
             </div>
           )}
@@ -301,10 +360,21 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
           {/* لوحة النتيجة */}
           {revealed && (
             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center overflow-y-auto rounded-full border-[6px] border-amber-400/70 bg-gradient-to-b from-rose-950/95 to-stone-950/98 px-5 py-4 text-center">
-              <div className="mx-auto w-fit rounded-md border-2 border-amber-300/80 bg-gradient-to-b from-rose-700 to-rose-900 px-5 py-0.5 text-xs font-black text-amber-100 shadow">
-                الجولة {round?.round_no}
+              <div className="relative mx-auto w-fit">
+                <span className="absolute -start-3 top-1/2 h-3 w-4 -translate-y-1/2 skew-y-12 rounded-s bg-gradient-to-b from-amber-400 to-amber-700" />
+                <span className="absolute -end-3 top-1/2 h-3 w-4 -translate-y-1/2 -skew-y-12 rounded-e bg-gradient-to-b from-amber-400 to-amber-700" />
+                <div className="rounded-md border-2 border-amber-300/80 bg-gradient-to-b from-rose-600 to-rose-900 px-6 py-0.5 text-xs font-black text-amber-100 shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
+                  الجولة {round?.round_no}
+                </div>
               </div>
-              <div className="mt-2 flex flex-col items-center">
+              <div className="relative mt-2 flex flex-col items-center">
+                <span className="pointer-events-none absolute inset-0 -m-4 animate-pulse text-amber-200/90">
+                  <span className="absolute left-0 top-1 text-xs">✦</span>
+                  <span className="absolute right-0 top-2 text-sm">✦</span>
+                  <span className="absolute left-2 bottom-8 text-[10px]">✦</span>
+                  <span className="absolute right-2 bottom-7 text-xs">✦</span>
+                  <span className="absolute left-1/2 top-0 text-[10px]">✦</span>
+                </span>
                 {carArt(round?.winning_key) && (
                   <img
                     src={carArt(round?.winning_key) as string}
