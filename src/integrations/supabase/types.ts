@@ -3202,6 +3202,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      verify_room_password: {
+        Args: { _password: string; _room_id: string }
+        Returns: boolean
+      }
       wallet_settings: { Args: never; Returns: Json }
       wheel_bet: {
         Args: { _amount: number; _room_id?: string; _slot_key: string }
@@ -3236,6 +3240,17 @@ export type Database = {
         }[]
       }
       wheel_round_state: { Args: never; Returns: Json }
+      wheel_round_winners: {
+        Args: { _round_id: string }
+        Returns: {
+          amount: number
+          avatar_url: string
+          display_name: string
+          payout: number
+          slot_key: string
+          user_id: string
+        }[]
+      }
       wheel_session_today: {
         Args: never
         Returns: {
