@@ -12,6 +12,7 @@ import {
 } from "@/lib/families.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FamilyCrest } from "@/components/FamilyCrest";
 import { UserAvatar } from "@/components/UserAvatar";
 import { FAMILY_ROLE_LABEL, familyStyle } from "@/lib/family-art";
 import { formatCoins } from "@/lib/format";
@@ -234,7 +235,7 @@ export function AdminFamiliesTab() {
           return (
             <div key={f.id} className={cn("surface-card space-y-2 bg-gradient-to-br p-3", style.card, active && style.glow)}>
               <button type="button" onClick={() => setSelected(active ? null : f.id)} className="flex w-full items-center gap-3 text-start">
-                <UserAvatar src={f.logo_url} name={f.name} size={44} className={style.ring} />
+                <FamilyCrest name={f.name} logoUrl={f.logo_url} styleKey={style.key} level={f.level} size={44} className={style.ring} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-black">{f.name}</p>
                   <p className="text-[10px] text-muted-foreground">

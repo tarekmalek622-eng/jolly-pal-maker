@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Crown, ShieldCheck, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
+import { FamilyCrest } from "@/components/FamilyCrest";
 import { UserAvatar } from "@/components/UserAvatar";
 import { FAMILY_ROLE_LABEL, familyStyle } from "@/lib/family-art";
 import { formatCoins } from "@/lib/format";
@@ -61,6 +62,8 @@ function FamilyPage() {
       if (error) throw new Error(error.message);
       return data as unknown as Stats | null;
     },
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
   });
 
   if (stats.isLoading) {
@@ -94,7 +97,7 @@ function FamilyPage() {
       <div className="space-y-3 px-4 pb-8">
         <div className={cn("surface-card space-y-3 bg-gradient-to-br p-4", style.card, s.family.level >= 7 && style.glow)}>
           <div className="flex items-center gap-3">
-            <UserAvatar src={s.family.logo_url} name={s.family.name} size={64} className={style.ring} />
+            <FamilyCrest name={s.family.name} logoUrl={s.family.logo_url} styleKey={s.level_info?.style} level={s.family.level} size={64} className={style.ring} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-base font-black">{s.family.name}</p>
               <span className={cn("mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold", style.badge)}>
