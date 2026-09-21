@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { CosmeticImage } from "@/components/RoomCosmetics";
-import { useIsAdmin, useMyProfile, useSupabaseSession, useWallet } from "@/hooks/use-session";
+import { useAdminSections, useIsAdmin, useMyProfile, useSupabaseSession, useWallet } from "@/hooks/use-session";
 import { uploadUserImage } from "@/lib/media";
 import { screenProfilePhoto } from "@/lib/moderation.functions";
 import { clearDeviceCredentials } from "@/lib/device-account";
@@ -39,6 +39,8 @@ function MePage() {
   const profile = useMyProfile(userId);
   const wallet = useWallet(userId);
   const isAdmin = useIsAdmin(userId);
+  const adminSections = useAdminSections(userId);
+  const canOpenAdmin = Boolean(isAdmin.data) || (adminSections.data ?? []).length > 0;
   const qc = useQueryClient();
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -366,7 +368,7 @@ function MePage() {
           </span>
           <span className="text-sm font-bold">العائلات</span>
         </Link>
-        {isAdmin.data && (
+        {canOpenAdmin && (
           <Link to="/admin" className="surface-card flex items-center gap-3 p-4">
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
               <Shield className="h-5 w-5 text-primary" />

@@ -7,8 +7,8 @@ type Rpc = {
 };
 
 async function assertAdmin(supabase: Rpc, userId: string) {
-  const { data, error } = await supabase.rpc("is_admin", { _user_id: userId });
-  if (error || data !== true) throw new Error("إدارة العائلات للإدارة فقط");
+  const { data, error } = await supabase.rpc("admin_has_section", { _user_id: userId, _section: "families" });
+  if (error || data !== true) throw new Error("لا تملك صلاحية قسم العائلات");
 }
 
 async function log(actorId: string, targetId: string, action: string, oldValue: unknown, newValue: unknown) {
