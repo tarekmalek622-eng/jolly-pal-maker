@@ -214,7 +214,6 @@ function AdminPage() {
 
       {tab === "users" && (
         <UsersTab
-          fullAccess={fullAccess}
           onWelcome={(publicId) => {
             setWelcomePrefill(publicId);
             setTab("welcome");
@@ -250,7 +249,7 @@ const ROLES = [
   { key: "welcome_manager", label: "مسؤول الترحيبية" },
 ] as const;
 
-function UsersTab({ onWelcome, fullAccess = true }: { onWelcome?: (publicId: string) => void; fullAccess?: boolean }) {
+function UsersTab({ onWelcome }: { onWelcome?: (publicId: string) => void }) {
   const [term, setTerm] = useState("");
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<string | null>(null);
@@ -540,10 +539,79 @@ function UsersTab({ onWelcome, fullAccess = true }: { onWelcome?: (publicId: str
                 })}
               </div>
             )}
+            <SectionsPicker userId={u.id} />
             </div>
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Super admin control: give one account access to specific admin sections only. */
+function SectionsPicker({ userId }: { userId: string }) {
+  const [open, setOpen] = useState(false);
+  const [picked, setPicked] = useState<string[] | null>(null);
+  const current = useQuery({
+    queryKey: ["admin-sections-of", userId],
+    enabled: open,
+    queryFn: () => adminGetUserSections({ data: { userId } }),
+  });
+  const saved = current.data?.sections ?? [];
+  const selection = picked ?? saved;
+  const save = useMutation({
+    mutationFn: () => adminSetUserSections({ data: { userId, sections: selection as never } }),
+    onSuccess: () => {
+      toast.success("تم تحديث أقسام الإدارة لهذا الحساب");
+      void current.refetch();
+      setPicked(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="space-y-2">
+      <Button
+        variant="outline"
+        onClick={() => setOpen((v) => !v)}
+        className="h-10 w-full rounded-xl text-[11px]"
+      >
+        <ScrollText className="me-1.5 h-4 w-4" /> أقسام الإدارة المخصصة
+      </Button>
+      {open && (
+        <div className="space-y-2 rounded-2xl border border-border bg-surface-2 p-2">
+          <p className="text-[10px] text-muted-foreground">
+            اختر الأقسام التي سيراها هذا الحساب في لوحة الإدارة. بدون أي اختيار لا تظهر له اللوحة.
+          </p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {TABS.filter((t) => (ADMIN_SECTION_KEYS as readonly string[]).includes(t.key)).map((t) => {
+              const on = selection.includes(t.key);
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() =>
+                    setPicked(on ? selection.filter((k) => k !== t.key) : [...selection, t.key])
+                  }
+                  className={cn(
+                    "rounded-xl border px-2 py-2 text-[10px] font-bold",
+                    on ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
+                  )}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+          <Button
+            onClick={() => save.mutate()}
+            disabled={save.isPending || current.isLoading}
+            className="h-10 w-full rounded-xl gradient-gold text-[11px] font-black text-primary-foreground"
+          >
+            {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ الأقسام"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
