@@ -8,7 +8,7 @@ import { familyStyle } from "@/lib/family-art";
 import { formatCoins } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/families")({
+export const Route = createFileRoute("/_authenticated/families/")({
   head: () => ({
     meta: [
       { title: "العائلات — صوتك" },

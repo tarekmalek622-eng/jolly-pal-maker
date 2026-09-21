@@ -69,6 +69,7 @@ import { cn } from "@/lib/utils";
 import { AdminBadgeCrest } from "@/components/AdminBadgeCrest";
 import { GameMonitorTab } from "@/components/GameMonitorTab";
 import { AdminRoomSystemsTab } from "@/components/AdminRoomSystemsTab";
+import { AdminFamiliesTab } from "@/components/AdminFamiliesTab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -100,6 +101,7 @@ const TABS = [
   { key: "reports", label: "الإبلاغات", icon: Flag },
   { key: "welcome", label: "الترحيبية", icon: PartyPopper },
   { key: "roomSystems", label: "أنظمة الغرفة", icon: Sofa },
+  { key: "families", label: "العائلات", icon: Users },
   { key: "logs", label: "السجل", icon: ScrollText },
 ] as const;
 
