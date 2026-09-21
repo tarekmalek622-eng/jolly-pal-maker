@@ -12,6 +12,7 @@ export type EventCard = {
   description: string | null;
   image_url: string | null;
   ranking_kind: string;
+  style: string;
   starts_at: string;
   ends_at: string;
   status: string;
@@ -22,7 +23,7 @@ export type EventCard = {
 };
 
 const EVENT_COLUMNS =
-  "id, title, subtitle, description, image_url, ranking_kind, starts_at, ends_at, status, rules, points_note, cup_event_prizes(id, rank_from, rank_to, coins, label)";
+  "id, title, subtitle, description, image_url, ranking_kind, style, starts_at, ends_at, status, rules, points_note, cup_event_prizes(id, rank_from, rank_to, coins, label)";
 
 /** قائمة الأحداث للعرض ككروت — بدون تحميل جداول الترتيب (أسرع بكثير). */
 export const listEventCards = createServerFn({ method: "GET" })
@@ -36,7 +37,7 @@ export const listEventCards = createServerFn({ method: "GET" })
     const { data, error } = await (supabaseAdmin as any)
       .from("cup_events")
       .select(EVENT_COLUMNS)
-      .in("status", ["active", "settling", "finished"])
+      .in("status", ["active", "settling"])
       .order("status", { ascending: true })
       .order("ends_at", { ascending: true })
       .limit(20);
