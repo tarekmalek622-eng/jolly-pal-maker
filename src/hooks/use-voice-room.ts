@@ -42,6 +42,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
     if (!roomId) return;
     let cancelled = false;
     const room = new LiveKitRoom({ adaptiveStream: true, dynacast: true });
+    const attachedAudio = audioElements.current;
     roomRef.current = room;
 
     room
@@ -86,12 +87,12 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
 
     return () => {
       cancelled = true;
-      audioElements.current.forEach((el) => el.remove());
-      audioElements.current.clear();
+      attachedAudio.forEach((el) => el.remove());
+      attachedAudio.clear();
       void room.disconnect();
       roomRef.current = null;
     };
-  }, [roomId, attach, retryKey]);
+  }, [roomId, canPublish, attach, retryKey]);
 
   // Refresh publish permission when the user's mic seat changes.
   useEffect(() => {
