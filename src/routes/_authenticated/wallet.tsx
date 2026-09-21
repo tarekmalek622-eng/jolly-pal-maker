@@ -16,9 +16,9 @@ import { COINS_RATE_NOTE, coinsEgpLabel, coinsUsdLabel } from "@/lib/coins";
 export const Route = createFileRoute("/_authenticated/wallet")({
   head: () => ({
     meta: [
-      { title: "المحفظة — صوتك" },
+      { title: "المحفظة — التاج" },
       { name: "description", content: "رصيد الكوينز، حزم الشحن، وسجل كل عمليات الإرسال والاستلام داخل التطبيق." },
-      { property: "og:title", content: "المحفظة — صوتك" },
+      { property: "og:title", content: "المحفظة — التاج" },
       { property: "og:description", content: "تابع رصيدك وسجل معاملاتك واشترِ حزم الكوينز." },
     ],
   }),

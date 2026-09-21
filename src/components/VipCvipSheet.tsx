@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getVipFrame, getVipName } from "@/lib/vip-frames";
+import { getVipFrame, getVipName, getVipVisual } from "@/lib/vip-frames";
 import { useSupabaseSession } from "@/hooks/use-session";
 
 /** الأنواع المولّدة لا تعرف جدول cvip_plans بعد. */
@@ -136,10 +136,10 @@ export function VipCvipSheet({
           <div className="mt-4 space-y-3 pb-6">
             {mode === "vip"
               ? (vip.data ?? []).map((v) => (
-                  <div key={v.level} className={cn("rounded-2xl border p-4", `vip-tier-${Math.min(5, v.level)}`)}>
+                  <div key={v.level} className={cn("rounded-2xl border p-4", getVipVisual(v.level)?.tierClass)}>
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
                       <img src={getVipFrame(v.level) ?? ""} width={56} height={56} alt={`إطار VIP ${v.level}`} className="h-14 w-14 shrink-0 object-contain" />
-                      <div className="min-w-0"><p className="truncate text-sm font-bold">VIP {v.level}</p><p className="truncate text-[10px] text-primary">{getVipName(v.level)}</p></div>
+                      <div className="min-w-0"><p className="truncate text-sm font-bold">VIP {v.level}</p><p className={cn("truncate text-[10px]", getVipVisual(v.level)?.nameClass)}>{getVipName(v.level)}</p><p className="mt-0.5 truncate text-[9px] text-muted-foreground">{getVipVisual(v.level)?.entryLabel}</p></div>
                       <span className="flex items-center gap-1 text-xs">
                         <Coins className="h-3.5 w-3.5 text-primary" />
                         {v.price.toLocaleString("en-US")}

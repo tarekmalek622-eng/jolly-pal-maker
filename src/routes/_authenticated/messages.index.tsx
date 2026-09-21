@@ -12,9 +12,9 @@ import { useSupabaseSession } from "@/hooks/use-session";
 export const Route = createFileRoute("/_authenticated/messages/")({
   head: () => ({
     meta: [
-      { title: "الرسائل — صوتك" },
-      { name: "description", content: "محادثاتك الخاصة مع الأصدقاء داخل صوتك، بتحديث مباشر للرسائل الجديدة." },
-      { property: "og:title", content: "الرسائل — صوتك" },
+      { title: "الرسائل — التاج" },
+      { name: "description", content: "محادثاتك الخاصة مع الأصدقاء داخل التاج، بتحديث مباشر للرسائل الجديدة." },
+      { property: "og:title", content: "الرسائل — التاج" },
       { property: "og:description", content: "دردشة خاصة مباشرة مع أصدقائك." },
     ],
   }),
@@ -119,7 +119,7 @@ function MessagesPage() {
               </span>
             )}
           </span>
-          <span className="block text-[11px] text-muted-foreground">رسائل رسمية من صوتك: نتائج الأحداث والإعلانات</span>
+          <span className="block text-[11px] text-muted-foreground">رسائل رسمية من التاج: نتائج الأحداث والإعلانات</span>
         </span>
       </Link>
       {threads.isLoading ? (

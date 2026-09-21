@@ -23,13 +23,13 @@ export const Route = createFileRoute("/_authenticated/games")({
   },
   head: () => ({
     meta: [
-      { title: "الألعاب — صوتك" },
+      { title: "الألعاب — التاج" },
       {
         name: "description",
         content:
           "الدومينو الجماعي والنرد وعجلة الحظ والورق والأسئلة والتحديات بالكوينز الافتراضية — للترفيه فقط بدون أموال حقيقية.",
       },
-      { property: "og:title", content: "الألعاب — صوتك" },
+      { property: "og:title", content: "الألعاب — التاج" },
       { property: "og:description", content: "ستة ألعاب بالكوينز الافتراضية، للترفيه فقط." },
     ],
   }),

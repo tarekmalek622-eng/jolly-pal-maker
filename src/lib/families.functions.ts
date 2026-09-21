@@ -36,6 +36,9 @@ export const adminCreateFamily = createServerFn({ method: "POST" })
           .regex(/^\d{4,10}$/)
           .optional(),
         logoUrl: z.string().trim().max(500).optional(),
+        coverUrl: z.string().trim().max(500).optional(),
+        animationUrl: z.string().trim().max(500).optional(),
+        joinMode: z.enum(["open", "request", "closed"]).optional(),
         description: z.string().trim().max(300).optional(),
         leaderId: z.string().uuid(),
         maxMembers: z.number().int().min(5).max(500).optional(),
@@ -66,6 +69,9 @@ export const adminCreateFamily = createServerFn({ method: "POST" })
         family_code: code,
         name: data.name,
         logo_url: data.logoUrl ?? null,
+        cover_url: data.coverUrl ?? null,
+        animation_url: data.animationUrl ?? null,
+        join_mode: data.joinMode ?? "request",
         description: data.description ?? null,
         leader_id: data.leaderId,
         max_members: data.maxMembers ?? 50,
@@ -97,6 +103,9 @@ export const adminUpdateFamily = createServerFn({ method: "POST" })
           .regex(/^\d{4,10}$/)
           .optional(),
         logoUrl: z.string().trim().max(500).nullable().optional(),
+        coverUrl: z.string().trim().max(500).nullable().optional(),
+        animationUrl: z.string().trim().max(500).nullable().optional(),
+        joinMode: z.enum(["open", "request", "closed"]).optional(),
         description: z.string().trim().max(300).nullable().optional(),
         leaderId: z.string().uuid().optional(),
         level: z.number().int().min(1).max(20).optional(),
@@ -124,6 +133,9 @@ export const adminUpdateFamily = createServerFn({ method: "POST" })
     if (data.name !== undefined) patch["name"] = data.name;
     if (data.familyCode !== undefined) patch["family_code"] = data.familyCode;
     if (data.logoUrl !== undefined) patch["logo_url"] = data.logoUrl;
+    if (data.coverUrl !== undefined) patch["cover_url"] = data.coverUrl;
+    if (data.animationUrl !== undefined) patch["animation_url"] = data.animationUrl;
+    if (data.joinMode !== undefined) patch["join_mode"] = data.joinMode;
     if (data.description !== undefined) patch["description"] = data.description;
     if (data.level !== undefined) patch["level"] = data.level;
     if (data.points !== undefined) patch["points"] = data.points;

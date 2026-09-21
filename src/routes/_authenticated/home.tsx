@@ -10,13 +10,14 @@ import { useSupabaseSession, useMyProfile, useWallet } from "@/hooks/use-session
 import { RoomCard, type RoomRow } from "@/components/RoomCard";
 import { EmptyState } from "@/components/AppShell";
 import { HomeBanners } from "@/components/HomeBanners";
+import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
-      { title: "الرئيسية — صوتك" },
+      { title: "الرئيسية — التاج" },
       { name: "description", content: "استعرض الغرف الصوتية النشطة والمشهورة والجديدة وابحث عن الأصدقاء برقم ID." },
-      { property: "og:title", content: "الرئيسية — صوتك" },
+      { property: "og:title", content: "الرئيسية — التاج" },
       { property: "og:description", content: "غرف صوتية نشطة، مستخدمون متصلون، وهدايا مباشرة." },
     ],
   }),
@@ -127,7 +128,8 @@ function HomePage() {
                 vipLevel={profile.data?.vip_level ?? 0}
               />
             </Link>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
+              <BrandMark size={24} showName className="mb-0.5 text-xs" />
               <p className="text-sm font-bold">{profile.data?.display_name ?? "..."}</p>
               <p className="text-[11px] text-muted-foreground">ID: {profile.data?.public_id ?? "—"}</p>
             </div>

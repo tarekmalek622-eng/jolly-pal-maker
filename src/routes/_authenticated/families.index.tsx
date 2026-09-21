@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/families/")({
   head: () => ({
     meta: [
-      { title: "العائلات — صوتك" },
-      { name: "description", content: "تعرّف على عائلات صوتك، مستوياتها، نقاطها وأعضائها." },
-      { property: "og:title", content: "عائلات صوتك" },
+      { title: "العائلات — التاج" },
+      { name: "description", content: "تعرّف على عائلات التاج، مستوياتها، نقاطها وأعضائها." },
+      { property: "og:title", content: "عائلات التاج" },
       { property: "og:description", content: "ترتيب العائلات حسب النقاط والمستوى وعدد الأعضاء." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -40,7 +40,7 @@ function FamiliesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("families")
-        .select("id, family_code, name, logo_url, description, level, points, member_count, max_members, is_suspended")
+        .select("id, family_code, name, logo_url, cover_url, animation_url, description, level, points, member_count, max_members, is_suspended")
         .eq("is_active", true)
         .order("points", { ascending: false })
         .limit(100);
@@ -66,6 +66,9 @@ function FamiliesPage() {
               params={{ familyId: f.id }}
               className={cn("surface-card flex items-center gap-3 bg-gradient-to-br p-3", style.card, f.level >= 7 && style.glow)}
             >
+              {(f.animation_url || f.cover_url) && (
+                <img src={f.animation_url || f.cover_url || ""} alt="" loading="lazy" decoding="async" className="h-12 w-16 shrink-0 rounded-xl object-cover" />
+              )}
               <span className="w-5 text-center text-xs font-black text-muted-foreground">{i + 1}</span>
               <FamilyCrest name={f.name} logoUrl={f.logo_url} styleKey={lvl?.style} level={f.level} size={46} className={style.ring} />
               <div className="min-w-0 flex-1">

@@ -159,6 +159,7 @@ export type Database = {
           is_active: boolean
           kind: string
           link_url: string | null
+          metadata: Json
           sort_order: number
           starts_at: string | null
           subtitle: string | null
@@ -174,6 +175,7 @@ export type Database = {
           is_active?: boolean
           kind?: string
           link_url?: string | null
+          metadata?: Json
           sort_order?: number
           starts_at?: string | null
           subtitle?: string | null
@@ -189,6 +191,7 @@ export type Database = {
           is_active?: boolean
           kind?: string
           link_url?: string | null
+          metadata?: Json
           sort_order?: number
           starts_at?: string | null
           subtitle?: string | null
@@ -775,6 +778,8 @@ export type Database = {
       }
       families: {
         Row: {
+          animation_url: string | null
+          cover_url: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -782,6 +787,7 @@ export type Database = {
           id: string
           is_active: boolean
           is_suspended: boolean
+          join_mode: string
           leader_id: string | null
           level: number
           logo_url: string | null
@@ -793,6 +799,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          animation_url?: string | null
+          cover_url?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -800,6 +808,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_suspended?: boolean
+          join_mode?: string
           leader_id?: string | null
           level?: number
           logo_url?: string | null
@@ -811,6 +820,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          animation_url?: string | null
+          cover_url?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -818,6 +829,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_suspended?: boolean
+          join_mode?: string
           leader_id?: string | null
           level?: number
           logo_url?: string | null
@@ -830,11 +842,53 @@ export type Database = {
         }
         Relationships: []
       }
+      family_join_requests: {
+        Row: {
+          created_at: string
+          family_id: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_join_requests_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       family_members: {
         Row: {
           family_id: string
           id: string
           joined_at: string
+          permissions: Json
           points: number
           role: string
           user_id: string
@@ -843,6 +897,7 @@ export type Database = {
           family_id: string
           id?: string
           joined_at?: string
+          permissions?: Json
           points?: number
           role?: string
           user_id: string
@@ -851,6 +906,7 @@ export type Database = {
           family_id?: string
           id?: string
           joined_at?: string
+          permissions?: Json
           points?: number
           role?: string
           user_id?: string
@@ -2834,9 +2890,38 @@ export type Database = {
       event_templates: { Args: never; Returns: Json }
       events_tick: { Args: never; Returns: number }
       expire_due_vip: { Args: never; Returns: number }
+      family_can: {
+        Args: { _family_id: string; _permission: string; _user_id: string }
+        Returns: boolean
+      }
       family_level_for: { Args: { _points: number }; Returns: number }
+      family_manage_member: {
+        Args: {
+          _action: string
+          _family_id: string
+          _member_id: string
+          _permissions?: Json
+        }
+        Returns: boolean
+      }
+      family_request_join: { Args: { _family_id: string }; Returns: Json }
+      family_respond_join_request: {
+        Args: { _accept: boolean; _request_id: string }
+        Returns: boolean
+      }
       family_settings: { Args: never; Returns: Json }
       family_stats: { Args: { _family_id: string }; Returns: Json }
+      family_update_own_profile: {
+        Args: {
+          _animation_url: string
+          _cover_url: string
+          _description: string
+          _family_id: string
+          _join_mode: string
+          _logo_url: string
+        }
+        Returns: boolean
+      }
       gen_family_code: { Args: never; Returns: string }
       gen_public_id: { Args: never; Returns: string }
       gen_room_code: { Args: never; Returns: string }
