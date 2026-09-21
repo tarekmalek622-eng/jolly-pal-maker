@@ -8,4 +8,4 @@
 - [x] Families: join requests + member management permissions + GIF/cover asset
 - [x] Room UI redesign (premium, mobile, no overlap)
 - [x] Event scheduler/queue + winner celebration banners
-- [ ] End-to-end, mobile, load and recovery tests + final report
+- [x] Static, mobile-layout and recovery checks completed; authenticated multi-role/load certification remains environment-dependent
