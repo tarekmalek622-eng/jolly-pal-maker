@@ -178,6 +178,27 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
 
   const revealed = Boolean(winKey) && shownRound === roundId;
   const drumroll = Boolean(winKey) && shownRound !== roundId;
+
+  // عجلة تلف حول الحلبة حتى تتوقف على السيارة الفائزة
+  const [spinKey, setSpinKey] = useState<string | null>(null);
+  useEffect(() => {
+    if (!drumroll) {
+      setSpinKey(null);
+      return;
+    }
+    const keys = RING.map((r) => r.key);
+    let i = 0;
+    let delay = 70;
+    let timer = 0;
+    const step = () => {
+      setSpinKey(keys[i % keys.length] ?? null);
+      i += 1;
+      delay = Math.min(260, delay * 1.06);
+      timer = window.setTimeout(step, delay);
+    };
+    step();
+    return () => window.clearTimeout(timer);
+  }, [drumroll]);
   const winningSlot = round?.slots?.find((s) => s.key === round.winning_key) ?? null;
 
   const players = useMemo(
@@ -233,12 +254,14 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
           {RING.map((spot) => {
             const art = carArt(spot.key);
             const isWinner = revealed && round?.winning_key === spot.key;
+            const isSpin = drumroll && spinKey === spot.key;
             return (
               <div
                 key={spot.key}
                 className={cn(
                   "absolute z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-amber-300/70 bg-stone-950/85 p-1 shadow-[0_2px_8px_rgba(0,0,0,0.6)] transition sm:h-11 sm:w-11",
                   isWinner && "scale-125 border-amber-200 shadow-[0_0_16px_rgba(252,211,77,0.95)]",
+                  isSpin && "scale-125 border-amber-200 bg-amber-400/40 shadow-[0_0_20px_rgba(252,211,77,0.95)]",
                 )}
                 style={{ top: spot.top, left: spot.left }}
               >
@@ -254,6 +277,7 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
                 const t = totals[slot.key];
                 const my = Number(mine[slot.key] ?? 0);
                 const isWinner = revealed && round?.winning_key === slot.key;
+                const isSpin = drumroll && spinKey === slot.key;
                 const art = carArt(slot.key);
                 return (
                   <button
@@ -264,6 +288,7 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
                     className={cn(
                       "flex min-w-0 flex-col items-center justify-center rounded-lg border border-emerald-200/20 bg-emerald-950/25 px-0.5 transition",
                       isWinner && "border-amber-200 bg-amber-400/30 shadow-[inset_0_0_18px_rgba(252,211,77,0.8)]",
+                      isSpin && "border-amber-200/90 bg-amber-300/25 shadow-[inset_0_0_14px_rgba(252,211,77,0.7)]",
                       my > 0 && !isWinner && "border-rose-300/60 bg-rose-900/25",
                       betting ? "active:scale-95" : "opacity-95",
                     )}
@@ -348,11 +373,10 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
 
           {/* تشويق ٣ ثوانٍ قبل كشف النتيجة */}
           {drumroll && (
-            <div className="absolute inset-[15%] z-30 flex flex-col items-center justify-center rounded-full bg-stone-950/85 text-center backdrop-blur-sm">
-              <span className="text-xs font-bold text-amber-200">جاري كشف النتيجة</span>
-              <span className="animate-pulse text-5xl font-black text-amber-300 tabular-nums">{drumCount || 1}</span>
-              <span className="text-xs font-black text-amber-200/80">{drumCount || 1}S</span>
-              <Loader2 className="mt-1 h-4 w-4 animate-spin text-amber-300" />
+            <div className="absolute left-1/2 top-1/2 z-30 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-2xl border-2 border-amber-300/70 bg-stone-950/80 px-4 py-2 text-center backdrop-blur-sm">
+              <span className="text-[11px] font-bold text-amber-200">جاري كشف النتيجة</span>
+              <span className="animate-pulse text-3xl font-black text-amber-300 tabular-nums">{drumCount || 1}S</span>
+              <Loader2 className="mt-0.5 h-4 w-4 animate-spin text-amber-300" />
             </div>
           )}
 
