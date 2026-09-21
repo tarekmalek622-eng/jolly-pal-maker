@@ -94,6 +94,23 @@ export function useIsAdmin(userId: string | null) {
   });
 }
 
+/**
+ * Admin sections the user may open. Full admins get ["*"]; delegated users get
+ * only the sections granted to them in admin_sections.
+ */
+export function useAdminSections(userId: string | null) {
+  return useQuery({
+    queryKey: ["admin-sections", userId],
+    enabled: Boolean(userId),
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_sections_for", { _user_id: userId! });
+      if (error) throw error;
+      return (data ?? []) as string[];
+    },
+  });
+}
+
 export function useRefreshMoney() {
   const qc = useQueryClient();
   return () => {
