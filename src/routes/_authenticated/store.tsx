@@ -33,8 +33,13 @@ const CATEGORIES: { key: string; label: string }[] = [
   { key: "mic_decoration", label: "زينة المايك" },
   { key: "badge", label: "شارات" },
   { key: "effect", label: "تأثيرات" },
+  { key: "entry", label: "دخول" },
+  { key: "name", label: "الاسم" },
+  { key: "chat", label: "الدردشة" },
+  { key: "special", label: "خاص" },
   { key: "profile_theme", label: "ثيمات" },
 ];
+
 
 function StorePage() {
   const { userId } = useSupabaseSession();
