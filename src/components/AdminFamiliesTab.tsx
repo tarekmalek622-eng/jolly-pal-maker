@@ -108,8 +108,7 @@ export function AdminFamiliesTab() {
   });
 
   const update = useMutation({
-    mutationFn: async (input: Parameters<typeof adminUpdateFamily>[0] extends { data: infer D } ? D : never) =>
-      adminUpdateFamily({ data: input }),
+    mutationFn: async (input: FamilyPatch) => adminUpdateFamily({ data: input }),
     onSuccess: () => {
       toast.success("تم التحديث");
       void families.refetch();
