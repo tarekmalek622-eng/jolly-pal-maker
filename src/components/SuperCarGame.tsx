@@ -81,19 +81,19 @@ function chipStack(amount: number): { value: number; face: string; ring: string 
 /** ترتيب الخانات داخل الدائرة كما في التصميم: صفّان في كل سطر */
 const GRID_ORDER = ["arrow", "wing", "suv", "flags", "crown", "horse", "diamond", "shield", "lion", "bolt"];
 
-/** مواقع الشعارات حول الحلبة */
-const RING = [
-  { key: "arrow", top: "4%", left: "50%" },
-  { key: "wing", top: "12%", left: "24%" },
-  { key: "suv", top: "12%", left: "76%" },
-  { key: "flags", top: "34%", left: "8%" },
-  { key: "crown", top: "34%", left: "92%" },
-  { key: "horse", top: "62%", left: "6%" },
-  { key: "diamond", top: "62%", left: "94%" },
-  { key: "shield", top: "84%", left: "22%" },
-  { key: "lion", top: "84%", left: "78%" },
-  { key: "bolt", top: "94%", left: "50%" },
-];
+/** مواقع الشعارات موزّعة بالتساوي حول الحلبة (المؤشّر في الأعلى) */
+const STEP = 360 / GRID_ORDER.length;
+const RING = GRID_ORDER.map((key, i) => {
+  const deg = -90 + i * STEP;
+  const rad = (deg * Math.PI) / 180;
+  const r = 46;
+  return {
+    key,
+    index: i,
+    left: `${50 + r * Math.cos(rad)}%`,
+    top: `${50 + r * Math.sin(rad)}%`,
+  };
+});
 
 /** ماكينة سباق السيارات — جولات ونتائج من السيرفر بالكامل */
 export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
@@ -179,26 +179,25 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
   const revealed = Boolean(winKey) && shownRound === roundId;
   const drumroll = Boolean(winKey) && shownRound !== roundId;
 
-  // عجلة تلف حول الحلبة حتى تتوقف على السيارة الفائزة
-  const [spinKey, setSpinKey] = useState<string | null>(null);
+  // دوران واقعي للعجلة: تسريع ثم إيقاف تدريجي على السيارة الفائزة
+  const [rotation, setRotation] = useState(0);
+  const [spinning, setSpinning] = useState(false);
   useEffect(() => {
-    if (!drumroll) {
-      setSpinKey(null);
-      return;
-    }
-    const keys = RING.map((r) => r.key);
-    let i = 0;
-    let delay = 70;
-    let timer = 0;
-    const step = () => {
-      setSpinKey(keys[i % keys.length] ?? null);
-      i += 1;
-      delay = Math.min(260, delay * 1.06);
-      timer = window.setTimeout(step, delay);
+    if (!drumroll || !winKey) return;
+    const target = RING.find((r) => r.key === winKey)?.index ?? 0;
+    setSpinning(true);
+    const id = window.requestAnimationFrame(() => {
+      setRotation((prev) => {
+        const base = Math.ceil(prev / 360) * 360;
+        return base + 360 * 5 - target * STEP;
+      });
+    });
+    const done = window.setTimeout(() => setSpinning(false), 3000);
+    return () => {
+      window.cancelAnimationFrame(id);
+      window.clearTimeout(done);
     };
-    step();
-    return () => window.clearTimeout(timer);
-  }, [drumroll]);
+  }, [drumroll, winKey]);
   const winningSlot = round?.slots?.find((s) => s.key === round.winning_key) ?? null;
 
   const players = useMemo(
@@ -250,25 +249,41 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
         <div className="relative mx-auto aspect-square w-full max-w-[22rem] sm:max-w-[30rem]">
           {/* الإطار الخارجي العنابي */}
           <div className="absolute inset-0 rounded-full border-[10px] border-rose-900/90 bg-gradient-to-b from-rose-900/60 to-stone-950/60 shadow-[0_0_40px_-6px_rgba(245,158,11,0.55)]" />
-          {/* شعارات محيط الحلبة */}
+          {/* مؤشّر التوقّف في الأعلى */}
+          <div className="absolute left-1/2 top-[1%] z-20 -translate-x-1/2">
+            <div className="h-0 w-0 border-x-[9px] border-t-[14px] border-x-transparent border-t-amber-300 drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]" />
+          </div>
+
+          {/* شعارات محيط الحلبة — طبقة دوّارة */}
+          <div
+            className="absolute inset-0 z-10"
+            style={{
+              transform: `rotate(${rotation}deg)`,
+              transition: spinning ? "transform 3s cubic-bezier(0.12,0.72,0.06,1)" : "none",
+            }}
+          >
           {RING.map((spot) => {
             const art = carArt(spot.key);
             const isWinner = revealed && round?.winning_key === spot.key;
-            const isSpin = drumroll && spinKey === spot.key;
             return (
               <div
                 key={spot.key}
                 className={cn(
                   "absolute z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-amber-300/70 bg-stone-950/85 p-1 shadow-[0_2px_8px_rgba(0,0,0,0.6)] transition sm:h-11 sm:w-11",
-                  isWinner && "scale-125 border-amber-200 shadow-[0_0_16px_rgba(252,211,77,0.95)]",
-                  isSpin && "scale-125 border-amber-200 bg-amber-400/40 shadow-[0_0_20px_rgba(252,211,77,0.95)]",
+                  isWinner && "scale-150 border-amber-200 bg-amber-300/30 shadow-[0_0_26px_rgba(252,211,77,1)] animate-pulse",
                 )}
                 style={{ top: spot.top, left: spot.left }}
               >
-                {art && <img src={art} alt="" loading="lazy" width={64} height={64} className="h-full w-full object-contain" />}
+                <div
+                  className="h-full w-full"
+                  style={{ transform: `rotate(${-rotation}deg)`, transition: spinning ? "transform 3s cubic-bezier(0.12,0.72,0.06,1)" : "none" }}
+                >
+                  {art && <img src={art} alt="" loading="lazy" width={64} height={64} className="h-full w-full object-contain" />}
+                </div>
               </div>
             );
           })}
+          </div>
 
           {/* الدائرة الخضراء */}
           <div className="absolute inset-[15%] overflow-hidden rounded-full border-[3px] border-amber-300/80 bg-[radial-gradient(circle_at_50%_30%,#12855a,#065f46_60%,#03311f)] shadow-inner">
@@ -277,7 +292,6 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
                 const t = totals[slot.key];
                 const my = Number(mine[slot.key] ?? 0);
                 const isWinner = revealed && round?.winning_key === slot.key;
-                const isSpin = drumroll && spinKey === slot.key;
                 const art = carArt(slot.key);
                 return (
                   <button
@@ -288,7 +302,6 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
                     className={cn(
                       "flex min-w-0 flex-col items-center justify-center rounded-lg border border-emerald-200/20 bg-emerald-950/25 px-0.5 transition",
                       isWinner && "border-amber-200 bg-amber-400/30 shadow-[inset_0_0_18px_rgba(252,211,77,0.8)]",
-                      isSpin && "border-amber-200/90 bg-amber-300/25 shadow-[inset_0_0_14px_rgba(252,211,77,0.7)]",
                       my > 0 && !isWinner && "border-rose-300/60 bg-rose-900/25",
                       betting ? "active:scale-95" : "opacity-95",
                     )}
