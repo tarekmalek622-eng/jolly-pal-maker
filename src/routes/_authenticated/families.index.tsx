@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
-import { UserAvatar } from "@/components/UserAvatar";
+import { FamilyCrest } from "@/components/FamilyCrest";
 import { familyStyle } from "@/lib/family-art";
 import { formatCoins } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,7 @@ function FamiliesPage() {
       if (error) throw new Error(error.message);
       return ((data as { levels?: Level[] } | null)?.levels ?? []) as Level[];
     },
+    staleTime: 10 * 60_000,
   });
 
   const families = useQuery({
@@ -46,6 +47,8 @@ function FamiliesPage() {
       if (error) throw new Error(error.message);
       return data ?? [];
     },
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
   });
 
   return (
@@ -64,7 +67,7 @@ function FamiliesPage() {
               className={cn("surface-card flex items-center gap-3 bg-gradient-to-br p-3", style.card, f.level >= 7 && style.glow)}
             >
               <span className="w-5 text-center text-xs font-black text-muted-foreground">{i + 1}</span>
-              <UserAvatar src={f.logo_url} name={f.name} size={46} className={style.ring} />
+              <FamilyCrest name={f.name} logoUrl={f.logo_url} styleKey={lvl?.style} level={f.level} size={46} className={style.ring} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-black">{f.name}</p>
                 <p className="truncate text-[10px] text-muted-foreground">
