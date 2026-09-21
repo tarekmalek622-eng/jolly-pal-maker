@@ -1,7 +1,10 @@
 ## Production rebuild
-- [ ] Audit gifts, wallets, games, rooms, voice, events, admin, security, and performance
-- [ ] Stabilize financial transactions and idempotency
-- [ ] Stabilize wheel and 77 game engine with recovery
-- [ ] Complete room game selector, wallet, bag, VIP, events, announcements, and admin health
-- [ ] Run end-to-end, mobile, load, and recovery tests
-- [ ] Final production audit and remaining-issues report
+- [x] Admin section permissions (grant one admin section per user)
+- [x] Recharge points + automatic CVIP tiers (admin-editable in app_settings 'cvip')
+- [x] Store expansion: 82 items, independent design per item (art_key + store-art.ts), new categories entry/name/chat/special
+- [ ] Rebrand to «التاج» (logo in splash/login/home/header/loading/empty states)
+- [ ] VIP 6/7/8 independent frames/badges/entry effects
+- [ ] Families: join requests + member management permissions + GIF asset
+- [ ] Room UI redesign (premium, mobile, no overlap)
+- [ ] Event scheduler/queue + winner celebration banners
+- [ ] End-to-end, mobile, load and recovery tests + final report
