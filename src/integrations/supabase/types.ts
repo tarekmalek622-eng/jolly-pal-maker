@@ -2708,6 +2708,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      maintenance_cleanup: { Args: never; Returns: Json }
       mark_direct_messages_read: {
         Args: { _sender_id: string }
         Returns: number
