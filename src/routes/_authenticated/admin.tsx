@@ -29,7 +29,7 @@ import { GiftPlayer, GiftThumb, type GiftMediaRow } from "@/components/GiftMedia
 import { uploadGiftMedia, uploadUserImage, resolveMediaUrl, type GiftMediaKind } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useIsAdmin, useSupabaseSession } from "@/hooks/use-session";
+import { useAdminSections, useIsAdmin, useSupabaseSession } from "@/hooks/use-session";
 import { listWelcomeClaims, lookupWelcomeUser, sendWelcomePackage } from "@/lib/welcome.functions";
 import {
   adminAdjustCoins,
@@ -58,6 +58,9 @@ import {
   adminSetPaymentAccounts,
   adminUpsertQuizQuestion,
   adminSetUserRole,
+  adminSetUserSections,
+  adminGetUserSections,
+  ADMIN_SECTION_KEYS,
   adminSetUserBadge,
   adminUpdateUserIdentity,
   adminUpsertBadgeDefinition,
@@ -108,8 +111,19 @@ const TABS = [
 function AdminPage() {
   const { userId } = useSupabaseSession();
   const isAdmin = useIsAdmin(userId);
+  const sectionsQuery = useAdminSections(userId);
+  const granted = sectionsQuery.data ?? [];
+  const fullAccess = granted.includes("*");
+  const allowedTabs = fullAccess ? TABS.slice() : TABS.filter((t) => granted.includes(t.key));
+  const hasAccess = allowedTabs.length > 0;
   const navigate = useNavigate();
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("users");
+
+  useEffect(() => {
+    if (allowedTabs.length > 0 && !allowedTabs.some((t) => t.key === tab)) {
+      setTab(allowedTabs[0]!.key);
+    }
+  }, [allowedTabs, tab]);
   const [welcomePrefill, setWelcomePrefill] = useState<string | null>(null);
   const ownerBadge = useQuery({
     queryKey: ["admin-owner-badge", userId],
@@ -127,13 +141,13 @@ function AdminPage() {
   });
 
   useEffect(() => {
-    if (isAdmin.isSuccess && !isAdmin.data) {
+    if (sectionsQuery.isSuccess && !hasAccess) {
       toast.error("هذه الصفحة للإدارة فقط");
       void navigate({ to: "/home", replace: true });
     }
-  }, [isAdmin.isSuccess, isAdmin.data, navigate]);
+  }, [sectionsQuery.isSuccess, hasAccess, navigate]);
 
-  if (isAdmin.isLoading) {
+  if (isAdmin.isLoading || sectionsQuery.isLoading) {
     return (
       <AppShell>
         <div className="flex justify-center py-16">
@@ -154,6 +168,15 @@ function AdminPage() {
           </div>
         </div>
       )}
+      {!fullAccess && (
+        <div className="mb-3 rounded-2xl border border-primary/35 bg-primary/10 p-3">
+          <p className="text-xs font-black text-primary">صلاحية محددة</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            لديك صلاحية {allowedTabs.map((t) => t.label).join(" · ")} فقط. باقي أقسام الإدارة غير متاحة لحسابك.
+          </p>
+        </div>
+      )}
+      {fullAccess && (
       <div className="mb-3 grid grid-cols-2 gap-2">
         <div className="rounded-2xl border border-border bg-surface p-3">
           <p className="text-xs font-black">رتبة مساعد</p>
@@ -164,9 +187,10 @@ function AdminPage() {
           <p className="mt-1 text-[10px] text-muted-foreground">سحب المشاركين وتخصيص الغرفة وإغلاق الجولة.</p>
         </div>
       </div>
+      )}
       <div className="sticky top-0 z-20 -mx-4 mb-4 bg-background/85 px-4 pb-2 pt-1 backdrop-blur-md">
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {TABS.map((t) => {
+          {allowedTabs.map((t) => {
             const Icon = t.icon;
             const active = tab === t.key;
             return (
@@ -190,6 +214,7 @@ function AdminPage() {
 
       {tab === "users" && (
         <UsersTab
+          fullAccess={fullAccess}
           onWelcome={(publicId) => {
             setWelcomePrefill(publicId);
             setTab("welcome");
@@ -225,7 +250,7 @@ const ROLES = [
   { key: "welcome_manager", label: "مسؤول الترحيبية" },
 ] as const;
 
-function UsersTab({ onWelcome }: { onWelcome?: (publicId: string) => void }) {
+function UsersTab({ onWelcome, fullAccess = true }: { onWelcome?: (publicId: string) => void; fullAccess?: boolean }) {
   const [term, setTerm] = useState("");
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<string | null>(null);
