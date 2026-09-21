@@ -10,7 +10,8 @@ import {
 } from "livekit-client";
 import { getVoiceToken } from "@/lib/voice.functions";
 
-export type VoiceStatus = "idle" | "connecting" | "connected" | "reconnecting" | "error" | "unconfigured";
+export type VoiceStatus =
+  "idle" | "connecting" | "connected" | "reconnecting" | "error" | "unconfigured";
 
 export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
   const roomRef = useRef<LiveKitRoom | null>(null);

@@ -691,7 +691,9 @@ function RoomPage() {
         />
       )}
 
-      {(voice.status === "reconnecting" || voice.status === "error" || voice.status === "unconfigured") && (
+      {(voice.status === "reconnecting" ||
+        voice.status === "error" ||
+        voice.status === "unconfigured") && (
         <div className="fixed inset-x-3 top-24 z-50 mx-auto flex max-w-md items-center gap-2 rounded-2xl border border-accent/40 bg-background/95 p-2.5 shadow-xl backdrop-blur-xl">
           <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-accent" />
           <p className="min-w-0 flex-1 text-[10px] font-bold">
@@ -700,7 +702,11 @@ function RoomPage() {
               : voice.error || "الخدمة الصوتية غير متاحة حاليًا"}
           </p>
           {voice.status !== "reconnecting" && (
-            <button type="button" onClick={voice.retry} className="rounded-lg bg-primary px-2.5 py-1.5 text-[10px] font-black text-primary-foreground">
+            <button
+              type="button"
+              onClick={voice.retry}
+              className="rounded-lg bg-primary px-2.5 py-1.5 text-[10px] font-black text-primary-foreground"
+            >
               إعادة المحاولة
             </button>
           )}
