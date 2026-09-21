@@ -5,7 +5,7 @@ import { ArrowRight, CalendarDays, Gift, Loader2, ScrollText, Target, Trophy } f
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { getEventDetails } from "@/lib/events.functions";
-import { eventArt } from "@/lib/event-art";
+import { eventArt, eventStyle } from "@/lib/event-art";
 import { formatCompact, formatFull } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -82,19 +82,20 @@ function EventDetailsPage() {
   }
 
   const { event, prizes, leaderboard, me } = query.data;
+  const style = eventStyle(event.style);
   const statusLabel =
     event.status === "active" ? "جارٍ الآن" : event.status === "finished" ? "منتهٍ" : event.status === "settling" ? "جارٍ التوزيع" : event.status;
 
   return (
     <AppShell>
       <div className="-mx-4 -mt-4 mb-4">
-        <div className="relative h-56">
+        <div className={`relative h-56 bg-gradient-to-br ${style.card}`}>
           <img
             src={eventArt(event.image_url)}
             alt={event.title}
             width={1024}
             height={640}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover opacity-80"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-transparent" />
           <Link
@@ -106,8 +107,8 @@ function EventDetailsPage() {
           </Link>
           <div className="absolute inset-x-0 bottom-0 space-y-1 p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-black">{statusLabel}</span>
-              <span className="rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black backdrop-blur ${style.chip}`}>{statusLabel}</span>
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold backdrop-blur ${style.chip}`}>
                 <CalendarDays className="me-1 inline h-3 w-3" />
                 {countdown}
               </span>
