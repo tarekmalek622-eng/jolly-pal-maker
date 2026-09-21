@@ -55,7 +55,9 @@ export function LuckyBagStrip({ roomId }: { roomId: string }) {
       if (error) throw error;
       return (data ?? []) as LuckyBagRow[];
     },
-    staleTime: 5000,
+    staleTime: 3000,
+    refetchInterval: 8000,
+    refetchOnWindowFocus: true,
   });
 
   const myClaims = useQuery<string[]>({
@@ -69,17 +71,18 @@ export function LuckyBagStrip({ roomId }: { roomId: string }) {
     },
   });
 
+  // قناة واحدة ثابتة للغرفة: الاعتماد على كائن الاستعلام كان يعيد الاشتراك كل رسم فتضيع الأحداث.
   useEffect(() => {
     const channel = supabase
       .channel(`lucky-bags-${roomId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "lucky_bags", filter: `room_id=eq.${roomId}` }, () => {
-        void bags.refetch();
+        void qc.invalidateQueries({ queryKey: ["lucky-bags", roomId] });
       })
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [roomId, bags]);
+  }, [roomId, qc]);
 
   const open = useMutation({
     mutationFn: async (bagId: string) => {
