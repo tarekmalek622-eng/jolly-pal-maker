@@ -170,6 +170,22 @@ function WalletPage() {
   const [convertAmount, setConvertAmount] = useState("");
   const [mode, setMode] = useState<"topup" | "convert">("topup");
 
+  const cvip = useQuery({
+    queryKey: ["cvip-state", userId],
+    enabled: !!userId,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("cvip_state");
+      if (error) throw new Error(error.message);
+      return data as unknown as {
+        recharge_points: number;
+        level: number;
+        next: { level: number; name: string; points: number } | null;
+      };
+    },
+  });
+
+
   const convert = useMutation({
     mutationFn: async () => {
       const amount = Math.floor(Number(convertAmount) || 0);
