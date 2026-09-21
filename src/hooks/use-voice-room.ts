@@ -185,6 +185,13 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
 
   const stopMusic = useCallback(() => stopMusicRef.current?.(), []);
 
+  useEffect(
+    () => () => {
+      stopMusicRef.current?.();
+    },
+    [],
+  );
+
   return {
     status,
     error,
