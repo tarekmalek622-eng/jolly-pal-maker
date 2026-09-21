@@ -92,5 +92,5 @@ const STYLES: Record<string, EventStyle> = {
 };
 
 export function eventStyle(key: string | null | undefined): EventStyle {
-  return STYLES[key ?? "royal"] ?? (STYLES.royal as EventStyle);
+  return STYLES[key ?? "royal"] ?? (STYLES["royal"] as EventStyle);
 }
