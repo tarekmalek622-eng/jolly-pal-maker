@@ -6,7 +6,16 @@ type Rpc = {
   rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
 };
 
-async function assertAdmin(supabase: Rpc, userId?: string) {
+/**
+ * Authorizes an admin action. Full admins pass everything; users granted a
+ * single admin section pass only actions belonging to that section.
+ */
+async function assertAdmin(supabase: Rpc, userId?: string, section?: string) {
+  if (section && userId) {
+    const { data, error } = await supabase.rpc("admin_has_section", { _user_id: userId, _section: section });
+    if (error || data !== true) throw new Error("لا تملك صلاحية هذا القسم");
+    return;
+  }
   const { data, error } = await supabase.rpc("is_admin", userId ? { _user_id: userId } : undefined);
   if (error || data !== true) throw new Error("هذه العملية للإدارة فقط");
 }
@@ -40,7 +49,7 @@ export const adminAdjustCoins = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "users");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: wallet, error: walletError } = await supabaseAdmin
@@ -79,7 +88,7 @@ export const adminSetSuspended = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), suspended: z.boolean() }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "users");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.rpc("admin_set_profile_suspended", {
       _user_id: data.userId,
@@ -96,7 +105,7 @@ export const adminSetRoomDisabled = createServerFn({ method: "POST" })
     z.object({ roomId: z.string().uuid(), disabled: z.boolean() }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "rooms");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("rooms")
@@ -113,7 +122,7 @@ export const adminUpdateRoomBackground = createServerFn({ method: "POST" })
     z.object({ roomId: z.string().uuid(), backgroundUrl: z.string().max(500).nullable() }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "rooms");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const previous = await supabaseAdmin.from("rooms").select("background_url").eq("id", data.roomId).maybeSingle();
     if (previous.error || !previous.data) throw new Error("الغرفة غير موجودة");
@@ -142,7 +151,7 @@ export const adminUpdateRoomDetails = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "rooms");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const previous = await supabaseAdmin
@@ -199,7 +208,7 @@ export const adminCloseWheelRound = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "gameEngine");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const round = await supabaseAdmin.from("wheel_rounds").select("id, round_no").eq("status", "betting").order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (round.error) throw new Error(round.error.message);
@@ -218,7 +227,7 @@ export const adminResolveReport = createServerFn({ method: "POST" })
     z.object({ reportId: z.string().uuid(), status: z.enum(["resolved", "rejected", "pending"]) }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "reports");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("reports")
@@ -258,7 +267,7 @@ export const adminUpsertGift = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => giftSchema.parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "gifts");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("gifts")
@@ -274,7 +283,7 @@ export const adminDeleteGift = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "gifts");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: gift } = await supabaseAdmin.from("gifts").select("name").eq("id", data.id).maybeSingle();
     const { count } = await supabaseAdmin
@@ -311,7 +320,7 @@ export const adminUpsertStoreItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => storeSchema.parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "store");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("store_items")
@@ -370,7 +379,7 @@ export const adminUpsertCoinPackage = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "coins");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("coin_packages")
@@ -399,7 +408,7 @@ export const adminUpsertVipLevel = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "vip");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const payload = {
       level: data.level,
@@ -438,7 +447,7 @@ export const adminUpsertCvipPlan = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "cvip");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { id, ...rest } = data;
     const row = {
@@ -479,7 +488,7 @@ export const adminSetGameSettings = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "games");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_settings")
@@ -520,7 +529,7 @@ export const adminSetWheelSettings = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "games");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("app_settings").upsert([{ key: "wheel", value: data }] as never);
     if (error) throw new Error(error.message);
@@ -541,7 +550,7 @@ export const adminSetRelationshipSettings = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "users");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_settings")
@@ -674,7 +683,7 @@ export const adminEndRelationship = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ relationshipId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "users");
     const { data: ended, error } = await (context.supabase as unknown as Rpc).rpc("admin_end_relationship", {
       _relationship_id: data.relationshipId,
     });
@@ -697,7 +706,7 @@ export const adminUpsertQuizQuestion = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "quiz");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const payload = {
       question: data.question,
@@ -719,7 +728,7 @@ export const adminDeleteQuizQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "quiz");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("quiz_questions").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
@@ -744,7 +753,7 @@ export const adminSetDominoSettings = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "games");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_settings")
@@ -768,7 +777,7 @@ export const adminReviewCoinPurchase = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "topups");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     if (data.approve) {
@@ -823,7 +832,7 @@ export const adminSetPaymentAccounts = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "topups");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_settings")
@@ -851,7 +860,7 @@ export const adminUpdateUserIdentity = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "users");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: current, error: readError } = await supabaseAdmin
@@ -945,7 +954,7 @@ export const adminCreateRoom = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "rooms");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     let ownerId = context.userId;
@@ -993,7 +1002,7 @@ export const adminSetRoomModerator = createServerFn({ method: "POST" })
     z.object({ roomId: z.string().uuid(), publicId: z.string().trim().min(3).max(30), enable: z.boolean() }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "rooms");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const target = await supabaseAdmin.from("profiles").select("id").eq("public_id", data.publicId).maybeSingle();
     if (target.error) throw new Error(target.error.message);
@@ -1020,7 +1029,7 @@ export const adminRemoveRoomMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid(), userId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "rooms");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const room = await supabaseAdmin.from("rooms").select("owner_id").eq("id", data.roomId).maybeSingle();
     if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
@@ -1037,7 +1046,7 @@ export const adminDeleteRoomMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ messageId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "roomMessages");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const previous = await supabaseAdmin
       .from("room_messages")
@@ -1056,7 +1065,7 @@ export const adminResendRoomMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ messageId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "roomMessages");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const source = await supabaseAdmin
       .from("room_messages")
@@ -1099,7 +1108,7 @@ export const adminUpsertBanner = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => bannerSchema.parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "banners");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const row = {
       title: data.title,
@@ -1132,11 +1141,88 @@ export const adminDeleteBanner = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase as never, context.userId);
+    await assertAdmin(context.supabase as never, context.userId, "banners");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as unknown as { from: (t: string) => { delete: () => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> } } };
     const { error } = await db.from("banners").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     await log(context.userId, data.id, "admin_banner_deleted", "", "");
     return { ok: true };
+  });
+
+/** Admin panel sections that can be delegated to a non-admin account. */
+export const ADMIN_SECTION_KEYS = [
+  "users",
+  "rooms",
+  "roomMessages",
+  "banners",
+  "badges",
+  "gifts",
+  "store",
+  "vip",
+  "cvip",
+  "coins",
+  "topups",
+  "games",
+  "gameEngine",
+  "quiz",
+  "reports",
+  "welcome",
+  "roomSystems",
+  "families",
+  "logs",
+] as const;
+
+/** Grants a user access to specific admin sections only (super admin action). */
+export const adminSetUserSections = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        sections: z.array(z.enum(ADMIN_SECTION_KEYS)).max(ADMIN_SECTION_KEYS.length),
+        note: z.string().max(200).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const unique = [...new Set(data.sections)];
+    if (unique.length === 0) {
+      const { error } = await supabaseAdmin.from("admin_sections").delete().eq("user_id", data.userId);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabaseAdmin
+        .from("admin_sections")
+        .upsert(
+          {
+            user_id: data.userId,
+            sections: unique,
+            granted_by: context.userId,
+            note: data.note ?? null,
+            updated_at: new Date().toISOString(),
+          } as never,
+          { onConflict: "user_id" },
+        );
+      if (error) throw new Error(error.message);
+    }
+    await log(context.userId, data.userId, "set_admin_sections", "", unique.join(","));
+    return { ok: true, sections: unique };
+  });
+
+/** Reads the admin sections granted to a user (super admin action). */
+export const adminGetUserSections = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ userId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("admin_sections")
+      .select("sections, note")
+      .eq("user_id", data.userId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return { sections: (row?.sections ?? []) as string[], note: row?.note ?? null };
   });
