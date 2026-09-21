@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Megaphone, CalendarDays, Trophy } from "lucide-react";
+import { Megaphone, CalendarDays, Trophy, Crown } from "lucide-react";
+import { UserAvatar } from "@/components/UserAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveMediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
@@ -15,12 +16,23 @@ export type BannerRow = {
   starts_at: string | null;
   ends_at: string | null;
   sort_order: number;
+  metadata: { winners?: BannerWinner[] } | null;
+};
+
+type BannerWinner = {
+  rank: number;
+  name: string;
+  avatar_url: string | null;
+  public_id: string | null;
+  coins: number;
 };
 
 const KIND_META: Record<string, { label: string; icon: typeof Megaphone }> = {
   ad: { label: "إعلان", icon: Megaphone },
   event: { label: "حدث", icon: CalendarDays },
   contest: { label: "مسابقة", icon: Trophy },
+  event_start: { label: "حدث التاج", icon: CalendarDays },
+  event_winners: { label: "أبطال التاج", icon: Crown },
 };
 
 /** بنر الرئيسية: إعلانات وأحداث ومسابقات تُدار من لوحة الإدارة. */
@@ -32,18 +44,27 @@ export function HomeBanners() {
       const db = supabase as unknown as {
         from: (t: string) => {
           select: (c: string) => {
-            eq: (c2: string, v: boolean) => {
+            eq: (
+              c2: string,
+              v: boolean,
+            ) => {
               order: (
                 c3: string,
                 o: { ascending: boolean },
-              ) => { limit: (n: number) => Promise<{ data: BannerRow[] | null; error: { message: string } | null }> };
+              ) => {
+                limit: (
+                  n: number,
+                ) => Promise<{ data: BannerRow[] | null; error: { message: string } | null }>;
+              };
             };
           };
         };
       };
       const { data, error } = await db
         .from("banners")
-        .select("id, title, subtitle, image_url, link_url, kind, starts_at, ends_at, sort_order")
+        .select(
+          "id, title, subtitle, image_url, link_url, kind, starts_at, ends_at, sort_order, metadata",
+        )
         .eq("is_active", true)
         .order("sort_order", { ascending: true })
         .limit(12);
@@ -106,6 +127,8 @@ function BannerCard({ banner }: { banner: BannerRow }) {
 
   const meta = KIND_META[banner.kind] ?? KIND_META["ad"]!;
   const Icon = meta.icon;
+  const winners =
+    banner.kind === "event_winners" ? (banner.metadata?.winners ?? []).slice(0, 3) : [];
 
   const content = (
     <div className="relative h-36 w-full overflow-hidden rounded-3xl border border-border bg-surface sm:h-44">
@@ -123,6 +146,22 @@ function BannerCard({ banner }: { banner: BannerRow }) {
         <p className="mt-1 truncate text-sm font-bold">{banner.title}</p>
         {banner.subtitle && (
           <p className="truncate text-[11px] text-muted-foreground">{banner.subtitle}</p>
+        )}
+        {winners.length > 0 && (
+          <div className="mt-2 flex items-end gap-2" dir="rtl">
+            {winners.map((winner) => (
+              <span
+                key={`${winner.rank}-${winner.public_id ?? winner.name}`}
+                className="inline-flex min-w-0 items-center gap-1 rounded-full border border-primary/30 bg-background/75 py-1 pe-2 ps-1 backdrop-blur-md"
+              >
+                <span className="text-sm">
+                  {winner.rank === 1 ? "🥇" : winner.rank === 2 ? "🥈" : "🥉"}
+                </span>
+                <UserAvatar src={winner.avatar_url} name={winner.name} size={22} />
+                <span className="max-w-16 truncate text-[9px] font-bold">{winner.name}</span>
+              </span>
+            ))}
+          </div>
         )}
       </div>
     </div>

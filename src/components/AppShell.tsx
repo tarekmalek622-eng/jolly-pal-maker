@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { BadgeStrip } from "@/components/BadgeStrip";
 import { useSupabaseSession, useMyProfile } from "@/hooks/use-session";
+import { BrandMark } from "@/components/BrandMark";
 
 export function AppShell({
   children,
@@ -35,9 +36,12 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
         <BadgeStrip userId={userId} rank={profile.data?.level ?? 1} count={0} />
       </div>
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <BrandMark size={34} />
+          <div className="min-w-0">
           <h1 className="text-xl font-bold">{title}</h1>
           {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+          </div>
         </div>
         {action}
       </div>
@@ -48,6 +52,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
 export function EmptyState({ title, hint, action }: { title: string; hint?: string; action?: ReactNode }) {
   return (
     <div className="surface-card flex flex-col items-center gap-2 px-6 py-10 text-center">
+      <BrandMark size={42} />
       <p className="font-semibold">{title}</p>
       {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
       {action}

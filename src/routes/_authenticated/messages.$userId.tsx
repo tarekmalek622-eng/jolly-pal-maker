@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/messages/$userId")({
   head: () => ({
     meta: [
-      { title: "محادثة — صوتك" },
-      { name: "description", content: "محادثة خاصة مباشرة داخل تطبيق صوتك." },
-      { property: "og:title", content: "محادثة — صوتك" },
+      { title: "محادثة — التاج" },
+      { name: "description", content: "محادثة خاصة مباشرة داخل تطبيق التاج." },
+      { property: "og:title", content: "محادثة — التاج" },
       { property: "og:description", content: "دردشة خاصة لحظية مع صديقك." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

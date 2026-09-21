@@ -18,9 +18,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/rooms/")({
   head: () => ({
     meta: [
-      { title: "الغرف الصوتية — صوتك" },
+      { title: "الغرف الصوتية — التاج" },
       { name: "description", content: "تصفح كل الغرف الصوتية حسب التصنيف أو أنشئ غرفتك الخاصة بمايكات وخلفية مخصصة." },
-      { property: "og:title", content: "الغرف الصوتية — صوتك" },
+      { property: "og:title", content: "الغرف الصوتية — التاج" },
       { property: "og:description", content: "غرف عامة وخاصة، مايكات متعددة، دردشة وهدايا." },
     ],
   }),

@@ -14,9 +14,9 @@ import { getVipFrame, getVipName } from "@/lib/vip-frames";
 export const Route = createFileRoute("/_authenticated/store")({
   head: () => ({
     meta: [
-      { title: "المتجر وVIP — صوتك" },
+      { title: "المتجر وVIP — التاج" },
       { name: "description", content: "اشترِ إطارات وخلفيات وشارات وتأثيرات ومستويات VIP بالكوينز داخل التطبيق." },
-      { property: "og:title", content: "المتجر وVIP — صوتك" },
+      { property: "og:title", content: "المتجر وVIP — التاج" },
       { property: "og:description", content: "عناصر تزيين للملف والغرفة والمايك ومستويات VIP." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

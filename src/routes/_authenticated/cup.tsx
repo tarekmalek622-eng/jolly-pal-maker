@@ -12,10 +12,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/cup")({
   head: () => ({
     meta: [
-      { title: "كأس التطبيق — صوتك" },
-      { name: "description", content: "لوحة كأس صوتك: الداعمون والمستلمون والشاحنون ومكاسب الألعاب بأرقام حقيقية." },
-      { property: "og:title", content: "كأس التطبيق — صوتك" },
-      { property: "og:description", content: "ترتيب وإحصائيات يومية وأسبوعية وشهرية من عمليات صوتك الفعلية." },
+      { title: "كأس التطبيق — التاج" },
+      { name: "description", content: "لوحة كأس التاج: الداعمون والمستلمون والشاحنون ومكاسب الألعاب بأرقام حقيقية." },
+      { property: "og:title", content: "كأس التطبيق — التاج" },
+      { property: "og:description", content: "ترتيب وإحصائيات يومية وأسبوعية وشهرية من عمليات التاج الفعلية." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

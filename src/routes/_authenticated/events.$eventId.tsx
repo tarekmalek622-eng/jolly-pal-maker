@@ -12,10 +12,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/events/$eventId")({
   head: () => ({
     meta: [
-      { title: "تفاصيل الحدث — صوتك" },
-      { name: "description", content: "المراكز والمكافآت والسياسات وتقدمك داخل أحداث صوتك." },
-      { property: "og:title", content: "تفاصيل الحدث — صوتك" },
-      { property: "og:description", content: "ترتيب مباشر ومكافآت حقيقية داخل أحداث صوتك." },
+      { title: "تفاصيل الحدث — التاج" },
+      { name: "description", content: "المراكز والمكافآت والسياسات وتقدمك داخل أحداث التاج." },
+      { property: "og:title", content: "تفاصيل الحدث — التاج" },
+      { property: "og:description", content: "ترتيب مباشر ومكافآت حقيقية داخل أحداث التاج." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

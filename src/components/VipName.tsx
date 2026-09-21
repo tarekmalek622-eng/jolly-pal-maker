@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { getVipVisual } from "@/lib/vip-frames";
 
 /**
  * اسم المستخدم مع تلوين خاص لأصحاب VIP:
@@ -14,14 +15,12 @@ export function VipName({
   vipLevel?: number;
   className?: string;
 }) {
-  const flow = vipLevel >= 4;
-  const gold = vipLevel >= 1 && vipLevel < 4;
+  const visual = getVipVisual(vipLevel);
   return (
     <span
       className={cn(
         "truncate font-bold",
-        flow && "text-vip-flow",
-        gold && "text-gradient-gold",
+        visual?.nameClass,
         className,
       )}
     >
@@ -40,9 +39,9 @@ export function VipId({
   vipLevel?: number;
   className?: string;
 }) {
-  const flow = vipLevel >= 4;
+  const visual = getVipVisual(vipLevel);
   return (
-    <span className={cn("text-[11px]", flow ? "text-vip-flow font-bold" : "text-muted-foreground", className)}>
+    <span className={cn("text-[11px]", visual ? `${visual.nameClass} font-bold` : "text-muted-foreground", className)}>
       ID: {publicId}
     </span>
   );

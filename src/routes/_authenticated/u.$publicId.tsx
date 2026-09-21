@@ -32,9 +32,9 @@ import { RelationshipShowcase } from "@/components/RelationshipShowcase";
 export const Route = createFileRoute("/_authenticated/u/$publicId")({
   head: () => ({
     meta: [
-      { title: "ملف مستخدم — صوتك" },
+      { title: "ملف مستخدم — التاج" },
       { name: "description", content: "استعرض ملف المستخدم: المستوى وVIP والمتابعين، وأرسل رسالة أو طلب صداقة." },
-      { property: "og:title", content: "ملف مستخدم — صوتك" },
+      { property: "og:title", content: "ملف مستخدم — التاج" },
       { property: "og:description", content: "المستوى، VIP، المتابعون وخيارات التواصل." },
       { property: "og:type", content: "profile" },
       { name: "twitter:card", content: "summary" },

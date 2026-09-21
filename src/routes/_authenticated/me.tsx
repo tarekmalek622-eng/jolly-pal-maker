@@ -25,9 +25,9 @@ import { RelationshipShowcase } from "@/components/RelationshipShowcase";
 export const Route = createFileRoute("/_authenticated/me")({
   head: () => ({
     meta: [
-      { title: "ملفي — صوتك" },
+      { title: "ملفي — التاج" },
       { name: "description", content: "عدّل اسمك وصورتك ونبذتك، وتابع مستواك وXP وVIP وعناصرك المملوكة." },
-      { property: "og:title", content: "ملفي — صوتك" },
+      { property: "og:title", content: "ملفي — التاج" },
       { property: "og:description", content: "مستواك، رصيدك، عناصرك، وإعدادات حسابك." },
     ],
   }),

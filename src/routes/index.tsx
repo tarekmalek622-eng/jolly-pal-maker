@@ -23,16 +23,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "صوتك — انضم لغرف الدردشة الصوتية" },
+      { title: "التاج — انضم لغرف الدردشة الصوتية" },
       {
         name: "description",
         content: "أنشئ حسابك في ثوانٍ بالاسم والدولة والصورة، وادخل غرف صوتية مباشرة مع مجتمع عربي نشط.",
       },
-      { property: "og:title", content: "صوتك — انضم لغرف الدردشة الصوتية" },
+      { property: "og:title", content: "التاج — انضم لغرف الدردشة الصوتية" },
       {
         property: "og:description",
         content: "تسجيل سريع برقم الهاتف وكلمة السر، غرف صوتية مباشرة، هدايا ومستويات وVIP.",
@@ -167,7 +168,7 @@ function Landing() {
   if (checking) {
     return (
       <div className="flex min-h-screen items-center justify-center gradient-hero">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-3"><BrandMark size={72} /><Loader2 className="h-5 w-5 animate-spin text-primary" /><span className="text-xs font-bold text-gradient-gold">التاج</span></div>
       </div>
     );
   }
@@ -200,11 +201,9 @@ function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex flex-1 flex-col justify-between">
       <div className="pt-10 text-center">
-        <div className="mx-auto flex h-24 w-24 animate-float items-center justify-center rounded-3xl gradient-gold shadow-glow">
-          <Mic className="h-11 w-11 text-primary-foreground" />
-        </div>
+        <BrandMark size={112} className="animate-float" />
         <h1 className="mt-7 text-4xl font-black">
-          <span className="text-gradient-gold">صوتك</span>
+          <span className="text-gradient-gold">التاج</span>
         </h1>
         <p className="mt-3 text-base text-muted-foreground">
           مجتمع صوتي عربي… غرف مباشرة، مايكات، هدايا وأصدقاء جدد.
@@ -324,10 +323,8 @@ function PhoneAuth({
   return (
     <div className="flex flex-1 flex-col justify-center py-4">
       <div className="mb-5 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl gradient-gold shadow-glow">
-          <Mic className="h-7 w-7 text-primary-foreground" />
-        </div>
-        <p className="mt-3 text-sm font-black text-gradient-gold">صوتك</p>
+        <BrandMark size={76} />
+        <p className="mt-3 text-sm font-black text-gradient-gold">التاج</p>
         <h1 className="mt-1 text-2xl font-bold">
           {mode === "login" ? "مرحبًا بعودتك" : "ابدأ حسابك الجديد"}
         </h1>

@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FamilyCrest } from "@/components/FamilyCrest";
 import { UserAvatar } from "@/components/UserAvatar";
-import { FAMILY_ROLE_LABEL, familyStyle } from "@/lib/family-art";
+import { FAMILY_PERMISSION_LABEL, FAMILY_ROLE_LABEL, familyStyle } from "@/lib/family-art";
 import { formatCoins } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +23,10 @@ type FamilyRow = {
   family_code: string;
   name: string;
   logo_url: string | null;
+  cover_url: string | null;
+  animation_url: string | null;
+  join_mode: "open" | "request" | "closed";
+  permissions: Record<string, boolean>;
   description: string | null;
   leader_id: string | null;
   level: number;
@@ -33,14 +37,29 @@ type FamilyRow = {
   is_suspended: boolean;
 };
 
-type FamilyLevel = { level: number; name: string; points: number; max_members: number; style: string };
-type FamilySettings = { enabled: boolean; max_deputies: number; default_max_members: number; levels: FamilyLevel[] };
+type FamilyLevel = {
+  level: number;
+  name: string;
+  points: number;
+  max_members: number;
+  style: string;
+};
+type FamilySettings = {
+  enabled: boolean;
+  max_deputies: number;
+  default_max_members: number;
+  levels: FamilyLevel[];
+};
 
 type FamilyPatch = {
   familyId: string;
   name?: string;
   familyCode?: string;
   logoUrl?: string | null;
+  coverUrl?: string | null;
+  animationUrl?: string | null;
+  joinMode?: "open" | "request" | "closed";
+  permissions?: Record<string, boolean>;
   description?: string | null;
   leaderId?: string;
   level?: number;
@@ -68,7 +87,7 @@ export function AdminFamiliesTab() {
       const { data, error } = await supabase
         .from("families")
         .select(
-          "id, family_code, name, logo_url, description, leader_id, level, points, member_count, max_members, is_active, is_suspended",
+          "id, family_code, name, logo_url, cover_url, animation_url, join_mode, permissions, description, leader_id, level, points, member_count, max_members, is_active, is_suspended",
         )
         .order("points", { ascending: false });
       if (error) throw new Error(error.message);
@@ -79,9 +98,18 @@ export function AdminFamiliesTab() {
   const settings = useQuery({
     queryKey: ["admin-family-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("app_settings").select("value").eq("key", "families").maybeSingle();
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "families")
+        .maybeSingle();
       if (error) throw new Error(error.message);
-      return (data?.value ?? { enabled: true, max_deputies: 4, default_max_members: 50, levels: [] }) as unknown as FamilySettings;
+      return (data?.value ?? {
+        enabled: true,
+        max_deputies: 4,
+        default_max_members: 50,
+        levels: [],
+      }) as unknown as FamilySettings;
     },
   });
 
@@ -142,7 +170,13 @@ export function AdminFamiliesTab() {
   });
 
   const setMember = useMutation({
-    mutationFn: async (input: { familyId: string; publicId?: string; userId?: string; role?: "leader" | "deputy" | "member"; remove?: boolean }) => {
+    mutationFn: async (input: {
+      familyId: string;
+      publicId?: string;
+      userId?: string;
+      role?: "leader" | "deputy" | "member";
+      remove?: boolean;
+    }) => {
       const userId = input.userId ?? (await lookupProfile(input.publicId ?? "")).id;
       return adminSetFamilyMember({
         data: {
@@ -176,7 +210,12 @@ export function AdminFamiliesTab() {
         user_id: string;
         role: string;
         points: number;
-        profiles: { display_name: string; avatar_url: string | null; public_id: string; vip_level: number } | null;
+        profiles: {
+          display_name: string;
+          avatar_url: string | null;
+          public_id: string;
+          vip_level: number;
+        } | null;
       }[];
     },
   });
@@ -200,10 +239,22 @@ export function AdminFamiliesTab() {
     <div className="space-y-3">
       <div className="surface-card space-y-2 p-3">
         <p className="text-sm font-bold">إنشاء عائلة جديدة</p>
-        <p className="text-[10px] text-muted-foreground">الإنشاء من الإدارة فقط — المستخدم لا يستطيع إنشاء عائلة.</p>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="اسم العائلة" className="h-9 rounded-xl text-xs" />
+        <p className="text-[10px] text-muted-foreground">
+          الإنشاء من الإدارة فقط — المستخدم لا يستطيع إنشاء عائلة.
+        </p>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="اسم العائلة"
+          className="h-9 rounded-xl text-xs"
+        />
         <div className="grid grid-cols-2 gap-2">
-          <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="ID العائلة (اختياري)" className="h-9 rounded-xl text-xs" />
+          <Input
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="ID العائلة (اختياري)"
+            className="h-9 rounded-xl text-xs"
+          />
           <Input
             value={leaderPublicId}
             onChange={(e) => setLeaderPublicId(e.target.value)}
@@ -211,7 +262,12 @@ export function AdminFamiliesTab() {
             className="h-9 rounded-xl text-xs"
           />
         </div>
-        <Input value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="رابط شعار العائلة" className="h-9 rounded-xl text-xs" />
+        <Input
+          value={logo}
+          onChange={(e) => setLogo(e.target.value)}
+          placeholder="رابط شعار العائلة"
+          className="h-9 rounded-xl text-xs"
+        />
         <Input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -228,21 +284,47 @@ export function AdminFamiliesTab() {
       </div>
 
       <div className="space-y-2">
-        {families.isLoading && <div className="surface-card p-4 text-xs text-muted-foreground">جارٍ التحميل…</div>}
+        {families.isLoading && (
+          <div className="surface-card p-4 text-xs text-muted-foreground">جارٍ التحميل…</div>
+        )}
         {(families.data ?? []).map((f) => {
           const style = familyStyle(cfg?.levels.find((l) => l.level === f.level)?.style);
           const active = selected === f.id;
           return (
-            <div key={f.id} className={cn("surface-card space-y-2 bg-gradient-to-br p-3", style.card, active && style.glow)}>
-              <button type="button" onClick={() => setSelected(active ? null : f.id)} className="flex w-full items-center gap-3 text-start">
-                <FamilyCrest name={f.name} logoUrl={f.logo_url} styleKey={style.key} level={f.level} size={44} className={style.ring} />
+            <div
+              key={f.id}
+              className={cn(
+                "surface-card space-y-2 bg-gradient-to-br p-3",
+                style.card,
+                active && style.glow,
+              )}
+            >
+              <button
+                type="button"
+                onClick={() => setSelected(active ? null : f.id)}
+                className="flex w-full items-center gap-3 text-start"
+              >
+                <FamilyCrest
+                  name={f.name}
+                  logoUrl={f.logo_url}
+                  styleKey={style.key}
+                  level={f.level}
+                  size={44}
+                  className={style.ring}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-black">{f.name}</p>
                   <p className="text-[10px] text-muted-foreground">
-                    ID {f.family_code} · مستوى {f.level} · {f.member_count}/{f.max_members} عضو · {formatCoins(f.points)}
+                    ID {f.family_code} · مستوى {f.level} · {f.member_count}/{f.max_members} عضو ·{" "}
+                    {formatCoins(f.points)}
                   </p>
                 </div>
-                <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold", style.badge)}>
+                <span
+                  className={cn(
+                    "rounded-full border px-2 py-0.5 text-[10px] font-bold",
+                    style.badge,
+                  )}
+                >
                   {f.is_suspended ? "موقوفة" : f.is_active ? "مفعّلة" : "مخفية"}
                 </span>
               </button>
@@ -253,7 +335,9 @@ export function AdminFamiliesTab() {
                     <Button
                       variant="outline"
                       className="h-9 rounded-xl text-[11px]"
-                      onClick={() => update.mutate({ familyId: f.id, isSuspended: !f.is_suspended })}
+                      onClick={() =>
+                        update.mutate({ familyId: f.id, isSuspended: !f.is_suspended })
+                      }
                     >
                       {f.is_suspended ? "إلغاء الإيقاف" : "إيقاف العائلة"}
                     </Button>
@@ -265,7 +349,11 @@ export function AdminFamiliesTab() {
                       {f.is_active ? "إخفاء" : "إظهار"}
                     </Button>
                   </div>
-                  <FamilyEditor family={f} onSave={(patch) => update.mutate({ familyId: f.id, ...patch })} pending={update.isPending} />
+                  <FamilyEditor
+                    family={f}
+                    onSave={(patch) => update.mutate({ ...patch, familyId: f.id })}
+                    pending={update.isPending}
+                  />
 
                   <div className="space-y-2 rounded-2xl border border-border/60 p-2">
                     <p className="text-[11px] font-bold">الأعضاء</p>
@@ -287,17 +375,33 @@ export function AdminFamiliesTab() {
                       </select>
                       <Button
                         disabled={setMember.isPending || !memberPublicId.trim()}
-                        onClick={() => setMember.mutate({ familyId: f.id, publicId: memberPublicId, role: memberRole })}
+                        onClick={() =>
+                          setMember.mutate({
+                            familyId: f.id,
+                            publicId: memberPublicId,
+                            role: memberRole,
+                          })
+                        }
                         className="h-9 shrink-0 rounded-xl text-[11px]"
                       >
                         إضافة
                       </Button>
                     </div>
                     {(membersQuery.data ?? []).map((m) => (
-                      <div key={m.user_id} className="flex items-center gap-2 rounded-xl border border-border/50 p-2">
-                        <UserAvatar src={m.profiles?.avatar_url} name={m.profiles?.display_name} size={32} vipLevel={m.profiles?.vip_level ?? 0} />
+                      <div
+                        key={m.user_id}
+                        className="flex items-center gap-2 rounded-xl border border-border/50 p-2"
+                      >
+                        <UserAvatar
+                          src={m.profiles?.avatar_url}
+                          name={m.profiles?.display_name}
+                          size={32}
+                          vipLevel={m.profiles?.vip_level ?? 0}
+                        />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[11px] font-bold">{m.profiles?.display_name ?? "مستخدم"}</p>
+                          <p className="truncate text-[11px] font-bold">
+                            {m.profiles?.display_name ?? "مستخدم"}
+                          </p>
                           <p className="text-[10px] text-muted-foreground">
                             {FAMILY_ROLE_LABEL[m.role] ?? m.role} · {formatCoins(m.points)}
                           </p>
@@ -305,7 +409,11 @@ export function AdminFamiliesTab() {
                         <select
                           value={m.role}
                           onChange={(e) =>
-                            setMember.mutate({ familyId: f.id, userId: m.user_id, role: e.target.value as typeof memberRole })
+                            setMember.mutate({
+                              familyId: f.id,
+                              userId: m.user_id,
+                              role: e.target.value as typeof memberRole,
+                            })
                           }
                           className="h-8 rounded-lg border border-border bg-surface px-1 text-[10px]"
                         >
@@ -315,14 +423,18 @@ export function AdminFamiliesTab() {
                         </select>
                         <button
                           type="button"
-                          onClick={() => setMember.mutate({ familyId: f.id, userId: m.user_id, remove: true })}
+                          onClick={() =>
+                            setMember.mutate({ familyId: f.id, userId: m.user_id, remove: true })
+                          }
                           className="rounded-lg border border-destructive/40 p-1.5 text-destructive"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     ))}
-                    {membersQuery.data?.length === 0 && <p className="text-[10px] text-muted-foreground">لا يوجد أعضاء بعد.</p>}
+                    {membersQuery.data?.length === 0 && (
+                      <p className="text-[10px] text-muted-foreground">لا يوجد أعضاء بعد.</p>
+                    )}
                   </div>
 
                   <Button
@@ -337,7 +449,9 @@ export function AdminFamiliesTab() {
             </div>
           );
         })}
-        {families.data?.length === 0 && <div className="surface-card p-4 text-xs text-muted-foreground">لا توجد عائلات بعد.</div>}
+        {families.data?.length === 0 && (
+          <div className="surface-card p-4 text-xs text-muted-foreground">لا توجد عائلات بعد.</div>
+        )}
       </div>
 
       {cfg && (
@@ -358,7 +472,9 @@ export function AdminFamiliesTab() {
               <Input
                 type="number"
                 value={cfg.max_deputies}
-                onChange={(e) => setDraftSettings({ ...cfg, max_deputies: Number(e.target.value) || 0 })}
+                onChange={(e) =>
+                  setDraftSettings({ ...cfg, max_deputies: Number(e.target.value) || 0 })
+                }
                 className="h-9 rounded-xl text-xs"
               />
             </label>
@@ -367,13 +483,18 @@ export function AdminFamiliesTab() {
               <Input
                 type="number"
                 value={cfg.default_max_members}
-                onChange={(e) => setDraftSettings({ ...cfg, default_max_members: Number(e.target.value) || 5 })}
+                onChange={(e) =>
+                  setDraftSettings({ ...cfg, default_max_members: Number(e.target.value) || 5 })
+                }
                 className="h-9 rounded-xl text-xs"
               />
             </label>
           </div>
           {cfg.levels.map((l, i) => (
-            <div key={l.level} className="grid grid-cols-4 gap-2 rounded-2xl border border-border/60 p-2">
+            <div
+              key={l.level}
+              className="grid grid-cols-4 gap-2 rounded-2xl border border-border/60 p-2"
+            >
               <label className="space-y-1">
                 <span className="text-[10px] text-muted-foreground">مستوى</span>
                 <Input value={l.level} readOnly className="h-9 rounded-xl text-xs" />
@@ -428,7 +549,9 @@ export function AdminFamiliesTab() {
         </div>
       )}
 
-      {selectedFamily && <p className="text-[10px] text-muted-foreground">العائلة المحددة: {selectedFamily.name}</p>}
+      {selectedFamily && (
+        <p className="text-[10px] text-muted-foreground">العائلة المحددة: {selectedFamily.name}</p>
+      )}
     </div>
   );
 }
@@ -439,12 +562,16 @@ function FamilyEditor({
   pending,
 }: {
   family: FamilyRow;
-  onSave: (patch: { name?: string; familyCode?: string; logoUrl?: string | null; description?: string | null; maxMembers?: number; points?: number }) => void;
+  onSave: (patch: Omit<FamilyPatch, "familyId">) => void;
   pending: boolean;
 }) {
   const [name, setName] = useState(family.name);
   const [code, setCode] = useState(family.family_code);
   const [logo, setLogo] = useState(family.logo_url ?? "");
+  const [cover, setCover] = useState(family.cover_url ?? "");
+  const [animation, setAnimation] = useState(family.animation_url ?? "");
+  const [joinMode, setJoinMode] = useState(family.join_mode);
+  const [permissions, setPermissions] = useState<Record<string, boolean>>(family.permissions ?? {});
   const [description, setDescription] = useState(family.description ?? "");
   const [maxMembers, setMaxMembers] = useState(family.max_members);
 
@@ -452,11 +579,67 @@ function FamilyEditor({
     <div className="space-y-2 rounded-2xl border border-border/60 p-2">
       <p className="text-[11px] font-bold">تعديل بيانات العائلة</p>
       <div className="grid grid-cols-2 gap-2">
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="الاسم" className="h-9 rounded-xl text-xs" />
-        <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="ID" className="h-9 rounded-xl text-xs" />
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="الاسم"
+          className="h-9 rounded-xl text-xs"
+        />
+        <Input
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          placeholder="ID"
+          className="h-9 rounded-xl text-xs"
+        />
       </div>
-      <Input value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="رابط الشعار" className="h-9 rounded-xl text-xs" />
-      <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="الوصف" className="h-9 rounded-xl text-xs" />
+      <Input
+        value={logo}
+        onChange={(e) => setLogo(e.target.value)}
+        placeholder="رابط الشعار"
+        className="h-9 rounded-xl text-xs"
+      />
+      <Input
+        value={cover}
+        onChange={(e) => setCover(e.target.value)}
+        placeholder="رابط صورة الغلاف"
+        className="h-9 rounded-xl text-xs"
+      />
+      <Input
+        value={animation}
+        onChange={(e) => setAnimation(e.target.value)}
+        placeholder="رابط GIF أو الحركة"
+        className="h-9 rounded-xl text-xs"
+      />
+      <Input
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="الوصف"
+        className="h-9 rounded-xl text-xs"
+      />
+      <label className="block space-y-1">
+        <span className="text-[10px] text-muted-foreground">طريقة الانضمام</span>
+        <select
+          value={joinMode}
+          onChange={(e) => setJoinMode(e.target.value as typeof joinMode)}
+          className="h-9 w-full rounded-xl border border-border bg-surface px-2 text-xs"
+        >
+          <option value="open">مفتوح مباشر</option>
+          <option value="request">بطلب موافقة</option>
+          <option value="closed">مغلق</option>
+        </select>
+      </label>
+      <div className="grid grid-cols-2 gap-2 rounded-xl border border-border/60 p-2">
+        {Object.entries(FAMILY_PERMISSION_LABEL).map(([key, label]) => (
+          <label key={key} className="flex items-center gap-2 text-[10px]">
+            <input
+              type="checkbox"
+              checked={permissions[key] ?? false}
+              onChange={(e) => setPermissions({ ...permissions, [key]: e.target.checked })}
+            />
+            {label}
+          </label>
+        ))}
+      </div>
       <label className="block space-y-1">
         <span className="text-[10px] text-muted-foreground">أقصى عدد أعضاء</span>
         <Input
@@ -475,6 +658,10 @@ function FamilyEditor({
             name: name.trim(),
             familyCode: code.trim(),
             logoUrl: logo.trim() || null,
+            coverUrl: cover.trim() || null,
+            animationUrl: animation.trim() || null,
+            joinMode,
+            permissions,
             description: description.trim() || null,
             maxMembers,
           })

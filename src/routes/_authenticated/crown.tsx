@@ -8,16 +8,17 @@ import { listCrownMessages, markCrownRead } from "@/lib/crown.functions";
 import { eventArt } from "@/lib/event-art";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatCompact, formatFull } from "@/lib/format";
+import { BrandMark } from "@/components/BrandMark";
 
 const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
 export const Route = createFileRoute("/_authenticated/crown")({
   head: () => ({
     meta: [
-      { title: "رسائل التاج — صوتك" },
-      { name: "description", content: "الرسائل الرسمية من إدارة صوتك: نتائج الأحداث، الفائزون، والإعلانات المهمة." },
-      { property: "og:title", content: "رسائل التاج — صوتك" },
-      { property: "og:description", content: "إعلانات ونتائج أحداث صوتك الرسمية في مكان واحد." },
+      { title: "رسائل التاج" },
+      { name: "description", content: "الرسائل الرسمية من إدارة التاج: نتائج الأحداث، الفائزون، والإعلانات المهمة." },
+      { property: "og:title", content: "رسائل التاج" },
+      { property: "og:description", content: "إعلانات ونتائج أحداث التاج الرسمية في مكان واحد." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -50,14 +51,14 @@ function CrownPage() {
 
   return (
     <AppShell>
-      <PageHeader title="رسائل التاج" subtitle="الرسائل الرسمية من إدارة صوتك" />
+      <PageHeader title="رسائل التاج" subtitle="الرسائل الرسمية من إدارة التاج" />
       <div className="space-y-3 px-3 pb-24">
         {messages.isLoading ? (
           <div className="flex justify-center py-10 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
           </div>
         ) : (messages.data ?? []).length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">لا توجد رسائل بعد.</p>
+          <div className="flex flex-col items-center gap-3 py-10 text-center"><BrandMark size={58} /><p className="text-sm font-semibold">لا توجد رسائل تاج جديدة</p><p className="text-xs text-muted-foreground">ستظهر هنا الإعلانات والنتائج الرسمية.</p></div>
         ) : (
           (messages.data ?? []).map((m) => (
             <article

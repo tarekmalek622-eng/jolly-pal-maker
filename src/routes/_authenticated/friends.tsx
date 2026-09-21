@@ -23,10 +23,10 @@ import {
 export const Route = createFileRoute("/_authenticated/friends")({
   head: () => ({
     meta: [
-      { title: "الأصدقاء — صوتك" },
-      { name: "description", content: "أصدقاء صوتك وطلبات الصداقة الواردة والمرسلة بتحديث مباشر." },
-      { property: "og:title", content: "الأصدقاء — صوتك" },
-      { property: "og:description", content: "إدارة الأصدقاء وطلبات الصداقة داخل صوتك." },
+      { title: "الأصدقاء — التاج" },
+      { name: "description", content: "أصدقاء التاج وطلبات الصداقة الواردة والمرسلة بتحديث مباشر." },
+      { property: "og:title", content: "الأصدقاء — التاج" },
+      { property: "og:description", content: "إدارة الأصدقاء وطلبات الصداقة داخل التاج." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

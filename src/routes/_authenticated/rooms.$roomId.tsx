@@ -40,16 +40,16 @@ import { formatCompact } from "@/lib/format";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMyProfile, useSupabaseSession } from "@/hooks/use-session";
 import { useVoiceRoomContext } from "@/components/VoiceRoomProvider";
 import { BadgeStrip } from "@/components/BadgeStrip";
-import { closeWheelRound, getMyRoomBadgePermissions, removeRoomParticipant, updateOwnedRoomDetails } from "@/lib/rooms.functions";
+import {
+  closeWheelRound,
+  getMyRoomBadgePermissions,
+  removeRoomParticipant,
+  updateOwnedRoomDetails,
+} from "@/lib/rooms.functions";
 import { uploadUserImage } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import roomAuroraBackground from "@/assets/room-aurora-bg.jpg";
@@ -62,9 +62,12 @@ import { Crown } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/rooms/$roomId")({
   head: () => ({
     meta: [
-      { title: "غرفة صوتية — صوتك" },
-      { name: "description", content: "غرفة صوتية مباشرة: مايكات، دردشة نصية، هدايا وإدارة كاملة للمالك والمشرفين." },
-      { property: "og:title", content: "غرفة صوتية — صوتك" },
+      { title: "غرفة صوتية — التاج" },
+      {
+        name: "description",
+        content: "غرفة صوتية مباشرة: مايكات، دردشة نصية، هدايا وإدارة كاملة للمالك والمشرفين.",
+      },
+      { property: "og:title", content: "غرفة صوتية — التاج" },
       { property: "og:description", content: "اصعد على المايك، دردش، وأرسل الهدايا مباشرة." },
     ],
   }),
@@ -115,11 +118,14 @@ function RoomPage() {
   const [luckyOpen, setLuckyOpen] = useState(false);
   const [roomSettingsOpen, setRoomSettingsOpen] = useState(false);
   const [roomPanelsOpen, setRoomPanelsOpen] = useState(false);
-  const [roomPanelsTab, setRoomPanelsTab] = useState<"info" | "members" | "activities" | "treasure" | "rewards">("info");
+  const [roomPanelsTab, setRoomPanelsTab] = useState<
+    "info" | "members" | "activities" | "treasure" | "rewards"
+  >("info");
   const [giftFxEnabled, setGiftFxEnabled] = useState(true);
   const giftFxRef = useRef(true);
   useEffect(() => {
-    const saved = typeof window === "undefined" ? null : window.localStorage.getItem("sawtak-gift-fx");
+    const saved =
+      typeof window === "undefined" ? null : window.localStorage.getItem("sawtak-gift-fx");
     const on = saved !== "off";
     setGiftFxEnabled(on);
     giftFxRef.current = on;
@@ -128,7 +134,8 @@ function RoomPage() {
     setGiftFxEnabled(on);
     giftFxRef.current = on;
     if (!on) setGiftQueue([]);
-    if (typeof window !== "undefined") window.localStorage.setItem("sawtak-gift-fx", on ? "on" : "off");
+    if (typeof window !== "undefined")
+      window.localStorage.setItem("sawtak-gift-fx", on ? "on" : "off");
   };
   const myProfile = useMyProfile(userId);
   const musicRef = useRef<HTMLInputElement>(null);
@@ -145,7 +152,9 @@ function RoomPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("rooms")
-        .select("id, room_code, name, image_url, background_url, theme, owner_id, is_active, is_disabled, chat_locked")
+        .select(
+          "id, room_code, name, image_url, background_url, theme, owner_id, is_active, is_disabled, chat_locked",
+        )
         .eq("id", roomId)
         .maybeSingle();
       if (error) throw error;
@@ -169,7 +178,10 @@ function RoomPage() {
   const members = useQuery({
     queryKey: ["room-members", roomId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("room_members").select("user_id").eq("room_id", roomId);
+      const { data, error } = await supabase
+        .from("room_members")
+        .select("user_id")
+        .eq("room_id", roomId);
       if (error) throw error;
       return (data ?? []).map((m) => m.user_id);
     },
@@ -208,7 +220,9 @@ function RoomPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, public_id, display_name, avatar_url, frame_url, vip_level, level, mic_decoration_url")
+        .select(
+          "id, public_id, display_name, avatar_url, frame_url, vip_level, level, mic_decoration_url",
+        )
         .in("id", peopleIds);
       if (error) throw error;
       return (data ?? []) as Person[];
@@ -232,7 +246,10 @@ function RoomPage() {
   const moderators = useQuery({
     queryKey: ["room-mods", roomId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("room_moderators").select("user_id").eq("room_id", roomId);
+      const { data, error } = await supabase
+        .from("room_moderators")
+        .select("user_id")
+        .eq("room_id", roomId);
       if (error) throw error;
       return (data ?? []).map((m) => m.user_id);
     },
@@ -257,7 +274,8 @@ function RoomPage() {
     queryFn: () => getMyRoomBadgePermissions(),
   });
   const canRemoveParticipants = isOwner || Boolean(badgePermissions.data?.participantRemove);
-  const canManage = isOwner || (moderators.data ?? []).includes(userId ?? "") || canRemoveParticipants;
+  const canManage =
+    isOwner || (moderators.data ?? []).includes(userId ?? "") || canRemoveParticipants;
   const mySeat = (mics.data ?? []).find((m) => m.user_id === userId) ?? null;
   const { voice, activeRoom, enterRoom, minimizeRoom, exitRoom, minimized } = useVoiceRoomContext();
   const canPublish = Boolean(mySeat && !mySeat.is_muted);
@@ -275,21 +293,33 @@ function RoomPage() {
   // join / leave membership
   useEffect(() => {
     if (!userId) return;
-    void supabase.from("room_members").upsert(
-      { room_id: roomId, user_id: userId, joined_at: new Date().toISOString() },
-      { onConflict: "room_id,user_id" },
-    );
+    void supabase
+      .from("room_members")
+      .upsert(
+        { room_id: roomId, user_id: userId, joined_at: new Date().toISOString() },
+        { onConflict: "room_id,user_id" },
+      );
     return () => {
       if (minimizedRef.current) return; // الغرفة مصغّرة — نُبقي العضوية والمايك
       void supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", userId);
-      void supabase.from("room_mics").update({ user_id: null }).eq("room_id", roomId).eq("user_id", userId);
+      void supabase
+        .from("room_mics")
+        .update({ user_id: null })
+        .eq("room_id", roomId)
+        .eq("user_id", userId);
     };
   }, [roomId, userId]);
 
   // طبقة عرض تأثيرات الهدايا لجميع الحاضرين
   const [giftQueue, setGiftQueue] = useState<GiftShowEvent[]>([]);
   const enqueueGift = useCallback(
-    async (row: { id?: string; gift_id?: string; sender_id?: string; receiver_id?: string; quantity?: number }) => {
+    async (row: {
+      id?: string;
+      gift_id?: string;
+      sender_id?: string;
+      receiver_id?: string;
+      quantity?: number;
+    }) => {
       if (!row.gift_id) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const anyDb = supabase as any;
@@ -307,7 +337,8 @@ function RoomPage() {
           .in("id", [row.sender_id, row.receiver_id].filter(Boolean) as string[]),
       ]);
       if (!gift) return;
-      const nameOf = (id?: string) => (names ?? []).find((p) => p.id === id)?.display_name ?? "مستخدم";
+      const nameOf = (id?: string) =>
+        (names ?? []).find((p) => p.id === id)?.display_name ?? "مستخدم";
       setGiftQueue((prev) => [
         ...prev.slice(-7),
         {
@@ -325,23 +356,51 @@ function RoomPage() {
   // realtime
   useEffect(() => {
     const channel = supabase
-      .channel(`room-live-${roomId}`, { config: { presence: { key: userId ?? crypto.randomUUID() } } })
-      .on("postgres_changes", { event: "*", schema: "public", table: "room_messages", filter: `room_id=eq.${roomId}` }, () => void messages.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "room_mics", filter: `room_id=eq.${roomId}` }, () => void mics.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "room_members", filter: `room_id=eq.${roomId}` }, () => void members.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "mic_requests", filter: `room_id=eq.${roomId}` }, () => void requests.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions", filter: `room_id=eq.${roomId}` }, (payload) => {
-        void messages.refetch();
-        const row = payload.new as {
-          id?: string;
-          room_id?: string | null;
-          gift_id?: string;
-          sender_id?: string;
-          receiver_id?: string;
-          quantity?: number;
-        } | null;
-        if (payload.eventType === "INSERT" && row?.room_id === roomId && giftFxRef.current) void enqueueGift(row);
+      .channel(`room-live-${roomId}`, {
+        config: { presence: { key: userId ?? crypto.randomUUID() } },
       })
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "room_messages", filter: `room_id=eq.${roomId}` },
+        () => void messages.refetch(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "room_mics", filter: `room_id=eq.${roomId}` },
+        () => void mics.refetch(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "room_members", filter: `room_id=eq.${roomId}` },
+        () => void members.refetch(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "mic_requests", filter: `room_id=eq.${roomId}` },
+        () => void requests.refetch(),
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "gift_transactions",
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          void messages.refetch();
+          const row = payload.new as {
+            id?: string;
+            room_id?: string | null;
+            gift_id?: string;
+            sender_id?: string;
+            receiver_id?: string;
+            quantity?: number;
+          } | null;
+          if (payload.eventType === "INSERT" && row?.room_id === roomId && giftFxRef.current)
+            void enqueueGift(row);
+        },
+      )
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
         setLiveCount(Math.max(userId ? 1 : 0, Object.keys(state).length));
@@ -382,7 +441,9 @@ function RoomPage() {
 
   const requestMic = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("mic_requests").insert({ room_id: roomId, user_id: userId! });
+      const { error } = await supabase
+        .from("mic_requests")
+        .insert({ room_id: roomId, user_id: userId! });
       if (error) throw error;
     },
     onSuccess: () => toast.success("تم إرسال طلب المايك للمالك"),
@@ -393,7 +454,10 @@ function RoomPage() {
     mutationFn: async (request: { id: string; user_id: string }) => {
       const free = (mics.data ?? []).find((m) => !m.user_id && !m.is_locked);
       if (!free) throw new Error("لا يوجد مايك متاح");
-      const { error } = await supabase.from("room_mics").update({ user_id: request.user_id }).eq("id", free.id);
+      const { error } = await supabase
+        .from("room_mics")
+        .update({ user_id: request.user_id })
+        .eq("id", free.id);
       if (error) throw error;
       await supabase.from("mic_requests").delete().eq("id", request.id);
     },
@@ -418,7 +482,9 @@ function RoomPage() {
   const toggleModerator = useMutation({
     mutationFn: async ({ target, make }: { target: string; make: boolean }) => {
       if (make) {
-        const { error } = await supabase.from("room_moderators").insert({ room_id: roomId, user_id: target });
+        const { error } = await supabase
+          .from("room_moderators")
+          .insert({ room_id: roomId, user_id: target });
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -458,7 +524,11 @@ function RoomPage() {
       });
       if (error) throw error;
       await supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", target);
-      await supabase.from("room_mics").update({ user_id: null }).eq("room_id", roomId).eq("user_id", target);
+      await supabase
+        .from("room_mics")
+        .update({ user_id: null })
+        .eq("room_id", roomId)
+        .eq("user_id", target);
     },
     onSuccess: () => {
       toast.success("تم حظر المستخدم من الغرفة");
@@ -493,10 +563,12 @@ function RoomPage() {
     }
     setSendingMessage(true);
     try {
-      const { error: membershipError } = await supabase.from("room_members").upsert(
-        { room_id: roomId, user_id: userId, joined_at: new Date().toISOString() },
-        { onConflict: "room_id,user_id" },
-      );
+      const { error: membershipError } = await supabase
+        .from("room_members")
+        .upsert(
+          { room_id: roomId, user_id: userId, joined_at: new Date().toISOString() },
+          { onConflict: "room_id,user_id" },
+        );
       if (membershipError) throw membershipError;
 
       const { error } = await supabase.rpc("send_room_message", { _room_id: roomId, _body: body });
@@ -510,7 +582,8 @@ function RoomPage() {
     }
   }
 
-  const personOf = (id: string | null) => (id ? (people.data ?? []).find((p) => p.id === id) ?? null : null);
+  const personOf = (id: string | null) =>
+    id ? ((people.data ?? []).find((p) => p.id === id) ?? null) : null;
 
   const giftTargets: GiftTarget[] = (people.data ?? []).map((p) => ({
     id: p.id,
@@ -521,7 +594,8 @@ function RoomPage() {
   }));
 
   if (room.isLoading) return <AppShell hideNav>جارٍ تحميل الغرفة...</AppShell>;
-  if (!room.data || room.data.is_disabled || !room.data.is_active) return <AppShell hideNav>الغرفة غير متاحة.</AppShell>;
+  if (!room.data || room.data.is_disabled || !room.data.is_active)
+    return <AppShell hideNav>الغرفة غير متاحة.</AppShell>;
 
   return (
     <AppShell
@@ -530,33 +604,82 @@ function RoomPage() {
       header={
         <header className="fixed inset-x-0 top-0 z-40 mx-auto max-w-lg px-3 pb-3 pt-3 text-foreground">
           <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-border/50 bg-background/65 p-2 backdrop-blur-xl">
-            <button onClick={() => setLeaveOpen(true)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface/80" aria-label="تصغير أو خروج">
+            <button
+              onClick={() => setLeaveOpen(true)}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface/80"
+              aria-label="تصغير أو خروج"
+            >
               <ArrowRight className="h-5 w-5" />
             </button>
             <div className="min-w-0 text-center">
               <p className="truncate text-sm font-black">{room.data.name}</p>
               <div className="mt-0.5 flex items-center justify-center gap-1.5 text-[9px] text-muted-foreground">
-               <span>ID: {room.data.room_code}</span><span>•</span><span>{Math.max(liveCount, members.data?.includes(userId ?? "") ? 1 : 0)} متواجد</span>
-                <span className={cn("h-1.5 w-1.5 rounded-full", voice.status === "connected" ? "bg-success" : "bg-destructive")} />
+                <span>ID: {room.data.room_code}</span>
+                <span>•</span>
+                <span>
+                  {Math.max(liveCount, members.data?.includes(userId ?? "") ? 1 : 0)} متواجد
+                </span>
+                <span
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    voice.status === "connected" ? "bg-success" : "bg-destructive",
+                  )}
+                />
               </div>
             </div>
             <div className="flex shrink-0 gap-1">
-              <button onClick={() => setCupOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15" aria-label="كأس الغرفة"><Trophy className="h-4 w-4 text-primary" /></button>
-              <button onClick={() => setCosmeticsOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80" aria-label="تزيين الغرفة"><Sparkles className="h-4 w-4" /></button>
-              {canManage && <button onClick={() => {
-                setRoomNameDraft(room.data?.name ?? "");
-                setRoomImageFile(null);
-                setRoomImagePreview(null);
-                setManageOpen(true);
-              }} className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80" aria-label="إدارة الغرفة"><Settings className="h-4 w-4" /></button>}
+              <button
+                onClick={() => setCupOpen(true)}
+                className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15"
+                aria-label="كأس الغرفة"
+              >
+                <Trophy className="h-4 w-4 text-primary" />
+              </button>
+              <button
+                onClick={() => setCosmeticsOpen(true)}
+                className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80"
+                aria-label="تزيين الغرفة"
+              >
+                <Sparkles className="h-4 w-4" />
+              </button>
+              {canManage && (
+                <button
+                  onClick={() => {
+                    setRoomNameDraft(room.data?.name ?? "");
+                    setRoomImageFile(null);
+                    setRoomImagePreview(null);
+                    setManageOpen(true);
+                  }}
+                  className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80"
+                  aria-label="إدارة الغرفة"
+                >
+                  <Settings className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
-          <div className="mt-1 flex justify-between px-1"><BadgeStrip userId={userId} rank="عضو" count={0} />{canManage && (requests.data?.length ?? 0) > 0 && <button onClick={() => setRequestsOpen(true)} className="rounded-full bg-accent px-2 py-1 text-[9px] font-bold text-accent-foreground">{requests.data?.length} طلب مايك</button>}</div>
+          <div className="mt-1 flex justify-between px-1">
+            <BadgeStrip userId={userId} rank="عضو" count={0} />
+            {canManage && (requests.data?.length ?? 0) > 0 && (
+              <button
+                onClick={() => setRequestsOpen(true)}
+                className="rounded-full bg-accent px-2 py-1 text-[9px] font-bold text-accent-foreground"
+              >
+                {requests.data?.length} طلب مايك
+              </button>
+            )}
+          </div>
         </header>
       }
     >
       <div className="room-immersive fixed inset-0 -z-10 mx-auto max-w-lg overflow-hidden">
-        <img src={roomAuroraBackground} width={768} height={1536} alt="خلفية شفق قطبي للغرفة" className="h-full w-full object-cover" />
+        <img
+          src={roomAuroraBackground}
+          width={768}
+          height={1536}
+          alt="خلفية شفق قطبي للغرفة"
+          className="h-full w-full object-cover"
+        />
         <div className="absolute inset-0 bg-background/20" />
       </div>
       {room.data.background_url && <RoomBackground url={room.data.background_url} />}
@@ -568,15 +691,17 @@ function RoomPage() {
         />
       )}
 
-      <div className="grid grid-cols-5 gap-x-1 gap-y-4 px-2 pt-28 sm:px-4">
+      <div className="grid grid-cols-4 gap-x-2 gap-y-4 px-3 pt-28 sm:px-5">
         {(mics.data ?? []).map((seat, idx) => {
           const person = personOf(seat.user_id);
           const speaking = person ? voice.speakingIds.includes(person.id) : false;
           const list = mics.data ?? [];
           const next = list[idx + 1];
-          const sameRow = (idx + 1) % 5 !== 0;
+          const sameRow = (idx + 1) % 4 !== 0;
           const linkedNext =
-            sameRow && seat.user_id && next?.user_id ? coupleKeys.has(pairKey(seat.user_id, next.user_id)) : false;
+            sameRow && seat.user_id && next?.user_id
+              ? coupleKeys.has(pairKey(seat.user_id, next.user_id))
+              : false;
           return (
             <button
               key={seat.id}
@@ -598,11 +723,19 @@ function RoomPage() {
                 className={cn(
                   "relative flex h-14 w-14 items-center justify-center rounded-full border sm:h-16 sm:w-16",
                   speaking ? "border-success ring-2 ring-success/50" : "border-border",
-                  "bg-surface",
+                  person?.id === room.data!.owner_id
+                    ? "border-primary bg-primary/10 shadow-glow"
+                    : "bg-surface",
                 )}
               >
                 {person ? (
-                  <UserAvatar src={person.avatar_url} name={person.display_name} size={54} vipLevel={person.vip_level} frame={person.frame_url} />
+                  <UserAvatar
+                    src={person.avatar_url}
+                    name={person.display_name}
+                    size={54}
+                    vipLevel={person.vip_level}
+                    frame={person.frame_url}
+                  />
                 ) : seat.is_locked ? (
                   <Lock className="h-5 w-5 text-muted-foreground" />
                 ) : (
@@ -619,14 +752,29 @@ function RoomPage() {
                     <MicOff className="h-3 w-3 text-destructive-foreground" />
                   </span>
                 )}
+                {person?.id === room.data!.owner_id && (
+                  <span className="absolute -top-2 rounded-full bg-primary p-1 text-primary-foreground shadow-lg">
+                    <Crown className="h-3 w-3" />
+                  </span>
+                )}
               </div>
-              {person ? <VipName name={person.display_name} vipLevel={person.vip_level} className="w-full truncate text-center text-[9px]" /> : <span className="w-full truncate text-center text-[9px] text-foreground/75">NO.{seat.seat_index}</span>}
+              {person ? (
+                <VipName
+                  name={person.display_name}
+                  vipLevel={person.vip_level}
+                  className="w-full truncate text-center text-[9px]"
+                />
+              ) : (
+                <span className="w-full truncate text-center text-[9px] text-foreground/75">
+                  NO.{seat.seat_index}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
-      <section className="mx-3 mt-5 space-y-2 pb-44">
+      <section className="mx-3 mt-5 space-y-2 pb-64">
         {(messages.data ?? []).map((m) => {
           const person = personOf(m.user_id);
           const isGift = m.kind === "gift";
@@ -638,7 +786,12 @@ function RoomPage() {
                 isGift ? "gradient-rose text-primary-foreground" : "bg-background/45",
               )}
             >
-              <UserAvatar src={person?.avatar_url} name={person?.display_name} size={28} vipLevel={person?.vip_level ?? 0} />
+              <UserAvatar
+                src={person?.avatar_url}
+                name={person?.display_name}
+                size={28}
+                vipLevel={person?.vip_level ?? 0}
+              />
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-bold">{person?.display_name ?? "مستخدم"}</p>
                 <p className="break-words text-sm">{m.body}</p>
@@ -648,9 +801,44 @@ function RoomPage() {
         })}
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg border-t border-border/50 bg-background/75 p-2.5 backdrop-blur-xl">
-        <div className="mb-2">
-          <LuckyBagStrip roomId={roomId} />
+      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg rounded-t-3xl border border-b-0 border-border/50 bg-background/90 px-2.5 pb-[max(.65rem,env(safe-area-inset-bottom))] pt-2 shadow-2xl backdrop-blur-xl">
+        <div className="mb-2 flex items-center gap-2 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none]">
+          <RoomTreasureFloat
+            roomId={roomId}
+            onOpen={() => {
+              setRoomPanelsTab("treasure");
+              setRoomPanelsOpen(true);
+            }}
+          />
+          <RoomUtility label="صالة VIP" onClick={() => setVipOpen(true)}>
+            <Crown className="h-5 w-5" />
+          </RoomUtility>
+          <RoomUtility
+            label="الألعاب"
+            onClick={() => {
+              setRoomGame("wheel");
+              setDominoOpen(true);
+            }}
+          >
+            <FerrisWheel className="h-5 w-5" />
+          </RoomUtility>
+          <RoomUtility
+            label={voice.musicPlaying ? "إيقاف الموسيقى" : "الموسيقى"}
+            active={voice.musicPlaying}
+            onClick={() => {
+              if (!mySeat) {
+                toast.error("اصعد على المايك أولًا لتشغيل الموسيقى");
+                return;
+              }
+              if (voice.musicPlaying) voice.stopMusic();
+              else musicRef.current?.click();
+            }}
+          >
+            <Music className="h-5 w-5" />
+          </RoomUtility>
+          <div className="min-w-44 flex-1">
+            <LuckyBagStrip roomId={roomId} />
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Input
@@ -663,22 +851,43 @@ function RoomPage() {
             disabled={room.data.chat_locked && !canManage}
             className="h-11 flex-1 rounded-full border-border/50 bg-surface/70 text-sm"
           />
-          <Button disabled={sendingMessage || !text.trim()} onClick={() => void sendMessage()} aria-label="إرسال الرسالة" className="h-11 w-11 rounded-full gradient-gold p-0 text-primary-foreground">
+          <Button
+            disabled={sendingMessage || !text.trim()}
+            onClick={() => void sendMessage()}
+            aria-label="إرسال الرسالة"
+            className="h-11 w-11 rounded-full gradient-gold p-0 text-primary-foreground"
+          >
             <Send className="h-4 w-4" />
           </Button>
         </div>
-        <div className="mt-2 flex items-center justify-center gap-3">
+        <div className="mt-2 grid grid-cols-6 gap-1">
           <RoundControl
             label={voice.micEnabled ? "المايك مفتوح" : "المايك مغلق"}
             active={voice.micEnabled}
             onClick={() => {
-              voice.toggleMic().catch((e: unknown) => toast.error(e instanceof Error ? e.message : "تعذر تشغيل المايك"));
+              voice
+                .toggleMic()
+                .catch((e: unknown) =>
+                  toast.error(e instanceof Error ? e.message : "تعذر تشغيل المايك"),
+                );
             }}
           >
-            {voice.micEnabled ? <Mic className="h-4.5 w-4.5" /> : <MicOff className="h-4.5 w-4.5" />}
+            {voice.micEnabled ? (
+              <Mic className="h-4.5 w-4.5" />
+            ) : (
+              <MicOff className="h-4.5 w-4.5" />
+            )}
           </RoundControl>
-          <RoundControl label={voice.speakerEnabled ? "السماعة" : "صامت"} active={voice.speakerEnabled} onClick={voice.toggleSpeaker}>
-            {voice.speakerEnabled ? <Volume2 className="h-4.5 w-4.5" /> : <VolumeX className="h-4.5 w-4.5" />}
+          <RoundControl
+            label={voice.speakerEnabled ? "السماعة" : "صامت"}
+            active={voice.speakerEnabled}
+            onClick={voice.toggleSpeaker}
+          >
+            {voice.speakerEnabled ? (
+              <Volume2 className="h-4.5 w-4.5" />
+            ) : (
+              <VolumeX className="h-4.5 w-4.5" />
+            )}
           </RoundControl>
           {!mySeat && (
             <RoundControl label="طلب مايك" onClick={() => requestMic.mutate()}>
@@ -707,59 +916,11 @@ function RoomPage() {
             voice
               .playMusic(f)
               .then(() => toast.success("جارٍ تشغيل الأغنية للجميع"))
-              .catch((err: unknown) => toast.error(err instanceof Error ? err.message : "تعذر تشغيل الأغنية"));
+              .catch((err: unknown) =>
+                toast.error(err instanceof Error ? err.message : "تعذر تشغيل الأغنية"),
+              );
           }}
         />
-      </div>
-
-      {/* أزرار عائمة أسفل يسار الغرفة: صندوق الكنز + عجلة الحظ + تشغيل الموسيقى */}
-      <div className="fixed bottom-36 left-2 z-30 flex flex-col items-center gap-2">
-        <RoomTreasureFloat
-          roomId={roomId}
-          onOpen={() => {
-            setRoomPanelsTab("treasure");
-            setRoomPanelsOpen(true);
-          }}
-        />
-        <button
-          type="button"
-          onClick={() => setVipOpen(true)}
-          aria-label="صالة VIP"
-          className="flex h-14 w-14 flex-col items-center justify-center rounded-xl border border-primary/60 bg-background/65 shadow-glow backdrop-blur-xl"
-        >
-          <Crown className="h-6 w-6 text-primary" />
-          <span className="mt-0.5 text-[8px] font-bold text-primary">صالة VIP</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setRoomGame("wheel");
-            setDominoOpen(true);
-          }}
-          aria-label="عجلة الحظ والألعاب"
-          className="flex h-14 w-14 flex-col items-center justify-center rounded-xl border border-primary/60 bg-background/65 shadow-glow backdrop-blur-xl"
-        >
-          <FerrisWheel className="h-6 w-6 text-primary" />
-          <span className="mt-0.5 text-[8px] font-bold text-primary">العجلة</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (!mySeat) {
-              toast.error("اصعد على المايك أولًا لتشغيل الموسيقى");
-              return;
-            }
-            if (voice.musicPlaying) voice.stopMusic();
-            else musicRef.current?.click();
-          }}
-          aria-label="تشغيل موسيقى من الهاتف"
-          className={cn(
-            "flex h-12 w-12 items-center justify-center rounded-2xl border bg-background/80 shadow-lg backdrop-blur-xl",
-            voice.musicPlaying ? "border-primary text-primary" : "border-border text-muted-foreground",
-          )}
-        >
-          <Music className="h-5 w-5" />
-        </button>
       </div>
 
       {/* تصغير الغرفة أو الخروج منها */}
@@ -786,9 +947,21 @@ function RoomPage() {
                   minimizedRef.current = false;
                   if (userId) {
                     // الخروج النهائي: إنزال الحساب من المايك وإزالة العضوية فورًا
-                    await supabase.from("room_mics").update({ user_id: null, is_muted: false }).eq("room_id", roomId).eq("user_id", userId);
-                    await supabase.from("mic_requests").delete().eq("room_id", roomId).eq("user_id", userId);
-                    await supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", userId);
+                    await supabase
+                      .from("room_mics")
+                      .update({ user_id: null, is_muted: false })
+                      .eq("room_id", roomId)
+                      .eq("user_id", userId);
+                    await supabase
+                      .from("mic_requests")
+                      .delete()
+                      .eq("room_id", roomId)
+                      .eq("user_id", userId);
+                    await supabase
+                      .from("room_members")
+                      .delete()
+                      .eq("room_id", roomId)
+                      .eq("user_id", userId);
                   }
                   exitRoom();
                   setLeaveOpen(false);
@@ -820,7 +993,9 @@ function RoomPage() {
               className="flex w-full items-center justify-between rounded-2xl border border-primary/40 bg-primary/10 p-4 text-start"
             >
               <span className="text-sm font-bold text-primary">لوحة الغرفة</span>
-              <span className="text-[11px] text-muted-foreground">المعلومات · الأعضاء · النشاطات · صندوق الكنز · الجوائز</span>
+              <span className="text-[11px] text-muted-foreground">
+                المعلومات · الأعضاء · النشاطات · صندوق الكنز · الجوائز
+              </span>
             </button>
             <button
               type="button"
@@ -828,12 +1003,20 @@ function RoomPage() {
               className="flex w-full items-center justify-between rounded-2xl border border-border/60 bg-surface/70 p-4 text-start"
             >
               <span className="text-sm font-bold">تأثيرات الهدايا</span>
-              <span className={cn("rounded-full px-3 py-1 text-[11px] font-bold", giftFxEnabled ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive")}>
+              <span
+                className={cn(
+                  "rounded-full px-3 py-1 text-[11px] font-bold",
+                  giftFxEnabled
+                    ? "bg-success/20 text-success"
+                    : "bg-destructive/20 text-destructive",
+                )}
+              >
                 {giftFxEnabled ? "مفعّلة" : "موقوفة"}
               </span>
             </button>
             <p className="text-[11px] text-muted-foreground">
-              إيقاف التأثيرات يخفي الفيديو والصوت لكل الهدايا داخل الغرف ويجعل التطبيق أسرع — الإعداد خاص بك فقط.
+              إيقاف التأثيرات يخفي الفيديو والصوت لكل الهدايا داخل الغرف ويجعل التطبيق أسرع —
+              الإعداد خاص بك فقط.
             </p>
             <button
               type="button"
@@ -841,7 +1024,14 @@ function RoomPage() {
               className="flex w-full items-center justify-between rounded-2xl border border-border/60 bg-surface/70 p-4 text-start"
             >
               <span className="text-sm font-bold">الاستماع للغرفة</span>
-              <span className={cn("rounded-full px-3 py-1 text-[11px] font-bold", voice.speakerEnabled ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive")}>
+              <span
+                className={cn(
+                  "rounded-full px-3 py-1 text-[11px] font-bold",
+                  voice.speakerEnabled
+                    ? "bg-success/20 text-success"
+                    : "bg-destructive/20 text-destructive",
+                )}
+              >
                 {voice.speakerEnabled ? "مفتوح" : "مغلق"}
               </span>
             </button>
@@ -939,7 +1129,10 @@ function RoomPage() {
                         label="عرض الملف الشخصي"
                         onClick={() => {
                           close();
-                          void navigate({ to: "/u/$publicId", params: { publicId: person.public_id } });
+                          void navigate({
+                            to: "/u/$publicId",
+                            params: { publicId: person.public_id },
+                          });
                         }}
                       />
                       <SeatBtn
@@ -1010,7 +1203,10 @@ function RoomPage() {
           })()}
         </SheetContent>
       </Sheet>
-      <GiftOverlay event={giftQueue[0] ?? null} onDone={() => setGiftQueue((prev) => prev.slice(1))} />
+      <GiftOverlay
+        event={giftQueue[0] ?? null}
+        onDone={() => setGiftQueue((prev) => prev.slice(1))}
+      />
 
       <Sheet open={dominoOpen} onOpenChange={setDominoOpen}>
         <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl">
@@ -1018,20 +1214,20 @@ function RoomPage() {
             <SheetTitle>ألعاب الغرفة</SheetTitle>
           </SheetHeader>
           <div className="mb-3 flex gap-2 rounded-2xl bg-surface-2 p-1">
-            {(
-              [
-                { key: "wheel" as const, label: "🎡 عجلة الحظ" },
-                { key: "seven77" as const, label: "7️⃣ لعبة 77" },
-                { key: "supercar" as const, label: "🏎️ سباق السيارات" },
-                { key: "domino" as const, label: "🁣 دومينو" },
-              ]
-            ).map((t) => (
+            {[
+              { key: "wheel" as const, label: "🎡 عجلة الحظ" },
+              { key: "seven77" as const, label: "7️⃣ لعبة 77" },
+              { key: "supercar" as const, label: "🏎️ سباق السيارات" },
+              { key: "domino" as const, label: "🁣 دومينو" },
+            ].map((t) => (
               <button
                 key={t.key}
                 onClick={() => setRoomGame(t.key)}
                 className={cn(
                   "flex-1 rounded-xl px-2 py-2 text-[11px] font-bold transition-colors",
-                  roomGame === t.key ? "gradient-gold text-primary-foreground" : "text-muted-foreground",
+                  roomGame === t.key
+                    ? "gradient-gold text-primary-foreground"
+                    : "text-muted-foreground",
                 )}
               >
                 {t.label}
@@ -1042,9 +1238,13 @@ function RoomPage() {
             {roomGame === "wheel" && badgePermissions.data?.wheelClose && (
               <Button
                 variant="outline"
-                onClick={() => void closeWheelRound({ data: { roomId } })
-                  .then(() => toast.success("تم إغلاق الجولة وتسوية النتيجة"))
-                  .catch((error: unknown) => toast.error(error instanceof Error ? error.message : "تعذر إغلاق الجولة"))}
+                onClick={() =>
+                  void closeWheelRound({ data: { roomId } })
+                    .then(() => toast.success("تم إغلاق الجولة وتسوية النتيجة"))
+                    .catch((error: unknown) =>
+                      toast.error(error instanceof Error ? error.message : "تعذر إغلاق الجولة"),
+                    )
+                }
                 className="mb-3 h-10 w-full rounded-xl"
               >
                 إغلاق الجولة الآن
@@ -1095,7 +1295,9 @@ function RoomPage() {
                 return (
                   <div key={r.id} className="surface-card flex items-center gap-3 p-3">
                     <UserAvatar src={person?.avatar_url} name={person?.display_name} size={40} />
-                    <p className="flex-1 text-sm font-semibold">{person?.display_name ?? "مستخدم"}</p>
+                    <p className="flex-1 text-sm font-semibold">
+                      {person?.display_name ?? "مستخدم"}
+                    </p>
                     <Button
                       onClick={() => approveRequest.mutate({ id: r.id, user_id: r.user_id })}
                       className="h-9 w-9 rounded-xl gradient-gold p-0 text-primary-foreground"
@@ -1104,7 +1306,13 @@ function RoomPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={() => void supabase.from("mic_requests").delete().eq("id", r.id).then(() => requests.refetch())}
+                      onClick={() =>
+                        void supabase
+                          .from("mic_requests")
+                          .delete()
+                          .eq("id", r.id)
+                          .then(() => requests.refetch())
+                      }
                       className="h-9 w-9 rounded-xl p-0"
                     >
                       <X className="h-4 w-4" />
@@ -1192,7 +1400,13 @@ function RoomPage() {
               <div className="space-y-2">
                 {(people.data ?? []).map((p) => (
                   <div key={p.id} className="surface-card flex items-center gap-3 p-3">
-                    <UserAvatar src={p.avatar_url} name={p.display_name} size={40} vipLevel={p.vip_level} frame={p.frame_url} />
+                    <UserAvatar
+                      src={p.avatar_url}
+                      name={p.display_name}
+                      size={40}
+                      vipLevel={p.vip_level}
+                      frame={p.frame_url}
+                    />
                     <p className="flex-1 truncate text-sm font-semibold">{p.display_name}</p>
                     {p.id !== userId && (
                       <>
@@ -1224,7 +1438,9 @@ function RoomPage() {
                   <Button
                     key={seat.id}
                     variant="outline"
-                    onClick={() => seatAction.mutate({ seat, patch: { is_locked: !seat.is_locked } })}
+                    onClick={() =>
+                      seatAction.mutate({ seat, patch: { is_locked: !seat.is_locked } })
+                    }
                     className="h-11 rounded-2xl text-[11px]"
                   >
                     مايك {seat.seat_index}: {seat.is_locked ? "مغلق" : "مفتوح"}
@@ -1263,7 +1479,9 @@ function RoomBackground({ url }: { url: string | null }) {
 }
 
 function RoomImagePreview({ stored }: { stored: string | null }) {
-  const [resolved, setResolved] = useState<string | null>(stored?.startsWith("blob:") ? stored : null);
+  const [resolved, setResolved] = useState<string | null>(
+    stored?.startsWith("blob:") ? stored : null,
+  );
 
   useEffect(() => {
     if (stored?.startsWith("blob:")) {
@@ -1341,6 +1559,33 @@ function RoundControl({
       )}
     >
       {children}
+    </button>
+  );
+}
+
+function RoomUtility({
+  label,
+  children,
+  onClick,
+  active,
+}: {
+  label: string;
+  children: ReactNode;
+  onClick: () => void;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={cn(
+        "flex h-14 min-w-14 shrink-0 flex-col items-center justify-center rounded-2xl border bg-surface/80 px-2 text-muted-foreground",
+        active ? "border-primary/60 text-primary" : "border-border/60",
+      )}
+    >
+      {children}
+      <span className="mt-0.5 whitespace-nowrap text-[8px] font-bold">{label}</span>
     </button>
   );
 }

@@ -77,9 +77,9 @@ import { AdminFamiliesTab } from "@/components/AdminFamiliesTab";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "لوحة الإدارة — صوتك" },
+      { title: "لوحة الإدارة — التاج" },
       { name: "description", content: "إدارة المستخدمين والغرف والإبلاغات وأرصدة الكوينز مع سجل كامل للإجراءات." },
-      { property: "og:title", content: "لوحة الإدارة — صوتك" },
+      { property: "og:title", content: "لوحة الإدارة — التاج" },
       { property: "og:description", content: "تحكم كامل في المستخدمين والغرف والمحتوى." },
     ],
   }),

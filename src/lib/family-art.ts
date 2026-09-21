@@ -75,3 +75,11 @@ export const FAMILY_ROLE_LABEL: Record<string, string> = {
   deputy: "نائب",
   member: "عضو",
 };
+
+export const FAMILY_PERMISSION_LABEL: Record<string, string> = {
+  family_accept_members: "قبول الأعضاء",
+  family_remove_members: "إزالة الأعضاء",
+  family_manage_requests: "إدارة طلبات الانضمام",
+  family_manage_profile: "تعديل صفحة العائلة",
+  family_manage_moderators: "إدارة مشرفي العائلة",
+};

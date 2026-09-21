@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { resolveMediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
-import { getVipFrame } from "@/lib/vip-frames";
+import { getVipFrame, getVipVisual } from "@/lib/vip-frames";
 
 type Props = {
   src?: string | null | undefined;
@@ -38,14 +38,13 @@ export function UserAvatar({ src, name, size = 48, vipLevel = 0, frame, online, 
   }, [frame]);
 
   const initial = (name ?? "؟").trim().charAt(0);
-  // إطارات متحركة: إطار النار يرتجف ويتوهّج، وباقي الإطارات توهّج ناعم
   const fallbackFrame = getVipFrame(vipLevel);
   const activeFrame = frameUrl ?? fallbackFrame;
   const frameKey = String(frame ?? fallbackFrame ?? "");
-  const frameAnim = /frame-03|fire|نار/i.test(frameKey)
+  const frameAnim = frameUrl && /frame-03|fire|نار/i.test(frameKey)
     ? "animate-frame-fire"
     : activeFrame
-      ? "animate-frame-glow"
+      ? (getVipVisual(vipLevel)?.frameClass ?? "animate-frame-glow")
       : "";
 
   return (
