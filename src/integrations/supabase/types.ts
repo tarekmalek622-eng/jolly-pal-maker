@@ -557,6 +557,7 @@ export type Database = {
           rules: string | null
           starts_at: string
           status: string
+          style: string
           subtitle: string | null
           title: string
           updated_at: string
@@ -573,6 +574,7 @@ export type Database = {
           rules?: string | null
           starts_at: string
           status?: string
+          style?: string
           subtitle?: string | null
           title: string
           updated_at?: string
@@ -589,6 +591,7 @@ export type Database = {
           rules?: string | null
           starts_at?: string
           status?: string
+          style?: string
           subtitle?: string | null
           title?: string
           updated_at?: string
@@ -2781,6 +2784,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      event_templates: { Args: never; Returns: Json }
       events_tick: { Args: never; Returns: number }
       expire_due_vip: { Args: never; Returns: number }
       family_level_for: { Args: { _points: number }; Returns: number }
@@ -2896,6 +2900,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      purge_event: { Args: { _event_id: string }; Returns: undefined }
       refund_item: { Args: { _user_item_id: string }; Returns: number }
       relationship_award: {
         Args: { _a: string; _amount: number; _b: string }
@@ -3188,6 +3193,32 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      spawn_next_event: {
+        Args: { _avoid_title?: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string
+          id: string
+          image_url: string | null
+          points_note: string | null
+          ranking_kind: string
+          rules: string | null
+          starts_at: string
+          status: string
+          style: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cup_events"
           isOneToOne: true
           isSetofReturn: false
         }
