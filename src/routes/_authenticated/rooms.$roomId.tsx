@@ -143,7 +143,11 @@ function RoomPage() {
   const room = useQuery({
     queryKey: ["room", roomId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("rooms").select("*").eq("id", roomId).maybeSingle();
+      const { data, error } = await supabase
+        .from("rooms")
+        .select("id, room_code, name, image_url, background_url, theme, owner_id, is_active, is_disabled, chat_locked")
+        .eq("id", roomId)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },

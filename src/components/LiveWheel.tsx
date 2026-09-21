@@ -46,12 +46,12 @@ type DailyTopRow = {
 };
 
 type WheelBet = {
-  id: string;
-  round_id: string;
   user_id: string;
   slot_key: string;
   amount: number;
   payout: number;
+  display_name: string;
+  avatar_url: string | null;
 };
 
 // generated types lag behind the new wheel tables/RPCs
@@ -147,19 +147,13 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
 
   const resultRound = round.data?.status === "finished" ? round.data : history.data?.[0] ?? null;
   const resultRoundId = resultRound?.id ?? null;
-  // أعلى الرهانات الفائزة فقط (٢٠ صفًا كحد أقصى) بدل تحميل رهانات الجولة كلها
+  // قائمة فائزين آمنة من السيرفر دون كشف رهانات اللاعبين الآخرين مباشرة.
   const resultBets = useQuery({
     queryKey: ["wheel-result-bets", resultRoundId],
     enabled: Boolean(resultRoundId),
     refetchInterval: resultRoundId === roundId ? 1800 : false,
     queryFn: async () => {
-      const { data, error } = await db
-        .from("wheel_bets")
-        .select("id, round_id, user_id, slot_key, amount, payout")
-        .eq("round_id", resultRoundId)
-        .gt("payout", 0)
-        .order("payout", { ascending: false })
-        .limit(20);
+      const { data, error } = await db.rpc("wheel_round_winners", { _round_id: resultRoundId });
       if (error) throw new Error(error.message);
       return (data ?? []) as WheelBet[];
     },
@@ -185,18 +179,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     },
   });
 
-  const resultPlayers = useQuery({
-    queryKey: ["wheel-result-players", resultRoundId, resultBets.data?.length ?? 0],
-    enabled: Boolean(resultBets.data?.length),
-    queryFn: async () => {
-      const ids = Array.from(new Set((resultBets.data ?? []).map((bet) => bet.user_id)));
-      const { data, error } = await db.from("profiles").select("id, display_name, avatar_url").in("id", ids);
-      if (error) throw new Error(error.message);
-      return new Map(
-        ((data ?? []) as { id: string; display_name: string; avatar_url: string | null }[]).map((profile) => [profile.id, profile]),
-      );
-    },
-  });
+  const resultPlayers = useMemo(
+    () => new Map((resultBets.data ?? []).map((bet) => [bet.user_id, bet])),
+    [resultBets.data],
+  );
 
   useEffect(() => {
     const t = window.setInterval(() => setNow(Date.now()), 250);
@@ -575,7 +561,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                   const entry = resultLeaderboard[idx];
                   if (!entry) return null;
                   const [uid, total] = entry;
-                  const pl = resultPlayers.data?.get(uid);
+                  const pl = resultPlayers.get(uid);
                   const first = idx === 0;
                   const rankColor =
                     idx === 0 ? "border-primary" : idx === 1 ? "border-muted-foreground" : "border-warning";
@@ -630,7 +616,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
               {resultLeaderboard.length > 3 && (
                 <div className="mt-2 space-y-1">
                   {resultLeaderboard.slice(3).map(([uid, total], i) => {
-                    const pl = resultPlayers.data?.get(uid);
+                    const pl = resultPlayers.get(uid);
                     return (
                       <div key={uid} className="flex items-center gap-2 text-xs">
                         <span className="w-4 font-bold text-muted-foreground">{i + 4}</span>
