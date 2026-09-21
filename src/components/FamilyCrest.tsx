@@ -30,11 +30,11 @@ export function FamilyCrest({
   className,
 }: {
   name: string;
-  logoUrl?: string | null;
-  styleKey?: string | null;
+  logoUrl?: string | null | undefined;
+  styleKey?: string | null | undefined;
   level?: number;
   size?: number;
-  className?: string;
+  className?: string | undefined;
 }) {
   const p = PALETTE[styleKey ?? "bronze"] ?? PALETTE["bronze"]!;
 
