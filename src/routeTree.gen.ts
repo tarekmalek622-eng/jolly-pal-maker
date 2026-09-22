@@ -20,6 +20,7 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedOwnerStatsRouteImport } from './routes/_authenticated/owner-stats'
+import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedStoreRouteImport } from './routes/_authenticated/store'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
@@ -86,6 +87,11 @@ const AuthenticatedNotificationsRoute =
 const AuthenticatedOwnerStatsRoute = AuthenticatedOwnerStatsRouteImport.update({
   id: '/owner-stats',
   path: '/owner-stats',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStoreRoute = AuthenticatedStoreRouteImport.update({
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/me': typeof AuthenticatedMeRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/owner-stats': typeof AuthenticatedOwnerStatsRoute
+  '/search': typeof AuthenticatedSearchRoute
   '/store': typeof AuthenticatedStoreRoute
   '/support': typeof AuthenticatedSupportRoute
   '/tasks': typeof AuthenticatedTasksRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/me': typeof AuthenticatedMeRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/owner-stats': typeof AuthenticatedOwnerStatsRoute
+  '/search': typeof AuthenticatedSearchRoute
   '/store': typeof AuthenticatedStoreRoute
   '/support': typeof AuthenticatedSupportRoute
   '/tasks': typeof AuthenticatedTasksRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/_authenticated/me': typeof AuthenticatedMeRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/owner-stats': typeof AuthenticatedOwnerStatsRoute
+  '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/store': typeof AuthenticatedStoreRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/notifications'
     | '/owner-stats'
+    | '/search'
     | '/store'
     | '/support'
     | '/tasks'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/notifications'
     | '/owner-stats'
+    | '/search'
     | '/store'
     | '/support'
     | '/tasks'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/_authenticated/me'
     | '/_authenticated/notifications'
     | '/_authenticated/owner-stats'
+    | '/_authenticated/search'
     | '/_authenticated/store'
     | '/_authenticated/support'
     | '/_authenticated/tasks'
@@ -387,6 +399,13 @@ declare module '@tanstack/react-router' {
       path: '/owner-stats'
       fullPath: '/owner-stats'
       preLoaderRoute: typeof AuthenticatedOwnerStatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/search': {
+      id: '/_authenticated/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AuthenticatedSearchRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/store': {
@@ -486,6 +505,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMeRoute: typeof AuthenticatedMeRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOwnerStatsRoute: typeof AuthenticatedOwnerStatsRoute
+  AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedStoreRoute: typeof AuthenticatedStoreRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
@@ -510,6 +530,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMeRoute: AuthenticatedMeRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOwnerStatsRoute: AuthenticatedOwnerStatsRoute,
+  AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedStoreRoute: AuthenticatedStoreRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,
