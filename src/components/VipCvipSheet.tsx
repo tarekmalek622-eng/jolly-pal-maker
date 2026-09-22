@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Coins, Crown, Loader2, Sparkles } from "lucide-react";
+import { Coins, Crown, Gift, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getVipFrame, getVipName, getVipVisual } from "@/lib/vip-frames";
 import { useSupabaseSession } from "@/hooks/use-session";
+
 
 /** الأنواع المولّدة لا تعرف جدول cvip_plans بعد. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
