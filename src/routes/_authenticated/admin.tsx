@@ -111,6 +111,7 @@ const TABS = [
   { key: "welcome", label: "الترحيبية", icon: PartyPopper },
   { key: "roomSystems", label: "أنظمة الغرفة", icon: Sofa },
   { key: "families", label: "العائلات", icon: Users },
+  { key: "words", label: "الكلمات المحظورة", icon: Ban },
   { key: "logs", label: "السجل", icon: ScrollText },
 ] as const;
 
@@ -261,6 +262,7 @@ function AdminPage() {
           }}
         />
       )}
+      {tab === "words" && <BannedWordsTab />}
       {tab === "gameEngine" && <GameMonitorTab />}
       {tab === "rooms" && <RoomsTab />}
       {tab === "roomMessages" && <RoomMessagesTab />}
@@ -4211,6 +4213,91 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function BannedWordsTab() {
+  const qc = useQueryClient();
+  const [word, setWord] = useState("");
+
+  const words = useQuery({
+    queryKey: ["banned-words"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("banned_words")
+        .select("id, word")
+        .order("word", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const add = useMutation({
+    mutationFn: async () => {
+      const value = word.trim().toLowerCase();
+      if (value.length < 2) throw new Error("الكلمة قصيرة جدًا");
+      const { error } = await supabase.from("banned_words").insert({ word: value });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setWord("");
+      toast.success("تمت إضافة الكلمة");
+      void qc.invalidateQueries({ queryKey: ["banned-words"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("banned_words").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم الحذف");
+      void qc.invalidateQueries({ queryKey: ["banned-words"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="surface-card space-y-2 p-4">
+        <p className="text-sm font-bold">إضافة كلمة محظورة</p>
+        <p className="text-[11px] text-muted-foreground">
+          أي رسالة في الغرف تحتوي هذه الكلمة ترفض تلقائيًا.
+        </p>
+        <div className="flex gap-2">
+          <Input value={word} onChange={(e) => setWord(e.target.value)} placeholder="الكلمة" />
+          <Button onClick={() => add.mutate()} disabled={add.isPending}>
+            إضافة
+          </Button>
+        </div>
+      </div>
+
+      {words.isError && (
+        <div className="surface-card p-4 text-center">
+          <p className="text-sm font-bold">تعذر تحميل القائمة</p>
+          <Button variant="outline" className="mt-2" onClick={() => void words.refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
+      {words.data && words.data.length === 0 && (
+        <p className="text-center text-sm text-muted-foreground">لا كلمات محظورة بعد.</p>
+      )}
+
+      <div className="space-y-2">
+        {(words.data ?? []).map((w) => (
+          <div key={w.id} className="surface-card flex items-center justify-between p-3">
+            <span className="text-sm font-bold">{w.word}</span>
+            <Button variant="ghost" size="sm" onClick={() => remove.mutate(w.id)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
