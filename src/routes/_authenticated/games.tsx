@@ -2,17 +2,36 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Dices, Loader2, Sparkles, Spade, HelpCircle, Flame, LayoutGrid, Cherry, Trophy, Gamepad2 } from "lucide-react";
+import {
+  Dices,
+  Loader2,
+  Sparkles,
+  Spade,
+  HelpCircle,
+  Flame,
+  LayoutGrid,
+  Cherry,
+  Trophy,
+  Gamepad2,
+} from "lucide-react";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DominoGame } from "@/components/DominoGame";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Game77 } from "@/components/Game77";
+import { RouletteGame } from "@/components/RouletteGame";
 import { SuperCarGame } from "@/components/SuperCarGame";
 import { EventsRail } from "@/components/EventsRail";
 import { supabase } from "@/integrations/supabase/client";
-import { playDice, spinWheel, playCards, startQuiz, answerQuiz, playChallenge } from "@/lib/games.functions";
+import {
+  playDice,
+  spinWheel,
+  playCards,
+  startQuiz,
+  answerQuiz,
+  playChallenge,
+} from "@/lib/games.functions";
 import { useRefreshMoney, useSupabaseSession, useWallet } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
@@ -36,12 +55,22 @@ export const Route = createFileRoute("/_authenticated/games")({
   component: GamesPage,
 });
 
-type GameKey = "domino" | "dice" | "wheel" | "seven77" | "supercar" | "cards" | "quiz" | "challenge";
+type GameKey =
+  | "domino"
+  | "dice"
+  | "wheel"
+  | "roulette"
+  | "seven77"
+  | "supercar"
+  | "cards"
+  | "quiz"
+  | "challenge";
 
 const GAME_TABS: { key: GameKey; label: string; icon: typeof Dices; flag: string }[] = [
   { key: "domino", label: "دومينو", icon: LayoutGrid, flag: "domino" },
   { key: "dice", label: "النرد", icon: Dices, flag: "dice" },
   { key: "wheel", label: "العجلة", icon: Sparkles, flag: "wheel" },
+  { key: "roulette", label: "روليت", icon: Dices, flag: "wheel" },
   { key: "seven77", label: "لعبة 77", icon: Cherry, flag: "seven77" },
   { key: "supercar", label: "سباق السيارات", icon: Sparkles, flag: "supercar" },
   { key: "cards", label: "الورق", icon: Spade, flag: "cards" },
@@ -66,17 +95,27 @@ function GamesPage() {
   const [guess, setGuess] = useState(6);
   const [challenge, setChallenge] = useState<"reflex" | "memory" | "luck">("reflex");
   const [result, setResult] = useState<string | null>(null);
-  const [quiz, setQuiz] = useState<{ sessionId: string; question: string; choices: string[] } | null>(null);
+  const [quiz, setQuiz] = useState<{
+    sessionId: string;
+    question: string;
+    choices: string[];
+  } | null>(null);
 
   const settings = useQuery({
     queryKey: ["game-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("app_settings").select("key, value").in("key", ["games", "limits"]);
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("key, value")
+        .in("key", ["games", "limits"]);
       if (error) throw error;
       const map = new Map((data ?? []).map((r) => [r.key, r.value]));
       return {
         games: (map.get("games") ?? {}) as Record<string, boolean | undefined>,
-        limits: (map.get("limits") ?? { min_bet: 50, max_bet: 5000 }) as { min_bet: number; max_bet: number },
+        limits: (map.get("limits") ?? { min_bet: 50, max_bet: 5000 }) as {
+          min_bet: number;
+          max_bet: number;
+        },
       };
     },
   });
@@ -117,7 +156,11 @@ function GamesPage() {
   const wheel = useMutation({
     mutationFn: async () => spinWheel({ data: { bet } }),
     onSuccess: (r) =>
-      afterPlay(r.payout > 0 ? `🎡 ${r.label} — ربحت ${r.payout.toLocaleString("en-US")} كوينز` : `🎡 ${r.label} — لا ربح`),
+      afterPlay(
+        r.payout > 0
+          ? `🎡 ${r.label} — ربحت ${r.payout.toLocaleString("en-US")} كوينز`
+          : `🎡 ${r.label} — لا ربح`,
+      ),
     onError: fail,
   });
 
@@ -145,7 +188,8 @@ function GamesPage() {
   });
 
   const answer = useMutation({
-    mutationFn: async (choice: number) => answerQuiz({ data: { sessionId: quiz!.sessionId, choice } }),
+    mutationFn: async (choice: number) =>
+      answerQuiz({ data: { sessionId: quiz!.sessionId, choice } }),
     onSuccess: (r) => {
       const correctText = quiz?.choices[r.correctIndex] ?? "";
       setQuiz(null);
@@ -161,7 +205,11 @@ function GamesPage() {
   const challengeRun = useMutation({
     mutationFn: async () => playChallenge({ data: { bet, challenge } }),
     onSuccess: (r) =>
-      afterPlay(r.won ? `🔥 ${r.label} — نجحت وربحت ${r.payout.toLocaleString("en-US")} كوينز` : `🔥 ${r.label} — لم تنجح`),
+      afterPlay(
+        r.won
+          ? `🔥 ${r.label} — نجحت وربحت ${r.payout.toLocaleString("en-US")} كوينز`
+          : `🔥 ${r.label} — لم تنجح`,
+      ),
     onError: fail,
   });
 
@@ -176,7 +224,13 @@ function GamesPage() {
   const flags = settings.data?.games ?? {};
   const limits = settings.data?.limits ?? { min_bet: 50, max_bet: 5000 };
   const betSteps = Array.from(
-    new Set([limits.min_bet, limits.min_bet * 2, limits.min_bet * 5, limits.min_bet * 10, limits.max_bet]),
+    new Set([
+      limits.min_bet,
+      limits.min_bet * 2,
+      limits.min_bet * 5,
+      limits.min_bet * 10,
+      limits.max_bet,
+    ]),
   ).filter((n) => n >= limits.min_bet && n <= limits.max_bet);
   const tabs = GAME_TABS.filter((t) => flags[t.flag] !== false);
   const active = tabs.some((t) => t.key === game) ? game : tabs[0]?.key;
@@ -192,7 +246,10 @@ function GamesPage() {
   return (
     <AppShell
       header={
-        <PageHeader title="الاستكشاف" subtitle={`رصيدك: ${(wallet.data?.coins ?? 0).toLocaleString("en-US")} كوينز`} />
+        <PageHeader
+          title="الاستكشاف"
+          subtitle={`رصيدك: ${(wallet.data?.coins ?? 0).toLocaleString("en-US")} كوينز`}
+        />
       }
     >
       <div className="mb-4 space-y-4">
@@ -206,7 +263,9 @@ function GamesPage() {
           </span>
           <span className="flex-1">
             <b className="block text-sm font-black">كأس التطبيق</b>
-            <span className="text-[10px] text-muted-foreground">الداعمون والمستلمون والشاحنون ومكاسب الألعاب</span>
+            <span className="text-[10px] text-muted-foreground">
+              الداعمون والمستلمون والشاحنون ومكاسب الألعاب
+            </span>
           </span>
           <span className="text-xs text-amber-400">عرض</span>
         </Link>
@@ -219,7 +278,9 @@ function GamesPage() {
           </span>
           <span className="flex-1">
             <b className="block text-sm font-black">الألعاب</b>
-            <span className="text-[10px] text-muted-foreground">الدومينو والعجلة و77 والنرد والورق والأسئلة والتحديات</span>
+            <span className="text-[10px] text-muted-foreground">
+              الدومينو والعجلة و77 والنرد والورق والأسئلة والتحديات
+            </span>
           </span>
           <span className="text-xs text-primary">{gamesOpen ? "إخفاء" : "فتح"}</span>
         </button>
@@ -265,33 +326,42 @@ function GamesPage() {
               <Game77 bet={bet} onSettled={afterPlay} />
             </div>
           )}
+          {active === "roulette" && (
+            <div className="mb-3">
+              <RouletteGame bet={bet} />
+            </div>
+          )}
           {active === "supercar" && <SuperCarGame roomId={search.room ?? null} />}
 
           <div
             className={cn(
               "surface-card p-5",
-              (active === "domino" || active === "wheel" || active === "supercar") && "hidden",
+              (active === "domino" ||
+                active === "wheel" ||
+                active === "roulette" ||
+                active === "supercar") &&
+                "hidden",
             )}
           >
             <p className="text-sm font-bold">
-              مبلغ الرهان (بين {limits.min_bet.toLocaleString("en-US")} و {limits.max_bet.toLocaleString("en-US")})
+              مبلغ الرهان (بين {limits.min_bet.toLocaleString("en-US")} و{" "}
+              {limits.max_bet.toLocaleString("en-US")})
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {betSteps
-                .map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setBet(n)}
-                    className={cn(
-                      "rounded-full border px-3 py-1.5 text-xs",
-                      bet === n
-                        ? "border-primary bg-primary/15 text-primary"
-                        : "border-border bg-surface-2 text-muted-foreground",
-                    )}
-                  >
-                    {n.toLocaleString("en-US")}
-                  </button>
-                ))}
+              {betSteps.map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setBet(n)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs",
+                    bet === n
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border bg-surface-2 text-muted-foreground",
+                  )}
+                >
+                  {n.toLocaleString("en-US")}
+                </button>
+              ))}
             </div>
             <Input
               type="number"
@@ -369,7 +439,9 @@ function GamesPage() {
                     {choice}
                   </button>
                 ))}
-                <p className="text-[10px] text-muted-foreground">الإجابة الصحيحة تربح ×3 من رهانك.</p>
+                <p className="text-[10px] text-muted-foreground">
+                  الإجابة الصحيحة تربح ×3 من رهانك.
+                </p>
               </div>
             ) : (
               <Button
@@ -427,7 +499,12 @@ function GamesPage() {
                     {s.status === "pending" ? " · جارية" : ""}
                   </p>
                 </div>
-                <p className={cn("text-xs font-bold", s.payout >= s.bet ? "text-success" : "text-muted-foreground")}>
+                <p
+                  className={cn(
+                    "text-xs font-bold",
+                    s.payout >= s.bet ? "text-success" : "text-muted-foreground",
+                  )}
+                >
                   {s.payout - s.bet >= 0 ? "+" : ""}
                   {(s.payout - s.bet).toLocaleString("en-US")}
                 </p>
