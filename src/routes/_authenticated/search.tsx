@@ -117,8 +117,8 @@ function SearchPage() {
                   className="surface-card flex items-center gap-3 p-3"
                 >
                   <UserAvatar
-                    url={u.avatar_url}
-                    frameUrl={u.frame_url}
+                    src={u.avatar_url}
+                    frame={u.frame_url}
                     name={u.display_name}
                     size={44}
                     vipLevel={u.vip_level ?? 0}
