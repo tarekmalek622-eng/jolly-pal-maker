@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Home, Compass, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCrownUnread } from "@/lib/crown.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { useSupabaseSession } from "@/hooks/use-session";
 
 const items = [
   { to: "/home", label: "الرئيسية", icon: Home },
