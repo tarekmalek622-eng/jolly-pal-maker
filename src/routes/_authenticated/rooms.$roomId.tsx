@@ -842,37 +842,66 @@ function RoomPage() {
         })}
       </div>
 
-      <section className="mx-3 mt-5 space-y-2 pb-64">
-        {(messages.data ?? []).map((m) => {
-          const person = personOf(m.user_id);
-          const isGift = m.kind === "gift";
-          return (
-            <div
-              key={m.id}
-              className={cn(
-                "flex items-start gap-2 rounded-xl border border-border/30 p-2.5 backdrop-blur-md",
-                isGift ? "gradient-rose text-primary-foreground" : "bg-background/45",
-              )}
-            >
-              <button
-                type="button"
-                onClick={() => person && setRoleSheet(person.id)}
-                aria-label="عرض المنصب"
+      {/* شريط تصنيف الدردشة كما في التصميم المرجعي */}
+      <div className="mx-3 mt-4 flex items-center justify-center gap-3 border-b border-border/25 pb-1.5 text-[11px] font-bold">
+        {CHAT_FILTERS.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            onClick={() => setChatFilter(f.key)}
+            className={cn(
+              "px-1 pb-1",
+              chatFilter === f.key
+                ? "border-b-2 border-primary text-foreground"
+                : "text-foreground/55",
+            )}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <section className="mx-3 mt-2 space-y-1.5 pb-64">
+        {(messages.data ?? [])
+          .filter((m) => {
+            if (chatFilter === "all") return true;
+            if (chatFilter === "gift") return m.kind === "gift";
+            if (chatFilter === "join") return m.kind === "join" || m.kind === "system";
+            return m.kind !== "gift" && m.kind !== "join" && m.kind !== "system";
+          })
+          .map((m) => {
+            const person = personOf(m.user_id);
+            const isGift = m.kind === "gift";
+            return (
+              <div
+                key={m.id}
+                className={cn(
+                  "flex items-start gap-2 rounded-2xl px-2.5 py-1.5",
+                  isGift ? "gradient-rose text-primary-foreground" : "bg-background/30",
+                )}
               >
-                <UserAvatar
-                  src={person?.avatar_url}
-                  name={person?.display_name}
-                  size={28}
-                  vipLevel={person?.vip_level ?? 0}
-                />
-              </button>
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-bold">{person?.display_name ?? "مستخدم"}</p>
-                <p className="break-words text-sm">{m.body}</p>
+                <button
+                  type="button"
+                  onClick={() => person && setRoleSheet(person.id)}
+                  aria-label="عرض المنصب"
+                  className="shrink-0"
+                >
+                  <UserAvatar
+                    src={person?.avatar_url}
+                    name={person?.display_name}
+                    size={24}
+                    vipLevel={person?.vip_level ?? 0}
+                  />
+                </button>
+                <p className="min-w-0 flex-1 break-words text-[13px] leading-5">
+                  <span className="me-1 font-bold text-primary">
+                    {person?.display_name ?? "مستخدم"}:
+                  </span>
+                  {m.body}
+                </p>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </section>
 
       {/* أزرار الجانب الأيسر: الكنز وصالة VIP والألعاب والموسيقى — كما في التصميم المرجعي */}
