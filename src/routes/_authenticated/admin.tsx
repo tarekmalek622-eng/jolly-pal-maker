@@ -290,7 +290,15 @@ const ROLES = [
   { key: "welcome_manager", label: "مسؤول الترحيبية" },
 ] as const;
 
-function UsersTab({ onWelcome }: { onWelcome?: (publicId: string) => void }) {
+function UsersTab({
+  onWelcome,
+  canSuspend = true,
+  canWelcome = true,
+}: {
+  onWelcome?: (publicId: string) => void;
+  canSuspend?: boolean;
+  canWelcome?: boolean;
+}) {
   const [term, setTerm] = useState("");
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<string | null>(null);
