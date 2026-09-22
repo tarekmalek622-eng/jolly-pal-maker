@@ -38,6 +38,21 @@ function MessagesPage() {
     queryFn: () => fetchCrownUnread(),
     staleTime: 30_000,
   });
+  const notifUnread = useQuery({
+    queryKey: ["notifications-unread", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId!)
+        .is("read_at", null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    staleTime: 20_000,
+  });
+
 
 
   const threads = useQuery({
