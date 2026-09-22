@@ -479,8 +479,8 @@ function UsersTab({
                 <Input
                   value={idDraft[u.id] ?? u.public_id}
                   onChange={(e) => setIdDraft((p) => ({ ...p, [u.id]: e.target.value }))}
-                  placeholder="ID الجديد (أرقام فقط)"
-                  inputMode="numeric"
+                  placeholder="ID الجديد (حروف أو أرقام)"
+
                   className="h-10 rounded-xl bg-surface text-xs"
                 />
                 <Input
@@ -495,8 +495,9 @@ function UsersTab({
                     onClick={() => {
                       const nextId = (idDraft[u.id] ?? u.public_id).trim();
                       const nextName = (nameDraft[u.id] ?? u.display_name).trim();
-                      if (!/^[0-9]{4,12}$/.test(nextId)) {
-                        toast.error("الـID يجب أن يكون أرقامًا من 4 إلى 12 خانة");
+                      if (!/^[A-Za-z0-9]{1,12}$/.test(nextId)) {
+                        toast.error("الـID يقبل حروفًا أو أرقامًا من خانة واحدة إلى 12");
+
                         return;
                       }
                       if (nextName.length < 2) {

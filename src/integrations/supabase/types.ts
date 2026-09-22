@@ -2926,6 +2926,41 @@ export type Database = {
       gen_public_id: { Args: never; Returns: string }
       gen_room_code: { Args: never; Returns: string }
       gift_stats: { Args: { _since?: string }; Returns: Json }
+      gift_vip: {
+        Args: { _level: number; _receiver_id: string }
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          cvip_expires_at: string | null
+          cvip_level: number
+          display_name: string
+          frame_url: string | null
+          gender: Database["public"]["Enums"]["gender_type"] | null
+          id: string
+          is_cvip: boolean
+          is_online: boolean
+          is_suspended: boolean
+          last_seen: string
+          level: number
+          mic_decoration_url: string | null
+          profile_background_url: string | null
+          public_id: string
+          updated_at: string
+          vip_expires_at: string | null
+          vip_level: number
+          xp: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_badge_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
