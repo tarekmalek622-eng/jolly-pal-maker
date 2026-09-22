@@ -20,6 +20,7 @@ import { Route as AuthenticatedGiftLogRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
+import { Route as AuthenticatedMyStatsRouteImport } from './routes/_authenticated/my-stats'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedOwnerStatsRouteImport } from './routes/_authenticated/owner-stats'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
@@ -88,6 +89,11 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
 const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
   id: '/me',
   path: '/me',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMyStatsRoute = AuthenticatedMyStatsRouteImport.update({
+  id: '/my-stats',
+  path: '/my-stats',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedNotificationsRoute =
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
   '/me': typeof AuthenticatedMeRoute
+  '/my-stats': typeof AuthenticatedMyStatsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/owner-stats': typeof AuthenticatedOwnerStatsRoute
   '/search': typeof AuthenticatedSearchRoute
@@ -211,6 +218,7 @@ export interface FileRoutesByTo {
   '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
   '/me': typeof AuthenticatedMeRoute
+  '/my-stats': typeof AuthenticatedMyStatsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/owner-stats': typeof AuthenticatedOwnerStatsRoute
   '/search': typeof AuthenticatedSearchRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
+  '/_authenticated/my-stats': typeof AuthenticatedMyStatsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/owner-stats': typeof AuthenticatedOwnerStatsRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
@@ -269,6 +278,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/home'
     | '/me'
+    | '/my-stats'
     | '/notifications'
     | '/owner-stats'
     | '/search'
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/home'
     | '/me'
+    | '/my-stats'
     | '/notifications'
     | '/owner-stats'
     | '/search'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/_authenticated/help'
     | '/_authenticated/home'
     | '/_authenticated/me'
+    | '/_authenticated/my-stats'
     | '/_authenticated/notifications'
     | '/_authenticated/owner-stats'
     | '/_authenticated/search'
@@ -423,6 +435,13 @@ declare module '@tanstack/react-router' {
       path: '/me'
       fullPath: '/me'
       preLoaderRoute: typeof AuthenticatedMeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-stats': {
+      id: '/_authenticated/my-stats'
+      path: '/my-stats'
+      fullPath: '/my-stats'
+      preLoaderRoute: typeof AuthenticatedMyStatsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/notifications': {
@@ -543,6 +562,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMeRoute: typeof AuthenticatedMeRoute
+  AuthenticatedMyStatsRoute: typeof AuthenticatedMyStatsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOwnerStatsRoute: typeof AuthenticatedOwnerStatsRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
@@ -570,6 +590,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMeRoute: AuthenticatedMeRoute,
+  AuthenticatedMyStatsRoute: AuthenticatedMyStatsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOwnerStatsRoute: AuthenticatedOwnerStatsRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
