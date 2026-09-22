@@ -524,6 +524,12 @@ function MePage() {
           </span>
           <span className="text-sm font-bold">مركز المساعدة</span>
         </Link>
+        <Link to="/my-stats" className="surface-card flex items-center gap-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/15">
+            <Sparkles className="h-5 w-5 text-accent" />
+          </span>
+          <span className="text-sm font-bold">إحصائياتي</span>
+        </Link>
         <Link to="/gift-log" className="surface-card flex items-center gap-3 p-4">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
             <Gift className="h-5 w-5 text-primary" />

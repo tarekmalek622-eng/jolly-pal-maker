@@ -219,7 +219,11 @@ function InfoPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean }) {
       </div>
       <RoomRating roomId={roomId} />
       {isOwner && (
-        <ChatLockToggle roomId={roomId} locked={Boolean(room.data?.chat_locked)} onDone={() => void room.refetch()} />
+        <ChatLockToggle
+          roomId={roomId}
+          locked={Boolean(room.data?.chat_locked)}
+          onDone={() => void room.refetch()}
+        />
       )}
       {isOwner && <RoomThemePicker roomId={roomId} current={room.data?.theme_style} />}
       <div className="rounded-2xl border border-border/60 bg-surface/70 p-3">
@@ -301,7 +305,10 @@ function ChatLockToggle({
 
   async function toggle() {
     setBusy(true);
-    const { error } = await supabase.from("rooms").update({ chat_locked: !locked }).eq("id", roomId);
+    const { error } = await supabase
+      .from("rooms")
+      .update({ chat_locked: !locked })
+      .eq("id", roomId);
     setBusy(false);
     if (error) {
       toast.error(error.message);

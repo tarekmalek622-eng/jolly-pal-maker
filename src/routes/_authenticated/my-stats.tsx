@@ -28,12 +28,34 @@ function MyStatsPage() {
     enabled: Boolean(userId),
     queryFn: async () => {
       const [profile, wallet, sent, received, visits, friends] = await Promise.all([
-        supabase.from("profiles").select("level, xp, vip_level, cvip_level").eq("id", userId!).maybeSingle(),
-        supabase.from("coin_wallets").select("coins, recharge_points").eq("user_id", userId!).maybeSingle(),
-        supabase.from("gift_transactions").select("total_price").eq("sender_id", userId!).limit(1000),
-        supabase.from("gift_transactions").select("total_price").eq("receiver_id", userId!).limit(1000),
-        supabase.from("profile_visits").select("id", { count: "exact", head: true }).eq("profile_id", userId!),
-        supabase.from("friends").select("id", { count: "exact", head: true }).eq("user_id", userId!),
+        supabase
+          .from("profiles")
+          .select("level, xp, vip_level, cvip_level")
+          .eq("id", userId!)
+          .maybeSingle(),
+        supabase
+          .from("coin_wallets")
+          .select("coins, recharge_points")
+          .eq("user_id", userId!)
+          .maybeSingle(),
+        supabase
+          .from("gift_transactions")
+          .select("total_price")
+          .eq("sender_id", userId!)
+          .limit(1000),
+        supabase
+          .from("gift_transactions")
+          .select("total_price")
+          .eq("receiver_id", userId!)
+          .limit(1000),
+        supabase
+          .from("profile_visits")
+          .select("id", { count: "exact", head: true })
+          .eq("profile_id", userId!),
+        supabase
+          .from("friends")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId!),
       ]);
       const sum = (rows: { total_price: number }[] | null) =>
         (rows ?? []).reduce((a, r) => a + Number(r.total_price ?? 0), 0);
