@@ -1384,8 +1384,10 @@ export type Database = {
           last_seen: string
           level: number
           mic_decoration_url: string | null
+          name_color: string | null
           profile_background_url: string | null
           public_id: string
+          status_text: string | null
           updated_at: string
           vip_expires_at: string | null
           vip_level: number
@@ -1410,8 +1412,10 @@ export type Database = {
           last_seen?: string
           level?: number
           mic_decoration_url?: string | null
+          name_color?: string | null
           profile_background_url?: string | null
           public_id: string
+          status_text?: string | null
           updated_at?: string
           vip_expires_at?: string | null
           vip_level?: number
@@ -1436,8 +1440,10 @@ export type Database = {
           last_seen?: string
           level?: number
           mic_decoration_url?: string | null
+          name_color?: string | null
           profile_background_url?: string | null
           public_id?: string
+          status_text?: string | null
           updated_at?: string
           vip_expires_at?: string | null
           vip_level?: number
@@ -3120,8 +3126,10 @@ export type Database = {
           last_seen: string
           level: number
           mic_decoration_url: string | null
+          name_color: string | null
           profile_background_url: string | null
           public_id: string
+          status_text: string | null
           updated_at: string
           vip_expires_at: string | null
           vip_level: number
@@ -3194,8 +3202,10 @@ export type Database = {
           last_seen: string
           level: number
           mic_decoration_url: string | null
+          name_color: string | null
           profile_background_url: string | null
           public_id: string
+          status_text: string | null
           updated_at: string
           vip_expires_at: string | null
           vip_level: number
@@ -3251,8 +3261,10 @@ export type Database = {
           last_seen: string
           level: number
           mic_decoration_url: string | null
+          name_color: string | null
           profile_background_url: string | null
           public_id: string
+          status_text: string | null
           updated_at: string
           vip_expires_at: string | null
           vip_level: number
@@ -3303,8 +3315,10 @@ export type Database = {
           last_seen: string
           level: number
           mic_decoration_url: string | null
+          name_color: string | null
           profile_background_url: string | null
           public_id: string
+          status_text: string | null
           updated_at: string
           vip_expires_at: string | null
           vip_level: number
@@ -3603,8 +3617,10 @@ export type Database = {
           last_seen: string
           level: number
           mic_decoration_url: string | null
+          name_color: string | null
           profile_background_url: string | null
           public_id: string
+          status_text: string | null
           updated_at: string
           vip_expires_at: string | null
           vip_level: number
