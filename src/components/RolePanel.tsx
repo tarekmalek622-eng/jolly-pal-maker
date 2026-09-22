@@ -59,13 +59,13 @@ export function RolePanel({
           .select("id, badge_definitions(key, name, style_key)")
           .eq("user_id", uid)
           .limit(12),
-        supabase.from("profile_gift_totals").select("total_coins").eq("user_id", uid),
+        supabase.from("profile_gift_totals").select("total_value").eq("user_id", uid),
       ]);
       if (roles.error) throw roles.error;
       if (profile.error) throw profile.error;
       if (badges.error) throw badges.error;
       const gifted = (social.data ?? []).reduce(
-        (sum, row) => sum + Number((row as { total_coins?: number }).total_coins ?? 0),
+        (sum, row) => sum + Number((row as { total_value?: number }).total_value ?? 0),
         0,
       );
       return {

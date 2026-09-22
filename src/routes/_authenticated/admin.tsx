@@ -83,6 +83,9 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { property: "og:description", content: "تحكم كامل في المستخدمين والغرف والمحتوى." },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    section: typeof search.section === "string" ? search.section : undefined,
+  }),
   component: AdminPage,
 });
 
@@ -117,7 +120,10 @@ function AdminPage() {
   const allowedTabs = fullAccess ? TABS.slice() : TABS.filter((t) => granted.includes(t.key));
   const hasAccess = allowedTabs.length > 0;
   const navigate = useNavigate();
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("users");
+  const { section } = Route.useSearch();
+  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>(
+    (TABS.find((t) => t.key === section)?.key ?? "users") as (typeof TABS)[number]["key"],
+  );
 
   useEffect(() => {
     if (allowedTabs.length > 0 && !allowedTabs.some((t) => t.key === tab)) {

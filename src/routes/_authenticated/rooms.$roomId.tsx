@@ -1139,6 +1139,7 @@ function RoomPage() {
                     userId={person.id}
                     isRoomOwner={person.id === room.data!.owner_id}
                     isRoomModerator={isMod}
+                    onNavigate={close}
                     className="mt-3"
                   />
                 )}
@@ -1253,7 +1254,8 @@ function RoomPage() {
               userId={roleSheet}
               isRoomOwner={roleSheet === room.data?.owner_id}
               isRoomModerator={(moderators.data ?? []).includes(roleSheet)}
-              className="mt-3 mb-4"
+              onNavigate={() => setRoleSheet(null)}
+              className="mb-4 mt-3"
             />
           )}
         </SheetContent>
