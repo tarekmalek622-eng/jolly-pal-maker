@@ -111,6 +111,16 @@ function RoomsPage() {
         <div className="flex justify-center py-10">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
+      ) : rooms.isError ? (
+        <div className="rounded-2xl border border-border bg-surface p-5 text-center">
+          <p className="text-sm font-semibold">تعذر تحميل الغرف</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {rooms.error instanceof Error ? rooms.error.message : "تحقق من الاتصال"}
+          </p>
+          <Button onClick={() => void rooms.refetch()} className="mt-3 h-10 rounded-2xl gradient-gold text-xs font-bold text-primary-foreground">
+            إعادة المحاولة
+          </Button>
+        </div>
       ) : filtered.length === 0 ? (
         <EmptyState title="لا توجد غرف في هذا التصنيف" hint="أنشئ أول غرفة الآن" />
       ) : (
