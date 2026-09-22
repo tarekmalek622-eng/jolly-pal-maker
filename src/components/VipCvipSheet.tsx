@@ -160,8 +160,41 @@ export function VipCvipSheet({
                     >
                       {currentVip >= v.level ? "مفعّل بالفعل" : "تفعيل الآن"}
                     </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setGiftLevel(giftLevel === v.level ? null : v.level)}
+                      className="mt-2 h-10 w-full rounded-2xl border-primary/40 text-xs text-primary"
+                    >
+                      <Gift className="me-1 h-4 w-4" />
+                      {giftLevel === v.level ? "إلغاء الإهداء" : "إهداء VIP لصديق"}
+                    </Button>
+                    {giftLevel === v.level && (
+                      <div className="mt-2 max-h-48 space-y-1.5 overflow-y-auto rounded-2xl border border-border/60 bg-surface/60 p-2">
+                        {friends.isLoading ? (
+                          <p className="py-3 text-center text-[11px] text-muted-foreground">جارٍ التحميل...</p>
+                        ) : (friends.data ?? []).length === 0 ? (
+                          <p className="py-3 text-center text-[11px] text-muted-foreground">
+                            لا يوجد أصدقاء بعد — أضف صديقًا أولًا.
+                          </p>
+                        ) : (
+                          (friends.data ?? []).map((f) => (
+                            <button
+                              key={f.id}
+                              type="button"
+                              disabled={gift.isPending}
+                              onClick={() => gift.mutate({ level: v.level, receiverId: f.id })}
+                              className="flex w-full items-center justify-between rounded-xl bg-background/60 px-3 py-2 text-start"
+                            >
+                              <span className="truncate text-[12px] font-bold">{f.display_name}</span>
+                              <span className="text-[10px] text-muted-foreground">ID {f.public_id}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))
+
               : (cvip.data ?? []).map((c) => (
                   <div key={c.id} className="svip-showcase p-4">
                     <div className="flex items-center justify-between">
