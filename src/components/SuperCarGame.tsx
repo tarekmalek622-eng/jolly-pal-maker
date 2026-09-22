@@ -64,7 +64,7 @@ const db = supabase as unknown as {
   rpc: (
     fn: string,
     args?: Record<string, unknown>,
-  ) => Promise<{ data: any; error: { message: string } | null }>;
+  ) => Promise<{ data: unknown; error: { message: string } | null }>;
 };
 
 /** شرائح الرهان بتصميم عملات الصور */
