@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getVipFrame, getVipName, getVipVisual } from "@/lib/vip-frames";
+import { getVipBadgeArt, getVipFrame, getVipName, getVipVisual } from "@/lib/vip-frames";
 import { useSupabaseSession } from "@/hooks/use-session";
 
 /** الأنواع المولّدة لا تعرف جدول cvip_plans بعد. */
