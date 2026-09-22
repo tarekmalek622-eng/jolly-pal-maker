@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getCrownUnread } from "@/lib/crown.functions";
-import { Loader2, Users } from "lucide-react";
+import { Bell, Loader2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
