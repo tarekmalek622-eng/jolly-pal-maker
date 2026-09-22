@@ -9,7 +9,13 @@ import { formatCompact, formatFull } from "@/lib/format";
 import { carArt } from "@/lib/car-art";
 import { UserAvatar } from "@/components/UserAvatar";
 
-type CarSlot = { key: string; label: string; multiplier: number; weight?: number; bettable?: boolean };
+type CarSlot = {
+  key: string;
+  label: string;
+  multiplier: number;
+  weight?: number;
+  bettable?: boolean;
+};
 
 type CarRound = {
   id: string;
@@ -25,7 +31,12 @@ type CarRound = {
 
 type SlotTotal = { total: number; players: number };
 
-type TopRow = { display_name: string; avatar_url: string | null; public_id: string; payout: number };
+type TopRow = {
+  display_name: string;
+  avatar_url: string | null;
+  public_id: string;
+  payout: number;
+};
 
 type CarState = {
   round: CarRound | null;
@@ -50,18 +61,41 @@ type DailyRow = {
 
 // الأنواع المولّدة لا تعرف جداول سباق السيارات الجديدة بعد
 const db = supabase as unknown as {
-  rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: any; error: { message: string } | null }>;
+  rpc: (
+    fn: string,
+    args?: Record<string, unknown>,
+  ) => Promise<{ data: any; error: { message: string } | null }>;
 };
 
 /** شرائح الرهان بتصميم عملات الصور */
 const CHIPS: { value: number; ring: string; face: string }[] = [
   { value: 100, ring: "border-sky-200", face: "bg-gradient-to-b from-sky-400 to-blue-700" },
-  { value: 1_000, ring: "border-emerald-200", face: "bg-gradient-to-b from-emerald-400 to-green-700" },
-  { value: 10_000, ring: "border-amber-200/70", face: "bg-gradient-to-b from-amber-800 to-stone-900" },
-  { value: 100_000, ring: "border-orange-200", face: "bg-gradient-to-b from-orange-400 to-amber-700" },
+  {
+    value: 1_000,
+    ring: "border-emerald-200",
+    face: "bg-gradient-to-b from-emerald-400 to-green-700",
+  },
+  {
+    value: 10_000,
+    ring: "border-amber-200/70",
+    face: "bg-gradient-to-b from-amber-800 to-stone-900",
+  },
+  {
+    value: 100_000,
+    ring: "border-orange-200",
+    face: "bg-gradient-to-b from-orange-400 to-amber-700",
+  },
   { value: 1_000_000, ring: "border-rose-200", face: "bg-gradient-to-b from-rose-500 to-red-800" },
-  { value: 10_000_000, ring: "border-fuchsia-200", face: "bg-gradient-to-b from-fuchsia-500 to-purple-800" },
-  { value: 100_000_000, ring: "border-yellow-200", face: "bg-gradient-to-b from-yellow-400 to-amber-600" },
+  {
+    value: 10_000_000,
+    ring: "border-fuchsia-200",
+    face: "bg-gradient-to-b from-fuchsia-500 to-purple-800",
+  },
+  {
+    value: 100_000_000,
+    ring: "border-yellow-200",
+    face: "bg-gradient-to-b from-yellow-400 to-amber-600",
+  },
 ];
 
 /** كومة عملات صغيرة تمثّل مبلغ الرهان كما في التصميم */
@@ -79,7 +113,18 @@ function chipStack(amount: number): { value: number; face: string; ring: string 
 }
 
 /** ترتيب الخانات داخل الدائرة كما في التصميم: صفّان في كل سطر */
-const GRID_ORDER = ["arrow", "wing", "suv", "flags", "crown", "horse", "diamond", "shield", "lion", "bolt"];
+const GRID_ORDER = [
+  "arrow",
+  "wing",
+  "suv",
+  "flags",
+  "crown",
+  "horse",
+  "diamond",
+  "shield",
+  "lion",
+  "bolt",
+];
 
 /** مواقع الشعارات موزّعة بالتساوي حول الحلبة (المؤشّر في الأعلى) */
 const STEP = 360 / GRID_ORDER.length;
@@ -138,7 +183,10 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
   const history = state.data?.history ?? [];
   const winners = state.data?.top ?? [];
 
-  const slots = useMemo(() => (round?.slots ?? []).filter((s) => s.bettable !== false), [round?.slots]);
+  const slots = useMemo(
+    () => (round?.slots ?? []).filter((s) => s.bettable !== false),
+    [round?.slots],
+  );
   const ordered = useMemo(() => {
     const byKey = new Map(slots.map((s) => [s.key, s]));
     const inOrder = GRID_ORDER.map((k) => byKey.get(k)).filter(Boolean) as CarSlot[];
@@ -146,7 +194,9 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
     return [...inOrder, ...rest];
   }, [slots]);
 
-  const secondsLeft = round ? Math.max(0, Math.ceil((new Date(round.ends_at).getTime() - now) / 1000)) : 0;
+  const secondsLeft = round
+    ? Math.max(0, Math.ceil((new Date(round.ends_at).getTime() - now) / 1000))
+    : 0;
   const betting = round?.status === "betting" && secondsLeft > 0;
 
   // تشويق ٣ ثوانٍ قبل ظهور النتيجة (النتيجة نفسها محسومة في السيرفر)
@@ -231,6 +281,33 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // آخر رهان للاعب لإعادته بزر «تكرار»
+  const [lastBets, setLastBets] = useState<{ key: string; amount: number }[]>([]);
+  useEffect(() => {
+    const entries = Object.entries(mine)
+      .map(([key, amount]) => ({ key, amount: Number(amount ?? 0) }))
+      .filter((e) => e.amount > 0);
+    if (entries.length > 0) setLastBets(entries);
+  }, [mine]);
+
+  const repeat = useMutation({
+    mutationFn: async () => {
+      for (const entry of lastBets) {
+        const { error } = await db.rpc("supercar_bet", {
+          _slot_key: entry.key,
+          _amount: entry.amount,
+          _room_id: roomId,
+        });
+        if (error) throw new Error(error.message);
+      }
+    },
+    onSuccess: () => {
+      void state.refetch();
+      refreshMoney();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const myTotal = Object.values(mine).reduce((a, b) => a + Number(b ?? 0), 0);
 
   return (
@@ -241,7 +318,9 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
         <div className="relative mx-auto mb-2 w-fit rounded-full border-2 border-amber-400/70 bg-gradient-to-b from-amber-600/40 to-stone-950/70 px-6 py-1">
           <span className="text-sm font-black text-amber-100">
             الجولة <span className="text-amber-300">{round?.round_no ?? 0}</span>
-            {session ? <span className="text-[10px] text-amber-200/70"> / {session.max_rounds}</span> : null}
+            {session ? (
+              <span className="text-[10px] text-amber-200/70"> / {session.max_rounds}</span>
+            ) : null}
           </span>
         </div>
 
@@ -262,27 +341,40 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
               transition: spinning ? "transform 3s cubic-bezier(0.12,0.72,0.06,1)" : "none",
             }}
           >
-          {RING.map((spot) => {
-            const art = carArt(spot.key);
-            const isWinner = revealed && round?.winning_key === spot.key;
-            return (
-              <div
-                key={spot.key}
-                className={cn(
-                  "absolute z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-amber-300/70 bg-stone-950/85 p-1 shadow-[0_2px_8px_rgba(0,0,0,0.6)] transition sm:h-11 sm:w-11",
-                  isWinner && "scale-150 border-amber-200 bg-amber-300/30 shadow-[0_0_26px_rgba(252,211,77,1)] animate-pulse",
-                )}
-                style={{ top: spot.top, left: spot.left }}
-              >
+            {RING.map((spot) => {
+              const art = carArt(spot.key);
+              const isWinner = revealed && round?.winning_key === spot.key;
+              return (
                 <div
-                  className="h-full w-full"
-                  style={{ transform: `rotate(${-rotation}deg)`, transition: spinning ? "transform 3s cubic-bezier(0.12,0.72,0.06,1)" : "none" }}
+                  key={spot.key}
+                  className={cn(
+                    "absolute z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-amber-300/70 bg-stone-950/85 p-1 shadow-[0_2px_8px_rgba(0,0,0,0.6)] transition sm:h-11 sm:w-11",
+                    isWinner &&
+                      "scale-150 border-amber-200 bg-amber-300/30 shadow-[0_0_26px_rgba(252,211,77,1)] animate-pulse",
+                  )}
+                  style={{ top: spot.top, left: spot.left }}
                 >
-                  {art && <img src={art} alt="" loading="lazy" width={64} height={64} className="h-full w-full object-contain" />}
+                  <div
+                    className="h-full w-full"
+                    style={{
+                      transform: `rotate(${-rotation}deg)`,
+                      transition: spinning ? "transform 3s cubic-bezier(0.12,0.72,0.06,1)" : "none",
+                    }}
+                  >
+                    {art && (
+                      <img
+                        src={art}
+                        alt=""
+                        loading="lazy"
+                        width={64}
+                        height={64}
+                        className="h-full w-full object-contain"
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
           </div>
 
           {/* الدائرة الخضراء */}
@@ -301,7 +393,8 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
                     onClick={() => bet.mutate(slot.key)}
                     className={cn(
                       "flex min-w-0 flex-col items-center justify-center rounded-lg border border-emerald-200/20 bg-emerald-950/25 px-0.5 transition",
-                      isWinner && "border-amber-200 bg-amber-400/30 shadow-[inset_0_0_18px_rgba(252,211,77,0.8)]",
+                      isWinner &&
+                        "border-amber-200 bg-amber-400/30 shadow-[inset_0_0_18px_rgba(252,211,77,0.8)]",
                       my > 0 && !isWinner && "border-rose-300/60 bg-rose-900/25",
                       betting ? "active:scale-95" : "opacity-95",
                     )}
@@ -339,11 +432,15 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
                       </span>
                     )}
                     <span className="mt-0.5 flex w-full items-center justify-center gap-1 text-[8px] font-bold leading-none sm:text-[9px]">
-                      <span className={cn("truncate", my > 0 ? "text-rose-100" : "text-emerald-200/40")}>
+                      <span
+                        className={cn("truncate", my > 0 ? "text-rose-100" : "text-emerald-200/40")}
+                      >
                         {my > 0 ? formatCompact(my) : "—"}
                       </span>
                       {Number(t?.total ?? 0) > 0 && (
-                        <span className="truncate text-amber-200/70">/ {formatCompact(Number(t?.total ?? 0))}</span>
+                        <span className="truncate text-amber-200/70">
+                          / {formatCompact(Number(t?.total ?? 0))}
+                        </span>
                       )}
                     </span>
                   </button>
@@ -355,7 +452,9 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
           {/* مؤقّت الجولة */}
           <div className="absolute top-0 left-0 z-20 flex h-12 w-12 flex-col items-center justify-center rounded-full border-[3px] border-amber-300/90 bg-gradient-to-b from-amber-500 to-amber-800 text-stone-950 shadow-[0_0_18px_rgba(252,211,77,0.6)] sm:h-16 sm:w-16">
             <AlarmClock className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="text-sm font-black tabular-nums sm:text-xl">{betting ? secondsLeft : "—"}</span>
+            <span className="text-sm font-black tabular-nums sm:text-xl">
+              {betting ? secondsLeft : "—"}
+            </span>
           </div>
 
           {/* فقاعة رهانات الآخرين */}
@@ -384,73 +483,86 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
             </span>
           </div>
 
-          {/* تشويق ٣ ثوانٍ قبل كشف النتيجة */}
-          {drumroll && (
-            <div className="absolute left-1/2 top-1/2 z-30 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-2xl border-2 border-amber-300/70 bg-stone-950/80 px-4 py-2 text-center backdrop-blur-sm">
-              <span className="text-[11px] font-bold text-amber-200">جاري كشف النتيجة</span>
-              <span className="animate-pulse text-3xl font-black text-amber-300 tabular-nums">{drumCount || 1}S</span>
-              <Loader2 className="mt-0.5 h-4 w-4 animate-spin text-amber-300" />
+          {/* شريط الجولة الذهبي أسفل الحلبة كما في التصميم */}
+          <div className="absolute bottom-[3%] left-1/2 z-20 -translate-x-1/2">
+            <div className="relative">
+              <span className="absolute -start-5 top-1/2 h-4 w-6 -translate-y-1/2 skew-y-12 rounded-s bg-gradient-to-b from-amber-300 to-amber-700 shadow" />
+              <span className="absolute -end-5 top-1/2 h-4 w-6 -translate-y-1/2 -skew-y-12 rounded-e bg-gradient-to-b from-amber-300 to-amber-700 shadow" />
+              <div className="relative rounded-md border-2 border-amber-300/80 bg-gradient-to-b from-rose-500 to-rose-800 px-7 py-0.5 text-[11px] font-black text-amber-100 shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
+                الجولة {round?.round_no ?? 0}
+              </div>
             </div>
-          )}
+          </div>
 
-
-          {/* لوحة النتيجة */}
-          {revealed && (
-            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center overflow-y-auto rounded-full border-[6px] border-amber-400/70 bg-gradient-to-b from-rose-950/95 to-stone-950/98 px-5 py-4 text-center">
-              <div className="relative mx-auto w-fit">
-                <span className="absolute -start-3 top-1/2 h-3 w-4 -translate-y-1/2 skew-y-12 rounded-s bg-gradient-to-b from-amber-400 to-amber-700" />
-                <span className="absolute -end-3 top-1/2 h-3 w-4 -translate-y-1/2 -skew-y-12 rounded-e bg-gradient-to-b from-amber-400 to-amber-700" />
-                <div className="rounded-md border-2 border-amber-300/80 bg-gradient-to-b from-rose-600 to-rose-900 px-6 py-0.5 text-xs font-black text-amber-100 shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
-                  الجولة {round?.round_no}
-                </div>
-              </div>
-              <div className="relative mt-2 flex flex-col items-center">
-                <span className="pointer-events-none absolute inset-0 -m-4 animate-pulse text-amber-200/90">
-                  <span className="absolute left-0 top-1 text-xs">✦</span>
-                  <span className="absolute right-0 top-2 text-sm">✦</span>
-                  <span className="absolute left-2 bottom-8 text-[10px]">✦</span>
-                  <span className="absolute right-2 bottom-7 text-xs">✦</span>
-                  <span className="absolute left-1/2 top-0 text-[10px]">✦</span>
-                </span>
-                {carArt(round?.winning_key) && (
-                  <img
-                    src={carArt(round?.winning_key) as string}
-                    alt={winningSlot?.label ?? ""}
-                    loading="lazy"
-                    width={96}
-                    height={96}
-                    className="h-14 w-14 object-contain drop-shadow-[0_0_20px_rgba(252,211,77,0.95)]"
-                  />
-                )}
-                <span className="mt-1 text-lg font-black text-amber-300 drop-shadow">
-                  X{winningSlot?.multiplier ?? 0}
-                </span>
-                <span className="text-[11px] text-amber-100/80">{winningSlot?.label ?? ""}</span>
-                <span className={cn("mt-1 text-xs font-bold", myPayout > 0 ? "text-emerald-300" : "text-stone-300")}>
-                  {myPayout > 0
-                    ? `ربحت ${formatCompact(myPayout)} 🎉`
-                    : myTotal > 0
-                      ? "لم تربح هذه الجولة"
-                      : "لم تختر أي سيارة في هذه الجولة"}
-                </span>
-              </div>
-              {winners.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-[10px] text-amber-200/80">أفضل الفائزين في هذه الجولة</p>
-                  <div className="mt-1 flex items-center justify-center gap-3">
-                    {winners.slice(0, 3).map((w) => (
-                      <div key={w.public_id} className="flex flex-col items-center">
-                        <UserAvatar src={w.avatar_url} name={w.display_name} className="h-9 w-9 ring-2 ring-amber-300/70" />
-                        <span className="max-w-16 truncate text-[10px] text-amber-100">{w.display_name}</span>
-                        <span className="text-[10px] font-black text-amber-300">{formatCompact(w.payout)} 💎</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+          {/* عدّاد كشف النتيجة في الزاوية كما في التصميم */}
+          {drumroll && (
+            <div className="absolute bottom-[8%] end-[4%] z-30 animate-pulse text-xl font-black text-amber-200 drop-shadow">
+              {drumCount || 1}S
             </div>
           )}
         </div>
+
+        {/* نتيجة الجولة أسفل الحلبة كما في التصميم */}
+        {revealed && (
+          <div className="mt-2 flex flex-col items-center text-center">
+            <div className="relative flex flex-col items-center">
+              <span className="pointer-events-none absolute inset-0 -m-5 animate-pulse text-amber-200/90">
+                <span className="absolute start-0 top-1 text-xs">✦</span>
+                <span className="absolute end-0 top-2 text-sm">✦</span>
+                <span className="absolute start-3 bottom-4 text-[10px]">✦</span>
+                <span className="absolute end-3 bottom-3 text-xs">✦</span>
+                <span className="absolute left-1/2 top-0 text-[10px]">✦</span>
+              </span>
+              {carArt(round?.winning_key) && (
+                <img
+                  src={carArt(round?.winning_key) as string}
+                  alt={winningSlot?.label ?? ""}
+                  loading="lazy"
+                  width={96}
+                  height={96}
+                  className="h-14 w-14 object-contain drop-shadow-[0_0_20px_rgba(252,211,77,0.95)]"
+                />
+              )}
+              <span className="mt-1 text-lg font-black text-amber-300 drop-shadow">
+                X{winningSlot?.multiplier ?? 0}
+              </span>
+            </div>
+            <span
+              className={cn(
+                "text-[11px] font-bold",
+                myPayout > 0 ? "text-emerald-300" : "text-stone-300",
+              )}
+            >
+              {myPayout > 0
+                ? `ربحت ${formatCompact(myPayout)} 🎉`
+                : myTotal > 0
+                  ? "لم تربح هذه الجولة"
+                  : "لم تختر أي سيارة في هذه الجولة"}
+            </span>
+            {winners.length > 0 && (
+              <div className="mt-2 w-full rounded-2xl border border-amber-500/40 bg-gradient-to-b from-rose-950/80 to-stone-950/90 px-3 py-2">
+                <p className="text-[10px] text-amber-100/85">افضل الفائزين في هذه الجولة</p>
+                <div className="mt-1 flex items-center justify-center gap-4">
+                  {winners.slice(0, 3).map((w) => (
+                    <div key={w.public_id} className="flex flex-col items-center">
+                      <UserAvatar
+                        src={w.avatar_url}
+                        name={w.display_name}
+                        className="h-12 w-12 ring-2 ring-amber-300/80"
+                      />
+                      <span className="max-w-16 truncate text-[10px] text-amber-100">
+                        {w.display_name}
+                      </span>
+                      <span className="text-[10px] font-black text-amber-300">
+                        {formatCompact(w.payout)} 💎
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* شرائح الرهان */}
         <div className="mt-3 flex items-center justify-center gap-2 overflow-x-auto pb-1">
@@ -474,6 +586,20 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
           {bet.isPending && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-300" />}
         </div>
 
+        {/* زر تكرار آخر رهان كما في التصميم */}
+        {lastBets.length > 0 && (
+          <div className="mt-2 flex justify-end">
+            <button
+              type="button"
+              disabled={!betting || repeat.isPending}
+              onClick={() => repeat.mutate()}
+              className="rounded-xl border-2 border-emerald-200/70 bg-gradient-to-b from-emerald-400 to-green-700 px-6 py-1.5 text-xs font-black text-white shadow-lg disabled:opacity-50"
+            >
+              {repeat.isPending ? "..." : "تكرار"}
+            </button>
+          </div>
+        )}
+
         {/* لوحتا مكاسب اليوم والرصيد */}
         <div className="mt-2 grid grid-cols-2 gap-2">
           <div className="rounded-2xl border-2 border-amber-400/50 bg-gradient-to-b from-rose-700/70 to-rose-950/80 px-3 py-2 text-center">
@@ -483,8 +609,11 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
             </p>
           </div>
           <div className="rounded-2xl border-2 border-amber-400/50 bg-gradient-to-b from-rose-700/70 to-rose-950/80 px-3 py-2 text-center">
-            <p className="text-[10px] text-amber-100/90">رصيدي</p>
-            <p className="text-sm font-black text-amber-200" title={formatFull(wallet.data?.coins ?? 0)}>
+            <p className="text-[10px] text-amber-100/90">رصيد الماسة</p>
+            <p
+              className="text-sm font-black text-amber-200"
+              title={formatFull(wallet.data?.coins ?? 0)}
+            >
               {formatCompact(wallet.data?.coins ?? 0)} 💎
             </p>
           </div>
@@ -498,7 +627,14 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
               return (
                 <div key={`${key ?? "none"}-${i}`} className="relative shrink-0">
                   {art ? (
-                    <img src={art} alt="" loading="lazy" width={40} height={40} className="h-7 w-7 object-contain" />
+                    <img
+                      src={art}
+                      alt=""
+                      loading="lazy"
+                      width={40}
+                      height={40}
+                      className="h-7 w-7 object-contain"
+                    />
                   ) : (
                     <span className="block w-7 text-center text-xs text-stone-500">—</span>
                   )}
@@ -534,7 +670,10 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
                 <span className="flex-1 truncate text-stone-200">{row.display_name}</span>
                 <span className="text-stone-500">#{row.public_id}</span>
                 <span
-                  className={cn("font-bold", row.net_result >= 0 ? "text-emerald-300" : "text-rose-400")}
+                  className={cn(
+                    "font-bold",
+                    row.net_result >= 0 ? "text-emerald-300" : "text-rose-400",
+                  )}
                   title={formatFull(row.net_result)}
                 >
                   {row.net_result >= 0 ? "+" : ""}
