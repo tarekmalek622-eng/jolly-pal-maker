@@ -253,6 +253,8 @@ function AdminPage() {
 
       {tab === "users" && (
         <UsersTab
+          canSuspend={fullAccess}
+          canWelcome={fullAccess || granted.includes("welcome")}
           onWelcome={(publicId) => {
             setWelcomePrefill(publicId);
             setTab("welcome");
