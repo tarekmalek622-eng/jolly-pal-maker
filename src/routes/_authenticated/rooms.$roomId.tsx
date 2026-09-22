@@ -758,13 +758,13 @@ function RoomPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-4 gap-x-2 gap-y-4 px-3 pt-28 sm:px-5">
+      <div className="grid grid-cols-5 gap-x-1.5 gap-y-3 px-2 pt-28 sm:px-4">
         {(mics.data ?? []).map((seat, idx) => {
           const person = personOf(seat.user_id);
           const speaking = person ? voice.speakingIds.includes(person.id) : false;
           const list = mics.data ?? [];
           const next = list[idx + 1];
-          const sameRow = (idx + 1) % 4 !== 0;
+          const sameRow = (idx + 1) % 5 !== 0;
           const linkedNext =
             sameRow && seat.user_id && next?.user_id
               ? coupleKeys.has(pairKey(seat.user_id, next.user_id))
