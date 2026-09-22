@@ -18,7 +18,13 @@ type Dashboard = {
   pending_topups: number;
   open_tickets: number;
   top_rooms: { id: string; name: string; member_count: number; xp: number; level: number }[];
-  top_gifters: { id: string; display_name: string; public_id: string; avatar_url: string | null; total: number }[];
+  top_gifters: {
+    id: string;
+    display_name: string;
+    public_id: string;
+    avatar_url: string | null;
+    total: number;
+  }[];
   recharge_daily: { day: string; coins: number }[];
 };
 
@@ -26,7 +32,10 @@ export const Route = createFileRoute("/_authenticated/owner-stats")({
   head: () => ({
     meta: [
       { title: "إحصائيات التطبيق — التاج" },
-      { name: "description", content: "لوحة إحصائيات مالك تطبيق التاج: الغرف الأنشط، أعلى المهدين، وحركة الشحن." },
+      {
+        name: "description",
+        content: "لوحة إحصائيات مالك تطبيق التاج: الغرف الأنشط، أعلى المهدين، وحركة الشحن.",
+      },
       { property: "og:title", content: "إحصائيات التطبيق — التاج" },
       { property: "og:description", content: "أرقام التطبيق الحقيقية في لوحة واحدة." },
       { property: "og:type", content: "website" },
@@ -62,7 +71,9 @@ function OwnerStatsPage() {
       }
     >
       <div className="space-y-4 pb-28">
-        {stats.isLoading && <p className="py-10 text-center text-sm text-muted-foreground">جارٍ التحميل...</p>}
+        {stats.isLoading && (
+          <p className="py-10 text-center text-sm text-muted-foreground">جارٍ التحميل...</p>
+        )}
         {stats.isError && (
           <div className="surface-card p-4 text-center text-sm">
             <p className="mb-2">{(stats.error as Error)?.message ?? "تعذر تحميل الإحصائيات"}</p>
@@ -91,7 +102,10 @@ function OwnerStatsPage() {
                   <div key={d.day} className="flex-1">
                     <div
                       className="w-full rounded-t gradient-gold"
-                      style={{ height: `${Math.round((Number(d.coins) / maxDay) * 100)}%`, minHeight: 2 }}
+                      style={{
+                        height: `${Math.round((Number(d.coins) / maxDay) * 100)}%`,
+                        minHeight: 2,
+                      }}
                       title={`${d.day}: ${Number(d.coins).toLocaleString("en-US")}`}
                     />
                   </div>
@@ -103,11 +117,16 @@ function OwnerStatsPage() {
               <h2 className="mb-3 text-sm font-bold">أكثر الغرف نشاطًا</h2>
               <div className="space-y-2">
                 {(stats.data.top_rooms ?? []).map((r, i) => (
-                  <div key={r.id} className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-2 text-xs">
+                  <div
+                    key={r.id}
+                    className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-2 text-xs"
+                  >
                     <span className="w-4 font-bold text-primary">{i + 1}</span>
                     <span className="min-w-0 flex-1 truncate font-bold">{r.name}</span>
                     <span className="text-muted-foreground">Lv{r.level}</span>
-                    <span className="text-muted-foreground">{Number(r.xp).toLocaleString("en-US")}</span>
+                    <span className="text-muted-foreground">
+                      {Number(r.xp).toLocaleString("en-US")}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -117,7 +136,10 @@ function OwnerStatsPage() {
               <h2 className="mb-3 text-sm font-bold">أعلى المهدين (7 أيام)</h2>
               <div className="space-y-2">
                 {(stats.data.top_gifters ?? []).map((g, i) => (
-                  <div key={g.id} className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-2">
+                  <div
+                    key={g.id}
+                    className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-2"
+                  >
                     <span className="w-4 text-xs font-bold text-primary">{i + 1}</span>
                     <UserAvatar src={g.avatar_url} name={g.display_name} size={30} />
                     <div className="min-w-0 flex-1">

@@ -35,7 +35,10 @@ export const Route = createFileRoute("/_authenticated/support")({
   head: () => ({
     meta: [
       { title: "الدعم والشكاوى — التاج" },
-      { name: "description", content: "أرسل شكوى أو استفسارًا لفريق دعم تطبيق التاج وتابع الرد داخل التطبيق." },
+      {
+        name: "description",
+        content: "أرسل شكوى أو استفسارًا لفريق دعم تطبيق التاج وتابع الرد داخل التطبيق.",
+      },
       { property: "og:title", content: "الدعم والشكاوى — التاج" },
       { property: "og:description", content: "تذاكر دعم ومتابعة الردود مباشرة." },
       { property: "og:type", content: "website" },
@@ -56,7 +59,10 @@ function SupportPage() {
     queryKey: ["support-staff", userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const { data, error } = await db.rpc("admin_has_section", { _user_id: userId!, _section: "support" });
+      const { data, error } = await db.rpc("admin_has_section", {
+        _user_id: userId!,
+        _section: "support",
+      });
       if (error) throw new Error(error.message);
       return Boolean(data);
     },
@@ -110,7 +116,11 @@ function SupportPage() {
 
   const sendReply = useMutation({
     mutationFn: async (close: boolean) => {
-      const { error } = await db.rpc("support_reply", { _ticket_id: openId, _body: reply.trim(), _close: close });
+      const { error } = await db.rpc("support_reply", {
+        _ticket_id: openId,
+        _body: reply.trim(),
+        _close: close,
+      });
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
@@ -163,7 +173,9 @@ function SupportPage() {
 
         <section className="space-y-2">
           <h2 className="px-1 text-sm font-bold">{isStaff.data ? "كل التذاكر" : "تذاكري"}</h2>
-          {tickets.isLoading && <p className="py-6 text-center text-xs text-muted-foreground">جارٍ التحميل...</p>}
+          {tickets.isLoading && (
+            <p className="py-6 text-center text-xs text-muted-foreground">جارٍ التحميل...</p>
+          )}
           {tickets.isError && (
             <div className="surface-card p-4 text-center text-sm">
               <p className="mb-2">تعذر تحميل التذاكر</p>
@@ -205,7 +217,10 @@ function SupportPage() {
               {openId === t.id && (
                 <div className="mt-3 space-y-2 border-t border-border pt-3">
                   {(thread.data ?? []).map((m) => (
-                    <div key={m.id} className={cn("flex", m.is_staff ? "justify-end" : "justify-start")}>
+                    <div
+                      key={m.id}
+                      className={cn("flex", m.is_staff ? "justify-end" : "justify-start")}
+                    >
                       <div
                         className={cn(
                           "max-w-[80%] rounded-2xl px-3 py-2 text-xs",
@@ -214,7 +229,10 @@ function SupportPage() {
                       >
                         <p className="whitespace-pre-wrap">{m.body}</p>
                         <p className="mt-1 text-[9px] opacity-70">
-                          {new Date(m.created_at).toLocaleString("ar", { hour: "2-digit", minute: "2-digit" })}
+                          {new Date(m.created_at).toLocaleString("ar", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
                       </div>
                     </div>

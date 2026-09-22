@@ -50,7 +50,10 @@ export const Route = createFileRoute("/_authenticated/tasks")({
         content: "مهام يومية وأسبوعية بمكافآت كوينز، دعوة الأصدقاء، وترتيب الأسبوع في تطبيق التاج.",
       },
       { property: "og:title", content: "المهام والجوائز — التاج" },
-      { property: "og:description", content: "أكمل مهامك اليومية واستلم مكافآتك وتابع ترتيب الأسبوع." },
+      {
+        property: "og:description",
+        content: "أكمل مهامك اليومية واستلم مكافآتك وتابع ترتيب الأسبوع.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -98,7 +101,12 @@ function TasksPage() {
         .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw new Error(error.message);
-      return (data ?? []) as { id: string; invitee_id: string; coins_inviter: number; created_at: string }[];
+      return (data ?? []) as {
+        id: string;
+        invitee_id: string;
+        coins_inviter: number;
+        created_at: string;
+      }[];
     },
   });
 
@@ -170,7 +178,9 @@ function TasksPage() {
       }
     >
       <div className="space-y-5 pb-28">
-        {tasks.isLoading && <p className="py-10 text-center text-sm text-muted-foreground">جارٍ التحميل...</p>}
+        {tasks.isLoading && (
+          <p className="py-10 text-center text-sm text-muted-foreground">جارٍ التحميل...</p>
+        )}
         {tasks.isError && (
           <div className="surface-card p-4 text-center text-sm">
             <p className="mb-2">تعذر تحميل المهام</p>
@@ -180,8 +190,18 @@ function TasksPage() {
           </div>
         )}
 
-        <TaskGroup title="مهام يومية" rows={daily} onClaim={(k) => claim.mutate(k)} busy={claim.isPending} />
-        <TaskGroup title="مهام أسبوعية" rows={weekly} onClaim={(k) => claim.mutate(k)} busy={claim.isPending} />
+        <TaskGroup
+          title="مهام يومية"
+          rows={daily}
+          onClaim={(k) => claim.mutate(k)}
+          busy={claim.isPending}
+        />
+        <TaskGroup
+          title="مهام أسبوعية"
+          rows={weekly}
+          onClaim={(k) => claim.mutate(k)}
+          busy={claim.isPending}
+        />
 
         <section className="surface-card p-4">
           <div className="mb-3 flex items-center gap-2">
@@ -240,7 +260,10 @@ function TasksPage() {
               {(ranking.data ?? []).map((row) => {
                 const p = (winners.data ?? []).find((w) => w.id === row.user_id);
                 return (
-                  <div key={row.id} className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-2">
+                  <div
+                    key={row.id}
+                    className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-2"
+                  >
                     <span
                       className={cn(
                         "flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold",
@@ -249,7 +272,12 @@ function TasksPage() {
                     >
                       {row.rank}
                     </span>
-                    <UserAvatar src={p?.avatar_url} name={p?.display_name} size={32} vipLevel={p?.vip_level ?? 0} />
+                    <UserAvatar
+                      src={p?.avatar_url}
+                      name={p?.display_name}
+                      size={32}
+                      vipLevel={p?.vip_level ?? 0}
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-bold">{p?.display_name ?? "مستخدم"}</p>
                       <p className="text-[10px] text-muted-foreground">
@@ -286,7 +314,10 @@ function TaskGroup({
     <section className="space-y-2">
       <h2 className="px-1 text-sm font-bold">{title}</h2>
       {rows.map((t) => {
-        const pct = Math.min(100, Math.round((Number(t.progress) / Math.max(1, Number(t.target))) * 100));
+        const pct = Math.min(
+          100,
+          Math.round((Number(t.progress) / Math.max(1, Number(t.target))) * 100),
+        );
         const done = Number(t.progress) >= Number(t.target);
         return (
           <div key={t.key} className="surface-card flex items-center gap-3 p-3.5">
@@ -304,12 +335,16 @@ function TaskGroup({
                 <div className="h-full gradient-gold" style={{ width: `${pct}%` }} />
               </div>
               <p className="mt-1 text-[10px] text-muted-foreground">
-                {Number(t.progress).toLocaleString("en-US")} / {Number(t.target).toLocaleString("en-US")} ·
-                مكافأة {Number(t.reward).toLocaleString("en-US")}
+                {Number(t.progress).toLocaleString("en-US")} /{" "}
+                {Number(t.target).toLocaleString("en-US")} · مكافأة{" "}
+                {Number(t.reward).toLocaleString("en-US")}
               </p>
             </div>
             <Button
-              className={cn("h-9 shrink-0 text-xs", done && !t.claimed && "gradient-gold text-primary-foreground")}
+              className={cn(
+                "h-9 shrink-0 text-xs",
+                done && !t.claimed && "gradient-gold text-primary-foreground",
+              )}
               variant={done && !t.claimed ? "default" : "outline"}
               disabled={t.claimed || !done || busy}
               onClick={() => onClaim(t.key)}

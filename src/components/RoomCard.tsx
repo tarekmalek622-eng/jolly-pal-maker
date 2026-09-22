@@ -23,7 +23,10 @@ export type RoomRow = {
 
 /** مستوى الغرفة من نقاط خبرتها (يزيد مع الهدايا داخلها). */
 export function roomLevelFromXp(xp?: number | null) {
-  return Math.max(1, Math.min(20, Math.floor(Math.sqrt(Math.max(Number(xp ?? 0), 0) / 1_000_000)) + 1));
+  return Math.max(
+    1,
+    Math.min(20, Math.floor(Math.sqrt(Math.max(Number(xp ?? 0), 0) / 1_000_000)) + 1),
+  );
 }
 
 /** إطار الغرفة: يتحدد تلقائيًا حسب نشاط الغرفة، ويمكن تجاوزه بإطار مملوك من المتجر. */
@@ -83,13 +86,22 @@ export function RoomCard({
       <div className={cn("room-frame", FRAME_CLASS[tier])}>
         <div className="room-frame-inner">
           <div className="relative aspect-[4/3] w-full gradient-hero sm:aspect-[16/10]">
-            {img && <img src={img} alt={room.name} className="h-full w-full object-cover" loading="lazy" />}
+            {img && (
+              <img
+                src={img}
+                alt={room.name}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/25 to-transparent" />
 
             <span className="absolute top-2 start-2 flex items-center gap-1 rounded-full bg-background/75 px-2 py-0.5 text-[10px] font-bold backdrop-blur">
               {FRAME_LABEL[tier]}
               <span className="text-primary">Lv{roomLevelFromXp(room.xp)}</span>
-              {room.is_verified && <BadgeCheck className="h-3 w-3 text-success" aria-label="غرفة موثقة" />}
+              {room.is_verified && (
+                <BadgeCheck className="h-3 w-3 text-success" aria-label="غرفة موثقة" />
+              )}
             </span>
             {room.room_type === "private" && (
               <span className="absolute top-2 end-2 rounded-full bg-background/75 p-1.5 backdrop-blur">

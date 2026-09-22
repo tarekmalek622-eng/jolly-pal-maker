@@ -76,9 +76,13 @@ function ChatPage() {
     if (!userId) return;
     const channel = supabase
       .channel(`dm-${userId}-${otherId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, () => {
-        void messages.refetch();
-      })
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "direct_messages" },
+        () => {
+          void messages.refetch();
+        },
+      )
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
@@ -96,7 +100,11 @@ function ChatPage() {
 
   const deleteMessage = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("direct_messages").delete().eq("id", id).eq("sender_id", userId!);
+      const { error } = await supabase
+        .from("direct_messages")
+        .delete()
+        .eq("id", id)
+        .eq("sender_id", userId!);
       if (error) throw error;
     },
     onSuccess: () => void messages.refetch(),
@@ -105,16 +113,29 @@ function ChatPage() {
 
   const blockUser = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("blocks").upsert({ blocker_id: userId!, blocked_id: otherId }, { onConflict: "blocker_id,blocked_id" });
+      const { error } = await supabase
+        .from("blocks")
+        .upsert(
+          { blocker_id: userId!, blocked_id: otherId },
+          { onConflict: "blocker_id,blocked_id" },
+        );
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("تم حجب المستخدم"); void navigate({ to: "/messages" }); },
+    onSuccess: () => {
+      toast.success("تم حجب المستخدم");
+      void navigate({ to: "/messages" });
+    },
     onError: () => toast.error("تعذر الحجب"),
   });
 
   const reportUser = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("reports").insert({ reporter_id: userId!, target_type: "user", target_id: otherId, reason: "إبلاغ من المحادثة الخاصة" });
+      const { error } = await supabase.from("reports").insert({
+        reporter_id: userId!,
+        target_type: "user",
+        target_id: otherId,
+        reason: "إبلاغ من المحادثة الخاصة",
+      });
       if (error) throw error;
     },
     onSuccess: () => toast.success("تم إرسال البلاغ للإدارة"),
@@ -203,15 +224,35 @@ function ChatPage() {
           <button onClick={() => void navigate({ to: "/messages" })} className="p-1">
             <ArrowRight className="h-5 w-5" />
           </button>
-          <UserAvatar src={other.data?.avatar_url} name={other.data?.display_name} size={40} vipLevel={other.data?.vip_level ?? 0} online={other.data?.is_online} />
+          <UserAvatar
+            src={other.data?.avatar_url}
+            name={other.data?.display_name}
+            size={40}
+            vipLevel={other.data?.vip_level ?? 0}
+            online={other.data?.is_online}
+          />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold">{other.data?.display_name ?? "..."}</p>
             <p className="text-[10px] text-muted-foreground">
               {other.data?.is_online ? "متصل الآن" : "غير متصل"}
             </p>
           </div>
-          <Button variant="ghost" onClick={() => reportUser.mutate()} className="h-9 w-9 p-0" aria-label="إبلاغ"><Flag className="h-4 w-4" /></Button>
-          <Button variant="ghost" onClick={() => blockUser.mutate()} className="h-9 w-9 p-0 text-destructive" aria-label="حجب"><Ban className="h-4 w-4" /></Button>
+          <Button
+            variant="ghost"
+            onClick={() => reportUser.mutate()}
+            className="h-9 w-9 p-0"
+            aria-label="إبلاغ"
+          >
+            <Flag className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => blockUser.mutate()}
+            className="h-9 w-9 p-0 text-destructive"
+            aria-label="حجب"
+          >
+            <Ban className="h-4 w-4" />
+          </Button>
         </header>
       }
     >
@@ -232,9 +273,20 @@ function ChatPage() {
                   <p>{m.kind === "gift" ? `🎁 ${m.body}` : m.body}</p>
                 )}
                 <p className="mt-1 text-[10px] opacity-70">
-                  {new Date(m.created_at).toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(m.created_at).toLocaleTimeString("ar", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
-                {mine && <button onClick={() => deleteMessage.mutate(m.id)} className="mt-1 opacity-70" aria-label="حذف الرسالة"><Trash2 className="h-3.5 w-3.5" /></button>}
+                {mine && (
+                  <button
+                    onClick={() => deleteMessage.mutate(m.id)}
+                    className="mt-1 opacity-70"
+                    aria-label="حذف الرسالة"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -243,10 +295,38 @@ function ChatPage() {
       </div>
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-lg border-t border-border bg-background/95 p-3 backdrop-blur-xl">
-        {emojiOpen && <div className="mb-2 flex justify-around rounded-xl bg-surface p-2 text-xl">{["😀", "😂", "❤️", "👏", "🔥", "🎉"].map((emoji) => <button key={emoji} onClick={() => { setText((value) => `${value}${emoji}`); setEmojiOpen(false); }}>{emoji}</button>)}</div>}
+        {emojiOpen && (
+          <div className="mb-2 flex justify-around rounded-xl bg-surface p-2 text-xl">
+            {["😀", "😂", "❤️", "👏", "🔥", "🎉"].map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => {
+                  setText((value) => `${value}${emoji}`);
+                  setEmojiOpen(false);
+                }}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setEmojiOpen((value) => !value)} className="h-12 w-12 rounded-2xl p-0" aria-label="رموز تعبيرية"><Smile className="h-5 w-5" /></Button>
-          <Button variant="outline" onClick={() => setGiftOpen(true)} className="h-12 w-12 rounded-2xl p-0" aria-label="إرسال هدية"><Gift className="h-5 w-5" /></Button>
+          <Button
+            variant="outline"
+            onClick={() => setEmojiOpen((value) => !value)}
+            className="h-12 w-12 rounded-2xl p-0"
+            aria-label="رموز تعبيرية"
+          >
+            <Smile className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setGiftOpen(true)}
+            className="h-12 w-12 rounded-2xl p-0"
+            aria-label="إرسال هدية"
+          >
+            <Gift className="h-5 w-5" />
+          </Button>
           <Button
             variant={recording ? "destructive" : "outline"}
             disabled={sendingVoice}
@@ -265,17 +345,38 @@ function ChatPage() {
             placeholder="اكتب رسالة..."
             className="h-12 flex-1 rounded-2xl bg-surface"
           />
-          <Button onClick={() => void send()} className="h-12 w-12 rounded-2xl gradient-gold p-0 text-primary-foreground">
+          <Button
+            onClick={() => void send()}
+            className="h-12 w-12 rounded-2xl gradient-gold p-0 text-primary-foreground"
+          >
             <Send className="h-5 w-5" />
           </Button>
         </div>
       </div>
-      {other.data && <GiftSheet open={giftOpen} onOpenChange={setGiftOpen} roomId={null} initialReceiverId={otherId} targets={[{ id: otherId, display_name: other.data.display_name, avatar_url: other.data.avatar_url, vip_level: other.data.vip_level }]} onSent={async (giftName) => {
-        if (!userId) return;
-        const { error } = await supabase.from("direct_messages").insert({ sender_id: userId, receiver_id: otherId, body: giftName, kind: "gift" });
-        if (error) toast.error("وصلت الهدية لكن تعذر عرضها في المحادثة");
-        else void messages.refetch();
-      }} />}
+      {other.data && (
+        <GiftSheet
+          open={giftOpen}
+          onOpenChange={setGiftOpen}
+          roomId={null}
+          initialReceiverId={otherId}
+          targets={[
+            {
+              id: otherId,
+              display_name: other.data.display_name,
+              avatar_url: other.data.avatar_url,
+              vip_level: other.data.vip_level,
+            },
+          ]}
+          onSent={async (giftName) => {
+            if (!userId) return;
+            const { error } = await supabase
+              .from("direct_messages")
+              .insert({ sender_id: userId, receiver_id: otherId, body: giftName, kind: "gift" });
+            if (error) toast.error("وصلت الهدية لكن تعذر عرضها في المحادثة");
+            else void messages.refetch();
+          }}
+        />
+      )}
     </AppShell>
   );
 }
