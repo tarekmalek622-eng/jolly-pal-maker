@@ -1126,6 +1126,14 @@ function RoomPage() {
                     مايك {seat.seat_index} · {person?.display_name ?? "فارغ"}
                   </SheetTitle>
                 </SheetHeader>
+                {person && (
+                  <RolePanel
+                    userId={person.id}
+                    isRoomOwner={person.id === room.data!.owner_id}
+                    isRoomModerator={isMod}
+                    className="mt-3"
+                  />
+                )}
                 <div className="mt-4 grid grid-cols-2 gap-2 pb-4">
                   {!person && !seat.is_locked && (
                     <SeatBtn
