@@ -102,6 +102,16 @@ function MessagesPage() {
             <h1 className="truncate text-lg font-bold">الرسائل</h1>
             <p className="text-[11px] text-muted-foreground">محادثاتك الخاصة · الأصدقاء من الزر</p>
           </div>
+          <Link
+            to="/notifications"
+            aria-label="الإشعارات"
+            className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-surface"
+          >
+            <Bell className="h-5 w-5" />
+            {(notifUnread.data ?? 0) > 0 && (
+              <span className="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background" />
+            )}
+          </Link>
         </div>
       }
     >
