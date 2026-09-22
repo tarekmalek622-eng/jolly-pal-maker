@@ -78,10 +78,16 @@ export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
       { title: "لوحة الإدارة — التاج" },
-      { name: "description", content: "إدارة المستخدمين والغرف والإبلاغات وأرصدة الكوينز مع سجل كامل للإجراءات." },
+      {
+        name: "description",
+        content: "إدارة المستخدمين والغرف والإبلاغات وأرصدة الكوينز مع سجل كامل للإجراءات.",
+      },
       { property: "og:title", content: "لوحة الإدارة — التاج" },
       { property: "og:description", content: "تحكم كامل في المستخدمين والغرف والمحتوى." },
     ],
+  }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    section: typeof search["section"] === "string" ? (search["section"] as string) : undefined,
   }),
   component: AdminPage,
 });
@@ -117,7 +123,10 @@ function AdminPage() {
   const allowedTabs = fullAccess ? TABS.slice() : TABS.filter((t) => granted.includes(t.key));
   const hasAccess = allowedTabs.length > 0;
   const navigate = useNavigate();
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("users");
+  const { section } = Route.useSearch();
+  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>(
+    (TABS.find((t) => t.key === section)?.key ?? "users") as (typeof TABS)[number]["key"],
+  );
 
   useEffect(() => {
     if (allowedTabs.length > 0 && !allowedTabs.some((t) => t.key === tab)) {
@@ -136,7 +145,10 @@ function AdminPage() {
         .eq("badge_definitions.key", "app_owner")
         .maybeSingle();
       if (error) throw error;
-      return data as unknown as { id: string; badge_definitions: { name: string; style_key: string } | null } | null;
+      return data as unknown as {
+        id: string;
+        badge_definitions: { name: string; style_key: string } | null;
+      } | null;
     },
   });
 
@@ -158,13 +170,21 @@ function AdminPage() {
   }
 
   return (
-    <AppShell header={<PageHeader title="لوحة الإدارة" subtitle="تحكم كامل بالتطبيق — كل إجراء يُسجَّل" />}>
+    <AppShell
+      header={<PageHeader title="لوحة الإدارة" subtitle="تحكم كامل بالتطبيق — كل إجراء يُسجَّل" />}
+    >
       {ownerBadge.data?.badge_definitions && (
         <div className="mb-3 flex items-center gap-3 rounded-2xl border border-primary/35 bg-primary/10 p-3">
-          <AdminBadgeCrest name={ownerBadge.data.badge_definitions.name} styleKey={ownerBadge.data.badge_definitions.style_key} compact />
+          <AdminBadgeCrest
+            name={ownerBadge.data.badge_definitions.name}
+            styleKey={ownerBadge.data.badge_definitions.style_key}
+            compact
+          />
           <div>
             <p className="text-sm font-black">حساب مالك التطبيق</p>
-            <p className="text-[10px] text-muted-foreground">أعلى رتبة موثقة · جميع صلاحيات الإدارة</p>
+            <p className="text-[10px] text-muted-foreground">
+              أعلى رتبة موثقة · جميع صلاحيات الإدارة
+            </p>
           </div>
         </div>
       )}
@@ -172,21 +192,26 @@ function AdminPage() {
         <div className="mb-3 rounded-2xl border border-primary/35 bg-primary/10 p-3">
           <p className="text-xs font-black text-primary">صلاحية محددة</p>
           <p className="mt-1 text-[10px] text-muted-foreground">
-            لديك صلاحية {allowedTabs.map((t) => t.label).join(" · ")} فقط. باقي أقسام الإدارة غير متاحة لحسابك.
+            لديك صلاحية {allowedTabs.map((t) => t.label).join(" · ")} فقط. باقي أقسام الإدارة غير
+            متاحة لحسابك.
           </p>
         </div>
       )}
       {fullAccess && (
-      <div className="mb-3 grid grid-cols-2 gap-2">
-        <div className="rounded-2xl border border-border bg-surface p-3">
-          <p className="text-xs font-black">رتبة مساعد</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">صلاحيات محددة حسب الشارة، مثل المتابعة أو سحب المشاركين.</p>
+        <div className="mb-3 grid grid-cols-2 gap-2">
+          <div className="rounded-2xl border border-border bg-surface p-3">
+            <p className="text-xs font-black">رتبة مساعد</p>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              صلاحيات محددة حسب الشارة، مثل المتابعة أو سحب المشاركين.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-primary/35 bg-primary/10 p-3">
+            <p className="text-xs font-black text-primary">رتبة مسؤول</p>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              سحب المشاركين وتخصيص الغرفة وإغلاق الجولة.
+            </p>
+          </div>
         </div>
-        <div className="rounded-2xl border border-primary/35 bg-primary/10 p-3">
-          <p className="text-xs font-black text-primary">رتبة مسؤول</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">سحب المشاركين وتخصيص الغرفة وإغلاق الجولة.</p>
-        </div>
-      </div>
       )}
       <div className="sticky top-0 z-20 -mx-4 mb-4 bg-background/85 px-4 pb-2 pt-1 backdrop-blur-md">
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -283,8 +308,7 @@ function UsersTab({ onWelcome }: { onWelcome?: (publicId: string) => void }) {
       userId: string;
       role: "admin" | "moderator" | "host" | "welcome_manager";
       grant: boolean;
-    }) =>
-      adminSetUserRole({ data: input }),
+    }) => adminSetUserRole({ data: input }),
     onSuccess: () => {
       toast.success("تم تحديث الصلاحية");
       void roles.refetch();
@@ -312,14 +336,18 @@ function UsersTab({ onWelcome }: { onWelcome?: (publicId: string) => void }) {
     enabled: Boolean(badgeUser && isSuper.data === true),
     queryFn: async () => {
       if (!badgeUser) return [];
-      const { data, error } = await supabase.from("user_badges").select("badge_id").eq("user_id", badgeUser);
+      const { data, error } = await supabase
+        .from("user_badges")
+        .select("badge_id")
+        .eq("user_id", badgeUser);
       if (error) throw error;
       return (data ?? []).map((row) => row.badge_id);
     },
   });
 
   const setBadge = useMutation({
-    mutationFn: async (input: { userId: string; badgeId: string; grant: boolean }) => adminSetUserBadge({ data: input }),
+    mutationFn: async (input: { userId: string; badgeId: string; grant: boolean }) =>
+      adminSetUserBadge({ data: input }),
     onSuccess: () => {
       toast.success("تم تحديث الشارة");
       void assignedBadges.refetch();
@@ -487,59 +515,65 @@ function UsersTab({ onWelcome }: { onWelcome?: (publicId: string) => void }) {
           </Button>
           {isSuper.data === true && (
             <div className="mt-2 space-y-2">
-            <div className="flex gap-1">
-              {ROLES.map((r) => {
-                const has = (roles.data ?? []).some((x) => x.user_id === u.id && x.role === r.key);
-                return (
-                  <Button
-                    key={r.key}
-                    type="button"
-                    variant="ghost"
-                    disabled={setRole.isPending}
-                    onClick={() => setRole.mutate({ userId: u.id, role: r.key, grant: !has })}
-                    className={cn(
-                      "flex-1 rounded-xl border px-2 py-2 text-[10px]",
-                      has
-                        ? "border-primary bg-primary/15 text-primary"
-                        : "border-border bg-surface-2 text-muted-foreground",
-                    )}
-                  >
-                    {r.label}
-                  </Button>
-                );
-              })}
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setBadgeUser((current) => current === u.id ? null : u.id)}
-              className="h-10 w-full rounded-xl text-[11px]"
-            >
-              <Award className="me-1.5 h-4 w-4" /> إدارة الشارات الإدارية
-            </Button>
-            {badgeUser === u.id && (
-              <div className="grid max-h-80 grid-cols-3 gap-2 overflow-y-auto rounded-2xl border border-border bg-surface-2 p-2">
-                {(badgeDefinitions.data ?? []).map((badge) => {
-                  const has = (assignedBadges.data ?? []).includes(badge.id);
+              <div className="flex gap-1">
+                {ROLES.map((r) => {
+                  const has = (roles.data ?? []).some(
+                    (x) => x.user_id === u.id && x.role === r.key,
+                  );
                   return (
                     <Button
-                      key={badge.id}
+                      key={r.key}
                       type="button"
                       variant="ghost"
-                      disabled={setBadge.isPending || assignedBadges.isLoading}
-                      onClick={() => setBadge.mutate({ userId: u.id, badgeId: badge.id, grant: !has })}
+                      disabled={setRole.isPending}
+                      onClick={() => setRole.mutate({ userId: u.id, role: r.key, grant: !has })}
                       className={cn(
-                        "h-auto min-h-32 rounded-2xl border p-2",
-                        has ? "border-primary bg-primary/10" : "border-border bg-surface",
+                        "flex-1 rounded-xl border px-2 py-2 text-[10px]",
+                        has
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border bg-surface-2 text-muted-foreground",
                       )}
                     >
-                      <AdminBadgeCrest name={badge.name} styleKey={badge.style_key} compact />
-                      <span className="mt-1 line-clamp-2 text-[8px] text-muted-foreground">{badge.description}</span>
+                      {r.label}
                     </Button>
                   );
                 })}
               </div>
-            )}
-            <SectionsPicker userId={u.id} />
+              <Button
+                variant="outline"
+                onClick={() => setBadgeUser((current) => (current === u.id ? null : u.id))}
+                className="h-10 w-full rounded-xl text-[11px]"
+              >
+                <Award className="me-1.5 h-4 w-4" /> إدارة الشارات الإدارية
+              </Button>
+              {badgeUser === u.id && (
+                <div className="grid max-h-80 grid-cols-3 gap-2 overflow-y-auto rounded-2xl border border-border bg-surface-2 p-2">
+                  {(badgeDefinitions.data ?? []).map((badge) => {
+                    const has = (assignedBadges.data ?? []).includes(badge.id);
+                    return (
+                      <Button
+                        key={badge.id}
+                        type="button"
+                        variant="ghost"
+                        disabled={setBadge.isPending || assignedBadges.isLoading}
+                        onClick={() =>
+                          setBadge.mutate({ userId: u.id, badgeId: badge.id, grant: !has })
+                        }
+                        className={cn(
+                          "h-auto min-h-32 rounded-2xl border p-2",
+                          has ? "border-primary bg-primary/10" : "border-border bg-surface",
+                        )}
+                      >
+                        <AdminBadgeCrest name={badge.name} styleKey={badge.style_key} compact />
+                        <span className="mt-1 line-clamp-2 text-[8px] text-muted-foreground">
+                          {badge.description}
+                        </span>
+                      </Button>
+                    );
+                  })}
+                </div>
+              )}
+              <SectionsPicker userId={u.id} />
             </div>
           )}
         </div>
@@ -584,24 +618,28 @@ function SectionsPicker({ userId }: { userId: string }) {
             اختر الأقسام التي سيراها هذا الحساب في لوحة الإدارة. بدون أي اختيار لا تظهر له اللوحة.
           </p>
           <div className="grid grid-cols-2 gap-1.5">
-            {TABS.filter((t) => (ADMIN_SECTION_KEYS as readonly string[]).includes(t.key)).map((t) => {
-              const on = selection.includes(t.key);
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() =>
-                    setPicked(on ? selection.filter((k) => k !== t.key) : [...selection, t.key])
-                  }
-                  className={cn(
-                    "rounded-xl border px-2 py-2 text-[10px] font-bold",
-                    on ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
-                  )}
-                >
-                  {t.label}
-                </button>
-              );
-            })}
+            {TABS.filter((t) => (ADMIN_SECTION_KEYS as readonly string[]).includes(t.key)).map(
+              (t) => {
+                const on = selection.includes(t.key);
+                return (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() =>
+                      setPicked(on ? selection.filter((k) => k !== t.key) : [...selection, t.key])
+                    }
+                    className={cn(
+                      "rounded-xl border px-2 py-2 text-[10px] font-bold",
+                      on
+                        ? "border-primary bg-primary/15 text-primary"
+                        : "border-border bg-surface text-muted-foreground",
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                );
+              },
+            )}
           </div>
           <Button
             onClick={() => save.mutate()}
@@ -652,29 +690,35 @@ function BadgeDefinitionsTab() {
   const query = useQuery({
     queryKey: ["badge-definitions-editor"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("badge_definitions")
-        .select("id, key, name, description, kind, image_url, icon_key, color_key, display_variant, audience, sort_order, threshold, is_active")
+      const { data, error } = await supabase
+        .from("badge_definitions")
+        .select(
+          "id, key, name, description, kind, image_url, icon_key, color_key, display_variant, audience, sort_order, threshold, is_active",
+        )
         .order("sort_order");
       if (error) throw error;
       return data ?? [];
     },
   });
   const save = useMutation({
-    mutationFn: () => adminUpsertBadgeDefinition({ data: {
-      ...(form.id ? { id: form.id } : {}),
-      key: form.key.trim(),
-      name: form.name.trim(),
-      description: form.description.trim() || null,
-      kind: form.kind,
-      imageUrl: form.imageUrl.trim() || null,
-      iconKey: form.iconKey.trim() || "shield",
-      colorKey: form.colorKey.trim() || "royal",
-      displayVariant: form.displayVariant,
-      audience: form.audience,
-      sortOrder: Number(form.sortOrder) || 0,
-      threshold: Number(form.threshold) || 0,
-      isActive: form.isActive,
-    } }),
+    mutationFn: () =>
+      adminUpsertBadgeDefinition({
+        data: {
+          ...(form.id ? { id: form.id } : {}),
+          key: form.key.trim(),
+          name: form.name.trim(),
+          description: form.description.trim() || null,
+          kind: form.kind,
+          imageUrl: form.imageUrl.trim() || null,
+          iconKey: form.iconKey.trim() || "shield",
+          colorKey: form.colorKey.trim() || "royal",
+          displayVariant: form.displayVariant,
+          audience: form.audience,
+          sortOrder: Number(form.sortOrder) || 0,
+          threshold: Number(form.threshold) || 0,
+          isActive: form.isActive,
+        },
+      }),
     onSuccess: () => {
       toast.success(form.id ? "تم تعديل الشارة" : "تمت إضافة الشارة");
       setForm(EMPTY_BADGE);
@@ -688,37 +732,142 @@ function BadgeDefinitionsTab() {
       <div className="surface-card space-y-2 p-3">
         <p className="text-sm font-black">{form.id ? "تعديل الشارة" : "إضافة شارة"}</p>
         <div className="flex justify-center py-2">
-          <AdminBadgeCrest name={form.name || "معاينة الشارة"} styleKey={form.colorKey} imageUrl={form.imageUrl || null} variant={form.displayVariant} compact />
+          <AdminBadgeCrest
+            name={form.name || "معاينة الشارة"}
+            styleKey={form.colorKey}
+            imageUrl={form.imageUrl || null}
+            variant={form.displayVariant}
+            compact
+          />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="اسم الشارة" className="rounded-xl bg-surface-2" />
-          <Input value={form.key} disabled={Boolean(form.id)} onChange={(e) => setForm({ ...form, key: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })} placeholder="badge_key" className="rounded-xl bg-surface-2" />
+          <Input
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="اسم الشارة"
+            className="rounded-xl bg-surface-2"
+          />
+          <Input
+            value={form.key}
+            disabled={Boolean(form.id)}
+            onChange={(e) =>
+              setForm({ ...form, key: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })
+            }
+            placeholder="badge_key"
+            className="rounded-xl bg-surface-2"
+          />
         </div>
-        <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="وصف الشارة" className="rounded-xl bg-surface-2" />
-        <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="رابط صورة الشارة (اختياري)" className="rounded-xl bg-surface-2" />
+        <Input
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          placeholder="وصف الشارة"
+          className="rounded-xl bg-surface-2"
+        />
+        <Input
+          value={form.imageUrl}
+          onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+          placeholder="رابط صورة الشارة (اختياري)"
+          className="rounded-xl bg-surface-2"
+        />
         <div className="grid grid-cols-2 gap-2">
-          <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as BadgeDraft["kind"] })} className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs">
-            <option value="administrative">إدارية</option><option value="achievement">إنجاز</option>
+          <select
+            value={form.kind}
+            onChange={(e) => setForm({ ...form, kind: e.target.value as BadgeDraft["kind"] })}
+            className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs"
+          >
+            <option value="administrative">إدارية</option>
+            <option value="achievement">إنجاز</option>
           </select>
-          <select value={form.displayVariant} onChange={(e) => setForm({ ...form, displayVariant: e.target.value as BadgeDraft["displayVariant"] })} className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs">
-            <option value="crest">درع</option><option value="ribbon">وشاح</option><option value="medal">ميدالية</option><option value="glass">زجاجية</option>
+          <select
+            value={form.displayVariant}
+            onChange={(e) =>
+              setForm({ ...form, displayVariant: e.target.value as BadgeDraft["displayVariant"] })
+            }
+            className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs"
+          >
+            <option value="crest">درع</option>
+            <option value="ribbon">وشاح</option>
+            <option value="medal">ميدالية</option>
+            <option value="glass">زجاجية</option>
           </select>
-          <select value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value as BadgeDraft["audience"] })} className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs">
-            <option value="assigned">المعيّنون</option><option value="admin">الإدارة</option><option value="moderator">المشرفون</option><option value="host">المضيفون</option><option value="vip">VIP</option><option value="all">الجميع</option>
+          <select
+            value={form.audience}
+            onChange={(e) =>
+              setForm({ ...form, audience: e.target.value as BadgeDraft["audience"] })
+            }
+            className="h-10 rounded-xl border border-border bg-surface-2 px-2 text-xs"
+          >
+            <option value="assigned">المعيّنون</option>
+            <option value="admin">الإدارة</option>
+            <option value="moderator">المشرفون</option>
+            <option value="host">المضيفون</option>
+            <option value="vip">VIP</option>
+            <option value="all">الجميع</option>
           </select>
-          <Input value={form.colorKey} onChange={(e) => setForm({ ...form, colorKey: e.target.value })} placeholder="نمط اللون" className="rounded-xl bg-surface-2" />
+          <Input
+            value={form.colorKey}
+            onChange={(e) => setForm({ ...form, colorKey: e.target.value })}
+            placeholder="نمط اللون"
+            className="rounded-xl bg-surface-2"
+          />
         </div>
-        <Button variant="outline" onClick={() => setForm({ ...form, isActive: !form.isActive })} className="w-full rounded-xl">{form.isActive ? "مفعّلة" : "متوقفة"}</Button>
+        <Button
+          variant="outline"
+          onClick={() => setForm({ ...form, isActive: !form.isActive })}
+          className="w-full rounded-xl"
+        >
+          {form.isActive ? "مفعّلة" : "متوقفة"}
+        </Button>
         <div className="flex gap-2">
-          <Button disabled={save.isPending || form.name.trim().length < 2 || form.key.length < 2} onClick={() => save.mutate()} className="flex-1 rounded-xl gradient-gold font-bold text-primary-foreground">حفظ الشارة</Button>
-          {form.id && <Button variant="outline" onClick={() => setForm(EMPTY_BADGE)} className="rounded-xl">إلغاء</Button>}
+          <Button
+            disabled={save.isPending || form.name.trim().length < 2 || form.key.length < 2}
+            onClick={() => save.mutate()}
+            className="flex-1 rounded-xl gradient-gold font-bold text-primary-foreground"
+          >
+            حفظ الشارة
+          </Button>
+          {form.id && (
+            <Button variant="outline" onClick={() => setForm(EMPTY_BADGE)} className="rounded-xl">
+              إلغاء
+            </Button>
+          )}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
         {(query.data ?? []).map((badge) => (
-          <button key={badge.id} type="button" onClick={() => setForm({ id: badge.id, key: badge.key, name: badge.name, description: badge.description ?? "", kind: badge.kind as BadgeDraft["kind"], imageUrl: badge.image_url ?? "", iconKey: badge.icon_key, colorKey: badge.color_key, displayVariant: badge.display_variant as BadgeDraft["displayVariant"], audience: badge.audience as BadgeDraft["audience"], sortOrder: String(badge.sort_order), threshold: String(badge.threshold), isActive: badge.is_active })} className="surface-card flex min-h-40 flex-col items-center p-3 text-center">
-            <AdminBadgeCrest name={badge.name} styleKey={badge.color_key} imageUrl={badge.image_url} variant={badge.display_variant} compact />
-            <span className="mt-2 text-[9px] text-muted-foreground">{badge.kind === "administrative" ? "إدارية" : "إنجاز"} · {badge.is_active ? "مفعلة" : "متوقفة"}</span>
+          <button
+            key={badge.id}
+            type="button"
+            onClick={() =>
+              setForm({
+                id: badge.id,
+                key: badge.key,
+                name: badge.name,
+                description: badge.description ?? "",
+                kind: badge.kind as BadgeDraft["kind"],
+                imageUrl: badge.image_url ?? "",
+                iconKey: badge.icon_key,
+                colorKey: badge.color_key,
+                displayVariant: badge.display_variant as BadgeDraft["displayVariant"],
+                audience: badge.audience as BadgeDraft["audience"],
+                sortOrder: String(badge.sort_order),
+                threshold: String(badge.threshold),
+                isActive: badge.is_active,
+              })
+            }
+            className="surface-card flex min-h-40 flex-col items-center p-3 text-center"
+          >
+            <AdminBadgeCrest
+              name={badge.name}
+              styleKey={badge.color_key}
+              imageUrl={badge.image_url}
+              variant={badge.display_variant}
+              compact
+            />
+            <span className="mt-2 text-[9px] text-muted-foreground">
+              {badge.kind === "administrative" ? "إدارية" : "إنجاز"} ·{" "}
+              {badge.is_active ? "مفعلة" : "متوقفة"}
+            </span>
           </button>
         ))}
       </div>
@@ -763,10 +912,19 @@ function AdminRoomImage({ stored, preview }: { stored: string | null; preview: s
 /** جلب أسماء المستخدمين لقائمة معرّفات (لا توجد علاقة PostgREST مع الملفات) */
 async function withProfiles(ids: string[]) {
   const unique = Array.from(new Set(ids));
-  if (unique.length === 0) return [] as { user_id: string; profiles: { display_name: string; public_id: string } | null }[];
-  const { data, error } = await supabase.from("profiles").select("id, display_name, public_id").in("id", unique);
+  if (unique.length === 0)
+    return [] as {
+      user_id: string;
+      profiles: { display_name: string; public_id: string } | null;
+    }[];
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, display_name, public_id")
+    .in("id", unique);
   if (error) throw error;
-  const map = new Map((data ?? []).map((p) => [p.id, { display_name: p.display_name, public_id: p.public_id }]));
+  const map = new Map(
+    (data ?? []).map((p) => [p.id, { display_name: p.display_name, public_id: p.public_id }]),
+  );
   return unique.map((id) => ({ user_id: id, profiles: map.get(id) ?? null }));
 }
 
@@ -813,25 +971,63 @@ function RoomCreateCard({ onCreated }: { onCreated: () => void }) {
 
   return (
     <div className="surface-card space-y-2 p-3">
-      <Button variant={open ? "outline" : "default"} onClick={() => setOpen(!open)} className="h-10 w-full rounded-xl text-[12px]">
+      <Button
+        variant={open ? "outline" : "default"}
+        onClick={() => setOpen(!open)}
+        className="h-10 w-full rounded-xl text-[12px]"
+      >
         {open ? "إلغاء إنشاء غرفة" : "إنشاء غرفة جديدة"}
       </Button>
       {open && (
         <div className="space-y-2 border-t border-border/50 pt-2">
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="اسم الغرفة" className="h-10 rounded-xl" />
-          <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="التصنيف" className="h-10 rounded-xl" />
-          <Input value={micCount} onChange={(e) => setMicCount(e.target.value)} placeholder="عدد المايكات" inputMode="numeric" className="h-10 rounded-xl" />
-          <Input value={ownerPublicId} onChange={(e) => setOwnerPublicId(e.target.value)} placeholder="معرّف المالك (اتركه فارغًا لتكون أنت المالك)" className="h-10 rounded-xl" />
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="اسم الغرفة"
+            className="h-10 rounded-xl"
+          />
+          <Input
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="التصنيف"
+            className="h-10 rounded-xl"
+          />
+          <Input
+            value={micCount}
+            onChange={(e) => setMicCount(e.target.value)}
+            placeholder="عدد المايكات"
+            inputMode="numeric"
+            className="h-10 rounded-xl"
+          />
+          <Input
+            value={ownerPublicId}
+            onChange={(e) => setOwnerPublicId(e.target.value)}
+            placeholder="معرّف المالك (اتركه فارغًا لتكون أنت المالك)"
+            className="h-10 rounded-xl"
+          />
           <div className="flex gap-2">
-            <Button variant={privateRoom ? "outline" : "default"} onClick={() => setPrivateRoom(false)} className="h-9 flex-1 rounded-xl text-[11px]">
+            <Button
+              variant={privateRoom ? "outline" : "default"}
+              onClick={() => setPrivateRoom(false)}
+              className="h-9 flex-1 rounded-xl text-[11px]"
+            >
               عامة
             </Button>
-            <Button variant={privateRoom ? "default" : "outline"} onClick={() => setPrivateRoom(true)} className="h-9 flex-1 rounded-xl text-[11px]">
+            <Button
+              variant={privateRoom ? "default" : "outline"}
+              onClick={() => setPrivateRoom(true)}
+              className="h-9 flex-1 rounded-xl text-[11px]"
+            >
               خاصة
             </Button>
           </div>
           {privateRoom && (
-            <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="كلمة مرور الغرفة" className="h-10 rounded-xl" />
+            <Input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="كلمة مرور الغرفة"
+              className="h-10 rounded-xl"
+            />
           )}
           <input
             type="file"
@@ -839,7 +1035,11 @@ function RoomCreateCard({ onCreated }: { onCreated: () => void }) {
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             className="w-full text-[11px]"
           />
-          <Button onClick={() => create.mutate()} disabled={create.isPending || name.trim().length < 2} className="h-10 w-full rounded-xl text-[12px]">
+          <Button
+            onClick={() => create.mutate()}
+            disabled={create.isPending || name.trim().length < 2}
+            className="h-10 w-full rounded-xl text-[12px]"
+          >
             {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "إنشاء الغرفة"}
           </Button>
         </div>
@@ -855,7 +1055,10 @@ function RoomTeamPanel({ roomId, ownerId }: { roomId: string; ownerId: string })
   const moderators = useQuery({
     queryKey: ["admin-room-mods", roomId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("room_moderators").select("user_id").eq("room_id", roomId);
+      const { data, error } = await supabase
+        .from("room_moderators")
+        .select("user_id")
+        .eq("room_id", roomId);
       if (error) throw error;
       return withProfiles((data ?? []).map((r) => r.user_id));
     },
@@ -864,7 +1067,11 @@ function RoomTeamPanel({ roomId, ownerId }: { roomId: string; ownerId: string })
   const members = useQuery({
     queryKey: ["admin-room-members", roomId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("room_members").select("user_id").eq("room_id", roomId).limit(60);
+      const { data, error } = await supabase
+        .from("room_members")
+        .select("user_id")
+        .eq("room_id", roomId)
+        .limit(60);
       if (error) throw error;
       return withProfiles((data ?? []).map((r) => r.user_id));
     },
@@ -894,7 +1101,12 @@ function RoomTeamPanel({ roomId, ownerId }: { roomId: string; ownerId: string })
     <div className="space-y-2 border-t border-border/50 pt-3">
       <p className="text-[11px] font-bold">المشرفون</p>
       <div className="flex gap-2">
-        <Input value={modId} onChange={(e) => setModId(e.target.value)} placeholder="معرّف المستخدم" className="h-9 flex-1 rounded-xl" />
+        <Input
+          value={modId}
+          onChange={(e) => setModId(e.target.value)}
+          placeholder="معرّف المستخدم"
+          className="h-9 flex-1 rounded-xl"
+        />
         <Button
           onClick={() => setMod.mutate({ publicId: modId.trim(), enable: true })}
           disabled={setMod.isPending || modId.trim().length < 3}
@@ -904,13 +1116,19 @@ function RoomTeamPanel({ roomId, ownerId }: { roomId: string; ownerId: string })
         </Button>
       </div>
       {(moderators.data ?? []).map((m) => (
-        <div key={m.user_id} className="flex items-center justify-between rounded-xl bg-surface-2 px-2 py-1.5">
+        <div
+          key={m.user_id}
+          className="flex items-center justify-between rounded-xl bg-surface-2 px-2 py-1.5"
+        >
           <span className="truncate text-[11px]">
             {m.profiles?.display_name ?? "—"} ({m.profiles?.public_id ?? "—"})
           </span>
           <Button
             variant="outline"
-            onClick={() => m.profiles?.public_id && setMod.mutate({ publicId: m.profiles.public_id, enable: false })}
+            onClick={() =>
+              m.profiles?.public_id &&
+              setMod.mutate({ publicId: m.profiles.public_id, enable: false })
+            }
             className="h-7 rounded-lg px-2 text-[10px]"
           >
             سحب
@@ -919,11 +1137,17 @@ function RoomTeamPanel({ roomId, ownerId }: { roomId: string; ownerId: string })
       ))}
 
       <p className="pt-2 text-[11px] font-bold">المشاركون</p>
-      {(members.data ?? []).length === 0 && <p className="text-[10px] text-muted-foreground">لا يوجد مشاركون الآن.</p>}
+      {(members.data ?? []).length === 0 && (
+        <p className="text-[10px] text-muted-foreground">لا يوجد مشاركون الآن.</p>
+      )}
       {(members.data ?? []).map((m) => (
-        <div key={m.user_id} className="flex items-center justify-between rounded-xl bg-surface-2 px-2 py-1.5">
+        <div
+          key={m.user_id}
+          className="flex items-center justify-between rounded-xl bg-surface-2 px-2 py-1.5"
+        >
           <span className="truncate text-[11px]">
-            {m.profiles?.display_name ?? "—"} ({m.profiles?.public_id ?? "—"}) {m.user_id === ownerId ? "· المالك" : ""}
+            {m.profiles?.display_name ?? "—"} ({m.profiles?.public_id ?? "—"}){" "}
+            {m.user_id === ownerId ? "· المالك" : ""}
           </span>
           {m.user_id !== ownerId && (
             <Button
@@ -971,7 +1195,13 @@ function RoomMessagesTab() {
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      const rows = (data ?? []) as { id: string; body: string; kind: string; created_at: string; user_id: string }[];
+      const rows = (data ?? []) as {
+        id: string;
+        body: string;
+        kind: string;
+        created_at: string;
+        user_id: string;
+      }[];
       const people = await withProfiles(rows.map((r) => r.user_id));
       const byId = new Map(people.map((p) => [p.user_id, p.profiles]));
       return rows.map((r) => ({ ...r, profiles: byId.get(r.user_id) ?? null }));
@@ -1015,8 +1245,12 @@ function RoomMessagesTab() {
       </div>
 
       {messages.isLoading && <div className="h-20 animate-pulse rounded-2xl bg-surface-2" />}
-      {messages.isError && <p className="text-[11px] text-destructive">{(messages.error as Error).message}</p>}
-      {messages.isSuccess && (messages.data ?? []).length === 0 && <EmptyState title="لا توجد رسائل في هذه الغرفة" />}
+      {messages.isError && (
+        <p className="text-[11px] text-destructive">{(messages.error as Error).message}</p>
+      )}
+      {messages.isSuccess && (messages.data ?? []).length === 0 && (
+        <EmptyState title="لا توجد رسائل في هذه الغرفة" />
+      )}
       {(messages.data ?? []).map((m) => (
         <div key={m.id} className="surface-card space-y-2 p-3">
           <p className="text-[10px] text-muted-foreground">
@@ -1183,7 +1417,8 @@ function RoomsTab() {
                   #{r.room_code} · {r.member_count} متواجد {r.is_disabled ? "· معطلة" : ""}
                 </p>
                 <p className="truncate text-[10px] text-muted-foreground">
-                  المالك: {owner?.display_name ?? "—"} {owner?.public_id ? `(${owner.public_id})` : ""}
+                  المالك: {owner?.display_name ?? "—"}{" "}
+                  {owner?.public_id ? `(${owner.public_id})` : ""}
                 </p>
               </div>
               <div className="flex flex-col gap-1">
@@ -1332,7 +1567,9 @@ function LogsTab() {
       {logs.data?.map((l) => (
         <div key={l.id} className="surface-card p-3">
           <p className="text-sm font-semibold">{l.action}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">{new Date(l.created_at).toLocaleString("ar")}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            {new Date(l.created_at).toLocaleString("ar")}
+          </p>
           {(l.old_value || l.new_value) && (
             <p className="mt-1 break-words text-[10px] text-muted-foreground">
               {String(l.old_value ?? "")} → {String(l.new_value ?? "")}
@@ -1380,7 +1617,12 @@ function ActiveButton({
   busy?: boolean;
 }) {
   return (
-    <Button variant="outline" disabled={busy} onClick={onToggle} className="h-9 rounded-xl px-3 text-[11px]">
+    <Button
+      variant="outline"
+      disabled={busy}
+      onClick={onToggle}
+      className="h-9 rounded-xl px-3 text-[11px]"
+    >
       {active ? "إخفاء" : "تفعيل"}
     </Button>
   );
@@ -1397,7 +1639,9 @@ function RaritySelect({ value, onChange }: { value: string; onChange: (v: string
           onClick={() => onChange(r)}
           className={cn(
             "flex-1 rounded-xl border px-2 py-2 text-[10px]",
-            value === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+            value === r
+              ? "border-primary bg-primary/15 text-primary"
+              : "border-border bg-surface-2 text-muted-foreground",
           )}
         >
           {r === "common" ? "عادي" : r === "rare" ? "نادر" : r === "epic" ? "أسطوري" : "خارق"}
@@ -1551,7 +1795,10 @@ function GiftsTab() {
         <div className="flex items-center justify-between">
           <p className="text-sm font-bold">{form.id ? "تعديل هدية" : "إضافة هدية"}</p>
           {form.id ? (
-            <button onClick={() => setForm(EMPTY_GIFT)} className="text-[11px] font-bold text-primary">
+            <button
+              onClick={() => setForm(EMPTY_GIFT)}
+              className="text-[11px] font-bold text-primary"
+            >
               هدية جديدة
             </button>
           ) : null}
@@ -1559,8 +1806,18 @@ function GiftsTab() {
 
         <Field label="الاسم" value={form.name} onChange={(v) => set({ name: v })} />
         <div className="grid grid-cols-2 gap-2">
-          <Field label="السعر" type="number" value={form.price} onChange={(v) => set({ price: v })} />
-          <Field label="الترتيب" type="number" value={form.sort_order} onChange={(v) => set({ sort_order: v })} />
+          <Field
+            label="السعر"
+            type="number"
+            value={form.price}
+            onChange={(v) => set({ price: v })}
+          />
+          <Field
+            label="الترتيب"
+            type="number"
+            value={form.sort_order}
+            onChange={(v) => set({ sort_order: v })}
+          />
         </div>
 
         <p className="text-[11px] font-bold text-muted-foreground">التصنيف</p>
@@ -1571,7 +1828,9 @@ function GiftsTab() {
               onClick={() => set({ category: c })}
               className={cn(
                 "h-7 rounded-full px-2.5 text-[10px] font-bold",
-                form.category === c ? "gradient-gold text-primary-foreground" : "border border-border bg-surface text-muted-foreground",
+                form.category === c
+                  ? "gradient-gold text-primary-foreground"
+                  : "border border-border bg-surface text-muted-foreground",
               )}
             >
               {c}
@@ -1582,16 +1841,33 @@ function GiftsTab() {
         <RaritySelect value={form.rarity} onChange={(v) => set({ rarity: v })} />
 
         <div className="grid grid-cols-3 gap-2">
-          <Field label="المدة (ms)" type="number" value={form.duration_ms} onChange={(v) => set({ duration_ms: v })} />
-          <Field label="الحجم %" type="number" value={form.display_scale} onChange={(v) => set({ display_scale: v })} />
-          <Field label="VIP مطلوب" type="number" value={form.required_vip} onChange={(v) => set({ required_vip: v })} />
+          <Field
+            label="المدة (ms)"
+            type="number"
+            value={form.duration_ms}
+            onChange={(v) => set({ duration_ms: v })}
+          />
+          <Field
+            label="الحجم %"
+            type="number"
+            value={form.display_scale}
+            onChange={(v) => set({ display_scale: v })}
+          />
+          <Field
+            label="VIP مطلوب"
+            type="number"
+            value={form.required_vip}
+            onChange={(v) => set({ required_vip: v })}
+          />
         </div>
 
         <button
           onClick={() => set({ sound_enabled: !form.sound_enabled })}
           className={cn(
             "h-9 w-full rounded-xl text-[11px] font-bold",
-            form.sound_enabled ? "gradient-gold text-primary-foreground" : "border border-border bg-surface text-muted-foreground",
+            form.sound_enabled
+              ? "gradient-gold text-primary-foreground"
+              : "border border-border bg-surface text-muted-foreground",
           )}
         >
           {form.sound_enabled ? "الصوت مُشغّل" : "الصوت مُوقف"}
@@ -1737,10 +2013,16 @@ function MediaUpload({
       {progress !== null ? (
         <div className="flex items-center gap-2">
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${progress}%` }}
+            />
           </div>
           <span className="text-[10px] font-bold">{progress}%</span>
-          <button onClick={() => handle?.cancel()} className="text-[10px] font-bold text-destructive">
+          <button
+            onClick={() => handle?.cancel()}
+            className="text-[10px] font-bold text-destructive"
+          >
             إلغاء
           </button>
         </div>
@@ -1797,7 +2079,9 @@ function GiftStats() {
             onClick={() => setPeriod(p.key)}
             className={cn(
               "h-7 flex-1 rounded-full text-[10px] font-bold",
-              period === p.key ? "gradient-gold text-primary-foreground" : "border border-border bg-surface text-muted-foreground",
+              period === p.key
+                ? "gradient-gold text-primary-foreground"
+                : "border border-border bg-surface text-muted-foreground",
             )}
           >
             {p.label}
@@ -1812,17 +2096,32 @@ function GiftStats() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-2">
-            <StatBox label="عدد الهدايا" value={(stats.data?.total_gifts ?? 0).toLocaleString("en-US")} />
-            <StatBox label="كوينز الهدايا" value={(stats.data?.total_coins ?? 0).toLocaleString("en-US")} />
+            <StatBox
+              label="عدد الهدايا"
+              value={(stats.data?.total_gifts ?? 0).toLocaleString("en-US")}
+            />
+            <StatBox
+              label="كوينز الهدايا"
+              value={(stats.data?.total_coins ?? 0).toLocaleString("en-US")}
+            />
           </div>
-          <StatList title="أكثر الهدايا" rows={(stats.data?.top_gifts ?? []).map((r) => ({ label: r.name, value: r.coins }))} />
+          <StatList
+            title="أكثر الهدايا"
+            rows={(stats.data?.top_gifts ?? []).map((r) => ({ label: r.name, value: r.coins }))}
+          />
           <StatList
             title="أكثر المرسلين"
-            rows={(stats.data?.top_senders ?? []).map((r) => ({ label: r.display_name, value: r.coins }))}
+            rows={(stats.data?.top_senders ?? []).map((r) => ({
+              label: r.display_name,
+              value: r.coins,
+            }))}
           />
           <StatList
             title="أكثر المستلمين"
-            rows={(stats.data?.top_receivers ?? []).map((r) => ({ label: r.display_name, value: r.coins }))}
+            rows={(stats.data?.top_receivers ?? []).map((r) => ({
+              label: r.display_name,
+              value: r.coins,
+            }))}
           />
         </>
       )}
@@ -1845,7 +2144,10 @@ function StatList({ title, rows }: { title: string; rows: { label: string; value
     <div className="space-y-1">
       <p className="text-[11px] font-bold text-muted-foreground">{title}</p>
       {rows.slice(0, 5).map((r, i) => (
-        <div key={`${r.label}-${i}`} className="flex items-center justify-between rounded-lg bg-surface px-2 py-1 text-[11px]">
+        <div
+          key={`${r.label}-${i}`}
+          className="flex items-center justify-between rounded-lg bg-surface px-2 py-1 text-[11px]"
+        >
           <span className="truncate">
             {i + 1}. {r.label}
           </span>
@@ -1944,7 +2246,12 @@ function StoreTab() {
           ))}
         </div>
         <div className="grid grid-cols-3 gap-2">
-          <Field label="السعر" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
+          <Field
+            label="السعر"
+            type="number"
+            value={form.price}
+            onChange={(v) => setForm({ ...form, price: v })}
+          />
           <Field
             label="أيام (اختياري)"
             type="number"
@@ -2042,11 +2349,21 @@ function VipTab() {
       <div className="surface-card space-y-2 p-3">
         <p className="text-sm font-bold">إضافة / تعديل مستوى VIP</p>
         <div className="grid grid-cols-2 gap-2">
-          <Field label="المستوى" type="number" value={form.level} onChange={(v) => setForm({ ...form, level: v })} />
+          <Field
+            label="المستوى"
+            type="number"
+            value={form.level}
+            onChange={(v) => setForm({ ...form, level: v })}
+          />
           <Field label="الاسم" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <Field label="السعر" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
+          <Field
+            label="السعر"
+            type="number"
+            value={form.price}
+            onChange={(v) => setForm({ ...form, price: v })}
+          />
           <Field
             label="المدة (يوم)"
             type="number"
@@ -2171,7 +2488,12 @@ function CvipTab() {
         <p className="text-sm font-bold">{form.id ? "تعديل خطة SVIP" : "إضافة خطة SVIP"}</p>
         <div className="grid grid-cols-2 gap-2">
           <Field label="الاسم" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
-          <Field label="السعر" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
+          <Field
+            label="السعر"
+            type="number"
+            value={form.price}
+            onChange={(v) => setForm({ ...form, price: v })}
+          />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <Field
@@ -2187,10 +2509,26 @@ function CvipTab() {
             onChange={(v) => setForm({ ...form, sort_order: v })}
           />
         </div>
-        <Field label="الوصف" value={form.description} onChange={(v) => setForm({ ...form, description: v })} />
-        <Field label="رابط الشارة" value={form.badge_url} onChange={(v) => setForm({ ...form, badge_url: v })} />
-        <Field label="رابط الإطار" value={form.frame_url} onChange={(v) => setForm({ ...form, frame_url: v })} />
-        <Field label="رابط الخلفية" value={form.background_url} onChange={(v) => setForm({ ...form, background_url: v })} />
+        <Field
+          label="الوصف"
+          value={form.description}
+          onChange={(v) => setForm({ ...form, description: v })}
+        />
+        <Field
+          label="رابط الشارة"
+          value={form.badge_url}
+          onChange={(v) => setForm({ ...form, badge_url: v })}
+        />
+        <Field
+          label="رابط الإطار"
+          value={form.frame_url}
+          onChange={(v) => setForm({ ...form, frame_url: v })}
+        />
+        <Field
+          label="رابط الخلفية"
+          value={form.background_url}
+          onChange={(v) => setForm({ ...form, background_url: v })}
+        />
         <div className="flex gap-2">
           <Button
             disabled={save.isPending || form.name.trim().length < 1}
@@ -2306,7 +2644,12 @@ function CoinsTab() {
         <p className="text-sm font-bold">إضافة باقة كوينز</p>
         <Field label="الاسم" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
         <div className="grid grid-cols-3 gap-2">
-          <Field label="الكوينز" type="number" value={form.coins} onChange={(v) => setForm({ ...form, coins: v })} />
+          <Field
+            label="الكوينز"
+            type="number"
+            value={form.coins}
+            onChange={(v) => setForm({ ...form, coins: v })}
+          />
           <Field
             label="مكافأة"
             type="number"
@@ -2362,7 +2705,14 @@ function GamesTab() {
       if (error) throw error;
       const map = new Map((data ?? []).map((r) => [r.key, r.value]));
       return {
-        games: { dice: true, wheel: true, cards: true, quiz: true, domino: true, ...(map.get("games") as object) } as GameFlags,
+        games: {
+          dice: true,
+          wheel: true,
+          cards: true,
+          quiz: true,
+          domino: true,
+          ...(map.get("games") as object),
+        } as GameFlags,
         limits: (map.get("limits") ?? { min_bet: 50, max_bet: 5000 }) as BetLimits,
       };
     },
@@ -2417,13 +2767,17 @@ function GamesTab() {
           label="أقل رهان"
           type="number"
           value={String(state.limits.min_bet)}
-          onChange={(v) => setDraft({ ...state, limits: { ...state.limits, min_bet: Number(v) || 0 } })}
+          onChange={(v) =>
+            setDraft({ ...state, limits: { ...state.limits, min_bet: Number(v) || 0 } })
+          }
         />
         <Field
           label="أعلى رهان"
           type="number"
           value={String(state.limits.max_bet)}
-          onChange={(v) => setDraft({ ...state, limits: { ...state.limits, max_bet: Number(v) || 0 } })}
+          onChange={(v) =>
+            setDraft({ ...state, limits: { ...state.limits, max_bet: Number(v) || 0 } })
+          }
         />
       </div>
       <Button
@@ -2441,11 +2795,27 @@ function GamesTab() {
   );
 }
 
-type RelationFlags = { couple: boolean; soulmate: boolean; favorite_friend: boolean; close_friend: boolean };
+type RelationFlags = {
+  couple: boolean;
+  soulmate: boolean;
+  favorite_friend: boolean;
+  close_friend: boolean;
+};
 
-const RELATION_DEFAULTS: RelationFlags = { couple: true, soulmate: true, favorite_friend: true, close_friend: true };
+const RELATION_DEFAULTS: RelationFlags = {
+  couple: true,
+  soulmate: true,
+  favorite_friend: true,
+  close_friend: true,
+};
 
-type WheelSlotDraft = { key: string; label: string; emoji: string; multiplier: number; weight: number };
+type WheelSlotDraft = {
+  key: string;
+  label: string;
+  emoji: string;
+  multiplier: number;
+  weight: number;
+};
 type WheelDraft = {
   enabled: boolean;
   duration_seconds: number;
@@ -2468,7 +2838,11 @@ function WheelSettings() {
   const query = useQuery({
     queryKey: ["admin-wheel-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("app_settings").select("value").eq("key", "wheel").maybeSingle();
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "wheel")
+        .maybeSingle();
       if (error) throw error;
       return { ...WHEEL_DEFAULTS, ...((data?.value as object) ?? {}) } as WheelDraft;
     },
@@ -2492,7 +2866,10 @@ function WheelSettings() {
   if (!state) return null;
 
   const setSlot = (i: number, patch: Partial<WheelSlotDraft>) =>
-    setDraft({ ...state, slots: state.slots.map((s, idx) => (idx === i ? { ...s, ...patch } : s)) });
+    setDraft({
+      ...state,
+      slots: state.slots.map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
+    });
 
   return (
     <div className="rounded-2xl border border-border p-3">
@@ -2501,7 +2878,9 @@ function WheelSettings() {
         onClick={() => setDraft({ ...state, enabled: !state.enabled })}
         className={cn(
           "w-full rounded-xl border px-3 py-2 text-xs",
-          state.enabled ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+          state.enabled
+            ? "border-primary bg-primary/15 text-primary"
+            : "border-border bg-surface-2 text-muted-foreground",
         )}
       >
         {state.enabled ? "اللعبة مفعّلة" : "اللعبة موقوفة"}
@@ -2554,7 +2933,9 @@ function WheelSettings() {
               />
             </div>
             <button
-              onClick={() => setDraft({ ...state, slots: state.slots.filter((_, idx) => idx !== i) })}
+              onClick={() =>
+                setDraft({ ...state, slots: state.slots.filter((_, idx) => idx !== i) })
+              }
               className="mt-2 text-[11px] text-destructive"
             >
               حذف الخانة
@@ -2568,7 +2949,13 @@ function WheelSettings() {
             ...state,
             slots: [
               ...state.slots,
-              { key: `slot_${Date.now()}`, label: "خانة جديدة", emoji: "🍀", multiplier: 5, weight: 10 },
+              {
+                key: `slot_${Date.now()}`,
+                label: "خانة جديدة",
+                emoji: "🍀",
+                multiplier: 5,
+                weight: 10,
+              },
             ],
           })
         }
@@ -2597,7 +2984,11 @@ function RelationshipSettings() {
   const query = useQuery({
     queryKey: ["admin-relationship-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("app_settings").select("value").eq("key", "relationships").maybeSingle();
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "relationships")
+        .maybeSingle();
       if (error) throw error;
       return { ...RELATION_DEFAULTS, ...((data?.value as object) ?? {}) } as RelationFlags;
     },
@@ -2606,7 +2997,8 @@ function RelationshipSettings() {
   const active = useQuery({
     queryKey: ["admin-active-relationships"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("relationships")
+      const { data, error } = await supabase
+        .from("relationships")
         .select("id, requester_id, partner_id, type, status, created_at")
         .in("status", ["pending", "accepted"])
         .order("created_at", { ascending: false })
@@ -2614,9 +3006,20 @@ function RelationshipSettings() {
       if (error) throw error;
       const ids = [...new Set((data ?? []).flatMap((row) => [row.requester_id, row.partner_id]))];
       if (ids.length === 0) return { rows: data ?? [], names: new Map<string, string>() };
-      const profiles = await supabase.from("profiles").select("id, display_name, public_id").in("id", ids);
+      const profiles = await supabase
+        .from("profiles")
+        .select("id, display_name, public_id")
+        .in("id", ids);
       if (profiles.error) throw profiles.error;
-      return { rows: data ?? [], names: new Map((profiles.data ?? []).map((person) => [person.id, `${person.display_name} · ${person.public_id}`])) };
+      return {
+        rows: data ?? [],
+        names: new Map(
+          (profiles.data ?? []).map((person) => [
+            person.id,
+            `${person.display_name} · ${person.public_id}`,
+          ]),
+        ),
+      };
     },
   });
   const state = draft ?? query.data ?? null;
@@ -2635,7 +3038,10 @@ function RelationshipSettings() {
   });
   const forceEnd = useMutation({
     mutationFn: (relationshipId: string) => adminEndRelationship({ data: { relationshipId } }),
-    onSuccess: () => { toast.success("تم إنهاء العلاقة وتسجيل الإجراء"); void active.refetch(); },
+    onSuccess: () => {
+      toast.success("تم إنهاء العلاقة وتسجيل الإجراء");
+      void active.refetch();
+    },
     onError: (error) => toast.error(error instanceof Error ? error.message : "تعذر إنهاء العلاقة"),
   });
 
@@ -2651,7 +3057,9 @@ function RelationshipSettings() {
             onClick={() => setDraft({ ...state, [k]: !state[k] })}
             className={cn(
               "rounded-xl border px-3 py-2 text-xs",
-              state[k] ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+              state[k]
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-border bg-surface-2 text-muted-foreground",
             )}
           >
             {relationLabels[k]} {state[k] ? "· مفعّلة" : "· موقوفة"}
@@ -2670,15 +3078,32 @@ function RelationshipSettings() {
         <div className="max-h-72 space-y-2 overflow-y-auto">
           {(active.data?.rows ?? []).map((row) => (
             <div key={row.id} className="rounded-xl bg-surface-2 p-2 text-[10px]">
-              <p className="truncate font-bold">{active.data?.names.get(row.requester_id) ?? row.requester_id}</p>
-              <p className="truncate text-muted-foreground">مع {active.data?.names.get(row.partner_id) ?? row.partner_id}</p>
+              <p className="truncate font-bold">
+                {active.data?.names.get(row.requester_id) ?? row.requester_id}
+              </p>
+              <p className="truncate text-muted-foreground">
+                مع {active.data?.names.get(row.partner_id) ?? row.partner_id}
+              </p>
               <div className="mt-1 flex items-center justify-between gap-2">
-                <span>{relationLabels[row.type]} · {row.status === "accepted" ? "مقبولة" : "معلقة"}</span>
-                <Button variant="outline" disabled={forceEnd.isPending} onClick={() => forceEnd.mutate(row.id)} className="h-7 rounded-lg px-2 text-[9px] text-destructive">إنهاء إداري</Button>
+                <span>
+                  {relationLabels[row.type]} · {row.status === "accepted" ? "مقبولة" : "معلقة"}
+                </span>
+                <Button
+                  variant="outline"
+                  disabled={forceEnd.isPending}
+                  onClick={() => forceEnd.mutate(row.id)}
+                  className="h-7 rounded-lg px-2 text-[9px] text-destructive"
+                >
+                  إنهاء إداري
+                </Button>
               </div>
             </div>
           ))}
-          {!active.isLoading && (active.data?.rows.length ?? 0) === 0 && <p className="py-4 text-center text-[10px] text-muted-foreground">لا توجد علاقات حالية</p>}
+          {!active.isLoading && (active.data?.rows.length ?? 0) === 0 && (
+            <p className="py-4 text-center text-[10px] text-muted-foreground">
+              لا توجد علاقات حالية
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -2705,7 +3130,11 @@ function DominoSettings() {
   const query = useQuery({
     queryKey: ["admin-domino-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("app_settings").select("value").eq("key", "domino").maybeSingle();
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "domino")
+        .maybeSingle();
       if (error) throw error;
       return { ...DOMINO_DEFAULTS, ...((data?.value ?? {}) as object) } as DominoSettingsState;
     },
@@ -2735,7 +3164,9 @@ function DominoSettings() {
         onClick={() => setDraft({ ...state, enabled: !state.enabled })}
         className={cn(
           "w-full rounded-xl border px-3 py-2 text-xs",
-          state.enabled ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
+          state.enabled
+            ? "border-primary bg-primary/15 text-primary"
+            : "border-border bg-surface text-muted-foreground",
         )}
       >
         {state.enabled ? "الدومينو مفعّل — اضغط للإيقاف" : "الدومينو موقوف — اضغط للتشغيل"}
@@ -2860,7 +3291,11 @@ function QuizTab() {
     <div className="space-y-4">
       <div className="space-y-3 rounded-2xl border border-border bg-surface p-3">
         <p className="text-xs font-bold">{editing ? "تعديل سؤال" : "سؤال جديد"}</p>
-        <Field label="السؤال" value={draft.question} onChange={(v) => setDraft((d) => ({ ...d, question: v }))} />
+        <Field
+          label="السؤال"
+          value={draft.question}
+          onChange={(v) => setDraft((d) => ({ ...d, question: v }))}
+        />
         <div className="grid grid-cols-2 gap-2">
           {draft.choices.map((choice, index) => (
             <div key={index} className="space-y-1">
@@ -2868,7 +3303,10 @@ function QuizTab() {
                 label={`الخيار ${index + 1}`}
                 value={choice}
                 onChange={(v) =>
-                  setDraft((d) => ({ ...d, choices: d.choices.map((c, i) => (i === index ? v : c)) }))
+                  setDraft((d) => ({
+                    ...d,
+                    choices: d.choices.map((c, i) => (i === index ? v : c)),
+                  }))
                 }
               />
               <button
@@ -2892,7 +3330,11 @@ function QuizTab() {
           onChange={(v) => setDraft((d) => ({ ...d, difficulty: v }))}
         />
         <div className="flex gap-2">
-          <Button onClick={() => void save(true)} disabled={busy} className="h-10 flex-1 rounded-xl text-xs">
+          <Button
+            onClick={() => void save(true)}
+            disabled={busy}
+            className="h-10 flex-1 rounded-xl text-xs"
+          >
             {editing ? "حفظ التعديل" : "إضافة ونشر"}
           </Button>
           {editing && (
@@ -2915,8 +3357,8 @@ function QuizTab() {
           <div key={row.id} className="rounded-2xl border border-border bg-surface p-3">
             <p className="text-xs font-bold">{row.question}</p>
             <p className="mt-1 text-[10px] text-muted-foreground">
-              الصحيحة: {choicesOf(row.choices)[row.correct_index] ?? "-"} · صعوبة {row.difficulty ?? 1} ·{" "}
-              {row.is_active ? "منشور" : "مخفي"}
+              الصحيحة: {choicesOf(row.choices)[row.correct_index] ?? "-"} · صعوبة{" "}
+              {row.difficulty ?? 1} · {row.is_active ? "منشور" : "مخفي"}
             </p>
             <div className="mt-2 flex gap-2">
               <Button
@@ -2947,7 +3389,12 @@ function QuizTab() {
                         data: {
                           id: row.id,
                           question: row.question,
-                          choices: [parsed[0] ?? "", parsed[1] ?? "", parsed[2] ?? "", parsed[3] ?? ""],
+                          choices: [
+                            parsed[0] ?? "",
+                            parsed[1] ?? "",
+                            parsed[2] ?? "",
+                            parsed[3] ?? "",
+                          ],
                           correct_index: row.correct_index,
                           difficulty: row.difficulty ?? 1,
                           is_active: !row.is_active,
@@ -2973,7 +3420,9 @@ function QuizTab() {
             </div>
           </div>
         ))}
-        {list.data?.length === 0 && <p className="text-xs text-muted-foreground">لا توجد أسئلة بعد.</p>}
+        {list.data?.length === 0 && (
+          <p className="text-xs text-muted-foreground">لا توجد أسئلة بعد.</p>
+        )}
       </div>
     </div>
   );
@@ -3005,9 +3454,17 @@ function TopupsTab() {
   const settings = useQuery({
     queryKey: ["admin-payment-accounts"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("app_settings").select("value").eq("key", "payment_accounts").maybeSingle();
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "payment_accounts")
+        .maybeSingle();
       if (error) throw error;
-      return (data?.value ?? {}) as { vodafone_cash?: string; instapay?: string; instructions?: string };
+      return (data?.value ?? {}) as {
+        vodafone_cash?: string;
+        instapay?: string;
+        instructions?: string;
+      };
     },
   });
 
@@ -3028,9 +3485,17 @@ function TopupsTab() {
       const client = supabase as unknown as {
         from: (t: string) => {
           select: (c: string) => {
-            eq: (col: string, v: unknown) => {
-              order: (col: string, o: { ascending: boolean }) => {
-                limit: (n: number) => Promise<{ data: unknown[] | null; error: { message: string } | null }>;
+            eq: (
+              col: string,
+              v: unknown,
+            ) => {
+              order: (
+                col: string,
+                o: { ascending: boolean },
+              ) => {
+                limit: (
+                  n: number,
+                ) => Promise<{ data: unknown[] | null; error: { message: string } | null }>;
               };
             };
           };
@@ -3038,7 +3503,9 @@ function TopupsTab() {
       };
       const { data, error } = await client
         .from("coin_purchase_requests")
-        .select("id, user_id, coins, amount_cents, currency, method, sender_reference, status, note, created_at")
+        .select(
+          "id, user_id, coins, amount_cents, currency, method, sender_reference, status, note, created_at",
+        )
         .eq("status", status)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -3046,7 +3513,10 @@ function TopupsTab() {
       const list = (data ?? []) as TopupRow[];
       const ids = [...new Set(list.map((r) => r.user_id))];
       if (ids.length === 0) return { list, names: {} as Record<string, string> };
-      const { data: profiles } = await supabase.from("profiles").select("id, display_name, public_id").in("id", ids);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, public_id")
+        .in("id", ids);
       const names: Record<string, string> = {};
       (profiles ?? []).forEach((p) => {
         names[p.id] = `${p.display_name} · ${p.public_id}`;
@@ -3056,7 +3526,8 @@ function TopupsTab() {
   });
 
   const review = useMutation({
-    mutationFn: (v: { id: string; approve: boolean; note?: string }) => adminReviewCoinPurchase({ data: v }),
+    mutationFn: (v: { id: string; approve: boolean; note?: string }) =>
+      adminReviewCoinPurchase({ data: v }),
     onSuccess: () => {
       toast.success("تم تنفيذ المراجعة");
       void rows.refetch();
@@ -3074,15 +3545,31 @@ function TopupsTab() {
     <div className="space-y-4">
       <div className="surface-card space-y-3 p-4">
         <p className="text-sm font-bold">حسابات التحويل</p>
-        <Field label="رقم فودافون كاش" value={accounts.vodafone_cash} onChange={(v) => setAccounts((s) => ({ ...s, vodafone_cash: v }))} />
-        <Field label="حساب InstaPay" value={accounts.instapay} onChange={(v) => setAccounts((s) => ({ ...s, instapay: v }))} />
-        <Field label="تعليمات للمستخدم" value={accounts.instructions} onChange={(v) => setAccounts((s) => ({ ...s, instructions: v }))} />
+        <Field
+          label="رقم فودافون كاش"
+          value={accounts.vodafone_cash}
+          onChange={(v) => setAccounts((s) => ({ ...s, vodafone_cash: v }))}
+        />
+        <Field
+          label="حساب InstaPay"
+          value={accounts.instapay}
+          onChange={(v) => setAccounts((s) => ({ ...s, instapay: v }))}
+        />
+        <Field
+          label="تعليمات للمستخدم"
+          value={accounts.instructions}
+          onChange={(v) => setAccounts((s) => ({ ...s, instructions: v }))}
+        />
         <Button
           disabled={saveAccounts.isPending}
           onClick={() => saveAccounts.mutate()}
           className="h-11 w-full rounded-2xl gradient-gold font-bold text-primary-foreground"
         >
-          {saveAccounts.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ بيانات التحويل"}
+          {saveAccounts.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            "حفظ بيانات التحويل"
+          )}
         </Button>
       </div>
 
@@ -3093,7 +3580,9 @@ function TopupsTab() {
             onClick={() => setStatus(s)}
             className={cn(
               "rounded-full border px-3 py-1.5 text-xs",
-              status === s ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
+              status === s
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-border bg-surface text-muted-foreground",
             )}
           >
             {s === "pending" ? "قيد المراجعة" : s === "approved" ? "مؤكدة" : "مرفوضة"}
@@ -3111,13 +3600,17 @@ function TopupsTab() {
         <div className="space-y-2">
           {rows.data?.list.map((r) => (
             <div key={r.id} className="surface-card space-y-2 p-3">
-              <p className="text-sm font-bold">{rows.data?.names[r.user_id] ?? r.user_id.slice(0, 8)}</p>
+              <p className="text-sm font-bold">
+                {rows.data?.names[r.user_id] ?? r.user_id.slice(0, 8)}
+              </p>
               <p className="text-xs text-muted-foreground">
-                {r.coins.toLocaleString("en-US")} كوينز · {(r.amount_cents / 100).toFixed(2)} {r.currency} ·{" "}
-                {METHOD_LABEL_AR[r.method] ?? r.method}
+                {r.coins.toLocaleString("en-US")} كوينز · {(r.amount_cents / 100).toFixed(2)}{" "}
+                {r.currency} · {METHOD_LABEL_AR[r.method] ?? r.method}
               </p>
               <p className="text-xs">مرجع التحويل: {r.sender_reference}</p>
-              <p className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString("ar")}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {new Date(r.created_at).toLocaleString("ar")}
+              </p>
               {r.status === "pending" && (
                 <div className="flex gap-2">
                   <Button
@@ -3129,14 +3622,18 @@ function TopupsTab() {
                   </Button>
                   <Button
                     disabled={review.isPending}
-                    onClick={() => review.mutate({ id: r.id, approve: false, note: "لم يتم التحقق من التحويل" })}
+                    onClick={() =>
+                      review.mutate({ id: r.id, approve: false, note: "لم يتم التحقق من التحويل" })
+                    }
                     className="h-10 flex-1 rounded-xl bg-destructive/20 text-xs font-bold text-destructive hover:bg-destructive/30"
                   >
                     رفض
                   </Button>
                 </div>
               )}
-              {r.note ? <p className="text-[11px] text-muted-foreground">ملاحظة: {r.note}</p> : null}
+              {r.note ? (
+                <p className="text-[11px] text-muted-foreground">ملاحظة: {r.note}</p>
+              ) : null}
             </div>
           ))}
         </div>
@@ -3225,7 +3722,9 @@ function BannersTab() {
       };
       const { data, error } = await db
         .from("banners")
-        .select("id, title, subtitle, image_url, link_url, kind, starts_at, ends_at, is_active, sort_order")
+        .select(
+          "id, title, subtitle, image_url, link_url, kind, starts_at, ends_at, is_active, sort_order",
+        )
         .order("sort_order", { ascending: true });
       if (error) throw new Error(error.message);
       return data ?? [];
@@ -3308,7 +3807,9 @@ function BannersTab() {
               onClick={() => setDraft((d) => ({ ...d, kind: key }))}
               className={cn(
                 "flex-1 rounded-2xl border px-3 py-2 text-xs font-bold",
-                draft.kind === key ? "border-primary/60 gradient-gold text-primary-foreground" : "border-border bg-surface text-muted-foreground",
+                draft.kind === key
+                  ? "border-primary/60 gradient-gold text-primary-foreground"
+                  : "border-border bg-surface text-muted-foreground",
               )}
             >
               {label}
@@ -3350,7 +3851,9 @@ function BannersTab() {
             onClick={() => setDraft((d) => ({ ...d, isActive: !d.isActive }))}
             className={cn(
               "mt-5 h-11 rounded-2xl border text-xs font-bold",
-              draft.isActive ? "border-primary/60 gradient-gold text-primary-foreground" : "border-border bg-surface text-muted-foreground",
+              draft.isActive
+                ? "border-primary/60 gradient-gold text-primary-foreground"
+                : "border-border bg-surface text-muted-foreground",
             )}
           >
             {draft.isActive ? "مُفعّل" : "موقوف"}
@@ -3405,8 +3908,8 @@ function BannersTab() {
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold">{b.title}</p>
             <p className="truncate text-[11px] text-muted-foreground">
-              {b.kind === "event" ? "حدث" : b.kind === "contest" ? "مسابقة" : "إعلان"} · ترتيب {b.sort_order} ·{" "}
-              {b.is_active ? "مُفعّل" : "موقوف"}
+              {b.kind === "event" ? "حدث" : b.kind === "contest" ? "مسابقة" : "إعلان"} · ترتيب{" "}
+              {b.sort_order} · {b.is_active ? "مُفعّل" : "موقوف"}
             </p>
           </div>
           <Button
@@ -3430,13 +3933,21 @@ function BannersTab() {
           >
             تعديل
           </Button>
-          <Button size="sm" variant="destructive" className="rounded-xl" onClick={() => remove.mutate(b.id)}>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="rounded-xl"
+            onClick={() => remove.mutate(b.id)}
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       ))}
       {!banners.isLoading && (banners.data ?? []).length === 0 && (
-        <EmptyState title="لا توجد بنرات" hint="أضف بنر إعلان أو حدث أو مسابقة ليظهر أعلى الصفحة الرئيسية" />
+        <EmptyState
+          title="لا توجد بنرات"
+          hint="أضف بنر إعلان أو حدث أو مسابقة ليظهر أعلى الصفحة الرئيسية"
+        />
       )}
     </div>
   );
@@ -3466,20 +3977,26 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
   const [publicId, setPublicId] = useState(prefill ?? "");
   const [device, setDevice] = useState("");
   const [video, setVideo] = useState("");
-  const [found, setFound] = useState<{ profile: WelcomeProfile; alreadyClaimed: boolean } | null>(null);
+  const [found, setFound] = useState<{ profile: WelcomeProfile; alreadyClaimed: boolean } | null>(
+    null,
+  );
   const { userId } = useSupabaseSession();
 
   const managers = useQuery({
     queryKey: ["welcome-managers"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("user_roles").select("user_id").eq("role", "welcome_manager");
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "welcome_manager");
       if (error) throw error;
       return data ?? [];
     },
   });
 
   const joinTeam = useMutation({
-    mutationFn: async () => adminSetUserRole({ data: { userId: userId!, role: "welcome_manager", grant: true } }),
+    mutationFn: async () =>
+      adminSetUserRole({ data: { userId: userId!, role: "welcome_manager", grant: true } }),
     onSuccess: async () => {
       toast.success("تمت إضافة حسابك إلى فريق الترحيبية");
       await managers.refetch();
@@ -3496,9 +4013,13 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
   });
 
   const lookup = useMutation({
-    mutationFn: async (id?: string) => lookupWelcomeUser({ data: { publicId: (id ?? publicId).trim() } }),
+    mutationFn: async (id?: string) =>
+      lookupWelcomeUser({ data: { publicId: (id ?? publicId).trim() } }),
     onSuccess: (res) =>
-      setFound({ profile: res.profile as unknown as WelcomeProfile, alreadyClaimed: res.alreadyClaimed }),
+      setFound({
+        profile: res.profile as unknown as WelcomeProfile,
+        alreadyClaimed: res.alreadyClaimed,
+      }),
     onError: (e) => {
       setFound(null);
       toast.error(e instanceof Error ? e.message : "تعذر البحث");
@@ -3537,14 +4058,17 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
       <div className="rounded-2xl border border-primary/35 bg-primary/10 p-3">
         <p className="text-xs font-black text-primary">هدية الترحيب</p>
         <p className="mt-1 text-[10px] text-muted-foreground">
-          1,000,000,000 كوينز + VIP 3 لمدة 7 أيام + معرّف من 6 أرقام — مرة واحدة فقط لكل مستخدم ولكل جهاز.
+          1,000,000,000 كوينز + VIP 3 لمدة 7 أيام + معرّف من 6 أرقام — مرة واحدة فقط لكل مستخدم ولكل
+          جهاز.
         </p>
         <div className="mt-2 flex items-center gap-2">
           <span className="flex-1 text-[10px] text-muted-foreground">
             حسابات لديها صلاحية الترحيبية: {(managers.data ?? []).length}
           </span>
           {(managers.data ?? []).some((m) => m.user_id === userId) ? (
-            <span className="rounded-full bg-primary/15 px-2 py-1 text-[10px] font-bold text-primary">حسابك مضاف ✓</span>
+            <span className="rounded-full bg-primary/15 px-2 py-1 text-[10px] font-bold text-primary">
+              حسابك مضاف ✓
+            </span>
           ) : (
             <Button
               onClick={() => joinTeam.mutate()}
@@ -3576,9 +4100,16 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
         {found && (
           <div className="space-y-2 rounded-2xl border border-border bg-background/50 p-3">
             <div className="flex items-center gap-2">
-              <UserAvatar src={found.profile.avatar_url} name={found.profile.display_name} size={36} vipLevel={found.profile.vip_level ?? 0} />
+              <UserAvatar
+                src={found.profile.avatar_url}
+                name={found.profile.display_name}
+                size={36}
+                vipLevel={found.profile.vip_level ?? 0}
+              />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-black">{found.profile.display_name ?? "مستخدم"}</p>
+                <p className="truncate text-xs font-black">
+                  {found.profile.display_name ?? "مستخدم"}
+                </p>
                 <p className="text-[10px] text-muted-foreground">ID: {found.profile.public_id}</p>
               </div>
             </div>
@@ -3603,7 +4134,11 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
                   disabled={send.isPending}
                   className="h-11 w-full rounded-2xl gradient-gold font-extrabold text-primary-foreground"
                 >
-                  {send.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "إرسال الترحيبية"}
+                  {send.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "إرسال الترحيبية"
+                  )}
                 </Button>
               </>
             )}
@@ -3621,12 +4156,23 @@ function WelcomeTab({ prefill }: { prefill?: string | null }) {
       ) : (
         <div className="space-y-2">
           {(claims.data ?? []).map((c) => (
-            <div key={c.id} className="flex items-center gap-2 rounded-2xl border border-border bg-surface p-2.5">
-              <UserAvatar src={c.profile?.avatar_url} name={c.profile?.display_name} size={32} vipLevel={c.profile?.vip_level ?? 0} />
+            <div
+              key={c.id}
+              className="flex items-center gap-2 rounded-2xl border border-border bg-surface p-2.5"
+            >
+              <UserAvatar
+                src={c.profile?.avatar_url}
+                name={c.profile?.display_name}
+                size={32}
+                vipLevel={c.profile?.vip_level ?? 0}
+              />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[11px] font-bold">{c.profile?.display_name ?? "مستخدم"}</p>
+                <p className="truncate text-[11px] font-bold">
+                  {c.profile?.display_name ?? "مستخدم"}
+                </p>
                 <p className="text-[10px] text-muted-foreground">
-                  ID: {c.profile?.public_id ?? "-"} · {new Date(c.claimed_at).toLocaleString("ar-EG")}
+                  ID: {c.profile?.public_id ?? "-"} ·{" "}
+                  {new Date(c.claimed_at).toLocaleString("ar-EG")}
                 </p>
               </div>
               <span className="text-[10px] font-extrabold text-primary">
