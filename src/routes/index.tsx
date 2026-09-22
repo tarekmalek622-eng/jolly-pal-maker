@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { authErrorMessage } from "@/lib/auth-errors";
 import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/")({
@@ -314,7 +315,7 @@ function PhoneAuth({
       }
       toast.error("الرقم أو كلمة السر غير صحيحة");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "تعذر إتمام العملية");
+      toast.error(authErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -521,7 +522,7 @@ function RegisterForm() {
       void navigate({ to: "/home", replace: true });
     } catch (error) {
       console.error(error);
-      toast.error(error instanceof Error ? error.message : "تعذر إنشاء الحساب");
+      toast.error(authErrorMessage(error, "تعذر إنشاء الحساب"));
     } finally {
       setSubmitting(false);
     }

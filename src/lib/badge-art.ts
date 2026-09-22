@@ -8,6 +8,10 @@ import emerald from "@/assets/badges/crest-emerald.png";
 import crimson from "@/assets/badges/crest-crimson.png";
 import sapphire from "@/assets/badges/crest-sapphire.png";
 import gold from "@/assets/badges/crest-gold.png";
+import violet from "@/assets/badges/crest-violet.png";
+import platinum from "@/assets/badges/crest-platinum.png";
+import rose from "@/assets/badges/crest-rose.png";
+import bronze from "@/assets/badges/crest-bronze.png";
 
 const ART: Record<string, string> = {
   super_admin: superAdmin,
@@ -32,10 +36,10 @@ const STYLE_ART: Record<string, string> = {
   crimson,
   ruby: crimson,
   flame: crimson,
-  rose: crimson,
-  coral: crimson,
-  magenta: crimson,
-  pink: crimson,
+  rose,
+  coral: rose,
+  magenta: rose,
+  pink: rose,
   sapphire,
   azure: sapphire,
   sky: sapphire,
@@ -50,14 +54,14 @@ const STYLE_ART: Record<string, string> = {
   lime: emerald,
   gold,
   amber: gold,
-  honey: gold,
-  bronze: gold,
-  sunset: gold,
-  platinum: sapphire,
-  pearl: sapphire,
-  diamond: sapphire,
-  violet: imperial,
-  obsidian: imperial,
+  honey: bronze,
+  bronze,
+  sunset: bronze,
+  platinum,
+  pearl: platinum,
+  diamond: platinum,
+  violet,
+  obsidian: violet,
 };
 
 /** صورة الشارة الرسمية حسب المفتاح ثم حسب نمطها، أو null إذا لم توجد. */

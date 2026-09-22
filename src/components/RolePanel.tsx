@@ -72,7 +72,8 @@ export function RolePanel({ userId, isRoomOwner, isRoomModerator, className }: R
 
   const titles: Array<{ label: string; icon: "crown" | "shield" | "star" | "users" }> = [];
   for (const role of ["super_admin", "admin", "moderator", "host"]) {
-    if (data.data?.roles.includes(role)) titles.push({ label: ROLE_LABELS[role], icon: "shield" });
+    if (data.data?.roles.includes(role))
+      titles.push({ label: ROLE_LABELS[role] ?? role, icon: "shield" });
   }
   if (isRoomOwner) titles.push({ label: "صاحب الغرفة", icon: "crown" });
   if (isRoomModerator) titles.push({ label: "مشرف الغرفة", icon: "shield" });
