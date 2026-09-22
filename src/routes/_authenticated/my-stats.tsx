@@ -29,7 +29,7 @@ function MyStatsPage() {
     queryFn: async () => {
       const [profile, wallet, sent, received, visits, friends] = await Promise.all([
         supabase.from("profiles").select("level, xp, vip_level, cvip_level").eq("id", userId!).maybeSingle(),
-        supabase.from("coin_wallets").select("balance, recharge_points").eq("user_id", userId!).maybeSingle(),
+        supabase.from("coin_wallets").select("coins, recharge_points").eq("user_id", userId!).maybeSingle(),
         supabase.from("gift_transactions").select("total_price").eq("sender_id", userId!).limit(1000),
         supabase.from("gift_transactions").select("total_price").eq("receiver_id", userId!).limit(1000),
         supabase.from("profile_visits").select("id", { count: "exact", head: true }).eq("profile_id", userId!),
@@ -42,7 +42,7 @@ function MyStatsPage() {
         xp: Number(profile.data?.xp ?? 0),
         vip: profile.data?.vip_level ?? 0,
         cvip: profile.data?.cvip_level ?? 0,
-        balance: Number(wallet.data?.balance ?? 0),
+        balance: Number(wallet.data?.coins ?? 0),
         points: Number(wallet.data?.recharge_points ?? 0),
         sent: sum(sent.data as { total_price: number }[] | null),
         received: sum(received.data as { total_price: number }[] | null),
