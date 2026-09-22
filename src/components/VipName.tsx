@@ -10,19 +10,22 @@ export function VipName({
   name,
   vipLevel = 0,
   className,
+  color,
 }: {
   name: string;
   vipLevel?: number;
   className?: string;
+  color?: string | null;
 }) {
   const visual = getVipVisual(vipLevel);
   return (
     <span
       className={cn(
         "truncate font-bold",
-        visual?.nameClass,
+        !color && visual?.nameClass,
         className,
       )}
+      style={color ? { color } : undefined}
     >
       {name}
     </span>
