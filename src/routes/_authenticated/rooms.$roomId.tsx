@@ -604,46 +604,17 @@ function RoomPage() {
       hideNav
       fullBleed
       header={
-        <header className="fixed inset-x-0 top-0 z-40 mx-auto max-w-lg px-3 pb-3 pt-3 text-foreground">
-          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-border/50 bg-background/65 p-2 backdrop-blur-xl">
+        <header className="fixed inset-x-0 top-0 z-40 mx-auto max-w-lg px-3 pb-2 pt-3 text-foreground">
+          {/* الصف الأعلى: زر الخروج يسارًا وبطاقة الغرفة/المالك يمينًا كما في التصميم المرجعي */}
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
             <button
               onClick={() => setLeaveOpen(true)}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface/80"
-              aria-label="تصغير أو خروج"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border/50 bg-background/60 backdrop-blur-xl"
+              aria-label="خروج من الغرفة"
             >
-              <ArrowRight className="h-5 w-5" />
+              <Power className="h-5 w-5" />
             </button>
-            <div className="min-w-0 text-center">
-              <p className="truncate text-sm font-black">{room.data.name}</p>
-              <div className="mt-0.5 flex items-center justify-center gap-1.5 text-[9px] text-muted-foreground">
-                <span>ID: {room.data.room_code}</span>
-                <span>•</span>
-                <span>
-                  {Math.max(liveCount, members.data?.includes(userId ?? "") ? 1 : 0)} متواجد
-                </span>
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    voice.status === "connected" ? "bg-success" : "bg-destructive",
-                  )}
-                />
-              </div>
-            </div>
-            <div className="flex shrink-0 gap-1">
-              <button
-                onClick={() => setCupOpen(true)}
-                className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15"
-                aria-label="كأس الغرفة"
-              >
-                <Trophy className="h-4 w-4 text-primary" />
-              </button>
-              <button
-                onClick={() => setCosmeticsOpen(true)}
-                className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80"
-                aria-label="تزيين الغرفة"
-              >
-                <Sparkles className="h-4 w-4" />
-              </button>
+            <div className="flex min-w-0 items-center justify-end gap-1">
               {canManage && (
                 <button
                   onClick={() => {
@@ -652,24 +623,95 @@ function RoomPage() {
                     setRoomImagePreview(null);
                     setManageOpen(true);
                   }}
-                  className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border/40 bg-background/50 backdrop-blur-xl"
                   aria-label="إدارة الغرفة"
                 >
                   <Settings className="h-4 w-4" />
                 </button>
               )}
-            </div>
-          </div>
-          <div className="mt-1 flex justify-between px-1">
-            <BadgeStrip userId={userId} rank="عضو" count={0} />
-            {canManage && (requests.data?.length ?? 0) > 0 && (
               <button
-                onClick={() => setRequestsOpen(true)}
-                className="rounded-full bg-accent px-2 py-1 text-[9px] font-bold text-accent-foreground"
+                onClick={() => setCosmeticsOpen(true)}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border/40 bg-background/50 backdrop-blur-xl"
+                aria-label="تزيين الغرفة"
               >
-                {requests.data?.length} طلب مايك
+                <Sparkles className="h-4 w-4" />
               </button>
-            )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setRoomPanelsOpen(true)}
+              className="flex shrink-0 items-center gap-2 rounded-full border border-primary/40 bg-background/70 py-1 pe-1 ps-2 backdrop-blur-xl"
+            >
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-primary/20">
+                <ArrowRight className="h-3.5 w-3.5 rotate-180 text-primary" />
+              </span>
+              <span className="min-w-0 text-end">
+                <span className="block max-w-28 truncate text-[11px] font-black">
+                  {room.data.name}
+                </span>
+                <span className="block text-[9px] text-muted-foreground">
+                  ID:{room.data.room_code}
+                </span>
+              </span>
+              <UserAvatar
+                src={personOf(room.data.owner_id)?.avatar_url}
+                name={personOf(room.data.owner_id)?.display_name ?? room.data.name}
+                size={34}
+                vipLevel={personOf(room.data.owner_id)?.vip_level ?? 0}
+              />
+            </button>
+          </div>
+
+          {/* صف العدّاد والموسيقى والإعجابات */}
+          <div className="mt-2 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setRoomPanelsTab("members");
+                setRoomPanelsOpen(true);
+              }}
+              className="flex shrink-0 items-center gap-1 rounded-full border border-border/40 bg-background/55 px-2 py-1 backdrop-blur-xl"
+            >
+              <span className="text-[10px] font-black">
+                {Math.max(liveCount, members.data?.includes(userId ?? "") ? 1 : 0)}
+              </span>
+              <UserAvatar
+                src={myProfile.data?.avatar_url}
+                name={myProfile.data?.display_name}
+                size={22}
+                vipLevel={myProfile.data?.vip_level ?? 0}
+              />
+            </button>
+            <div className="flex min-w-0 items-center justify-center gap-1.5">
+              <span
+                className={cn(
+                  "h-1.5 w-1.5 shrink-0 rounded-full",
+                  voice.status === "connected" ? "bg-success" : "bg-destructive",
+                )}
+              />
+              {voice.musicPlaying && (
+                <span className="flex items-center gap-1 rounded-full border border-border/40 bg-background/55 px-2 py-0.5 text-[9px] font-bold backdrop-blur-xl">
+                  <Music className="h-3 w-3" />
+                  موسيقى
+                </span>
+              )}
+              {canManage && (requests.data?.length ?? 0) > 0 && (
+                <button
+                  onClick={() => setRequestsOpen(true)}
+                  className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[9px] font-bold text-accent-foreground"
+                >
+                  {requests.data?.length} طلب مايك
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setCupOpen(true)}
+              className="flex shrink-0 items-center gap-1 rounded-full border border-border/40 bg-background/55 px-2 py-1 text-[10px] font-black backdrop-blur-xl"
+              aria-label="كأس الغرفة"
+            >
+              <Trophy className="h-3.5 w-3.5 text-primary" />
+            </button>
           </div>
         </header>
       }
