@@ -479,8 +479,8 @@ function UsersTab({
                 <Input
                   value={idDraft[u.id] ?? u.public_id}
                   onChange={(e) => setIdDraft((p) => ({ ...p, [u.id]: e.target.value }))}
-                  placeholder="ID الجديد (أرقام فقط)"
-                  inputMode="numeric"
+                  placeholder="ID الجديد (حروف أو أرقام)"
+
                   className="h-10 rounded-xl bg-surface text-xs"
                 />
                 <Input
