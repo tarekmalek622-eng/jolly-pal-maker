@@ -16,6 +16,7 @@ import {
   Mic,
   MicOff,
   Music,
+  Power,
   Camera,
   Send,
   Settings,
