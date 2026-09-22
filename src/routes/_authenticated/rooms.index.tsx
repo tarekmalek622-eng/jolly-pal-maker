@@ -39,7 +39,7 @@ function RoomsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("rooms")
-        .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count")
+        .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified")
         .eq("is_disabled", false)
         .order("member_count", { ascending: false })
         .limit(100);
@@ -55,7 +55,7 @@ function RoomsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("rooms")
-        .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count")
+        .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified")
         .eq("owner_id", userId!);
       if (error) throw error;
       return (data ?? []) as RoomRow[];

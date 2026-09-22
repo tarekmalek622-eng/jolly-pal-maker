@@ -4,9 +4,12 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Backpack,
+  BarChart3,
   Camera,
   Coins,
   Crown,
+  LifeBuoy,
+  ListChecks,
   LogOut,
   Pencil,
   Shield,
@@ -412,6 +415,26 @@ function MePage() {
           </span>
           <span className="text-sm font-bold">العائلات</span>
         </Link>
+        <Link to="/tasks" className="surface-card flex items-center gap-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-gold">
+            <ListChecks className="h-5 w-5 text-primary-foreground" />
+          </span>
+          <span className="text-sm font-bold">المهام والجوائز</span>
+        </Link>
+        <Link to="/support" className="surface-card flex items-center gap-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
+            <LifeBuoy className="h-5 w-5 text-primary" />
+          </span>
+          <span className="text-sm font-bold">الدعم والشكاوى</span>
+        </Link>
+        {isAdmin.data && (
+          <Link to="/owner-stats" className="surface-card flex items-center gap-3 p-4">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/15">
+              <BarChart3 className="h-5 w-5 text-accent" />
+            </span>
+            <span className="text-sm font-bold">الإحصائيات</span>
+          </Link>
+        )}
         {canOpenAdmin && (
           <Link
             to="/admin"

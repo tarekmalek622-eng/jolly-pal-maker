@@ -19,6 +19,9 @@ export const ADMIN_SECTION_LABELS: Record<string, string> = {
   roomSystems: "أنظمة الغرفة",
   families: "العائلات",
   logs: "السجل",
+  tasks: "المهام",
+  support: "الدعم",
+  stats: "الإحصائيات",
 };
 
 export function adminSectionLabel(key: string) {

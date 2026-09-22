@@ -698,6 +698,8 @@ export type Database = {
       }
       direct_messages: {
         Row: {
+          audio_duration_ms: number | null
+          audio_url: string | null
           body: string
           created_at: string
           id: string
@@ -708,6 +710,8 @@ export type Database = {
           sender_id: string
         }
         Insert: {
+          audio_duration_ms?: number | null
+          audio_url?: string | null
           body: string
           created_at?: string
           id?: string
@@ -718,6 +722,8 @@ export type Database = {
           sender_id: string
         }
         Update: {
+          audio_duration_ms?: number | null
+          audio_url?: string | null
           body?: string
           created_at?: string
           id?: string
@@ -1074,6 +1080,8 @@ export type Database = {
       gifts: {
         Row: {
           animation_url: string | null
+          available_from: string | null
+          available_until: string | null
           category: string
           created_at: string
           display_scale: number
@@ -1082,6 +1090,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          is_seasonal: boolean
           name: string
           price: number
           rarity: string
@@ -1095,6 +1104,8 @@ export type Database = {
         }
         Insert: {
           animation_url?: string | null
+          available_from?: string | null
+          available_until?: string | null
           category?: string
           created_at?: string
           display_scale?: number
@@ -1103,6 +1114,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_seasonal?: boolean
           name: string
           price: number
           rarity?: string
@@ -1116,6 +1128,8 @@ export type Database = {
         }
         Update: {
           animation_url?: string | null
+          available_from?: string | null
+          available_until?: string | null
           category?: string
           created_at?: string
           display_scale?: number
@@ -1124,6 +1138,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_seasonal?: boolean
           name?: string
           price?: number
           rarity?: string
@@ -1460,6 +1475,33 @@ export type Database = {
           is_active?: boolean
           question?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          coins_invitee: number
+          coins_inviter: number
+          created_at: string
+          id: string
+          invitee_id: string
+          inviter_id: string
+        }
+        Insert: {
+          coins_invitee?: number
+          coins_inviter?: number
+          created_at?: string
+          id?: string
+          invitee_id: string
+          inviter_id: string
+        }
+        Update: {
+          coins_invitee?: number
+          coins_inviter?: number
+          created_at?: string
+          id?: string
+          invitee_id?: string
+          inviter_id?: string
         }
         Relationships: []
       }
@@ -2063,6 +2105,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           is_disabled: boolean
+          is_verified: boolean
           max_users: number
           member_count: number
           mic_count: number
@@ -2074,6 +2117,7 @@ export type Database = {
           room_type: Database["public"]["Enums"]["room_type"]
           theme: string | null
           updated_at: string
+          xp: number
         }
         Insert: {
           background_url?: string | null
@@ -2085,6 +2129,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           is_disabled?: boolean
+          is_verified?: boolean
           max_users?: number
           member_count?: number
           mic_count?: number
@@ -2096,6 +2141,7 @@ export type Database = {
           room_type?: Database["public"]["Enums"]["room_type"]
           theme?: string | null
           updated_at?: string
+          xp?: number
         }
         Update: {
           background_url?: string | null
@@ -2107,6 +2153,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           is_disabled?: boolean
+          is_verified?: boolean
           max_users?: number
           member_count?: number
           mic_count?: number
@@ -2118,6 +2165,7 @@ export type Database = {
           room_type?: Database["public"]["Enums"]["room_type"]
           theme?: string | null
           updated_at?: string
+          xp?: number
         }
         Relationships: []
       }
@@ -2324,6 +2372,145 @@ export type Database = {
         }
         Relationships: []
       }
+      support_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_staff: boolean
+          sender_id: string
+          ticket_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_staff?: boolean
+          sender_id: string
+          ticket_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_staff?: boolean
+          sender_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      task_claims: {
+        Row: {
+          created_at: string
+          id: string
+          period_start: string
+          reward_coins: number
+          task_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          period_start: string
+          reward_coins?: number
+          task_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          period_start?: string
+          reward_coins?: number
+          task_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_claims_task_key_fkey"
+            columns: ["task_key"]
+            isOneToOne: false
+            referencedRelation: "task_definitions"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      task_definitions: {
+        Row: {
+          created_at: string
+          description: string
+          is_active: boolean
+          key: string
+          metric: string
+          period: string
+          reward_coins: number
+          sort_order: number
+          target: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          is_active?: boolean
+          key: string
+          metric: string
+          period?: string
+          reward_coins?: number
+          sort_order?: number
+          target?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          is_active?: boolean
+          key?: string
+          metric?: string
+          period?: string
+          reward_coins?: number
+          sort_order?: number
+          target?: number
+          title?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           awarded_at: string
@@ -2457,6 +2644,60 @@ export type Database = {
           price?: number
           profile_effect?: string | null
           room_effect?: string | null
+        }
+        Relationships: []
+      }
+      weekly_rank_payouts: {
+        Row: {
+          category: string
+          coins: number
+          created_at: string
+          id: string
+          rank: number
+          score: number
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          category: string
+          coins?: number
+          created_at?: string
+          id?: string
+          rank: number
+          score?: number
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          category?: string
+          coins?: number
+          created_at?: string
+          id?: string
+          rank?: number
+          score?: number
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
+      weekly_rank_weeks: {
+        Row: {
+          category: string
+          id: string
+          settled_at: string
+          week_start: string
+        }
+        Insert: {
+          category: string
+          id?: string
+          settled_at?: string
+          week_start: string
+        }
+        Update: {
+          category?: string
+          id?: string
+          settled_at?: string
+          week_start?: string
         }
         Relationships: []
       }
@@ -2785,6 +3026,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           is_disabled: boolean
+          is_verified: boolean
           max_users: number
           member_count: number
           mic_count: number
@@ -2796,6 +3038,7 @@ export type Database = {
           room_type: Database["public"]["Enums"]["room_type"]
           theme: string | null
           updated_at: string
+          xp: number
         }
         SetofOptions: {
           from: "*"
@@ -2982,6 +3225,7 @@ export type Database = {
       }
       mic_protection_for: { Args: { _user_id: string }; Returns: number }
       open_lucky_bag: { Args: { _bag_id: string }; Returns: number }
+      owner_dashboard: { Args: never; Returns: Json }
       purchase_cvip: {
         Args: { _plan_id: string }
         Returns: {
@@ -3070,6 +3314,7 @@ export type Database = {
         }
       }
       purge_event: { Args: { _event_id: string }; Returns: undefined }
+      referral_redeem: { Args: { _code: string }; Returns: Json }
       refund_item: { Args: { _user_item_id: string }; Returns: number }
       relationship_award: {
         Args: { _a: string; _amount: number; _b: string }
@@ -3176,6 +3421,7 @@ export type Database = {
           vip_level: number
         }[]
       }
+      room_level_for: { Args: { _xp: number }; Returns: number }
       room_reward_settle_week: {
         Args: { _room_id: string; _week_start: string }
         Returns: string
@@ -3477,6 +3723,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      support_create_ticket: {
+        Args: { _body: string; _category: string; _subject: string }
+        Returns: string
+      }
+      support_reply: {
+        Args: { _body: string; _close?: boolean; _ticket_id: string }
+        Returns: boolean
+      }
       suppress_duplicate_role_notification_marker: {
         Args: never
         Returns: undefined
@@ -3500,11 +3754,27 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      task_claim: { Args: { _key: string }; Returns: number }
+      task_metric_value: {
+        Args: { _metric: string; _since: string; _user_id: string }
+        Returns: number
+      }
+      task_period_start: { Args: { _period: string }; Returns: string }
+      tasks_state: { Args: never; Returns: Json }
       verify_room_password: {
         Args: { _password: string; _room_id: string }
         Returns: boolean
       }
       wallet_settings: { Args: never; Returns: Json }
+      weekly_ranking_leaderboard: {
+        Args: { _category: string; _limit?: number; _week_start: string }
+        Returns: {
+          score: number
+          user_id: string
+        }[]
+      }
+      weekly_ranking_settings: { Args: never; Returns: Json }
+      weekly_ranking_settle: { Args: { _week_start?: string }; Returns: number }
       wheel_bet: {
         Args: { _amount: number; _room_id?: string; _slot_key: string }
         Returns: {

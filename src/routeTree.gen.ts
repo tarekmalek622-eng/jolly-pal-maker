@@ -19,7 +19,10 @@ import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedOwnerStatsRouteImport } from './routes/_authenticated/owner-stats'
 import { Route as AuthenticatedStoreRouteImport } from './routes/_authenticated/store'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
+import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events.$eventId'
 import { Route as AuthenticatedFamiliesIndexRouteImport } from './routes/_authenticated/families.index'
@@ -80,9 +83,24 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOwnerStatsRoute = AuthenticatedOwnerStatsRouteImport.update({
+  id: '/owner-stats',
+  path: '/owner-stats',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedStoreRoute = AuthenticatedStoreRouteImport.update({
   id: '/store',
   path: '/store',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTasksRoute = AuthenticatedTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
@@ -147,7 +165,10 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/me': typeof AuthenticatedMeRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/owner-stats': typeof AuthenticatedOwnerStatsRoute
   '/store': typeof AuthenticatedStoreRoute
+  '/support': typeof AuthenticatedSupportRoute
+  '/tasks': typeof AuthenticatedTasksRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/families/$familyId': typeof AuthenticatedFamiliesFamilyIdRoute
@@ -168,7 +189,10 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/me': typeof AuthenticatedMeRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/owner-stats': typeof AuthenticatedOwnerStatsRoute
   '/store': typeof AuthenticatedStoreRoute
+  '/support': typeof AuthenticatedSupportRoute
+  '/tasks': typeof AuthenticatedTasksRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/families/$familyId': typeof AuthenticatedFamiliesFamilyIdRoute
@@ -191,7 +215,10 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/owner-stats': typeof AuthenticatedOwnerStatsRoute
   '/_authenticated/store': typeof AuthenticatedStoreRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
+  '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/_authenticated/families/$familyId': typeof AuthenticatedFamiliesFamilyIdRoute
@@ -214,7 +241,10 @@ export interface FileRouteTypes {
     | '/home'
     | '/me'
     | '/notifications'
+    | '/owner-stats'
     | '/store'
+    | '/support'
+    | '/tasks'
     | '/wallet'
     | '/events/$eventId'
     | '/families/$familyId'
@@ -235,7 +265,10 @@ export interface FileRouteTypes {
     | '/home'
     | '/me'
     | '/notifications'
+    | '/owner-stats'
     | '/store'
+    | '/support'
+    | '/tasks'
     | '/wallet'
     | '/events/$eventId'
     | '/families/$familyId'
@@ -257,7 +290,10 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/me'
     | '/_authenticated/notifications'
+    | '/_authenticated/owner-stats'
     | '/_authenticated/store'
+    | '/_authenticated/support'
+    | '/_authenticated/tasks'
     | '/_authenticated/wallet'
     | '/_authenticated/events/$eventId'
     | '/_authenticated/families/$familyId'
@@ -346,11 +382,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/owner-stats': {
+      id: '/_authenticated/owner-stats'
+      path: '/owner-stats'
+      fullPath: '/owner-stats'
+      preLoaderRoute: typeof AuthenticatedOwnerStatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/store': {
       id: '/_authenticated/store'
       path: '/store'
       fullPath: '/store'
       preLoaderRoute: typeof AuthenticatedStoreRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tasks': {
+      id: '/_authenticated/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof AuthenticatedTasksRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/wallet': {
@@ -428,7 +485,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMeRoute: typeof AuthenticatedMeRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedOwnerStatsRoute: typeof AuthenticatedOwnerStatsRoute
   AuthenticatedStoreRoute: typeof AuthenticatedStoreRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
+  AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedEventsEventIdRoute: typeof AuthenticatedEventsEventIdRoute
   AuthenticatedFamiliesFamilyIdRoute: typeof AuthenticatedFamiliesFamilyIdRoute
@@ -449,7 +509,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMeRoute: AuthenticatedMeRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedOwnerStatsRoute: AuthenticatedOwnerStatsRoute,
   AuthenticatedStoreRoute: AuthenticatedStoreRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
+  AuthenticatedTasksRoute: AuthenticatedTasksRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedEventsEventIdRoute: AuthenticatedEventsEventIdRoute,
   AuthenticatedFamiliesFamilyIdRoute: AuthenticatedFamiliesFamilyIdRoute,

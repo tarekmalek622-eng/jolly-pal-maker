@@ -50,7 +50,16 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 /** ترتيب ثابت للتصنيفات الأساسية حتى لا تتغير أماكن الأزرار. */
-const CATEGORY_ORDER = ["all", "flowers", "kings", "diamond", "cars", "luxury", "boxes", "legendary"];
+const CATEGORY_ORDER = [
+  "all",
+  "flowers",
+  "kings",
+  "diamond",
+  "cars",
+  "luxury",
+  "boxes",
+  "legendary",
+];
 
 export function GiftSheet({
   open,
@@ -83,13 +92,23 @@ export function GiftSheet({
       const { data, error } = await db
         .from("gifts")
         .select(
-          "id, name, emoji, image_url, thumb_url, animation_url, video_url, sound_url, sound_enabled, duration_ms, display_scale, price, rarity, category, required_vip",
+          "id, name, emoji, image_url, thumb_url, animation_url, video_url, sound_url, sound_enabled, duration_ms, display_scale, price, rarity, category, required_vip, available_from, available_until",
         )
         .eq("is_active", true)
         .order("sort_order")
         .order("price");
       if (error) throw error;
-      return (data ?? []) as GiftRow[];
+      // الهدايا الموسمية تظهر فقط داخل نافذتها الزمنية المحددة من الإدارة
+      const now = Date.now();
+      const rows = (data ?? []) as (GiftRow & {
+        available_from?: string | null;
+        available_until?: string | null;
+      })[];
+      return rows.filter(
+        (g) =>
+          (!g.available_from || new Date(g.available_from).getTime() <= now) &&
+          (!g.available_until || new Date(g.available_until).getTime() >= now),
+      ) as GiftRow[];
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -113,7 +132,9 @@ export function GiftSheet({
     const q = search.trim().toLowerCase();
     return targets
       .filter((t) => t.id !== userId)
-      .filter((t) => !q || t.display_name.toLowerCase().includes(q) || (t.public_id ?? "").includes(q));
+      .filter(
+        (t) => !q || t.display_name.toLowerCase().includes(q) || (t.public_id ?? "").includes(q),
+      );
   }, [targets, userId, search]);
 
   const selectedGift = (gifts.data ?? []).find((g) => g.id === giftId) ?? null;
@@ -145,7 +166,11 @@ export function GiftSheet({
       }
     },
     onSuccess: async () => {
-      toast.success(selected.length > 1 ? `تم إرسال الهدية إلى ${selected.length} مستخدم 🎉` : "تم إرسال الهدية 🎉");
+      toast.success(
+        selected.length > 1
+          ? `تم إرسال الهدية إلى ${selected.length} مستخدم 🎉`
+          : "تم إرسال الهدية 🎉",
+      );
       if (selectedGift) await onSent?.(selectedGift.name);
       refresh();
       setQuantity(1);
@@ -205,11 +230,20 @@ export function GiftSheet({
                     onClick={() => toggleUser(t.id)}
                     className={cn(
                       "relative flex w-16 shrink-0 flex-col items-center gap-1 rounded-2xl border p-1.5 transition-colors",
-                      selected.includes(t.id) ? "border-primary bg-primary/10" : "border-transparent",
+                      selected.includes(t.id)
+                        ? "border-primary bg-primary/10"
+                        : "border-transparent",
                     )}
                   >
-                    <UserAvatar src={t.avatar_url} name={t.display_name} size={44} vipLevel={t.vip_level} />
-                    <span className="w-full truncate text-center text-[10px]">{t.display_name}</span>
+                    <UserAvatar
+                      src={t.avatar_url}
+                      name={t.display_name}
+                      size={44}
+                      vipLevel={t.vip_level}
+                    />
+                    <span className="w-full truncate text-center text-[10px]">
+                      {t.display_name}
+                    </span>
                     {selected.includes(t.id) ? (
                       <span className="absolute -top-1 left-1 h-4 w-4 rounded-full bg-primary text-[10px] font-bold leading-4 text-primary-foreground">
                         ✓
@@ -229,7 +263,9 @@ export function GiftSheet({
                   onClick={() => setCategory(c)}
                   className={cn(
                     "h-8 shrink-0 rounded-full px-3 text-[11px] font-bold",
-                    category === c ? "gradient-gold text-primary-foreground" : "border border-border bg-surface text-muted-foreground",
+                    category === c
+                      ? "gradient-gold text-primary-foreground"
+                      : "border border-border bg-surface text-muted-foreground",
                   )}
                 >
                   {CATEGORY_LABELS[c] ?? c}
@@ -242,7 +278,9 @@ export function GiftSheet({
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
               </div>
             ) : visibleGifts.length === 0 ? (
-              <p className="py-4 text-center text-xs text-muted-foreground">لا توجد هدايا في هذا التصنيف.</p>
+              <p className="py-4 text-center text-xs text-muted-foreground">
+                لا توجد هدايا في هذا التصنيف.
+              </p>
             ) : (
               <div className="grid grid-cols-4 gap-2">
                 {visibleGifts.map((g) => (
@@ -275,7 +313,9 @@ export function GiftSheet({
                   <p className="text-[11px] text-muted-foreground">
                     معاينة التأثير · {Math.round((selectedGift.duration_ms ?? 3000) / 1000)} ثانية
                   </p>
-                  <p className="text-[11px] text-primary">{selectedGift.price.toLocaleString("en-US")} كوينز للمستلم</p>
+                  <p className="text-[11px] text-primary">
+                    {selectedGift.price.toLocaleString("en-US")} كوينز للمستلم
+                  </p>
                 </div>
               </div>
             ) : null}
@@ -288,7 +328,9 @@ export function GiftSheet({
                   onClick={() => setQuantity(n)}
                   className={cn(
                     "h-10 flex-1 rounded-xl border text-sm font-bold",
-                    quantity === n ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
+                    quantity === n
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border bg-surface text-muted-foreground",
                   )}
                 >
                   ×{n}
@@ -304,11 +346,18 @@ export function GiftSheet({
               className="mt-2 h-10 w-full rounded-xl border border-border bg-surface px-3 text-center text-sm font-bold"
               placeholder="كمية مخصصة"
             />
-            <p className="mt-1 text-[11px] text-muted-foreground">لا يوجد حد للكمية — الرصيد فقط هو الحد.</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              لا يوجد حد للكمية — الرصيد فقط هو الحد.
+            </p>
 
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-surface p-3 text-sm">
-              <span className="text-muted-foreground">رصيدك: {formatCompact(wallet.data?.coins ?? 0)}</span>
-              <span className="flex items-center gap-1 font-bold" title={`${formatFull(total)} كوينز`}>
+              <span className="text-muted-foreground">
+                رصيدك: {formatCompact(wallet.data?.coins ?? 0)}
+              </span>
+              <span
+                className="flex items-center gap-1 font-bold"
+                title={`${formatFull(total)} كوينز`}
+              >
                 <Coins className="h-4 w-4 text-primary" /> {formatCompact(total)}
               </span>
             </div>
@@ -335,7 +384,9 @@ export function GiftSheet({
                   <span className="leading-tight">
                     إرسال
                     {selected.length > 1 ? ` ×${selected.length}` : ""}
-                    <span className="block text-[9px] font-bold opacity-80">{formatCompact(total)}</span>
+                    <span className="block text-[9px] font-bold opacity-80">
+                      {formatCompact(total)}
+                    </span>
                   </span>
                 </>
               )}
