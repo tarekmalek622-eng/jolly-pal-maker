@@ -36,6 +36,8 @@ export type Profile = {
   birth_date: string | null;
   gender: "male" | "female" | null;
   bio: string | null;
+  status_text: string | null;
+  name_color: string | null;
   avatar_url: string | null;
   frame_url: string | null;
   profile_background_url: string | null;

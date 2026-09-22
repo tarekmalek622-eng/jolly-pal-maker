@@ -72,6 +72,8 @@ function MePage() {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
+  const [statusText, setStatusText] = useState("");
+  const [nameColor, setNameColor] = useState("");
   const [saving, setSaving] = useState(false);
   const [privSheet, setPrivSheet] = useState<"vip" | "cvip" | null>(null);
   const [bagOpen, setBagOpen] = useState(false);
@@ -139,7 +141,12 @@ function MePage() {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ display_name: name.trim(), bio: bio.trim() })
+      .update({
+        display_name: name.trim(),
+        bio: bio.trim(),
+        status_text: statusText.trim() || null,
+        name_color: nameColor || null,
+      })
       .eq("id", userId);
     setSaving(false);
     if (error) {
@@ -233,6 +240,8 @@ function MePage() {
                 onClick={() => {
                   setName(p?.display_name ?? "");
                   setBio(p?.bio ?? "");
+                  setStatusText(p?.status_text ?? "");
+                  setNameColor(p?.name_color ?? "");
                   setEditing((v) => !v);
                 }}
                 className={cn(
@@ -247,6 +256,7 @@ function MePage() {
               <VipName
                 name={p?.display_name ?? "..."}
                 vipLevel={p?.vip_level ?? 0}
+                color={p?.name_color}
                 className="block min-w-0 truncate text-lg"
               />
             </div>
@@ -340,6 +350,12 @@ function MePage() {
           }
         />
 
+        {p?.status_text && (
+          <p className="mt-3 inline-block rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
+            {p.status_text}
+          </p>
+        )}
+
         {p?.bio && <p className="mt-4 text-sm text-muted-foreground">{p.bio}</p>}
 
         {editing && (
@@ -350,6 +366,33 @@ function MePage() {
               maxLength={24}
               className="h-12 rounded-2xl bg-surface-2"
             />
+            <Input
+              value={statusText}
+              onChange={(e) => setStatusText(e.target.value)}
+              maxLength={40}
+              placeholder="حالتك الآن (مثال: متاح للدردشة)"
+              className="h-12 rounded-2xl bg-surface-2"
+            />
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold text-muted-foreground">لون اسمك</p>
+              <div className="flex flex-wrap gap-2">
+                {["", "#f0b90b", "#ef4444", "#22c55e", "#3b82f6", "#a855f7", "#ec4899"].map((c) => (
+                  <button
+                    key={c || "default"}
+                    type="button"
+                    onClick={() => setNameColor(c)}
+                    className={cn(
+                      "h-8 w-8 rounded-full border-2",
+                      nameColor === c ? "border-primary" : "border-border/60",
+                    )}
+                    style={c ? { background: c } : undefined}
+                    aria-label={c ? `لون ${c}` : "اللون الافتراضي"}
+                  >
+                    {!c && <span className="text-[9px] font-bold">VIP</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
             <Textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
