@@ -72,6 +72,36 @@ function ChatPage() {
     },
   });
 
+  const reactions = useQuery({
+    queryKey: ["dm-reactions", userId, otherId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const ids = (messages.data ?? []).map((m) => m.id);
+      if (ids.length === 0) return [] as { message_id: string; user_id: string; emoji: string }[];
+      const { data, error } = await supabase
+        .from("message_reactions")
+        .select("message_id, user_id, emoji")
+        .in("message_id", ids);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const REACTION_EMOJIS = ["❤️", "😂", "👍", "🔥", "😮"];
+
+  async function react(messageId: string, emoji: string) {
+    if (!userId) return;
+    const existing = (reactions.data ?? []).find((r) => r.message_id === messageId && r.user_id === userId);
+    if (existing?.emoji === emoji) {
+      await supabase.from("message_reactions").delete().eq("message_id", messageId).eq("user_id", userId);
+    } else {
+      await supabase
+        .from("message_reactions")
+        .upsert({ message_id: messageId, user_id: userId, emoji }, { onConflict: "message_id,user_id" });
+    }
+    void reactions.refetch();
+  }
+
   useEffect(() => {
     if (!userId) return;
     const channel = supabase
@@ -282,6 +312,40 @@ function ChatPage() {
                     minute: "2-digit",
                   })}
                 </p>
+                <div className="mt-1 flex items-center gap-1">
+                  {REACTION_EMOJIS.map((e) => {
+                    const count = (reactions.data ?? []).filter((r) => r.message_id === m.id && r.emoji === e).length;
+                    const active = (reactions.data ?? []).some(
+                      (r) => r.message_id === m.id && r.emoji === e && r.user_id === userId,
+                    );
+                    if (count === 0 && !active) {
+                      return (
+                        <button
+                          key={e}
+                          type="button"
+                          onClick={() => void react(m.id, e)}
+                          className="text-[11px] opacity-40"
+                          aria-label={`تفاعل ${e}`}
+                        >
+                          {e}
+                        </button>
+                      );
+                    }
+                    return (
+                      <button
+                        key={e}
+                        type="button"
+                        onClick={() => void react(m.id, e)}
+                        className={cn(
+                          "rounded-full px-1.5 text-[11px]",
+                          active ? "bg-background/30 font-bold" : "bg-background/15",
+                        )}
+                      >
+                        {e} {count > 0 ? count : ""}
+                      </button>
+                    );
+                  })}
+                </div>
                 {mine && (
                   <button
                     onClick={() => deleteMessage.mutate(m.id)}
