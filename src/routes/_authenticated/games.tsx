@@ -267,12 +267,17 @@ function GamesPage() {
               <Game77 bet={bet} onSettled={afterPlay} />
             </div>
           )}
+          {active === "roulette" && (
+            <div className="mb-3">
+              <RouletteGame bet={bet} />
+            </div>
+          )}
           {active === "supercar" && <SuperCarGame roomId={search.room ?? null} />}
 
           <div
             className={cn(
               "surface-card p-5",
-              (active === "domino" || active === "wheel" || active === "supercar") && "hidden",
+              (active === "domino" || active === "wheel" || active === "roulette" || active === "supercar") && "hidden",
             )}
           >
             <p className="text-sm font-bold">
