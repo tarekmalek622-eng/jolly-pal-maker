@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getCrownUnread } from "@/lib/crown.functions";
-import { Loader2, Users } from "lucide-react";
+import { Bell, Loader2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -13,7 +13,10 @@ export const Route = createFileRoute("/_authenticated/messages/")({
   head: () => ({
     meta: [
       { title: "الرسائل — التاج" },
-      { name: "description", content: "محادثاتك الخاصة مع الأصدقاء داخل التاج، بتحديث مباشر للرسائل الجديدة." },
+      {
+        name: "description",
+        content: "محادثاتك الخاصة مع الأصدقاء داخل التاج، بتحديث مباشر للرسائل الجديدة.",
+      },
       { property: "og:title", content: "الرسائل — التاج" },
       { property: "og:description", content: "دردشة خاصة مباشرة مع أصدقائك." },
     ],
@@ -38,7 +41,20 @@ function MessagesPage() {
     queryFn: () => fetchCrownUnread(),
     staleTime: 30_000,
   });
-
+  const notifUnread = useQuery({
+    queryKey: ["notifications-unread", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId!)
+        .is("read_at", null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    staleTime: 20_000,
+  });
 
   const threads = useQuery({
     queryKey: ["dm-threads", userId],
@@ -78,9 +94,13 @@ function MessagesPage() {
     if (!userId) return;
     const channel = supabase
       .channel("dm-inbox")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, () => {
-        void threads.refetch();
-      })
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "direct_messages" },
+        () => {
+          void threads.refetch();
+        },
+      )
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
@@ -102,6 +122,16 @@ function MessagesPage() {
             <h1 className="truncate text-lg font-bold">الرسائل</h1>
             <p className="text-[11px] text-muted-foreground">محادثاتك الخاصة · الأصدقاء من الزر</p>
           </div>
+          <Link
+            to="/notifications"
+            aria-label="الإشعارات"
+            className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-surface"
+          >
+            <Bell className="h-5 w-5" />
+            {(notifUnread.data ?? 0) > 0 && (
+              <span className="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background" />
+            )}
+          </Link>
         </div>
       }
     >
@@ -109,7 +139,9 @@ function MessagesPage() {
         to="/crown"
         className="mb-3 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-gradient-to-l from-amber-500/15 to-transparent px-3 py-3"
       >
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/20 text-lg">👑</span>
+        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/20 text-lg">
+          👑
+        </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2 text-sm font-bold">
             رسائل التاج
@@ -119,7 +151,9 @@ function MessagesPage() {
               </span>
             )}
           </span>
-          <span className="block text-[11px] text-muted-foreground">رسائل رسمية من التاج: نتائج الأحداث والإعلانات</span>
+          <span className="block text-[11px] text-muted-foreground">
+            رسائل رسمية من التاج: نتائج الأحداث والإعلانات
+          </span>
         </span>
       </Link>
       {threads.isLoading ? (
@@ -138,13 +172,24 @@ function MessagesPage() {
                 params={{ userId: other.id }}
                 className="surface-card flex items-center gap-3 p-3"
               >
-                <UserAvatar src={other.avatar_url} name={other.display_name} size={48} vipLevel={other.vip_level} online={other.is_online} />
+                <UserAvatar
+                  src={other.avatar_url}
+                  name={other.display_name}
+                  size={48}
+                  vipLevel={other.vip_level}
+                  online={other.is_online}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{other.display_name}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{last.body ?? "رسالة"}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {last.body ?? "رسالة"}
+                  </p>
                 </div>
                 <span className="text-[10px] text-muted-foreground">
-                  {new Date(last.created_at).toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(last.created_at).toLocaleTimeString("ar", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               </Link>
             ) : null,

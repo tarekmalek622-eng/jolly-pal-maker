@@ -9,3 +9,4 @@
 - [x] Room UI redesign (premium, mobile, no overlap)
 - [x] Event scheduler/queue + winner celebration banners
 - [x] Static, mobile-layout and recovery checks completed; authenticated multi-role/load certification remains environment-dependent
+- [x] Notification Center (/notifications) with real categories, realtime red dot, mark-all-read and delete

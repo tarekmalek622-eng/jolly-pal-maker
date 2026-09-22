@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Home, Compass, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCrownUnread } from "@/lib/crown.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { useSupabaseSession } from "@/hooks/use-session";
 
 const items = [
   { to: "/home", label: "الرئيسية", icon: Home },
@@ -14,6 +16,7 @@ const items = [
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { userId } = useSupabaseSession();
   const fetchUnread = useServerFn(getCrownUnread);
   const unread = useQuery({
     queryKey: ["crown-unread"],
@@ -21,7 +24,22 @@ export function BottomNav() {
     staleTime: 30_000,
     refetchInterval: 60_000,
   });
-  const hasCrown = (unread.data?.unread ?? 0) > 0;
+  const notifUnread = useQuery({
+    queryKey: ["notifications-unread", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId!)
+        .is("read_at", null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    staleTime: 20_000,
+    refetchInterval: 60_000,
+  });
+  const hasCrown = (unread.data?.unread ?? 0) > 0 || (notifUnread.data ?? 0) > 0;
 
   return (
     <nav className="fixed bottom-0 start-0 end-0 z-40 mx-auto max-w-lg">
