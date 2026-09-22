@@ -36,7 +36,11 @@ export function RolePanel({ userId, isRoomOwner, isRoomModerator, className }: R
       const uid = userId ?? "";
       const [roles, profile, family, badges] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", uid),
-        supabase.from("profiles").select("vip_level, cvip_level, level").eq("id", uid).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("vip_level, cvip_level, level")
+          .eq("id", uid)
+          .maybeSingle(),
         supabase
           .from("family_members")
           .select("role, families(name)")
@@ -61,9 +65,14 @@ export function RolePanel({ userId, isRoomOwner, isRoomModerator, className }: R
           (family.data as { families?: { name?: string } | null } | null)?.families?.name ?? null,
         badges: (badges.data ?? [])
           .map((row) => {
-            const def = (row as { badge_definitions?: { key: string; name: string; style_key: string | null } | null })
-              .badge_definitions;
-            return def ? { key: def.key, name: def.name, styleKey: def.style_key ?? "royal" } : null;
+            const def = (
+              row as {
+                badge_definitions?: { key: string; name: string; style_key: string | null } | null;
+              }
+            ).badge_definitions;
+            return def
+              ? { key: def.key, name: def.name, styleKey: def.style_key ?? "royal" }
+              : null;
           })
           .filter((item): item is { key: string; name: string; styleKey: string } => Boolean(item)),
       };
@@ -102,9 +111,7 @@ export function RolePanel({ userId, isRoomOwner, isRoomModerator, className }: R
       {data.isLoading ? (
         <div className="h-6 w-2/3 animate-pulse rounded-full bg-foreground/10" />
       ) : titles.length === 0 ? (
-        <p className="text-[11px] text-muted-foreground">
-          عضو · المستوى {data.data?.level ?? 0}
-        </p>
+        <p className="text-[11px] text-muted-foreground">عضو · المستوى {data.data?.level ?? 0}</p>
       ) : (
         <div className="flex flex-wrap gap-1.5">
           {titles.map((title) => (

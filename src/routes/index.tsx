@@ -32,7 +32,8 @@ export const Route = createFileRoute("/")({
       { title: "التاج — انضم لغرف الدردشة الصوتية" },
       {
         name: "description",
-        content: "أنشئ حسابك في ثوانٍ بالاسم والدولة والصورة، وادخل غرف صوتية مباشرة مع مجتمع عربي نشط.",
+        content:
+          "أنشئ حسابك في ثوانٍ بالاسم والدولة والصورة، وادخل غرف صوتية مباشرة مع مجتمع عربي نشط.",
       },
       { property: "og:title", content: "التاج — انضم لغرف الدردشة الصوتية" },
       {
@@ -134,7 +135,6 @@ function Landing() {
   const [checking, setChecking] = useState(true);
   const [step, setStep] = useState<"intro" | "auth" | "form">("intro");
 
-
   useEffect(() => {
     let active = true;
     void (async () => {
@@ -169,7 +169,11 @@ function Landing() {
   if (checking) {
     return (
       <div className="flex min-h-screen items-center justify-center gradient-hero">
-        <div className="flex flex-col items-center gap-3"><BrandMark size={72} /><Loader2 className="h-5 w-5 animate-spin text-primary" /><span className="text-xs font-bold text-gradient-gold">التاج</span></div>
+        <div className="flex flex-col items-center gap-3">
+          <BrandMark size={72} />
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span className="text-xs font-bold text-gradient-gold">التاج</span>
+        </div>
       </div>
     );
   }
@@ -333,66 +337,77 @@ function PhoneAuth({
       </div>
 
       <div className="surface-card p-4">
-      <div className="grid grid-cols-2 gap-2 rounded-2xl bg-surface-2 p-1">
-        {([["login", "دخول"], ["signup", "حساب جديد"]] as const).map(([value, label]) => (
-          <Button
-            key={value}
-            type="button"
-            variant="ghost"
-            onClick={() => setMode(value)}
-            className={cn(
-              "h-11 rounded-xl text-sm font-semibold transition-colors",
-              mode === value ? "gradient-gold text-primary-foreground" : "text-muted-foreground",
-            )}
-          >
-            {label}
-          </Button>
-        ))}
-      </div>
-
-      <div className="mt-5 space-y-4">
-        <div className="space-y-2">
-          <Label>الدولة</Label>
-          <CountryPicker value={countryCode} onSelect={(c) => setCountryCode(c.code)} />
+        <div className="grid grid-cols-2 gap-2 rounded-2xl bg-surface-2 p-1">
+          {(
+            [
+              ["login", "دخول"],
+              ["signup", "حساب جديد"],
+            ] as const
+          ).map(([value, label]) => (
+            <Button
+              key={value}
+              type="button"
+              variant="ghost"
+              onClick={() => setMode(value)}
+              className={cn(
+                "h-11 rounded-xl text-sm font-semibold transition-colors",
+                mode === value ? "gradient-gold text-primary-foreground" : "text-muted-foreground",
+              )}
+            >
+              {label}
+            </Button>
+          ))}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">رقم الهاتف</Label>
-          <div className="flex items-center gap-2" dir="ltr">
-            <span className="flex h-12 min-w-16 items-center justify-center rounded-2xl border border-border bg-surface-2 px-3 text-sm font-semibold text-primary">
-              +{dial}
-            </span>
+
+        <div className="mt-5 space-y-4">
+          <div className="space-y-2">
+            <Label>الدولة</Label>
+            <CountryPicker value={countryCode} onSelect={(c) => setCountryCode(c.code)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">رقم الهاتف</Label>
+            <div className="flex items-center gap-2" dir="ltr">
+              <span className="flex h-12 min-w-16 items-center justify-center rounded-2xl border border-border bg-surface-2 px-3 text-sm font-semibold text-primary">
+                +{dial}
+              </span>
+              <Input
+                id="phone"
+                type="tel"
+                inputMode="numeric"
+                dir="ltr"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="1xxxxxxxxx"
+                className="h-12 flex-1 rounded-2xl bg-surface text-left"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">كلمة السر</Label>
             <Input
-              id="phone"
-              type="tel"
-              inputMode="numeric"
-              dir="ltr"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="1xxxxxxxxx"
-              className="h-12 flex-1 rounded-2xl bg-surface text-left"
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••"
+              className="h-12 rounded-2xl bg-surface"
             />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">كلمة السر</Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••"
-            className="h-12 rounded-2xl bg-surface"
-          />
-        </div>
-      </div>
 
-      <Button
-        onClick={() => void submit()}
-        disabled={busy}
-        className="mt-7 h-14 w-full rounded-2xl gradient-gold text-base font-bold text-primary-foreground hover:opacity-90"
-      >
-        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : mode === "login" ? "دخول" : "متابعة"}
-      </Button>
+        <Button
+          onClick={() => void submit()}
+          disabled={busy}
+          className="mt-7 h-14 w-full rounded-2xl gradient-gold text-base font-bold text-primary-foreground hover:opacity-90"
+        >
+          {busy ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : mode === "login" ? (
+            "دخول"
+          ) : (
+            "متابعة"
+          )}
+        </Button>
       </div>
       <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5 text-success" />
@@ -618,7 +633,12 @@ function RegisterForm() {
         <div className="space-y-2">
           <Label>الجنس</Label>
           <div className="grid grid-cols-2 gap-3">
-            {([["male", "ذكر"], ["female", "أنثى"]] as const).map(([value, label]) => (
+            {(
+              [
+                ["male", "ذكر"],
+                ["female", "أنثى"],
+              ] as const
+            ).map(([value, label]) => (
               <button
                 key={value}
                 type="button"

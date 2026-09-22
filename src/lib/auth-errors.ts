@@ -1,13 +1,19 @@
 /** ترجمة رسائل المصادقة وقاعدة البيانات إلى العربية حتى لا تظهر رسائل إنجليزية للمستخدم. */
 const RULES: Array<{ test: RegExp; message: string }> = [
-  { test: /already registered|already exists|duplicate key/i, message: "هذا الرقم مسجّل بالفعل، سجّل الدخول" },
+  {
+    test: /already registered|already exists|duplicate key/i,
+    message: "هذا الرقم مسجّل بالفعل، سجّل الدخول",
+  },
   { test: /invalid login credentials/i, message: "الرقم أو كلمة السر غير صحيحة" },
   { test: /password.*(6|short|least)/i, message: "كلمة السر 6 أحرف أو أرقام على الأقل" },
   { test: /invalid.*email|email address.*invalid/i, message: "اكتب رقم هاتف صحيح" },
   { test: /email not confirmed/i, message: "لم يتم تأكيد الحساب بعد" },
   { test: /rate limit|too many requests/i, message: "محاولات كثيرة، انتظر قليلًا ثم أعد المحاولة" },
   { test: /network|fetch failed|timeout/i, message: "تعذر الاتصال بالخدمة، تحقق من الإنترنت" },
-  { test: /permission denied|not authorized|unauthorized|row-level security/i, message: "لا تملك صلاحية لهذه العملية" },
+  {
+    test: /permission denied|not authorized|unauthorized|row-level security/i,
+    message: "لا تملك صلاحية لهذه العملية",
+  },
   { test: /user not found/i, message: "الحساب غير موجود" },
   { test: /signup.*disabled/i, message: "تسجيل الحسابات متوقف حاليًا" },
   { test: /public_id|display_name.*taken/i, message: "الاسم أو المعرّف مستخدم بالفعل، اختر غيره" },
