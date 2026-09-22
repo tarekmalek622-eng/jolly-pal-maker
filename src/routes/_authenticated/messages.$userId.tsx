@@ -247,6 +247,15 @@ function ChatPage() {
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setEmojiOpen((value) => !value)} className="h-12 w-12 rounded-2xl p-0" aria-label="رموز تعبيرية"><Smile className="h-5 w-5" /></Button>
           <Button variant="outline" onClick={() => setGiftOpen(true)} className="h-12 w-12 rounded-2xl p-0" aria-label="إرسال هدية"><Gift className="h-5 w-5" /></Button>
+          <Button
+            variant={recording ? "destructive" : "outline"}
+            disabled={sendingVoice}
+            onClick={() => (recording ? stopRecording() : void startRecording())}
+            className="h-12 w-12 rounded-2xl p-0"
+            aria-label={recording ? "إيقاف التسجيل وإرسال" : "رسالة صوتية"}
+          >
+            {recording ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          </Button>
           <Input
             value={text}
             onChange={(e) => setText(e.target.value)}
