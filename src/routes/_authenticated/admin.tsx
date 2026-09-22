@@ -84,7 +84,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
     ],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
-    section: typeof search.section === "string" ? search.section : undefined,
+    section: typeof search["section"] === "string" ? (search["section"] as string) : undefined,
   }),
   component: AdminPage,
 });

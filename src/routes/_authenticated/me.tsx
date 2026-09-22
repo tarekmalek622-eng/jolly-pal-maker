@@ -19,6 +19,7 @@ import { uploadUserImage } from "@/lib/media";
 import { screenProfilePhoto } from "@/lib/moderation.functions";
 import { clearDeviceCredentials } from "@/lib/device-account";
 import { levelProgress } from "@/lib/levels";
+import { adminSectionLabel } from "@/lib/admin-sections";
 import { ProfileShowcase } from "@/components/ProfileShowcase";
 import { RelationshipShowcase } from "@/components/RelationshipShowcase";
 
@@ -369,7 +370,7 @@ function MePage() {
           <span className="text-sm font-bold">العائلات</span>
         </Link>
         {canOpenAdmin && (
-          <Link to="/admin" className="surface-card flex items-center gap-3 p-4">
+          <Link to="/admin" search={{ section: undefined }} className="surface-card flex items-center gap-3 p-4">
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
               <Shield className="h-5 w-5 text-primary" />
             </span>
@@ -377,6 +378,47 @@ function MePage() {
           </Link>
         )}
       </div>
+
+      {/* صلاحياتي الإدارية — قسم مستقل داخل حسابي يعرض الأقسام المخصصة لي فقط */}
+      {(adminSections.data ?? []).length > 0 && (
+        <section className="surface-card mt-4 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/15">
+              <Shield className="h-4 w-4 text-primary" />
+            </span>
+            <div>
+              <p className="text-sm font-black">صلاحياتي</p>
+              <p className="text-[10px] text-muted-foreground">
+                {(adminSections.data ?? []).includes("*")
+                  ? "وصول كامل لكل أقسام الإدارة"
+                  : `${(adminSections.data ?? []).length} قسم مخصص لحسابك`}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(adminSections.data ?? []).includes("*") ? (
+              <Link
+                to="/admin"
+                search={{ section: undefined }}
+                className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-[11px] font-bold text-primary"
+              >
+                كل الأقسام
+              </Link>
+            ) : (
+              (adminSections.data ?? []).map((key) => (
+                <Link
+                  key={key}
+                  to="/admin"
+                  search={{ section: key }}
+                  className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-[11px] font-bold text-primary"
+                >
+                  {adminSectionLabel(key)}
+                </Link>
+              ))
+            )}
+          </div>
+        </section>
+      )}
 
       {/* حقيبتي — كل ما اشتريته من المتجر بصوره مع التفعيل المباشر */}
       <Sheet open={bagOpen} onOpenChange={setBagOpen}>
