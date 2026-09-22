@@ -171,7 +171,16 @@ function AdminPage() {
 
   return (
     <AppShell
-      header={<PageHeader title="لوحة الإدارة" subtitle="تحكم كامل بالتطبيق — كل إجراء يُسجَّل" />}
+      header={
+        <PageHeader
+          title={!fullAccess && allowedTabs.length === 1 ? allowedTabs[0]!.label : "لوحة الإدارة"}
+          subtitle={
+            !fullAccess && allowedTabs.length === 1
+              ? "قسم مخصص لحسابك — كل إجراء يُسجَّل"
+              : "تحكم كامل بالتطبيق — كل إجراء يُسجَّل"
+          }
+        />
+      }
     >
       {ownerBadge.data?.badge_definitions && (
         <div className="mb-3 flex items-center gap-3 rounded-2xl border border-primary/35 bg-primary/10 p-3">
