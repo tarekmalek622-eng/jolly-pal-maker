@@ -11,6 +11,7 @@ import {
   Crown,
   LifeBuoy,
   ListChecks,
+  Gift,
   LogOut,
   Pencil,
   Search,
