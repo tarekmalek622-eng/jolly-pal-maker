@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { roomThemeClass } from "@/components/RoomThemePicker";
 import { UserAvatar } from "@/components/UserAvatar";
 import { GiftSheet, type GiftTarget } from "@/components/GiftSheet";
 import { LuckyBagSheet, LuckyBagStrip } from "@/components/LuckyBag";
@@ -167,7 +168,7 @@ function RoomPage() {
       const { data, error } = await supabase
         .from("rooms")
         .select(
-          "id, room_code, name, image_url, background_url, theme, owner_id, is_active, is_disabled, chat_locked",
+          "id, room_code, name, image_url, background_url, theme, theme_style, owner_id, is_active, is_disabled, chat_locked",
         )
         .eq("id", roomId)
         .maybeSingle();
@@ -738,6 +739,12 @@ function RoomPage() {
         />
         <div className="absolute inset-0 bg-background/20" />
       </div>
+      <div
+        className={cn(
+          "pointer-events-none fixed inset-0 -z-10 opacity-90",
+          roomThemeClass(room.data.theme_style),
+        )}
+      />
       {room.data.background_url && <RoomBackground url={room.data.background_url} />}
 
       {room.data.theme && (
@@ -800,7 +807,10 @@ function RoomPage() {
               <div
                 className={cn(
                   "relative flex h-13 w-13 items-center justify-center rounded-full border sm:h-15 sm:w-15",
-                  speaking ? "border-success ring-2 ring-success/50" : "border-border/60",
+                  person && "seat-pop",
+                  speaking
+                    ? "speaker-halo border-success ring-2 ring-success/50"
+                    : "border-border/60",
                   person?.id === room.data!.owner_id
                     ? "border-primary bg-primary/10 shadow-glow"
                     : "bg-background/35 backdrop-blur-md",

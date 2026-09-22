@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Crown, Gift, Loader2, Sparkles, Trophy, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { RoomThemePicker } from "@/components/RoomThemePicker";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,9 +33,24 @@ type TreasureState = {
   level: number;
   progress: number;
   total_opened: number;
-  current: { level?: number; name?: string; target?: number; prizes?: { rank: number; coins: number }[] };
-  levels: { level: number; name: string; target: number; prizes: { rank: number; coins: number }[] }[];
-  contributors: { user_id: string; display_name: string | null; avatar_url: string | null; amount: number }[];
+  current: {
+    level?: number;
+    name?: string;
+    target?: number;
+    prizes?: { rank: number; coins: number }[];
+  };
+  levels: {
+    level: number;
+    name: string;
+    target: number;
+    prizes: { rank: number; coins: number }[];
+  }[];
+  contributors: {
+    user_id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    amount: number;
+  }[];
   recent_opens: { level: number; total_prize: number; created_at: string }[];
 };
 
@@ -42,12 +58,31 @@ type RewardsState = {
   week_start: string;
   weekly_revenue: number;
   last_week_revenue: number;
-  tier: { revenue?: number; owner_coins?: number; admin_coins?: number; percent?: number; weekly_cap?: number };
-  tiers: { revenue: number; owner_coins: number; admin_coins: number; admins_min: number; admins_max: number; percent: number; weekly_cap: number }[];
+  tier: {
+    revenue?: number;
+    owner_coins?: number;
+    admin_coins?: number;
+    percent?: number;
+    weekly_cap?: number;
+  };
+  tiers: {
+    revenue: number;
+    owner_coins: number;
+    admin_coins: number;
+    admins_min: number;
+    admins_max: number;
+    percent: number;
+    weekly_cap: number;
+  }[];
   min_weekly_cup: number;
   registration: string;
   admin_ids: string[] | null;
-  last_settlement: { week_start?: string; revenue?: number; owner_coins?: number; admin_coins?: number };
+  last_settlement: {
+    week_start?: string;
+    revenue?: number;
+    owner_coins?: number;
+    admin_coins?: number;
+  };
 };
 
 export function RoomPanels({
@@ -88,7 +123,9 @@ export function RoomPanels({
               onClick={() => setTab(t.key)}
               className={cn(
                 "shrink-0 rounded-full border px-3 py-2 text-[11px] font-bold transition-colors",
-                tab === t.key ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+                tab === t.key
+                  ? "border-primary bg-primary/15 text-primary"
+                  : "border-border bg-surface-2 text-muted-foreground",
               )}
             >
               {t.label}
@@ -97,9 +134,11 @@ export function RoomPanels({
         </div>
 
         <div className="mt-3 pb-6">
-          {tab === "info" && <InfoPanel roomId={roomId} />}
+          {tab === "info" && <InfoPanel roomId={roomId} isOwner={isOwner} />}
           {tab === "members" && <MembersPanel roomId={roomId} />}
-          {tab === "activities" && <ActivitiesPanel roomId={roomId} userId={userId} canManage={canManage} />}
+          {tab === "activities" && (
+            <ActivitiesPanel roomId={roomId} userId={userId} canManage={canManage} />
+          )}
           {tab === "treasure" && <TreasurePanel roomId={roomId} />}
           {tab === "rewards" && <RewardsPanel roomId={roomId} isOwner={isOwner} />}
         </div>
@@ -116,13 +155,15 @@ function Loading() {
   );
 }
 
-function InfoPanel({ roomId }: { roomId: string }) {
+function InfoPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean }) {
   const room = useQuery({
     queryKey: ["room-info", roomId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("rooms")
-        .select("name, room_code, description, category, member_count, mic_count, popularity")
+        .select(
+          "name, room_code, description, category, member_count, mic_count, popularity, theme_style",
+        )
         .eq("id", roomId)
         .maybeSingle();
       if (error) throw new Error(error.message);
@@ -152,7 +193,9 @@ function InfoPanel({ roomId }: { roomId: string }) {
     <div className="space-y-2">
       <div className="rounded-2xl border border-border/60 bg-surface/70 p-3">
         <p className="text-sm font-black">{room.data?.name}</p>
-        <p className="mt-1 text-[11px] text-muted-foreground">ID: {room.data?.room_code} · {room.data?.category}</p>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          ID: {room.data?.room_code} · {room.data?.category}
+        </p>
       </div>
       <div className="grid grid-cols-3 gap-2">
         <Stat label="الأعضاء" value={String(room.data?.member_count ?? 0)} />
@@ -164,7 +207,8 @@ function InfoPanel({ roomId }: { roomId: string }) {
           <Sparkles className="h-3.5 w-3.5" /> مكافآت الغرفة
         </p>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          صندوق الكنز: المستوى {treasure.data?.level ?? 1} — التقدّم {formatCompact(treasure.data?.progress ?? 0)} من{" "}
+          صندوق الكنز: المستوى {treasure.data?.level ?? 1} — التقدّم{" "}
+          {formatCompact(treasure.data?.progress ?? 0)} من{" "}
           {formatCompact(treasure.data?.current?.target ?? 0)}
         </p>
         <p className="mt-1 text-[11px] text-muted-foreground">
@@ -172,6 +216,7 @@ function InfoPanel({ roomId }: { roomId: string }) {
           {rewards.data?.tier?.percent ?? 0}%
         </p>
       </div>
+      {isOwner && <RoomThemePicker roomId={roomId} current={room.data?.theme_style} />}
       <div className="rounded-2xl border border-border/60 bg-surface/70 p-3">
         <p className="text-xs font-bold">الإعلان</p>
         <p className="mt-1 whitespace-pre-wrap text-[11px] text-muted-foreground">
@@ -197,7 +242,9 @@ function MembersPanel({ roomId }: { roomId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("room_members")
-        .select("user_id, joined_at, profiles:user_id(display_name, avatar_url, frame_url, vip_level, level)")
+        .select(
+          "user_id, joined_at, profiles:user_id(display_name, avatar_url, frame_url, vip_level, level)",
+        )
         .eq("room_id", roomId)
         .order("joined_at", { ascending: true })
         .limit(100);
@@ -208,15 +255,34 @@ function MembersPanel({ roomId }: { roomId: string }) {
 
   if (members.isLoading) return <Loading />;
   if ((members.data ?? []).length === 0)
-    return <p className="py-8 text-center text-xs text-muted-foreground">لا يوجد أعضاء داخل الغرفة الآن.</p>;
+    return (
+      <p className="py-8 text-center text-xs text-muted-foreground">
+        لا يوجد أعضاء داخل الغرفة الآن.
+      </p>
+    );
 
   return (
     <div className="space-y-1.5">
       {(members.data ?? []).map((m) => {
-        const p = m.profiles as unknown as { display_name: string; avatar_url: string | null; frame_url: string | null; vip_level: number; level: number } | null;
+        const p = m.profiles as unknown as {
+          display_name: string;
+          avatar_url: string | null;
+          frame_url: string | null;
+          vip_level: number;
+          level: number;
+        } | null;
         return (
-          <div key={m.user_id} className="flex items-center gap-2 rounded-2xl border border-border/60 bg-surface/70 p-2">
-            <UserAvatar src={p?.avatar_url ?? null} frame={p?.frame_url ?? null} vipLevel={p?.vip_level ?? 0} name={p?.display_name ?? ""} size={36} />
+          <div
+            key={m.user_id}
+            className="flex items-center gap-2 rounded-2xl border border-border/60 bg-surface/70 p-2"
+          >
+            <UserAvatar
+              src={p?.avatar_url ?? null}
+              frame={p?.frame_url ?? null}
+              vipLevel={p?.vip_level ?? 0}
+              name={p?.display_name ?? ""}
+              size={36}
+            />
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-bold">{p?.display_name ?? "مستخدم"}</p>
               <p className="text-[10px] text-muted-foreground">
@@ -232,7 +298,15 @@ function MembersPanel({ roomId }: { roomId: string }) {
   );
 }
 
-function ActivitiesPanel({ roomId, userId, canManage }: { roomId: string; userId: string | null; canManage: boolean }) {
+function ActivitiesPanel({
+  roomId,
+  userId,
+  canManage,
+}: {
+  roomId: string;
+  userId: string | null;
+  canManage: boolean;
+}) {
   const [creating, setCreating] = useState(false);
   const [title, setTitle] = useState("");
   const [kind, setKind] = useState("chat");
@@ -292,7 +366,10 @@ function ActivitiesPanel({ roomId, userId, canManage }: { roomId: string; userId
   return (
     <div className="space-y-2">
       {canManage && !creating && (
-        <Button onClick={() => setCreating(true)} className="h-11 w-full rounded-2xl gradient-gold text-xs font-bold text-primary-foreground">
+        <Button
+          onClick={() => setCreating(true)}
+          className="h-11 w-full rounded-2xl gradient-gold text-xs font-bold text-primary-foreground"
+        >
           إنشاء نشاط جديد
         </Button>
       )}
@@ -300,7 +377,13 @@ function ActivitiesPanel({ roomId, userId, canManage }: { roomId: string; userId
       {canManage && creating && (
         <div className="space-y-2 rounded-2xl border border-primary/30 bg-surface/70 p-3">
           <p className="text-xs font-bold">إنشاء نشاط الغرفة</p>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="موضوع النشاط" className="h-10 rounded-xl text-xs" maxLength={40} />
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="موضوع النشاط"
+            className="h-10 rounded-xl text-xs"
+            maxLength={40}
+          />
           <div className="flex flex-wrap gap-1.5">
             {ACTIVITY_KINDS.map((k) => (
               <button
@@ -309,7 +392,9 @@ function ActivitiesPanel({ roomId, userId, canManage }: { roomId: string; userId
                 onClick={() => setKind(k.key)}
                 className={cn(
                   "rounded-full border px-2.5 py-1.5 text-[11px] font-bold",
-                  kind === k.key ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+                  kind === k.key
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border bg-surface-2 text-muted-foreground",
                 )}
               >
                 {k.label}
@@ -325,7 +410,12 @@ function ActivitiesPanel({ roomId, userId, canManage }: { roomId: string; userId
           <div className="grid grid-cols-2 gap-2">
             <label className="space-y-1">
               <span className="text-[10px] text-muted-foreground">وقت البدء</span>
-              <Input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} className="h-10 rounded-xl text-xs" />
+              <Input
+                type="datetime-local"
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
+                className="h-10 rounded-xl text-xs"
+              />
             </label>
             <label className="space-y-1">
               <span className="text-[10px] text-muted-foreground">المدة (دقيقة)</span>
@@ -338,10 +428,18 @@ function ActivitiesPanel({ roomId, userId, canManage }: { roomId: string; userId
             </label>
           </div>
           <div className="flex gap-2">
-            <Button disabled={create.isPending} onClick={() => create.mutate()} className="h-10 flex-1 rounded-xl gradient-gold text-xs font-bold text-primary-foreground">
+            <Button
+              disabled={create.isPending}
+              onClick={() => create.mutate()}
+              className="h-10 flex-1 rounded-xl gradient-gold text-xs font-bold text-primary-foreground"
+            >
               خطوة تالية
             </Button>
-            <Button variant="outline" onClick={() => setCreating(false)} className="h-10 flex-1 rounded-xl text-xs">
+            <Button
+              variant="outline"
+              onClick={() => setCreating(false)}
+              className="h-10 flex-1 rounded-xl text-xs"
+            >
               إلغاء
             </Button>
           </div>
@@ -351,7 +449,9 @@ function ActivitiesPanel({ roomId, userId, canManage }: { roomId: string; userId
       {list.isLoading ? (
         <Loading />
       ) : (list.data ?? []).length === 0 ? (
-        <p className="py-8 text-center text-xs text-muted-foreground">لا توجد نشاطات في هذه الغرفة بعد.</p>
+        <p className="py-8 text-center text-xs text-muted-foreground">
+          لا توجد نشاطات في هذه الغرفة بعد.
+        </p>
       ) : (
         (list.data ?? []).map((a) => (
           <div key={a.id} className="rounded-2xl border border-border/60 bg-surface/70 p-3">
@@ -360,16 +460,28 @@ function ActivitiesPanel({ roomId, userId, canManage }: { roomId: string; userId
                 <p className="truncate text-xs font-bold">{a.title}</p>
                 <p className="mt-0.5 text-[10px] text-muted-foreground">
                   {ACTIVITY_KINDS.find((k) => k.key === a.kind)?.label ?? a.kind} ·{" "}
-                  {new Date(a.starts_at).toLocaleString("ar", { dateStyle: "short", timeStyle: "short" })} · {a.duration_minutes} دقيقة
+                  {new Date(a.starts_at).toLocaleString("ar", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  })}{" "}
+                  · {a.duration_minutes} دقيقة
                 </p>
               </div>
               {canManage && (
-                <button type="button" onClick={() => remove.mutate(a.id)} className="text-[10px] font-bold text-destructive">
+                <button
+                  type="button"
+                  onClick={() => remove.mutate(a.id)}
+                  className="text-[10px] font-bold text-destructive"
+                >
                   حذف
                 </button>
               )}
             </div>
-            {a.description && <p className="mt-1.5 whitespace-pre-wrap text-[11px] text-muted-foreground">{a.description}</p>}
+            {a.description && (
+              <p className="mt-1.5 whitespace-pre-wrap text-[11px] text-muted-foreground">
+                {a.description}
+              </p>
+            )}
           </div>
         ))
       )}
@@ -390,7 +502,10 @@ function TreasurePanel({ roomId }: { roomId: string }) {
 
   if (state.isLoading) return <Loading />;
   const s = state.data;
-  if (!s) return <p className="py-8 text-center text-xs text-muted-foreground">تعذر تحميل صندوق الكنز.</p>;
+  if (!s)
+    return (
+      <p className="py-8 text-center text-xs text-muted-foreground">تعذر تحميل صندوق الكنز.</p>
+    );
 
   const target = Number(s.current?.target ?? 0);
   const pct = target > 0 ? Math.min(100, Math.round((Number(s.progress) / target) * 100)) : 0;
@@ -399,21 +514,31 @@ function TreasurePanel({ roomId }: { roomId: string }) {
     <div className="space-y-3">
       <div className="rounded-3xl border border-primary/40 bg-gradient-to-b from-primary/15 to-transparent p-4 text-center">
         <p className="text-[11px] text-muted-foreground">صندوق كنز الغرفة</p>
-        <p className="mt-1 text-lg font-black text-primary">{s.current?.name ?? `المستوى ${s.level}`}</p>
+        <p className="mt-1 text-lg font-black text-primary">
+          {s.current?.name ?? `المستوى ${s.level}`}
+        </p>
         <div className="mx-auto mt-3 h-3 w-full overflow-hidden rounded-full bg-surface-2">
-          <div className="h-full rounded-full gradient-gold transition-all" style={{ width: `${pct}%` }} />
+          <div
+            className="h-full rounded-full gradient-gold transition-all"
+            style={{ width: `${pct}%` }}
+          />
         </div>
         <p className="mt-1.5 text-[11px] font-bold">
           {formatCompact(Number(s.progress))} / {formatCompact(target)} ({pct}%)
         </p>
-        <p className="mt-1 text-[10px] text-muted-foreground">قدّم هدية لفتح صندوق الكنز — فُتح {s.total_opened} مرة</p>
+        <p className="mt-1 text-[10px] text-muted-foreground">
+          قدّم هدية لفتح صندوق الكنز — فُتح {s.total_opened} مرة
+        </p>
       </div>
 
       <div>
         <p className="mb-1.5 text-xs font-bold">جوائز هذا المستوى</p>
         <div className="grid grid-cols-3 gap-2">
           {(s.current?.prizes ?? []).map((p) => (
-            <div key={p.rank} className="rounded-2xl border border-border/60 bg-surface/70 p-2 text-center">
+            <div
+              key={p.rank}
+              className="rounded-2xl border border-border/60 bg-surface/70 p-2 text-center"
+            >
               <p className="text-[10px] text-muted-foreground">المركز {p.rank}</p>
               <p className="text-xs font-black text-primary">{formatCompact(Number(p.coins))} 🪙</p>
             </div>
@@ -430,11 +555,18 @@ function TreasurePanel({ roomId }: { roomId: string }) {
         ) : (
           <div className="space-y-1.5">
             {s.contributors.slice(0, 10).map((c, i) => (
-              <div key={c.user_id} className="flex items-center gap-2 rounded-2xl border border-border/60 bg-surface/70 p-2">
+              <div
+                key={c.user_id}
+                className="flex items-center gap-2 rounded-2xl border border-border/60 bg-surface/70 p-2"
+              >
                 <span className="w-4 text-center text-[11px] font-black text-primary">{i + 1}</span>
                 <UserAvatar src={c.avatar_url} name={c.display_name ?? ""} size={30} />
-                <p className="min-w-0 flex-1 truncate text-xs font-bold">{c.display_name ?? "مستخدم"}</p>
-                <p className="text-[11px] font-bold text-primary">{formatCompact(Number(c.amount))}</p>
+                <p className="min-w-0 flex-1 truncate text-xs font-bold">
+                  {c.display_name ?? "مستخدم"}
+                </p>
+                <p className="text-[11px] font-bold text-primary">
+                  {formatCompact(Number(c.amount))}
+                </p>
               </div>
             ))}
           </div>
@@ -449,12 +581,16 @@ function TreasurePanel({ roomId }: { roomId: string }) {
               key={l.level}
               className={cn(
                 "w-24 shrink-0 rounded-2xl border p-2 text-center",
-                l.level === s.level ? "border-primary bg-primary/10" : "border-border/60 bg-surface/70",
+                l.level === s.level
+                  ? "border-primary bg-primary/10"
+                  : "border-border/60 bg-surface/70",
               )}
             >
               <p className="text-[11px] font-black">Lv{l.level}</p>
               <p className="truncate text-[10px] text-muted-foreground">{l.name}</p>
-              <p className="mt-1 text-[10px] font-bold text-primary">{formatCompact(Number(l.target))}</p>
+              <p className="mt-1 text-[10px] font-bold text-primary">
+                {formatCompact(Number(l.target))}
+              </p>
             </div>
           ))}
         </div>
@@ -465,10 +601,17 @@ function TreasurePanel({ roomId }: { roomId: string }) {
           <p className="mb-1.5 text-xs font-bold">آخر عمليات الفتح</p>
           <div className="space-y-1.5">
             {s.recent_opens.map((o, i) => (
-              <div key={`${o.created_at}-${i}`} className="flex items-center justify-between rounded-2xl border border-border/60 bg-surface/70 p-2 text-[11px]">
+              <div
+                key={`${o.created_at}-${i}`}
+                className="flex items-center justify-between rounded-2xl border border-border/60 bg-surface/70 p-2 text-[11px]"
+              >
                 <span>Lv{o.level}</span>
-                <span className="font-bold text-primary">{formatCompact(Number(o.total_prize))} 🪙</span>
-                <span className="text-muted-foreground">{new Date(o.created_at).toLocaleDateString("ar")}</span>
+                <span className="font-bold text-primary">
+                  {formatCompact(Number(o.total_prize))} 🪙
+                </span>
+                <span className="text-muted-foreground">
+                  {new Date(o.created_at).toLocaleDateString("ar")}
+                </span>
               </div>
             ))}
           </div>
@@ -507,19 +650,26 @@ function RewardsPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean })
       const rows = await supabase.from("room_moderators").select("user_id").eq("room_id", roomId);
       if (rows.error) throw new Error(rows.error.message);
       const ids = (rows.data ?? []).map((r) => r.user_id);
-      if (ids.length === 0) return [] as { id: string; display_name: string; avatar_url: string | null }[];
-      const people = await supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids);
+      if (ids.length === 0)
+        return [] as { id: string; display_name: string; avatar_url: string | null }[];
+      const people = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .in("id", ids);
       if (people.error) throw new Error(people.error.message);
       return people.data ?? [];
     },
   });
 
   const [picked, setPicked] = useState<string[] | null>(null);
-  const chosen = picked ?? (state.data?.admin_ids ?? []);
+  const chosen = picked ?? state.data?.admin_ids ?? [];
 
   const saveAdmins = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.rpc("room_support_set_admins", { _room_id: roomId, _ids: chosen });
+      const { error } = await supabase.rpc("room_support_set_admins", {
+        _room_id: roomId,
+        _ids: chosen,
+      });
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
@@ -532,7 +682,10 @@ function RewardsPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean })
 
   if (state.isLoading) return <Loading />;
   const s = state.data;
-  if (!s) return <p className="py-8 text-center text-xs text-muted-foreground">تعذر تحميل جوائز الغرفة.</p>;
+  if (!s)
+    return (
+      <p className="py-8 text-center text-xs text-muted-foreground">تعذر تحميل جوائز الغرفة.</p>
+    );
 
   return (
     <div className="space-y-3">
@@ -566,12 +719,15 @@ function RewardsPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean })
             <Users className="h-3.5 w-3.5 text-primary" /> المشرفون المستفيدون من مكافأة الدعم
           </p>
           <p className="mt-1 text-[10px] text-muted-foreground">
-            اختر من مشرفي غرفتك (20 كحد أقصى). إن لم تختر أحدًا تُقسَّم المكافأة على كل المشرفين بالتساوي.
+            اختر من مشرفي غرفتك (20 كحد أقصى). إن لم تختر أحدًا تُقسَّم المكافأة على كل المشرفين
+            بالتساوي.
           </p>
           {mods.isLoading ? (
             <Loading />
           ) : (mods.data ?? []).length === 0 ? (
-            <p className="py-3 text-center text-[11px] text-muted-foreground">لا يوجد مشرفون في الغرفة بعد.</p>
+            <p className="py-3 text-center text-[11px] text-muted-foreground">
+              لا يوجد مشرفون في الغرفة بعد.
+            </p>
           ) : (
             <div className="mt-2 space-y-1.5">
               {(mods.data ?? []).map((m) => {
@@ -581,7 +737,13 @@ function RewardsPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean })
                     key={m.id}
                     type="button"
                     onClick={() =>
-                      setPicked(on ? chosen.filter((x) => x !== m.id) : chosen.length >= 20 ? chosen : [...chosen, m.id])
+                      setPicked(
+                        on
+                          ? chosen.filter((x) => x !== m.id)
+                          : chosen.length >= 20
+                            ? chosen
+                            : [...chosen, m.id],
+                      )
                     }
                     className={cn(
                       "flex w-full items-center gap-2 rounded-xl border p-2 text-start",
@@ -589,8 +751,15 @@ function RewardsPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean })
                     )}
                   >
                     <UserAvatar src={m.avatar_url} name={m.display_name} size={30} />
-                    <span className="min-w-0 flex-1 truncate text-[11px] font-bold">{m.display_name}</span>
-                    <span className={cn("text-[10px] font-bold", on ? "text-primary" : "text-muted-foreground")}>
+                    <span className="min-w-0 flex-1 truncate text-[11px] font-bold">
+                      {m.display_name}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold",
+                        on ? "text-primary" : "text-muted-foreground",
+                      )}
+                    >
                       {on ? "مستفيد" : "إضافة"}
                     </span>
                   </button>
@@ -613,7 +782,8 @@ function RewardsPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean })
           <p className="font-bold">شريحتك الحالية</p>
           <p className="mt-1 text-muted-foreground">
             مكافأة المالك {formatCompact(Number(s.tier.owner_coins ?? 0))} · إجمالي مكافأة الادمن{" "}
-            {formatCompact(Number(s.tier.admin_coins ?? 0))} · الحد الأسبوعي {formatCompact(Number(s.tier.weekly_cap ?? 0))}
+            {formatCompact(Number(s.tier.admin_coins ?? 0))} · الحد الأسبوعي{" "}
+            {formatCompact(Number(s.tier.weekly_cap ?? 0))}
           </p>
         </div>
       )}
@@ -633,12 +803,20 @@ function RewardsPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean })
             </thead>
             <tbody>
               {(s.tiers ?? []).map((t) => (
-                <tr key={t.revenue} className={cn("border-t border-border/40", Number(s.tier?.revenue) === t.revenue && "bg-primary/10")}>
+                <tr
+                  key={t.revenue}
+                  className={cn(
+                    "border-t border-border/40",
+                    Number(s.tier?.revenue) === t.revenue && "bg-primary/10",
+                  )}
+                >
                   <td className="p-2 text-center">&gt;{formatCompact(Number(t.revenue))}</td>
                   <td className="p-2 text-center">{formatCompact(Number(t.owner_coins))}</td>
                   <td className="p-2 text-center">{formatCompact(Number(t.admin_coins))}</td>
                   <td className="p-2 text-center">{t.percent}%</td>
-                  <td className="p-2 text-center text-primary">{formatCompact(Number(t.weekly_cap))}</td>
+                  <td className="p-2 text-center text-primary">
+                    {formatCompact(Number(t.weekly_cap))}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -652,8 +830,10 @@ function RewardsPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean })
             <Crown className="h-3.5 w-3.5 text-primary" /> آخر توزيع
           </p>
           <p className="mt-1 text-muted-foreground">
-            أسبوع {s.last_settlement.week_start} · إيراد {formatCompact(Number(s.last_settlement.revenue ?? 0))} · المالك{" "}
-            {formatCompact(Number(s.last_settlement.owner_coins ?? 0))} · الادمن {formatCompact(Number(s.last_settlement.admin_coins ?? 0))}
+            أسبوع {s.last_settlement.week_start} · إيراد{" "}
+            {formatCompact(Number(s.last_settlement.revenue ?? 0))} · المالك{" "}
+            {formatCompact(Number(s.last_settlement.owner_coins ?? 0))} · الادمن{" "}
+            {formatCompact(Number(s.last_settlement.admin_coins ?? 0))}
           </p>
         </div>
       )}

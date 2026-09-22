@@ -1,0 +1,1 @@
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS theme_style text NOT NULL DEFAULT 'royal';

@@ -2116,6 +2116,7 @@ export type Database = {
           room_code: string
           room_type: Database["public"]["Enums"]["room_type"]
           theme: string | null
+          theme_style: string
           updated_at: string
           xp: number
         }
@@ -2140,6 +2141,7 @@ export type Database = {
           room_code: string
           room_type?: Database["public"]["Enums"]["room_type"]
           theme?: string | null
+          theme_style?: string
           updated_at?: string
           xp?: number
         }
@@ -2164,6 +2166,7 @@ export type Database = {
           room_code?: string
           room_type?: Database["public"]["Enums"]["room_type"]
           theme?: string | null
+          theme_style?: string
           updated_at?: string
           xp?: number
         }
@@ -3037,6 +3040,7 @@ export type Database = {
           room_code: string
           room_type: Database["public"]["Enums"]["room_type"]
           theme: string | null
+          theme_style: string
           updated_at: string
           xp: number
         }
