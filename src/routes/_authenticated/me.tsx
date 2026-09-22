@@ -2,7 +2,17 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Backpack, Camera, Coins, Crown, LogOut, Pencil, Shield, Sparkles, Users } from "lucide-react";
+import {
+  Backpack,
+  Camera,
+  Coins,
+  Crown,
+  LogOut,
+  Pencil,
+  Shield,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { AppShell, PageHeader } from "@/components/AppShell";
@@ -14,7 +24,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { CosmeticImage } from "@/components/RoomCosmetics";
-import { useAdminSections, useIsAdmin, useMyProfile, useSupabaseSession, useWallet } from "@/hooks/use-session";
+import {
+  useAdminSections,
+  useIsAdmin,
+  useMyProfile,
+  useSupabaseSession,
+  useWallet,
+} from "@/hooks/use-session";
 import { uploadUserImage } from "@/lib/media";
 import { screenProfilePhoto } from "@/lib/moderation.functions";
 import { clearDeviceCredentials } from "@/lib/device-account";
@@ -27,7 +43,10 @@ export const Route = createFileRoute("/_authenticated/me")({
   head: () => ({
     meta: [
       { title: "ملفي — التاج" },
-      { name: "description", content: "عدّل اسمك وصورتك ونبذتك، وتابع مستواك وXP وVIP وعناصرك المملوكة." },
+      {
+        name: "description",
+        content: "عدّل اسمك وصورتك ونبذتك، وتابع مستواك وXP وVIP وعناصرك المملوكة.",
+      },
       { property: "og:title", content: "ملفي — التاج" },
       { property: "og:description", content: "مستواك، رصيدك، عناصرك، وإعدادات حسابك." },
     ],
@@ -58,8 +77,14 @@ function MePage() {
     enabled: Boolean(userId),
     queryFn: async () => {
       const [followers, following, friends] = await Promise.all([
-        supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", userId!),
-        supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", userId!),
+        supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("following_id", userId!),
+        supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("follower_id", userId!),
         supabase.from("friends").select("*", { count: "exact", head: true }).eq("user_id", userId!),
       ]);
       return {
@@ -88,7 +113,10 @@ function MePage() {
 
   async function toggleEquip(userItemId: string, equip: boolean) {
     setEquipping(userItemId);
-    const { error } = await supabase.rpc("equip_item", { _user_item_id: userItemId, _equip: equip });
+    const { error } = await supabase.rpc("equip_item", {
+      _user_item_id: userItemId,
+      _equip: equip,
+    });
     setEquipping(null);
     if (error) {
       toast.error(error.message);
@@ -143,7 +171,10 @@ function MePage() {
         return;
       }
       const path = await uploadUserImage("avatars", userId, file);
-      const { error } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", userId);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: path })
+        .eq("id", userId);
       if (error) throw error;
       toast.success("تم تحديث صورتك");
       void qc.invalidateQueries({ queryKey: ["profile"] });
@@ -168,7 +199,13 @@ function MePage() {
       <div className="surface-card p-5">
         <div className="flex items-center gap-4">
           <button type="button" onClick={() => fileRef.current?.click()} className="relative">
-            <UserAvatar src={p?.avatar_url} name={p?.display_name} size={72} vipLevel={p?.vip_level ?? 0} frame={p?.frame_url} />
+            <UserAvatar
+              src={p?.avatar_url}
+              name={p?.display_name}
+              size={72}
+              vipLevel={p?.vip_level ?? 0}
+              frame={p?.frame_url}
+            />
             <span className="absolute -bottom-1 -end-1 flex h-7 w-7 items-center justify-center rounded-full gradient-gold">
               <Camera className="h-3.5 w-3.5 text-primary-foreground" />
             </span>
@@ -196,7 +233,9 @@ function MePage() {
                 }}
                 className={cn(
                   "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors",
-                  editing ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+                  editing
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border bg-surface-2 text-muted-foreground",
                 )}
               >
                 <Pencil className="h-3.5 w-3.5" />
@@ -209,7 +248,9 @@ function MePage() {
             </div>
             <VipId publicId={p?.public_id ?? "—"} vipLevel={p?.vip_level ?? 0} />
             <div className="mt-1 flex flex-wrap gap-1.5">
-              <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px]">مستوى {progress.level}</span>
+              <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px]">
+                مستوى {progress.level}
+              </span>
               {(p?.vip_level ?? 0) > 0 && (
                 <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
                   <Crown className="h-3 w-3" /> VIP {p?.vip_level}
@@ -226,14 +267,11 @@ function MePage() {
 
         <div className="mt-4">
           <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
-            <div
-              className="h-full gradient-gold"
-              style={{ width: `${progress.percent}%` }}
-            />
+            <div className="h-full gradient-gold" style={{ width: `${progress.percent}%` }} />
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            الخبرة {progress.intoLevel.toLocaleString("en-US")} / {progress.needed.toLocaleString("en-US")} للمستوى{" "}
-            {progress.level + 1} · بلا حد أقصى
+            الخبرة {progress.intoLevel.toLocaleString("en-US")} /{" "}
+            {progress.needed.toLocaleString("en-US")} للمستوى {progress.level + 1} · بلا حد أقصى
           </p>
         </div>
 
@@ -293,16 +331,21 @@ function MePage() {
           mode={privSheet ?? "vip"}
           currentVip={p?.vip_level ?? 0}
           isCvip={Boolean(p?.is_cvip)}
-          cvipExpiresAt={(p as { cvip_expires_at?: string | null } | undefined)?.cvip_expires_at ?? null}
+          cvipExpiresAt={
+            (p as { cvip_expires_at?: string | null } | undefined)?.cvip_expires_at ?? null
+          }
         />
-
-
 
         {p?.bio && <p className="mt-4 text-sm text-muted-foreground">{p.bio}</p>}
 
         {editing && (
           <div className="mt-4 space-y-3">
-            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={24} className="h-12 rounded-2xl bg-surface-2" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={24}
+              className="h-12 rounded-2xl bg-surface-2"
+            />
             <Textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
@@ -370,7 +413,11 @@ function MePage() {
           <span className="text-sm font-bold">العائلات</span>
         </Link>
         {canOpenAdmin && (
-          <Link to="/admin" search={{ section: undefined }} className="surface-card flex items-center gap-3 p-4">
+          <Link
+            to="/admin"
+            search={{ section: undefined }}
+            className="surface-card flex items-center gap-3 p-4"
+          >
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
               <Shield className="h-5 w-5 text-primary" />
             </span>
@@ -438,7 +485,8 @@ function MePage() {
                     s.key === "all"
                       ? (myItems.data?.length ?? 0)
                       : (myItems.data ?? []).filter(
-                          (i) => (i.store_items as { category?: string } | null)?.category === s.key,
+                          (i) =>
+                            (i.store_items as { category?: string } | null)?.category === s.key,
                         ).length;
                   if (count === 0 && s.key !== "all") return null;
                   return (
@@ -466,33 +514,42 @@ function MePage() {
                       (i.store_items as { category?: string } | null)?.category === bagTab,
                   )
                   .map((it) => {
-                const si = it.store_items as { name?: string; category?: string; image_url?: string | null } | null;
-                return (
-                  <div key={it.id} className="surface-card overflow-hidden">
-                    <div className="flex h-24 items-center justify-center gradient-surface p-1">
-                      <CosmeticImage url={si?.image_url ?? null} className="h-full w-full object-contain" />
-                    </div>
-                    <div className="p-2 text-center">
-                      <p className="truncate text-[11px] font-semibold">{si?.name ?? "عنصر"}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {it.expires_at ? new Date(it.expires_at).toLocaleDateString("ar") : "دائم"}
-                      </p>
-                      <button
-                        disabled={equipping === it.id}
-                        onClick={() => void toggleEquip(it.id, !it.is_equipped)}
-                        className={cn(
-                          "mt-2 w-full rounded-lg border px-2 py-1.5 text-[10px]",
-                          it.is_equipped
-                            ? "border-primary bg-primary/15 text-primary"
-                            : "border-border bg-surface-2 text-muted-foreground",
-                        )}
-                      >
-                        {it.is_equipped ? "مُستخدم" : "استخدم"}
-                      </button>
-                    </div>
-                  </div>
-                 );
-               })}
+                    const si = it.store_items as {
+                      name?: string;
+                      category?: string;
+                      image_url?: string | null;
+                    } | null;
+                    return (
+                      <div key={it.id} className="surface-card overflow-hidden">
+                        <div className="flex h-24 items-center justify-center gradient-surface p-1">
+                          <CosmeticImage
+                            url={si?.image_url ?? null}
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+                        <div className="p-2 text-center">
+                          <p className="truncate text-[11px] font-semibold">{si?.name ?? "عنصر"}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {it.expires_at
+                              ? new Date(it.expires_at).toLocaleDateString("ar")
+                              : "دائم"}
+                          </p>
+                          <button
+                            disabled={equipping === it.id}
+                            onClick={() => void toggleEquip(it.id, !it.is_equipped)}
+                            className={cn(
+                              "mt-2 w-full rounded-lg border px-2 py-1.5 text-[10px]",
+                              it.is_equipped
+                                ? "border-primary bg-primary/15 text-primary"
+                                : "border-border bg-surface-2 text-muted-foreground",
+                            )}
+                          >
+                            {it.is_equipped ? "مُستخدم" : "استخدم"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             </>
           )}

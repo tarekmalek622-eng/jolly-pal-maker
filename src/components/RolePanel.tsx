@@ -53,7 +53,11 @@ export function RolePanel({
           )
           .eq("id", uid)
           .maybeSingle(),
-        supabase.from("family_members").select("role, families(name)").eq("user_id", uid).maybeSingle(),
+        supabase
+          .from("family_members")
+          .select("role, families(name)")
+          .eq("user_id", uid)
+          .maybeSingle(),
         supabase
           .from("user_badges")
           .select("id, badge_definitions(key, name, style_key)")
@@ -78,9 +82,13 @@ export function RolePanel({
         badges: (badges.data ?? [])
           .map((row) => {
             const def = (
-              row as { badge_definitions?: { key: string; name: string; style_key: string | null } | null }
+              row as {
+                badge_definitions?: { key: string; name: string; style_key: string | null } | null;
+              }
             ).badge_definitions;
-            return def ? { key: def.key, name: def.name, styleKey: def.style_key ?? "royal" } : null;
+            return def
+              ? { key: def.key, name: def.name, styleKey: def.style_key ?? "royal" }
+              : null;
           })
           .filter((item): item is { key: string; name: string; styleKey: string } => Boolean(item)),
       };
@@ -128,9 +136,13 @@ export function RolePanel({
 
       <div className="mt-2 flex items-center justify-center gap-1.5">
         {p?.gender === "male" ? (
-          <span className="rounded-full bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-300">♂</span>
+          <span className="rounded-full bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-300">
+            ♂
+          </span>
         ) : p?.gender === "female" ? (
-          <span className="rounded-full bg-pink-500/20 px-1.5 py-0.5 text-[10px] text-pink-300">♀</span>
+          <span className="rounded-full bg-pink-500/20 px-1.5 py-0.5 text-[10px] text-pink-300">
+            ♀
+          </span>
         ) : null}
         <VipName
           name={p?.display_name ?? "مستخدم"}
@@ -206,7 +218,9 @@ export function RolePanel({
                 ) : (
                   <Shield className="h-8 w-8 text-primary" />
                 )}
-                <span className="w-full truncate text-center text-[8px] font-bold">{badge.name}</span>
+                <span className="w-full truncate text-center text-[8px] font-bold">
+                  {badge.name}
+                </span>
               </span>
             );
           })}
