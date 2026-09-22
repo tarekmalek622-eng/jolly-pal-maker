@@ -19,7 +19,10 @@ export const Route = createFileRoute("/_authenticated/rooms/")({
   head: () => ({
     meta: [
       { title: "الغرف الصوتية — التاج" },
-      { name: "description", content: "تصفح كل الغرف الصوتية حسب التصنيف أو أنشئ غرفتك الخاصة بمايكات وخلفية مخصصة." },
+      {
+        name: "description",
+        content: "تصفح كل الغرف الصوتية حسب التصنيف أو أنشئ غرفتك الخاصة بمايكات وخلفية مخصصة.",
+      },
       { property: "og:title", content: "الغرف الصوتية — التاج" },
       { property: "og:description", content: "غرف عامة وخاصة، مايكات متعددة، دردشة وهدايا." },
     ],
@@ -39,7 +42,9 @@ function RoomsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("rooms")
-        .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified")
+        .select(
+          "id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified",
+        )
         .eq("is_disabled", false)
         .order("member_count", { ascending: false })
         .limit(100);
@@ -55,7 +60,9 @@ function RoomsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("rooms")
-        .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified")
+        .select(
+          "id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified",
+        )
         .eq("owner_id", userId!);
       if (error) throw error;
       return (data ?? []) as RoomRow[];
@@ -88,7 +95,9 @@ function RoomsPage() {
             onClick={() => setCategory(c)}
             className={cn(
               "shrink-0 rounded-full border px-3 py-1.5 text-xs",
-              category === c ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
+              category === c
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-border bg-surface text-muted-foreground",
             )}
           >
             {c}
@@ -101,7 +110,9 @@ function RoomsPage() {
           <h2 className="mb-2 text-sm font-bold text-muted-foreground">غرفي</h2>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {myRooms.data?.map((r) => <RoomCard key={r.id} room={r} />)}
+              {myRooms.data?.map((r) => (
+                <RoomCard key={r.id} room={r} />
+              ))}
             </div>
           </div>
         </section>
@@ -111,12 +122,27 @@ function RoomsPage() {
         <div className="flex justify-center py-10">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
+      ) : rooms.isError ? (
+        <div className="rounded-2xl border border-border bg-surface p-5 text-center">
+          <p className="text-sm font-semibold">تعذر تحميل الغرف</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {rooms.error instanceof Error ? rooms.error.message : "تحقق من الاتصال"}
+          </p>
+          <Button
+            onClick={() => void rooms.refetch()}
+            className="mt-3 h-10 rounded-2xl gradient-gold text-xs font-bold text-primary-foreground"
+          >
+            إعادة المحاولة
+          </Button>
+        </div>
       ) : filtered.length === 0 ? (
         <EmptyState title="لا توجد غرف في هذا التصنيف" hint="أنشئ أول غرفة الآن" />
       ) : (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {filtered.map((r) => <RoomCard key={r.id} room={r} />)}
+            {filtered.map((r) => (
+              <RoomCard key={r.id} room={r} />
+            ))}
           </div>
         </div>
       )}
@@ -126,7 +152,13 @@ function RoomsPage() {
   );
 }
 
-function CreateRoomSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+function CreateRoomSheet({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
   const { userId } = useSupabaseSession();
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -214,12 +246,24 @@ function CreateRoomSheet({ open, onOpenChange }: { open: boolean; onOpenChange: 
 
           <div className="space-y-2">
             <Label htmlFor="rname">اسم الغرفة</Label>
-            <Input id="rname" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} className="h-12 rounded-2xl bg-surface" />
+            <Input
+              id="rname"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={30}
+              className="h-12 rounded-2xl bg-surface"
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="rdesc">الوصف</Label>
-            <Textarea id="rdesc" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={120} className="rounded-2xl bg-surface" />
+            <Textarea
+              id="rdesc"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={120}
+              className="rounded-2xl bg-surface"
+            />
           </div>
 
           <div className="space-y-2">
@@ -232,7 +276,9 @@ function CreateRoomSheet({ open, onOpenChange }: { open: boolean; onOpenChange: 
                   onClick={() => setCategory(c)}
                   className={cn(
                     "rounded-full border px-3 py-1.5 text-xs",
-                    category === c ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
+                    category === c
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border bg-surface text-muted-foreground",
                   )}
                 >
                   {c}
@@ -251,7 +297,9 @@ function CreateRoomSheet({ open, onOpenChange }: { open: boolean; onOpenChange: 
                   onClick={() => setMicCount(n)}
                   className={cn(
                     "h-10 w-12 rounded-xl border text-sm",
-                    micCount === n ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
+                    micCount === n
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border bg-surface text-muted-foreground",
                   )}
                 >
                   {n}
@@ -268,16 +316,29 @@ function CreateRoomSheet({ open, onOpenChange }: { open: boolean; onOpenChange: 
             <button
               type="button"
               onClick={() => setIsPrivate((v) => !v)}
-              className={cn("h-7 w-12 rounded-full transition-colors", isPrivate ? "bg-primary" : "bg-surface-2")}
+              className={cn(
+                "h-7 w-12 rounded-full transition-colors",
+                isPrivate ? "bg-primary" : "bg-surface-2",
+              )}
             >
-              <span className={cn("block h-6 w-6 rounded-full bg-background transition-transform", isPrivate ? "translate-x-0" : "-translate-x-5")} />
+              <span
+                className={cn(
+                  "block h-6 w-6 rounded-full bg-background transition-transform",
+                  isPrivate ? "translate-x-0" : "-translate-x-5",
+                )}
+              />
             </button>
           </div>
 
           {isPrivate && (
             <div className="space-y-2">
               <Label htmlFor="rpass">كلمة مرور الغرفة</Label>
-              <Input id="rpass" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-2xl bg-surface" />
+              <Input
+                id="rpass"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-12 rounded-2xl bg-surface"
+              />
             </div>
           )}
 
