@@ -108,7 +108,45 @@ export function VipCvipSheet({
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التفعيل"),
   });
 
+  const [giftLevel, setGiftLevel] = useState<number | null>(null);
+
+  const friends = useQuery({
+    queryKey: ["vip-gift-friends", userId],
+    enabled: open && mode === "vip" && Boolean(userId),
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("friends").select("friend_id").eq("user_id", userId!);
+      if (error) throw error;
+      const ids = (data ?? []).map((r) => r.friend_id);
+      if (ids.length === 0) return [] as { id: string; display_name: string; public_id: string }[];
+      const { data: profiles, error: pErr } = await supabase
+        .from("profiles")
+        .select("id, display_name, public_id")
+        .in("id", ids);
+      if (pErr) throw pErr;
+      return (profiles ?? []) as { id: string; display_name: string; public_id: string }[];
+    },
+  });
+
+  const gift = useMutation({
+    mutationFn: async (payload: { level: number; receiverId: string }) => {
+      const { error } = await db.rpc("gift_vip", { _receiver_id: payload.receiverId, _level: payload.level });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("تم إرسال هدية VIP 🎁");
+      setGiftLevel(null);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["wallet"] }),
+        qc.invalidateQueries({ queryKey: ["coin-transactions"] }),
+        qc.invalidateQueries({ queryKey: ["room-people"] }),
+      ]);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر إرسال الهدية"),
+  });
+
   const loading = mode === "vip" ? vip.isLoading : cvip.isLoading;
+
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
