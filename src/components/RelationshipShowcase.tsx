@@ -37,7 +37,11 @@ export function RelationshipShowcase({ userId, own = false }: { userId: string; 
     queryKey: ["relationship-showcase", userId],
     queryFn: async () => {
       const rows = await fetchMyRelationships(userId, !own);
-      const ids = [...new Set(rows.map((row) => row.requester_id === userId ? row.partner_id : row.requester_id))];
+      const ids = [
+        ...new Set(
+          rows.map((row) => (row.requester_id === userId ? row.partner_id : row.requester_id)),
+        ),
+      ];
       if (ids.length === 0) return { rows, people: [] as Person[] };
       const { data, error } = await supabase
         .from("profiles")
@@ -49,7 +53,8 @@ export function RelationshipShowcase({ userId, own = false }: { userId: string; 
   });
 
   useEffect(() => {
-    const channel = supabase.channel(`relationship-showcase-${userId}`)
+    const channel = supabase
+      .channel(`relationship-showcase-${userId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "relationships" }, () => {
         void queryClient.invalidateQueries({ queryKey: ["relationship-showcase", userId] });
       })
@@ -66,7 +71,11 @@ export function RelationshipShowcase({ userId, own = false }: { userId: string; 
           <h2 className="text-sm font-black">علاقاتي المميزة</h2>
           <p className="text-[10px] text-muted-foreground">أربع روابط مستقلة تظهر للطرفين</p>
         </div>
-        {own && <Link to="/friends" className="text-[11px] font-bold text-primary">إدارة الطلبات</Link>}
+        {own && (
+          <Link to="/friends" className="text-[11px] font-bold text-primary">
+            إدارة الطلبات
+          </Link>
+        )}
       </div>
       <div className="space-y-2">
         {/* العلاقة الأساسية (CP) بعرض كامل، وباقي العلاقات مربعات صغيرة تحتها */}
