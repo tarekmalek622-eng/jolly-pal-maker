@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { getVipFrame, getVipName, getVipVisual } from "@/lib/vip-frames";
 import { useSupabaseSession } from "@/hooks/use-session";
 
-
 /** الأنواع المولّدة لا تعرف جدول cvip_plans بعد. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -33,7 +32,8 @@ type CvipPlan = {
 
 function perkList(perks: unknown): string[] {
   if (Array.isArray(perks)) return perks.map((p) => String(p));
-  if (perks && typeof perks === "object") return Object.values(perks as Record<string, unknown>).map((p) => String(p));
+  if (perks && typeof perks === "object")
+    return Object.values(perks as Record<string, unknown>).map((p) => String(p));
   return [];
 }
 
@@ -115,7 +115,10 @@ export function VipCvipSheet({
     enabled: open && mode === "vip" && Boolean(userId),
     staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.from("friends").select("friend_id").eq("user_id", userId!);
+      const { data, error } = await supabase
+        .from("friends")
+        .select("friend_id")
+        .eq("user_id", userId!);
       if (error) throw error;
       const ids = (data ?? []).map((r) => r.friend_id);
       if (ids.length === 0) return [] as { id: string; display_name: string; public_id: string }[];
@@ -130,7 +133,10 @@ export function VipCvipSheet({
 
   const gift = useMutation({
     mutationFn: async (payload: { level: number; receiverId: string }) => {
-      const { error } = await db.rpc("gift_vip", { _receiver_id: payload.receiverId, _level: payload.level });
+      const { error } = await db.rpc("gift_vip", {
+        _receiver_id: payload.receiverId,
+        _level: payload.level,
+      });
       if (error) throw error;
     },
     onSuccess: async () => {
@@ -147,13 +153,16 @@ export function VipCvipSheet({
 
   const loading = mode === "vip" ? vip.isLoading : cvip.isLoading;
 
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[88vh] overflow-y-auto rounded-t-3xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            {mode === "vip" ? <Crown className="h-4 w-4 text-primary" /> : <Sparkles className="h-4 w-4 text-accent" />}
+            {mode === "vip" ? (
+              <Crown className="h-4 w-4 text-primary" />
+            ) : (
+              <Sparkles className="h-4 w-4 text-accent" />
+            )}
             {mode === "vip" ? "مميزات VIP" : "مميزات SVIP"}
           </SheetTitle>
         </SheetHeader>
@@ -176,16 +185,35 @@ export function VipCvipSheet({
           <div className="mt-4 space-y-3 pb-6">
             {mode === "vip"
               ? (vip.data ?? []).map((v) => (
-                  <div key={v.level} className={cn("rounded-2xl border p-4", getVipVisual(v.level)?.tierClass)}>
+                  <div
+                    key={v.level}
+                    className={cn("rounded-2xl border p-4", getVipVisual(v.level)?.tierClass)}
+                  >
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
-                      <img src={getVipFrame(v.level) ?? ""} width={56} height={56} alt={`إطار VIP ${v.level}`} className="h-14 w-14 shrink-0 object-contain" />
-                      <div className="min-w-0"><p className="truncate text-sm font-bold">VIP {v.level}</p><p className={cn("truncate text-[10px]", getVipVisual(v.level)?.nameClass)}>{getVipName(v.level)}</p><p className="mt-0.5 truncate text-[9px] text-muted-foreground">{getVipVisual(v.level)?.entryLabel}</p></div>
+                      <img
+                        src={getVipFrame(v.level) ?? ""}
+                        width={56}
+                        height={56}
+                        alt={`إطار VIP ${v.level}`}
+                        className="h-14 w-14 shrink-0 object-contain"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold">VIP {v.level}</p>
+                        <p className={cn("truncate text-[10px]", getVipVisual(v.level)?.nameClass)}>
+                          {getVipName(v.level)}
+                        </p>
+                        <p className="mt-0.5 truncate text-[9px] text-muted-foreground">
+                          {getVipVisual(v.level)?.entryLabel}
+                        </p>
+                      </div>
                       <span className="flex items-center gap-1 text-xs">
                         <Coins className="h-3.5 w-3.5 text-primary" />
                         {v.price.toLocaleString("en-US")}
                       </span>
                     </div>
-                    <p className="mt-1 text-[10px] text-muted-foreground">{v.duration_days} يومًا</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      {v.duration_days} يومًا
+                    </p>
                     <ul className="mt-2 space-y-1">
                       {perkList(v.perks).map((p) => (
                         <li key={p} className="text-[11px] text-muted-foreground">
@@ -211,7 +239,9 @@ export function VipCvipSheet({
                     {giftLevel === v.level && (
                       <div className="mt-2 max-h-48 space-y-1.5 overflow-y-auto rounded-2xl border border-border/60 bg-surface/60 p-2">
                         {friends.isLoading ? (
-                          <p className="py-3 text-center text-[11px] text-muted-foreground">جارٍ التحميل...</p>
+                          <p className="py-3 text-center text-[11px] text-muted-foreground">
+                            جارٍ التحميل...
+                          </p>
                         ) : (friends.data ?? []).length === 0 ? (
                           <p className="py-3 text-center text-[11px] text-muted-foreground">
                             لا يوجد أصدقاء بعد — أضف صديقًا أولًا.
@@ -225,8 +255,12 @@ export function VipCvipSheet({
                               onClick={() => gift.mutate({ level: v.level, receiverId: f.id })}
                               className="flex w-full items-center justify-between rounded-xl bg-background/60 px-3 py-2 text-start"
                             >
-                              <span className="truncate text-[12px] font-bold">{f.display_name}</span>
-                              <span className="text-[10px] text-muted-foreground">ID {f.public_id}</span>
+                              <span className="truncate text-[12px] font-bold">
+                                {f.display_name}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                ID {f.public_id}
+                              </span>
                             </button>
                           ))
                         )}
@@ -234,7 +268,6 @@ export function VipCvipSheet({
                     )}
                   </div>
                 ))
-
               : (cvip.data ?? []).map((c) => (
                   <div key={c.id} className="svip-showcase p-4">
                     <div className="flex items-center justify-between">
@@ -244,8 +277,12 @@ export function VipCvipSheet({
                         {c.price.toLocaleString("en-US")}
                       </span>
                     </div>
-                    {c.description && <p className="mt-1 text-[11px] text-muted-foreground">{c.description}</p>}
-                    <p className="mt-1 text-[10px] text-muted-foreground">{c.duration_days} يومًا</p>
+                    {c.description && (
+                      <p className="mt-1 text-[11px] text-muted-foreground">{c.description}</p>
+                    )}
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      {c.duration_days} يومًا
+                    </p>
                     <ul className="mt-2 space-y-1">
                       {perkList(c.perks).map((p) => (
                         <li key={p} className="text-[11px] text-muted-foreground">
@@ -263,10 +300,14 @@ export function VipCvipSheet({
                   </div>
                 ))}
             {mode === "vip" && (vip.data ?? []).length === 0 && (
-              <p className="py-6 text-center text-xs text-muted-foreground">لا توجد مستويات VIP مفعّلة من الإدارة.</p>
+              <p className="py-6 text-center text-xs text-muted-foreground">
+                لا توجد مستويات VIP مفعّلة من الإدارة.
+              </p>
             )}
             {mode === "cvip" && (cvip.data ?? []).length === 0 && (
-              <p className="py-6 text-center text-xs text-muted-foreground">لا توجد خطط SVIP مفعّلة من الإدارة.</p>
+              <p className="py-6 text-center text-xs text-muted-foreground">
+                لا توجد خطط SVIP مفعّلة من الإدارة.
+              </p>
             )}
           </div>
         )}
