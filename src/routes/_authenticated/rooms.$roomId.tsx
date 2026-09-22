@@ -16,9 +16,11 @@ import {
   Mic,
   MicOff,
   Music,
+  Power,
   Camera,
   Send,
   Settings,
+  Sofa,
   Sparkles,
   Trophy,
   Volume2,
@@ -95,6 +97,15 @@ type Person = {
   mic_decoration_url: string | null;
 };
 
+const CHAT_FILTERS = [
+  { key: "all", label: "الكل" },
+  { key: "join", label: "أدخل" },
+  { key: "gift", label: "هدية" },
+  { key: "chat", label: "دردشة" },
+] as const;
+
+type ChatFilter = (typeof CHAT_FILTERS)[number]["key"];
+
 function pairKey(a: string, b: string) {
   return a < b ? `${a}|${b}` : `${b}|${a}`;
 }
@@ -105,6 +116,7 @@ function RoomPage() {
   const navigate = useNavigate();
 
   const [text, setText] = useState("");
+  const [chatFilter, setChatFilter] = useState<ChatFilter>("all");
   const [giftOpen, setGiftOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const [requestsOpen, setRequestsOpen] = useState(false);
@@ -604,46 +616,17 @@ function RoomPage() {
       hideNav
       fullBleed
       header={
-        <header className="fixed inset-x-0 top-0 z-40 mx-auto max-w-lg px-3 pb-3 pt-3 text-foreground">
-          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-border/50 bg-background/65 p-2 backdrop-blur-xl">
+        <header className="fixed inset-x-0 top-0 z-40 mx-auto max-w-lg px-3 pb-2 pt-3 text-foreground">
+          {/* الصف الأعلى: زر الخروج يسارًا وبطاقة الغرفة/المالك يمينًا كما في التصميم المرجعي */}
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
             <button
               onClick={() => setLeaveOpen(true)}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface/80"
-              aria-label="تصغير أو خروج"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border/50 bg-background/60 backdrop-blur-xl"
+              aria-label="خروج من الغرفة"
             >
-              <ArrowRight className="h-5 w-5" />
+              <Power className="h-5 w-5" />
             </button>
-            <div className="min-w-0 text-center">
-              <p className="truncate text-sm font-black">{room.data.name}</p>
-              <div className="mt-0.5 flex items-center justify-center gap-1.5 text-[9px] text-muted-foreground">
-                <span>ID: {room.data.room_code}</span>
-                <span>•</span>
-                <span>
-                  {Math.max(liveCount, members.data?.includes(userId ?? "") ? 1 : 0)} متواجد
-                </span>
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    voice.status === "connected" ? "bg-success" : "bg-destructive",
-                  )}
-                />
-              </div>
-            </div>
-            <div className="flex shrink-0 gap-1">
-              <button
-                onClick={() => setCupOpen(true)}
-                className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15"
-                aria-label="كأس الغرفة"
-              >
-                <Trophy className="h-4 w-4 text-primary" />
-              </button>
-              <button
-                onClick={() => setCosmeticsOpen(true)}
-                className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80"
-                aria-label="تزيين الغرفة"
-              >
-                <Sparkles className="h-4 w-4" />
-              </button>
+            <div className="flex min-w-0 items-center justify-end gap-1">
               {canManage && (
                 <button
                   onClick={() => {
@@ -652,24 +635,95 @@ function RoomPage() {
                     setRoomImagePreview(null);
                     setManageOpen(true);
                   }}
-                  className="grid h-9 w-9 place-items-center rounded-xl bg-surface/80"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border/40 bg-background/50 backdrop-blur-xl"
                   aria-label="إدارة الغرفة"
                 >
                   <Settings className="h-4 w-4" />
                 </button>
               )}
-            </div>
-          </div>
-          <div className="mt-1 flex justify-between px-1">
-            <BadgeStrip userId={userId} rank="عضو" count={0} />
-            {canManage && (requests.data?.length ?? 0) > 0 && (
               <button
-                onClick={() => setRequestsOpen(true)}
-                className="rounded-full bg-accent px-2 py-1 text-[9px] font-bold text-accent-foreground"
+                onClick={() => setCosmeticsOpen(true)}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border/40 bg-background/50 backdrop-blur-xl"
+                aria-label="تزيين الغرفة"
               >
-                {requests.data?.length} طلب مايك
+                <Sparkles className="h-4 w-4" />
               </button>
-            )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setRoomPanelsOpen(true)}
+              className="flex shrink-0 items-center gap-2 rounded-full border border-primary/40 bg-background/70 py-1 pe-1 ps-2 backdrop-blur-xl"
+            >
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-primary/20">
+                <ArrowRight className="h-3.5 w-3.5 rotate-180 text-primary" />
+              </span>
+              <span className="min-w-0 text-end">
+                <span className="block max-w-28 truncate text-[11px] font-black">
+                  {room.data.name}
+                </span>
+                <span className="block text-[9px] text-muted-foreground">
+                  ID:{room.data.room_code}
+                </span>
+              </span>
+              <UserAvatar
+                src={personOf(room.data.owner_id)?.avatar_url}
+                name={personOf(room.data.owner_id)?.display_name ?? room.data.name}
+                size={34}
+                vipLevel={personOf(room.data.owner_id)?.vip_level ?? 0}
+              />
+            </button>
+          </div>
+
+          {/* صف العدّاد والموسيقى والإعجابات */}
+          <div className="mt-2 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setRoomPanelsTab("members");
+                setRoomPanelsOpen(true);
+              }}
+              className="flex shrink-0 items-center gap-1 rounded-full border border-border/40 bg-background/55 px-2 py-1 backdrop-blur-xl"
+            >
+              <span className="text-[10px] font-black">
+                {Math.max(liveCount, members.data?.includes(userId ?? "") ? 1 : 0)}
+              </span>
+              <UserAvatar
+                src={myProfile.data?.avatar_url}
+                name={myProfile.data?.display_name}
+                size={22}
+                vipLevel={myProfile.data?.vip_level ?? 0}
+              />
+            </button>
+            <div className="flex min-w-0 items-center justify-center gap-1.5">
+              <span
+                className={cn(
+                  "h-1.5 w-1.5 shrink-0 rounded-full",
+                  voice.status === "connected" ? "bg-success" : "bg-destructive",
+                )}
+              />
+              {voice.musicPlaying && (
+                <span className="flex items-center gap-1 rounded-full border border-border/40 bg-background/55 px-2 py-0.5 text-[9px] font-bold backdrop-blur-xl">
+                  <Music className="h-3 w-3" />
+                  موسيقى
+                </span>
+              )}
+              {canManage && (requests.data?.length ?? 0) > 0 && (
+                <button
+                  onClick={() => setRequestsOpen(true)}
+                  className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[9px] font-bold text-accent-foreground"
+                >
+                  {requests.data?.length} طلب مايك
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setCupOpen(true)}
+              className="flex shrink-0 items-center gap-1 rounded-full border border-border/40 bg-background/55 px-2 py-1 text-[10px] font-black backdrop-blur-xl"
+              aria-label="كأس الغرفة"
+            >
+              <Trophy className="h-3.5 w-3.5 text-primary" />
+            </button>
           </div>
         </header>
       }
@@ -715,13 +769,13 @@ function RoomPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-4 gap-x-2 gap-y-4 px-3 pt-28 sm:px-5">
+      <div className="grid grid-cols-5 gap-x-1.5 gap-y-3 px-2 pt-28 sm:px-4">
         {(mics.data ?? []).map((seat, idx) => {
           const person = personOf(seat.user_id);
           const speaking = person ? voice.speakingIds.includes(person.id) : false;
           const list = mics.data ?? [];
           const next = list[idx + 1];
-          const sameRow = (idx + 1) % 4 !== 0;
+          const sameRow = (idx + 1) % 5 !== 0;
           const linkedNext =
             sameRow && seat.user_id && next?.user_id
               ? coupleKeys.has(pairKey(seat.user_id, next.user_id))
@@ -745,25 +799,25 @@ function RoomPage() {
               )}
               <div
                 className={cn(
-                  "relative flex h-14 w-14 items-center justify-center rounded-full border sm:h-16 sm:w-16",
-                  speaking ? "border-success ring-2 ring-success/50" : "border-border",
+                  "relative flex h-13 w-13 items-center justify-center rounded-full border sm:h-15 sm:w-15",
+                  speaking ? "border-success ring-2 ring-success/50" : "border-border/60",
                   person?.id === room.data!.owner_id
                     ? "border-primary bg-primary/10 shadow-glow"
-                    : "bg-surface",
+                    : "bg-background/35 backdrop-blur-md",
                 )}
               >
                 {person ? (
                   <UserAvatar
                     src={person.avatar_url}
                     name={person.display_name}
-                    size={54}
+                    size={48}
                     vipLevel={person.vip_level}
                     frame={person.frame_url}
                   />
                 ) : seat.is_locked ? (
                   <Lock className="h-5 w-5 text-muted-foreground" />
                 ) : (
-                  <Mic className="h-5 w-5 text-muted-foreground" />
+                  <Sofa className="h-6 w-6 text-success/70" />
                 )}
                 {(person?.mic_decoration_url ?? seat.decoration_url) && (
                   <CosmeticImage
@@ -790,7 +844,7 @@ function RoomPage() {
                 />
               ) : (
                 <span className="w-full truncate text-center text-[9px] text-foreground/75">
-                  NO.{seat.seat_index}
+                  {seat.seat_index}
                 </span>
               )}
             </button>
@@ -798,37 +852,66 @@ function RoomPage() {
         })}
       </div>
 
-      <section className="mx-3 mt-5 space-y-2 pb-64">
-        {(messages.data ?? []).map((m) => {
-          const person = personOf(m.user_id);
-          const isGift = m.kind === "gift";
-          return (
-            <div
-              key={m.id}
-              className={cn(
-                "flex items-start gap-2 rounded-xl border border-border/30 p-2.5 backdrop-blur-md",
-                isGift ? "gradient-rose text-primary-foreground" : "bg-background/45",
-              )}
-            >
-              <button
-                type="button"
-                onClick={() => person && setRoleSheet(person.id)}
-                aria-label="عرض المنصب"
+      {/* شريط تصنيف الدردشة كما في التصميم المرجعي */}
+      <div className="mx-3 mt-4 flex items-center justify-center gap-3 border-b border-border/25 pb-1.5 text-[11px] font-bold">
+        {CHAT_FILTERS.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            onClick={() => setChatFilter(f.key)}
+            className={cn(
+              "px-1 pb-1",
+              chatFilter === f.key
+                ? "border-b-2 border-primary text-foreground"
+                : "text-foreground/55",
+            )}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <section className="mx-3 mt-2 space-y-1.5 pb-64">
+        {(messages.data ?? [])
+          .filter((m) => {
+            if (chatFilter === "all") return true;
+            if (chatFilter === "gift") return m.kind === "gift";
+            if (chatFilter === "join") return m.kind === "join" || m.kind === "system";
+            return m.kind !== "gift" && m.kind !== "join" && m.kind !== "system";
+          })
+          .map((m) => {
+            const person = personOf(m.user_id);
+            const isGift = m.kind === "gift";
+            return (
+              <div
+                key={m.id}
+                className={cn(
+                  "flex items-start gap-2 rounded-2xl px-2.5 py-1.5",
+                  isGift ? "gradient-rose text-primary-foreground" : "bg-background/30",
+                )}
               >
-                <UserAvatar
-                  src={person?.avatar_url}
-                  name={person?.display_name}
-                  size={28}
-                  vipLevel={person?.vip_level ?? 0}
-                />
-              </button>
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-bold">{person?.display_name ?? "مستخدم"}</p>
-                <p className="break-words text-sm">{m.body}</p>
+                <button
+                  type="button"
+                  onClick={() => person && setRoleSheet(person.id)}
+                  aria-label="عرض المنصب"
+                  className="shrink-0"
+                >
+                  <UserAvatar
+                    src={person?.avatar_url}
+                    name={person?.display_name}
+                    size={24}
+                    vipLevel={person?.vip_level ?? 0}
+                  />
+                </button>
+                <p className="min-w-0 flex-1 break-words text-[13px] leading-5">
+                  <span className="me-1 font-bold text-primary">
+                    {person?.display_name ?? "مستخدم"}:
+                  </span>
+                  {m.body}
+                </p>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </section>
 
       {/* أزرار الجانب الأيسر: الكنز وصالة VIP والألعاب والموسيقى — كما في التصميم المرجعي */}
