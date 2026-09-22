@@ -92,7 +92,9 @@ export function RouletteGame({ bet: initialBet }: { bet?: number }) {
       {/* العجلة */}
       <div className="relative mx-auto mt-3 aspect-square w-full max-w-[320px]">
         {/* مؤشر أعلى العجلة */}
-        <span className="absolute left-1/2 top-0 z-20 -translate-x-1/2 -translate-y-1 text-2xl text-amber-300">▼</span>
+        <span className="absolute left-1/2 top-0 z-20 -translate-x-1/2 -translate-y-1 text-2xl text-amber-300">
+          ▼
+        </span>
         <div
           className="absolute inset-0 transition-transform duration-[3000ms] ease-[cubic-bezier(0.12,0.72,0.06,1)]"
           style={{ transform: `rotate(${rotation}deg)` }}
@@ -151,7 +153,12 @@ export function RouletteGame({ bet: initialBet }: { bet?: number }) {
             outcome.payout > 0 ? "bg-emerald-500/15" : "bg-black/40",
           )}
         >
-          <p className={cn("text-2xl font-black", outcome.payout > 0 ? "text-emerald-300" : "text-amber-100/70")}>
+          <p
+            className={cn(
+              "text-2xl font-black",
+              outcome.payout > 0 ? "text-emerald-300" : "text-amber-100/70",
+            )}
+          >
             {outcome.label}
           </p>
           <p className="mt-1 text-xs font-bold text-amber-100/80">
