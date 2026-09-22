@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Ban, Crown, Flag, HeartHandshake, MessageCircle, MoreVertical, UserPlus, UserRoundCheck } from "lucide-react";
 import {
@@ -65,6 +65,13 @@ function UserPage() {
   });
 
   const target = profile.data;
+
+  useEffect(() => {
+    if (!userId || !target?.id || target.id === userId) return;
+    void supabase
+      .from("profile_visits")
+      .upsert({ profile_id: target.id, visitor_id: userId }, { onConflict: "profile_id,visitor_id" });
+  }, [userId, target?.id]);
   const isMe = target?.id === userId;
 
   const relation = useQuery({
