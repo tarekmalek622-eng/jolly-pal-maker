@@ -20,6 +20,7 @@ import {
   Camera,
   Send,
   Settings,
+  Sofa,
   Sparkles,
   Trophy,
   Volume2,
@@ -833,7 +834,7 @@ function RoomPage() {
                 />
               ) : (
                 <span className="w-full truncate text-center text-[9px] text-foreground/75">
-                  NO.{seat.seat_index}
+                  {seat.seat_index}
                 </span>
               )}
             </button>
