@@ -56,6 +56,7 @@ import roomAuroraBackground from "@/assets/room-aurora-bg.jpg";
 import { VipName } from "@/components/VipName";
 import { VipCvipSheet } from "@/components/VipCvipSheet";
 import { RoomPanels } from "@/components/RoomPanels";
+import { RolePanel } from "@/components/RolePanel";
 import { RoomTreasureFloat } from "@/components/RoomTreasureFloat";
 import { Crown } from "lucide-react";
 
