@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   Backpack,
   BarChart3,
+  BookOpen,
   Camera,
   Coins,
   Crown,
@@ -12,6 +13,7 @@ import {
   ListChecks,
   LogOut,
   Pencil,
+  Search,
   Shield,
   Sparkles,
   Users,
