@@ -222,7 +222,12 @@ function AdminPage() {
           </div>
         </div>
       )}
-      <div className="sticky top-0 z-20 -mx-4 mb-4 bg-background/85 px-4 pb-2 pt-1 backdrop-blur-md">
+      <div
+        className={cn(
+          "sticky top-0 z-20 -mx-4 mb-4 bg-background/85 px-4 pb-2 pt-1 backdrop-blur-md",
+          allowedTabs.length < 2 && "hidden",
+        )}
+      >
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {allowedTabs.map((t) => {
             const Icon = t.icon;
