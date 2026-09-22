@@ -16,6 +16,7 @@ import { Route as AuthenticatedCrownRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedCupRouteImport } from './routes/_authenticated/cup'
 import { Route as AuthenticatedFriendsRouteImport } from './routes/_authenticated/friends'
 import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated/games'
+import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -66,6 +67,11 @@ const AuthenticatedFriendsRoute = AuthenticatedFriendsRouteImport.update({
 const AuthenticatedGamesRoute = AuthenticatedGamesRouteImport.update({
   id: '/games',
   path: '/games',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/cup': typeof AuthenticatedCupRoute
   '/friends': typeof AuthenticatedFriendsRoute
   '/games': typeof AuthenticatedGamesRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
   '/me': typeof AuthenticatedMeRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/cup': typeof AuthenticatedCupRoute
   '/friends': typeof AuthenticatedFriendsRoute
   '/games': typeof AuthenticatedGamesRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
   '/me': typeof AuthenticatedMeRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/_authenticated/cup': typeof AuthenticatedCupRoute
   '/_authenticated/friends': typeof AuthenticatedFriendsRoute
   '/_authenticated/games': typeof AuthenticatedGamesRoute
+  '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/cup'
     | '/friends'
     | '/games'
+    | '/help'
     | '/home'
     | '/me'
     | '/notifications'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/cup'
     | '/friends'
     | '/games'
+    | '/help'
     | '/home'
     | '/me'
     | '/notifications'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cup'
     | '/_authenticated/friends'
     | '/_authenticated/games'
+    | '/_authenticated/help'
     | '/_authenticated/home'
     | '/_authenticated/me'
     | '/_authenticated/notifications'
@@ -371,6 +383,13 @@ declare module '@tanstack/react-router' {
       path: '/games'
       fullPath: '/games'
       preLoaderRoute: typeof AuthenticatedGamesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/help': {
+      id: '/_authenticated/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof AuthenticatedHelpRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/home': {
@@ -501,6 +520,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCupRoute: typeof AuthenticatedCupRoute
   AuthenticatedFriendsRoute: typeof AuthenticatedFriendsRoute
   AuthenticatedGamesRoute: typeof AuthenticatedGamesRoute
+  AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMeRoute: typeof AuthenticatedMeRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -526,6 +546,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCupRoute: AuthenticatedCupRoute,
   AuthenticatedFriendsRoute: AuthenticatedFriendsRoute,
   AuthenticatedGamesRoute: AuthenticatedGamesRoute,
+  AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMeRoute: AuthenticatedMeRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
