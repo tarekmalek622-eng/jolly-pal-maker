@@ -122,7 +122,9 @@ function MePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profile_visits")
-        .select("visitor_id, updated_at, profiles:visitor_id(public_id, display_name, avatar_url, frame_url, vip_level)")
+        .select(
+          "visitor_id, updated_at, profiles:visitor_id(public_id, display_name, avatar_url, frame_url, vip_level)",
+        )
         .eq("profile_id", userId!)
         .order("updated_at", { ascending: false })
         .limit(15);

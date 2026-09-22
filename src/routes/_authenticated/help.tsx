@@ -12,7 +12,11 @@ export const Route = createFileRoute("/_authenticated/help")({
   head: () => ({
     meta: [
       { title: "مركز المساعدة — التاج" },
-      { name: "description", content: "أسئلة شائعة عن الشحن والاستبدال والغرف والهدايا والـ VIP والحماية في تطبيق التاج." },
+      {
+        name: "description",
+        content:
+          "أسئلة شائعة عن الشحن والاستبدال والغرف والهدايا والـ VIP والحماية في تطبيق التاج.",
+      },
       { property: "og:title", content: "مركز المساعدة — التاج" },
       { property: "og:description", content: "إجابات سريعة لأكثر الأسئلة تكرارًا." },
       { property: "og:type", content: "website" },
@@ -25,11 +29,11 @@ export const Route = createFileRoute("/_authenticated/help")({
 const FAQ: { q: string; a: string }[] = [
   {
     q: "كيف أشحن رصيد الماس؟",
-    a: "من صفحة المحفظة اختر \"شحن\"، ثم اختر الباقة وأرسل الطلب. يظهر الرصيد بعد موافقة الإدارة على الطلب.",
+    a: 'من صفحة المحفظة اختر "شحن"، ثم اختر الباقة وأرسل الطلب. يظهر الرصيد بعد موافقة الإدارة على الطلب.',
   },
   {
     q: "كيف أستبدل رصيد الدعم؟",
-    a: "من صفحة المحفظة اختر \"استبدال\" وحدد المبلغ. يتم التحويل داخل المحفظة فورًا وفق الحد المسموح.",
+    a: 'من صفحة المحفظة اختر "استبدال" وحدد المبلغ. يتم التحويل داخل المحفظة فورًا وفق الحد المسموح.',
   },
   {
     q: "كيف أنشئ غرفة؟",
@@ -52,12 +56,12 @@ const FAQ: { q: string; a: string }[] = [
     a: "الهدايا المتبادلة بينك وبين الطرف الآخر تضيف نقاطًا للعلاقة، وعند كل حد تصعد العلاقة مستوى حتى المستوى السابع بإطار ذهبي.",
   },
   {
-    q: "لماذا أرى \"لا توجد غرف\"؟",
-    a: "غالبًا مشكلة اتصال مؤقتة. اضغط \"إعادة المحاولة\" أو بدّل التصنيف، وإن استمر الأمر تواصل مع الدعم.",
+    q: 'لماذا أرى "لا توجد غرف"؟',
+    a: 'غالبًا مشكلة اتصال مؤقتة. اضغط "إعادة المحاولة" أو بدّل التصنيف، وإن استمر الأمر تواصل مع الدعم.',
   },
   {
     q: "كيف أبلّغ عن مستخدم مخالف؟",
-    a: "افتح ملفه الشخصي واضغط زر الخيارات ثم \"إبلاغ\"، واكتب السبب. يصل التقرير للإدارة مع سجل كامل.",
+    a: 'افتح ملفه الشخصي واضغط زر الخيارات ثم "إبلاغ"، واكتب السبب. يصل التقرير للإدارة مع سجل كامل.',
   },
   {
     q: "نسيت بيانات الدخول أو حسابي موقوف؟",
@@ -94,7 +98,9 @@ function HelpPage() {
           {FAQ.map((item, i) => (
             <AccordionItem key={item.q} value={`q${i}`} className="surface-card border-none px-4">
               <AccordionTrigger className="text-right text-sm font-bold">{item.q}</AccordionTrigger>
-              <AccordionContent className="text-xs leading-6 text-muted-foreground">{item.a}</AccordionContent>
+              <AccordionContent className="text-xs leading-6 text-muted-foreground">
+                {item.a}
+              </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>

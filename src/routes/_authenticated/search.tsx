@@ -12,7 +12,10 @@ export const Route = createFileRoute("/_authenticated/search")({
   head: () => ({
     meta: [
       { title: "البحث الموحّد — التاج" },
-      { name: "description", content: "ابحث عن المستخدمين بالاسم أو الآيدي، وعن الغرف والعائلات في مكان واحد." },
+      {
+        name: "description",
+        content: "ابحث عن المستخدمين بالاسم أو الآيدي، وعن الغرف والعائلات في مكان واحد.",
+      },
       { property: "og:title", content: "البحث الموحّد — التاج" },
       { property: "og:description", content: "مستخدمون، غرف وعائلات في بحث واحد." },
       { property: "og:type", content: "website" },
@@ -34,7 +37,9 @@ function SearchPage() {
       const [users, rooms, families] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, public_id, display_name, avatar_url, frame_url, vip_level, name_color, status_text")
+          .select(
+            "id, public_id, display_name, avatar_url, frame_url, vip_level, name_color, status_text",
+          )
           .or(`display_name.ilike.${like},public_id.ilike.${like}`)
           .limit(12),
         supabase
@@ -81,7 +86,9 @@ function SearchPage() {
         </div>
 
         {q.length === 0 && (
-          <p className="mt-8 text-center text-sm text-muted-foreground">اكتب حرفًا واحدًا على الأقل لبدء البحث.</p>
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            اكتب حرفًا واحدًا على الأقل لبدء البحث.
+          </p>
         )}
 
         {results.isLoading && q.length > 0 && (
@@ -103,7 +110,9 @@ function SearchPage() {
           </div>
         )}
 
-        {empty && <p className="mt-8 text-center text-sm text-muted-foreground">لا نتائج مطابقة.</p>}
+        {empty && (
+          <p className="mt-8 text-center text-sm text-muted-foreground">لا نتائج مطابقة.</p>
+        )}
 
         {results.data && results.data.users.length > 0 && (
           <section className="mt-5">
