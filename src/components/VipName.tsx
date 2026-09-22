@@ -15,7 +15,7 @@ export function VipName({
   name: string;
   vipLevel?: number;
   className?: string;
-  color?: string | null;
+  color?: string | null | undefined;
 }) {
   const visual = getVipVisual(vipLevel);
   return (
