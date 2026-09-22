@@ -9,6 +9,7 @@ import { useSupabaseSession } from "@/hooks/use-session";
 
 const items = [
   { to: "/home", label: "الرئيسية", icon: Home },
+  { to: "/rooms", label: "الغرف", icon: Mic },
   { to: "/games", label: "الاستكشاف", icon: Compass },
   { to: "/messages", label: "الرسائل", icon: MessageCircle },
   { to: "/me", label: "حسابي", icon: User },
