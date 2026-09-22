@@ -11,11 +11,31 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
   { key: "gift", label: "الهدايا", emoji: "🎁", kinds: ["gift", "treasure"] },
   { key: "friend", label: "الأصدقاء", emoji: "🤝", kinds: ["friend_request", "friend_accepted"] },
   { key: "relationship", label: "العلاقات", emoji: "💞", kinds: ["relationship"] },
-  { key: "family", label: "العائلات", emoji: "🏰", kinds: ["family", "family_request", "family_member"] },
-  { key: "event", label: "الأحداث", emoji: "🎉", kinds: ["event_prize", "event_start", "event_winners"] },
-  { key: "reward", label: "الجوائز", emoji: "🏆", kinds: ["reward", "badge_unlocked", "admin_badge", "wallet"] },
+  {
+    key: "family",
+    label: "العائلات",
+    emoji: "🏰",
+    kinds: ["family", "family_request", "family_member"],
+  },
+  {
+    key: "event",
+    label: "الأحداث",
+    emoji: "🎉",
+    kinds: ["event_prize", "event_start", "event_winners"],
+  },
+  {
+    key: "reward",
+    label: "الجوائز",
+    emoji: "🏆",
+    kinds: ["reward", "badge_unlocked", "admin_badge", "wallet"],
+  },
   { key: "vip", label: "VIP / CVIP", emoji: "💎", kinds: ["vip", "cvip"] },
-  { key: "system", label: "النظام", emoji: "⚙️", kinds: ["system", "welcome", "role_change", "administrative"] },
+  {
+    key: "system",
+    label: "النظام",
+    emoji: "⚙️",
+    kinds: ["system", "welcome", "role_change", "administrative"],
+  },
 ];
 
 export function groupKinds(key: string): string[] {

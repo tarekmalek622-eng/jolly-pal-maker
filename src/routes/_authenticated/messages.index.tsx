@@ -13,7 +13,10 @@ export const Route = createFileRoute("/_authenticated/messages/")({
   head: () => ({
     meta: [
       { title: "الرسائل — التاج" },
-      { name: "description", content: "محادثاتك الخاصة مع الأصدقاء داخل التاج، بتحديث مباشر للرسائل الجديدة." },
+      {
+        name: "description",
+        content: "محادثاتك الخاصة مع الأصدقاء داخل التاج، بتحديث مباشر للرسائل الجديدة.",
+      },
       { property: "og:title", content: "الرسائل — التاج" },
       { property: "og:description", content: "دردشة خاصة مباشرة مع أصدقائك." },
     ],
@@ -53,8 +56,6 @@ function MessagesPage() {
     staleTime: 20_000,
   });
 
-
-
   const threads = useQuery({
     queryKey: ["dm-threads", userId],
     enabled: Boolean(userId),
@@ -93,9 +94,13 @@ function MessagesPage() {
     if (!userId) return;
     const channel = supabase
       .channel("dm-inbox")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, () => {
-        void threads.refetch();
-      })
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "direct_messages" },
+        () => {
+          void threads.refetch();
+        },
+      )
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
@@ -134,7 +139,9 @@ function MessagesPage() {
         to="/crown"
         className="mb-3 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-gradient-to-l from-amber-500/15 to-transparent px-3 py-3"
       >
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/20 text-lg">👑</span>
+        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/20 text-lg">
+          👑
+        </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2 text-sm font-bold">
             رسائل التاج
@@ -144,7 +151,9 @@ function MessagesPage() {
               </span>
             )}
           </span>
-          <span className="block text-[11px] text-muted-foreground">رسائل رسمية من التاج: نتائج الأحداث والإعلانات</span>
+          <span className="block text-[11px] text-muted-foreground">
+            رسائل رسمية من التاج: نتائج الأحداث والإعلانات
+          </span>
         </span>
       </Link>
       {threads.isLoading ? (
@@ -163,13 +172,24 @@ function MessagesPage() {
                 params={{ userId: other.id }}
                 className="surface-card flex items-center gap-3 p-3"
               >
-                <UserAvatar src={other.avatar_url} name={other.display_name} size={48} vipLevel={other.vip_level} online={other.is_online} />
+                <UserAvatar
+                  src={other.avatar_url}
+                  name={other.display_name}
+                  size={48}
+                  vipLevel={other.vip_level}
+                  online={other.is_online}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{other.display_name}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{last.body ?? "رسالة"}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {last.body ?? "رسالة"}
+                  </p>
                 </div>
                 <span className="text-[10px] text-muted-foreground">
-                  {new Date(last.created_at).toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(last.created_at).toLocaleTimeString("ar", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               </Link>
             ) : null,
