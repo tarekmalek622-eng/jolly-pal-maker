@@ -16,6 +16,7 @@ import { Route as AuthenticatedCrownRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedCupRouteImport } from './routes/_authenticated/cup'
 import { Route as AuthenticatedFriendsRouteImport } from './routes/_authenticated/friends'
 import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated/games'
+import { Route as AuthenticatedGiftLogRouteImport } from './routes/_authenticated/gift-log'
 import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
@@ -67,6 +68,11 @@ const AuthenticatedFriendsRoute = AuthenticatedFriendsRouteImport.update({
 const AuthenticatedGamesRoute = AuthenticatedGamesRouteImport.update({
   id: '/games',
   path: '/games',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGiftLogRoute = AuthenticatedGiftLogRouteImport.update({
+  id: '/gift-log',
+  path: '/gift-log',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
@@ -174,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/cup': typeof AuthenticatedCupRoute
   '/friends': typeof AuthenticatedFriendsRoute
   '/games': typeof AuthenticatedGamesRoute
+  '/gift-log': typeof AuthenticatedGiftLogRoute
   '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
   '/me': typeof AuthenticatedMeRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/cup': typeof AuthenticatedCupRoute
   '/friends': typeof AuthenticatedFriendsRoute
   '/games': typeof AuthenticatedGamesRoute
+  '/gift-log': typeof AuthenticatedGiftLogRoute
   '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
   '/me': typeof AuthenticatedMeRoute
@@ -228,6 +236,7 @@ export interface FileRoutesById {
   '/_authenticated/cup': typeof AuthenticatedCupRoute
   '/_authenticated/friends': typeof AuthenticatedFriendsRoute
   '/_authenticated/games': typeof AuthenticatedGamesRoute
+  '/_authenticated/gift-log': typeof AuthenticatedGiftLogRoute
   '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
@@ -256,6 +265,7 @@ export interface FileRouteTypes {
     | '/cup'
     | '/friends'
     | '/games'
+    | '/gift-log'
     | '/help'
     | '/home'
     | '/me'
@@ -282,6 +292,7 @@ export interface FileRouteTypes {
     | '/cup'
     | '/friends'
     | '/games'
+    | '/gift-log'
     | '/help'
     | '/home'
     | '/me'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cup'
     | '/_authenticated/friends'
     | '/_authenticated/games'
+    | '/_authenticated/gift-log'
     | '/_authenticated/help'
     | '/_authenticated/home'
     | '/_authenticated/me'
@@ -383,6 +395,13 @@ declare module '@tanstack/react-router' {
       path: '/games'
       fullPath: '/games'
       preLoaderRoute: typeof AuthenticatedGamesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gift-log': {
+      id: '/_authenticated/gift-log'
+      path: '/gift-log'
+      fullPath: '/gift-log'
+      preLoaderRoute: typeof AuthenticatedGiftLogRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/help': {
@@ -520,6 +539,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCupRoute: typeof AuthenticatedCupRoute
   AuthenticatedFriendsRoute: typeof AuthenticatedFriendsRoute
   AuthenticatedGamesRoute: typeof AuthenticatedGamesRoute
+  AuthenticatedGiftLogRoute: typeof AuthenticatedGiftLogRoute
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMeRoute: typeof AuthenticatedMeRoute
@@ -546,6 +566,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCupRoute: AuthenticatedCupRoute,
   AuthenticatedFriendsRoute: AuthenticatedFriendsRoute,
   AuthenticatedGamesRoute: AuthenticatedGamesRoute,
+  AuthenticatedGiftLogRoute: AuthenticatedGiftLogRoute,
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMeRoute: AuthenticatedMeRoute,
