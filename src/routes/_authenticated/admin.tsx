@@ -171,7 +171,16 @@ function AdminPage() {
 
   return (
     <AppShell
-      header={<PageHeader title="لوحة الإدارة" subtitle="تحكم كامل بالتطبيق — كل إجراء يُسجَّل" />}
+      header={
+        <PageHeader
+          title={!fullAccess && allowedTabs.length === 1 ? allowedTabs[0]!.label : "لوحة الإدارة"}
+          subtitle={
+            !fullAccess && allowedTabs.length === 1
+              ? "قسم مخصص لحسابك — كل إجراء يُسجَّل"
+              : "تحكم كامل بالتطبيق — كل إجراء يُسجَّل"
+          }
+        />
+      }
     >
       {ownerBadge.data?.badge_definitions && (
         <div className="mb-3 flex items-center gap-3 rounded-2xl border border-primary/35 bg-primary/10 p-3">
@@ -213,7 +222,12 @@ function AdminPage() {
           </div>
         </div>
       )}
-      <div className="sticky top-0 z-20 -mx-4 mb-4 bg-background/85 px-4 pb-2 pt-1 backdrop-blur-md">
+      <div
+        className={cn(
+          "sticky top-0 z-20 -mx-4 mb-4 bg-background/85 px-4 pb-2 pt-1 backdrop-blur-md",
+          allowedTabs.length < 2 && "hidden",
+        )}
+      >
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {allowedTabs.map((t) => {
             const Icon = t.icon;
@@ -239,6 +253,8 @@ function AdminPage() {
 
       {tab === "users" && (
         <UsersTab
+          canSuspend={fullAccess}
+          canWelcome={fullAccess || granted.includes("welcome")}
           onWelcome={(publicId) => {
             setWelcomePrefill(publicId);
             setTab("welcome");
@@ -274,7 +290,15 @@ const ROLES = [
   { key: "welcome_manager", label: "مسؤول الترحيبية" },
 ] as const;
 
-function UsersTab({ onWelcome }: { onWelcome?: (publicId: string) => void }) {
+function UsersTab({
+  onWelcome,
+  canSuspend = true,
+  canWelcome = true,
+}: {
+  onWelcome?: (publicId: string) => void;
+  canSuspend?: boolean;
+  canWelcome?: boolean;
+}) {
   const [term, setTerm] = useState("");
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<string | null>(null);
@@ -417,13 +441,15 @@ function UsersTab({ onWelcome }: { onWelcome?: (publicId: string) => void }) {
                 ID {u.public_id} · مستوى {u.level} {u.is_suspended ? "· موقوف" : ""}
               </p>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => suspend.mutate({ id: u.id, suspended: !u.is_suspended })}
-              className="h-9 rounded-xl px-3 text-[11px]"
-            >
-              {u.is_suspended ? "إلغاء الإيقاف" : "إيقاف"}
-            </Button>
+            {canSuspend && (
+              <Button
+                variant="outline"
+                onClick={() => suspend.mutate({ id: u.id, suspended: !u.is_suspended })}
+                className="h-9 rounded-xl px-3 text-[11px]"
+              >
+                {u.is_suspended ? "إلغاء الإيقاف" : "إيقاف"}
+              </Button>
+            )}
           </div>
           <div className="mt-2 flex gap-2">
             <Input
@@ -506,13 +532,15 @@ function UsersTab({ onWelcome }: { onWelcome?: (publicId: string) => void }) {
               </Button>
             )}
           </div>
-          <Button
-            variant="outline"
-            onClick={() => onWelcome?.(u.public_id)}
-            className="mt-2 h-10 w-full rounded-xl border-primary/40 text-[11px] font-bold text-primary"
-          >
-            <PartyPopper className="me-1.5 h-4 w-4" /> مسؤولية الترحيبية
-          </Button>
+          {canWelcome && (
+            <Button
+              variant="outline"
+              onClick={() => onWelcome?.(u.public_id)}
+              className="mt-2 h-10 w-full rounded-xl border-primary/40 text-[11px] font-bold text-primary"
+            >
+              <PartyPopper className="me-1.5 h-4 w-4" /> مسؤولية الترحيبية
+            </Button>
+          )}
           {isSuper.data === true && (
             <div className="mt-2 space-y-2">
               <div className="flex gap-1">
