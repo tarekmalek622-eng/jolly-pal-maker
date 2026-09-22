@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useSupabaseSession } from "@/hooks/use-session";
 import { formatCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -162,7 +163,7 @@ function InfoPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean }) {
       const { data, error } = await supabase
         .from("rooms")
         .select(
-          "name, room_code, description, category, member_count, mic_count, popularity, theme_style",
+          "name, room_code, description, category, member_count, mic_count, popularity, theme_style, chat_locked",
         )
         .eq("id", roomId)
         .maybeSingle();
@@ -216,6 +217,14 @@ function InfoPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean }) {
           {rewards.data?.tier?.percent ?? 0}%
         </p>
       </div>
+      <RoomRating roomId={roomId} />
+      {isOwner && (
+        <ChatLockToggle
+          roomId={roomId}
+          locked={Boolean(room.data?.chat_locked)}
+          onDone={() => void room.refetch()}
+        />
+      )}
       {isOwner && <RoomThemePicker roomId={roomId} current={room.data?.theme_style} />}
       <div className="rounded-2xl border border-border/60 bg-surface/70 p-3">
         <p className="text-xs font-bold">الإعلان</p>
@@ -223,6 +232,111 @@ function InfoPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean }) {
           {room.data?.description || "لا يوجد إعلان في هذه الغرفة."}
         </p>
       </div>
+    </div>
+  );
+}
+
+function RoomRating({ roomId }: { roomId: string }) {
+  const { userId } = useSupabaseSession();
+  const ratings = useQuery({
+    queryKey: ["room-ratings", roomId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("room_ratings")
+        .select("user_id, stars")
+        .eq("room_id", roomId);
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
+
+  const rows = ratings.data ?? [];
+  const avg = rows.length ? rows.reduce((a, r) => a + Number(r.stars), 0) / rows.length : 0;
+  const mine = rows.find((r) => r.user_id === userId)?.stars ?? 0;
+
+  async function rate(stars: number) {
+    if (!userId) return;
+    const { error } = await supabase
+      .from("room_ratings")
+      .upsert({ room_id: roomId, user_id: userId, stars }, { onConflict: "room_id,user_id" });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("تم تقييم الغرفة");
+    void ratings.refetch();
+  }
+
+  return (
+    <div className="rounded-2xl border border-border/60 bg-surface/70 p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-bold">تقييم الغرفة</p>
+        <p className="text-[11px] text-muted-foreground">
+          {rows.length ? `${avg.toFixed(1)} من 5 (${rows.length})` : "لا تقييمات بعد"}
+        </p>
+      </div>
+      <div className="mt-2 flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => void rate(n)}
+            aria-label={`تقييم ${n}`}
+            className="p-0.5 text-lg leading-none"
+          >
+            <span className={n <= mine ? "text-primary" : "text-muted-foreground/40"}>★</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChatLockToggle({
+  roomId,
+  locked,
+  onDone,
+}: {
+  roomId: string;
+  locked: boolean;
+  onDone: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  async function toggle() {
+    setBusy(true);
+    const { error } = await supabase
+      .from("rooms")
+      .update({ chat_locked: !locked })
+      .eq("id", roomId);
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(locked ? "تم فتح الدردشة" : "تم قفل الدردشة");
+    onDone();
+  }
+
+  return (
+    <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-surface/70 p-3">
+      <div>
+        <p className="text-xs font-bold">قفل الدردشة</p>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">
+          عند القفل يكتب المالك والمشرفون فقط.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={() => void toggle()}
+        disabled={busy}
+        className={cn(
+          "rounded-2xl px-3 py-2 text-[11px] font-bold",
+          locked ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary",
+        )}
+      >
+        {locked ? "مقفولة — افتح" : "اقفل"}
+      </button>
     </div>
   );
 }
