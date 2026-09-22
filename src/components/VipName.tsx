@@ -20,11 +20,7 @@ export function VipName({
   const visual = getVipVisual(vipLevel);
   return (
     <span
-      className={cn(
-        "truncate font-bold",
-        !color && visual?.nameClass,
-        className,
-      )}
+      className={cn("truncate font-bold", !color && visual?.nameClass, className)}
       style={color ? { color } : undefined}
     >
       {name}
@@ -44,7 +40,13 @@ export function VipId({
 }) {
   const visual = getVipVisual(vipLevel);
   return (
-    <span className={cn("text-[11px]", visual ? `${visual.nameClass} font-bold` : "text-muted-foreground", className)}>
+    <span
+      className={cn(
+        "text-[11px]",
+        visual ? `${visual.nameClass} font-bold` : "text-muted-foreground",
+        className,
+      )}
+    >
       ID: {publicId}
     </span>
   );
