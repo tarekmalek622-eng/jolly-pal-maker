@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Home, Compass, MessageCircle, User } from "lucide-react";
+import { Home, Compass, Mic, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCrownUnread } from "@/lib/crown.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { useSupabaseSession } from "@/hooks/use-session";
 
 const items = [
   { to: "/home", label: "الرئيسية", icon: Home },
+  { to: "/rooms", label: "الغرف", icon: Mic },
   { to: "/games", label: "الاستكشاف", icon: Compass },
   { to: "/messages", label: "الرسائل", icon: MessageCircle },
   { to: "/me", label: "حسابي", icon: User },
