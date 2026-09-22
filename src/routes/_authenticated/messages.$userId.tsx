@@ -279,3 +279,26 @@ function ChatPage() {
     </AppShell>
   );
 }
+
+/** فقاعة الرسالة الصوتية — تشغيل مباشر من التخزين الآمن. */
+function VoiceBubble({ stored, durationMs }: { stored: string; durationMs: number | null }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    void resolveMediaUrl(stored).then((u) => active && setUrl(u));
+    return () => {
+      active = false;
+    };
+  }, [stored]);
+  const seconds = Math.max(1, Math.round((durationMs ?? 0) / 1000));
+  return (
+    <div className="flex items-center gap-2">
+      {url ? (
+        <audio controls src={url} className="h-8 w-44" preload="none" />
+      ) : (
+        <span className="text-[11px] opacity-70">جارٍ تحميل الصوت...</span>
+      )}
+      <span className="text-[10px] opacity-70">{seconds}ث</span>
+    </div>
+  );
+}
