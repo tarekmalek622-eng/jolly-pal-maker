@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Ban, Flag, Gift, Send, Smile, Trash2 } from "lucide-react";
+import { ArrowRight, Ban, Flag, Gift, Mic, Send, Smile, Square, Trash2 } from "lucide-react";
+import { resolveMediaUrl } from "@/lib/media";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -33,6 +34,10 @@ function ChatPage() {
   const [text, setText] = useState("");
   const [giftOpen, setGiftOpen] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [sendingVoice, setSendingVoice] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const startedAtRef = useRef(0);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const other = useQuery({
@@ -54,7 +59,9 @@ function ChatPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("direct_messages")
-        .select("id, sender_id, receiver_id, body, kind, metadata, read_at, created_at")
+        .select(
+          "id, sender_id, receiver_id, body, kind, metadata, read_at, created_at, audio_url, audio_duration_ms",
+        )
         .or(
           `and(sender_id.eq.${userId!},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${userId!})`,
         )
@@ -132,6 +139,62 @@ function ChatPage() {
     void messages.refetch();
   }
 
+  /* ---------- رسالة صوتية حقيقية: تسجيل من الميكروفون ورفعها للمحادثة ---------- */
+  async function startRecording() {
+    if (!userId) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const duration = Date.now() - startedAtRef.current;
+        setRecording(false);
+        if (duration < 700) {
+          toast.error("التسجيل قصير جدًا");
+          return;
+        }
+        setSendingVoice(true);
+        try {
+          const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+          const path = `${userId}/${Date.now()}.webm`;
+          const { error: upErr } = await supabase.storage
+            .from("voice-messages")
+            .upload(path, blob, { contentType: blob.type, upsert: true });
+          if (upErr) throw upErr;
+          const { error } = await supabase.from("direct_messages").insert({
+            sender_id: userId,
+            receiver_id: otherId,
+            body: "رسالة صوتية",
+            kind: "voice",
+            audio_url: `voice-messages/${path}`,
+            audio_duration_ms: duration,
+          });
+          if (error) throw error;
+          void messages.refetch();
+        } catch {
+          toast.error("تعذر إرسال الرسالة الصوتية");
+        } finally {
+          setSendingVoice(false);
+        }
+      };
+      recorderRef.current = recorder;
+      startedAtRef.current = Date.now();
+      recorder.start();
+      setRecording(true);
+    } catch {
+      toast.error("تعذر الوصول إلى الميكروفون");
+    }
+  }
+
+  function stopRecording() {
+    recorderRef.current?.stop();
+    recorderRef.current = null;
+  }
+
   return (
     <AppShell
       hideNav
@@ -163,7 +226,11 @@ function ChatPage() {
                   mine ? "gradient-gold text-primary-foreground" : "bg-surface",
                 )}
               >
-                <p>{m.kind === "gift" ? `🎁 ${m.body}` : m.body}</p>
+                {m.kind === "voice" && m.audio_url ? (
+                  <VoiceBubble stored={m.audio_url} durationMs={m.audio_duration_ms} />
+                ) : (
+                  <p>{m.kind === "gift" ? `🎁 ${m.body}` : m.body}</p>
+                )}
                 <p className="mt-1 text-[10px] opacity-70">
                   {new Date(m.created_at).toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}
                 </p>

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Crown, Lock, Mic, Users } from "lucide-react";
+import { BadgeCheck, Crown, Lock, Mic, Users } from "lucide-react";
 import { resolveMediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,14 @@ export type RoomRow = {
   created_at: string;
   owner_id: string;
   mic_count: number;
+  xp?: number | null;
+  is_verified?: boolean | null;
 };
+
+/** مستوى الغرفة من نقاط خبرتها (يزيد مع الهدايا داخلها). */
+export function roomLevelFromXp(xp?: number | null) {
+  return Math.max(1, Math.min(20, Math.floor(Math.sqrt(Math.max(Number(xp ?? 0), 0) / 1_000_000)) + 1));
+}
 
 /** إطار الغرفة: يتحدد تلقائيًا حسب نشاط الغرفة، ويمكن تجاوزه بإطار مملوك من المتجر. */
 export type RoomFrameTier = "normal" | "vip" | "rare" | "featured" | "animated" | "legendary";
@@ -79,8 +86,10 @@ export function RoomCard({
             {img && <img src={img} alt={room.name} className="h-full w-full object-cover" loading="lazy" />}
             <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/25 to-transparent" />
 
-            <span className="absolute top-2 start-2 rounded-full bg-background/75 px-2 py-0.5 text-[10px] font-bold backdrop-blur">
+            <span className="absolute top-2 start-2 flex items-center gap-1 rounded-full bg-background/75 px-2 py-0.5 text-[10px] font-bold backdrop-blur">
               {FRAME_LABEL[tier]}
+              <span className="text-primary">Lv{roomLevelFromXp(room.xp)}</span>
+              {room.is_verified && <BadgeCheck className="h-3 w-3 text-success" aria-label="غرفة موثقة" />}
             </span>
             {room.room_type === "private" && (
               <span className="absolute top-2 end-2 rounded-full bg-background/75 p-1.5 backdrop-blur">

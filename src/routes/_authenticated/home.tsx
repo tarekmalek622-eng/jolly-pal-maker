@@ -39,7 +39,7 @@ function HomePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("rooms")
-        .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count")
+        .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified")
         .eq("is_disabled", false)
         .order("member_count", { ascending: false })
         .limit(50);
@@ -76,7 +76,7 @@ function HomePage() {
           .limit(10),
         supabase
           .from("rooms")
-          .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count")
+          .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified")
           .or(`name.ilike.%${q}%,room_code.eq.${/^\d+$/.test(q) ? q : "0"}`)
           .limit(10),
       ]);

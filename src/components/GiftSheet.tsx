@@ -83,13 +83,20 @@ export function GiftSheet({
       const { data, error } = await db
         .from("gifts")
         .select(
-          "id, name, emoji, image_url, thumb_url, animation_url, video_url, sound_url, sound_enabled, duration_ms, display_scale, price, rarity, category, required_vip",
+          "id, name, emoji, image_url, thumb_url, animation_url, video_url, sound_url, sound_enabled, duration_ms, display_scale, price, rarity, category, required_vip, available_from, available_until",
         )
         .eq("is_active", true)
         .order("sort_order")
         .order("price");
       if (error) throw error;
-      return (data ?? []) as GiftRow[];
+      // الهدايا الموسمية تظهر فقط داخل نافذتها الزمنية المحددة من الإدارة
+      const now = Date.now();
+      const rows = (data ?? []) as (GiftRow & { available_from?: string | null; available_until?: string | null })[];
+      return rows.filter(
+        (g) =>
+          (!g.available_from || new Date(g.available_from).getTime() <= now) &&
+          (!g.available_until || new Date(g.available_until).getTime() >= now),
+      ) as GiftRow[];
     },
     staleTime: 5 * 60 * 1000,
   });

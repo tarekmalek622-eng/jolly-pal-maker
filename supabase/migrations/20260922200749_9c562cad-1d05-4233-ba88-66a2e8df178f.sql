@@ -1,0 +1,13 @@
+revoke execute on function public.task_metric_value(uuid,text,timestamptz) from anon, authenticated;
+revoke execute on function public.task_period_start(text) from anon, authenticated;
+revoke execute on function public.weekly_ranking_settle(date) from anon, authenticated;
+revoke execute on function public.weekly_ranking_leaderboard(text,date,int) from anon, authenticated;
+revoke execute on function public.weekly_ranking_settings() from anon;
+revoke execute on function public.room_xp_from_gift() from anon, authenticated;
+revoke execute on function public.notify_unusual_recharge() from anon, authenticated;
+revoke execute on function public.tasks_state() from anon;
+revoke execute on function public.task_claim(text) from anon;
+revoke execute on function public.referral_redeem(text) from anon;
+revoke execute on function public.support_create_ticket(text,text,text) from anon;
+revoke execute on function public.support_reply(uuid,text,boolean) from anon;
+revoke execute on function public.owner_dashboard() from anon;
