@@ -853,8 +853,9 @@ export const adminUpdateUserIdentity = createServerFn({ method: "POST" })
         publicId: z
           .string()
           .trim()
-          .regex(/^[0-9]{4,12}$/, "الـID يجب أن يكون أرقامًا من 4 إلى 12 خانة")
+          .regex(/^[A-Za-z0-9]{1,12}$/, "الـID يقبل حروفًا أو أرقامًا من خانة واحدة إلى 12")
           .optional(),
+
         displayName: z.string().trim().min(2).max(30).optional(),
       })
       .parse(input),
