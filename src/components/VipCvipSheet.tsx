@@ -197,7 +197,10 @@ export function VipCvipSheet({
                           height={56}
                           loading="lazy"
                           alt={`شارة VIP ${v.level}`}
-                          className={cn("h-14 w-14 object-contain drop-shadow", getVipVisual(v.level)?.badgeClass)}
+                          className={cn(
+                            "h-14 w-14 object-contain drop-shadow",
+                            getVipVisual(v.level)?.badgeClass,
+                          )}
                         />
                         <img
                           src={getVipFrame(v.level) ?? ""}
@@ -205,7 +208,10 @@ export function VipCvipSheet({
                           height={48}
                           loading="lazy"
                           alt={`إطار VIP ${v.level}`}
-                          className={cn("h-12 w-12 object-contain opacity-90", getVipVisual(v.level)?.frameClass)}
+                          className={cn(
+                            "h-12 w-12 object-contain opacity-90",
+                            getVipVisual(v.level)?.frameClass,
+                          )}
                         />
                       </div>
                       <div className="min-w-0">
