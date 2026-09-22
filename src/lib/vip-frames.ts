@@ -1,3 +1,11 @@
+import vipBadge1 from "@/assets/vip-badge-1.png";
+import vipBadge2 from "@/assets/vip-badge-2.png";
+import vipBadge3 from "@/assets/vip-badge-3.png";
+import vipBadge4 from "@/assets/vip-badge-4.png";
+import vipBadge5 from "@/assets/vip-badge-5.png";
+import vipBadge6 from "@/assets/vip-badge-6.png";
+import vipBadge7 from "@/assets/vip-badge-7.png";
+import vipBadge8 from "@/assets/vip-badge-8.png";
 import vipFrame1 from "@/assets/vip-frame-1.png";
 import vipFrame2 from "@/assets/vip-frame-2.png";
 import vipFrame3 from "@/assets/vip-frame-3.png";
@@ -52,4 +60,19 @@ export function getVipFrame(level: number) {
 export function getVipName(level: number) {
   if (level < 1) return "عضو";
   return VIP_NAMES[Math.min(8, level) - 1] ?? VIP_NAMES[7];
+}
+export const VIP_BADGES = [
+  vipBadge1,
+  vipBadge2,
+  vipBadge3,
+  vipBadge4,
+  vipBadge5,
+  vipBadge6,
+  vipBadge7,
+  vipBadge8,
+] as const;
+
+export function getVipBadgeArt(level: number) {
+  if (level < 1) return null;
+  return VIP_BADGES[Math.min(8, level) - 1] ?? VIP_BADGES[7];
 }
