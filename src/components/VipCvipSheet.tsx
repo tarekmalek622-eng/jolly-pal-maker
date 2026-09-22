@@ -190,13 +190,24 @@ export function VipCvipSheet({
                     className={cn("rounded-2xl border p-4", getVipVisual(v.level)?.tierClass)}
                   >
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
-                      <img
-                        src={getVipFrame(v.level) ?? ""}
-                        width={56}
-                        height={56}
-                        alt={`إطار VIP ${v.level}`}
-                        className="h-14 w-14 shrink-0 object-contain"
-                      />
+                      <div className="flex shrink-0 items-center gap-1">
+                        <img
+                          src={getVipBadgeArt(v.level) ?? ""}
+                          width={56}
+                          height={56}
+                          loading="lazy"
+                          alt={`شارة VIP ${v.level}`}
+                          className={cn("h-14 w-14 object-contain drop-shadow", getVipVisual(v.level)?.badgeClass)}
+                        />
+                        <img
+                          src={getVipFrame(v.level) ?? ""}
+                          width={48}
+                          height={48}
+                          loading="lazy"
+                          alt={`إطار VIP ${v.level}`}
+                          className={cn("h-12 w-12 object-contain opacity-90", getVipVisual(v.level)?.frameClass)}
+                        />
+                      </div>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold">VIP {v.level}</p>
                         <p className={cn("truncate text-[10px]", getVipVisual(v.level)?.nameClass)}>
