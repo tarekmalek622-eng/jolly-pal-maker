@@ -56,6 +56,7 @@ import roomAuroraBackground from "@/assets/room-aurora-bg.jpg";
 import { VipName } from "@/components/VipName";
 import { VipCvipSheet } from "@/components/VipCvipSheet";
 import { RoomPanels } from "@/components/RoomPanels";
+import { RolePanel } from "@/components/RolePanel";
 import { RoomTreasureFloat } from "@/components/RoomTreasureFloat";
 import { Crown } from "lucide-react";
 
@@ -111,6 +112,7 @@ function RoomPage() {
   const [roomGame, setRoomGame] = useState<"wheel" | "seven77" | "supercar" | "domino">("wheel");
   const [roomBet77, setRoomBet77] = useState(10_000_000);
   const [seatSheet, setSeatSheet] = useState<string | null>(null);
+  const [roleSheet, setRoleSheet] = useState<string | null>(null);
   const [cupOpen, setCupOpen] = useState(false);
   const [cosmeticsOpen, setCosmeticsOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -808,12 +810,18 @@ function RoomPage() {
                 isGift ? "gradient-rose text-primary-foreground" : "bg-background/45",
               )}
             >
-              <UserAvatar
-                src={person?.avatar_url}
-                name={person?.display_name}
-                size={28}
-                vipLevel={person?.vip_level ?? 0}
-              />
+              <button
+                type="button"
+                onClick={() => person && setRoleSheet(person.id)}
+                aria-label="عرض المنصب"
+              >
+                <UserAvatar
+                  src={person?.avatar_url}
+                  name={person?.display_name}
+                  size={28}
+                  vipLevel={person?.vip_level ?? 0}
+                />
+              </button>
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-bold">{person?.display_name ?? "مستخدم"}</p>
                 <p className="break-words text-sm">{m.body}</p>
@@ -1126,6 +1134,14 @@ function RoomPage() {
                     مايك {seat.seat_index} · {person?.display_name ?? "فارغ"}
                   </SheetTitle>
                 </SheetHeader>
+                {person && (
+                  <RolePanel
+                    userId={person.id}
+                    isRoomOwner={person.id === room.data!.owner_id}
+                    isRoomModerator={isMod}
+                    className="mt-3"
+                  />
+                )}
                 <div className="mt-4 grid grid-cols-2 gap-2 pb-4">
                   {!person && !seat.is_locked && (
                     <SeatBtn
@@ -1225,6 +1241,24 @@ function RoomPage() {
           })()}
         </SheetContent>
       </Sheet>
+      <Sheet open={Boolean(roleSheet)} onOpenChange={(v) => !v && setRoleSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle className="text-start">
+              {personOf(roleSheet)?.display_name ?? "المنصب"}
+            </SheetTitle>
+          </SheetHeader>
+          {roleSheet && (
+            <RolePanel
+              userId={roleSheet}
+              isRoomOwner={roleSheet === room.data?.owner_id}
+              isRoomModerator={(moderators.data ?? []).includes(roleSheet)}
+              className="mt-3 mb-4"
+            />
+          )}
+        </SheetContent>
+      </Sheet>
+
       <GiftOverlay
         event={giftQueue[0] ?? null}
         onDone={() => setGiftQueue((prev) => prev.slice(1))}
