@@ -177,8 +177,8 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
 
   const round = state.data?.round ?? null;
   const session = state.data?.session ?? null;
-  const totals = state.data?.slot_totals ?? {};
-  const mine = state.data?.mine ?? {};
+  const totals = useMemo(() => state.data?.slot_totals ?? {}, [state.data?.slot_totals]);
+  const mine = useMemo(() => state.data?.mine ?? {}, [state.data?.mine]);
   const myPayout = state.data?.my_payout ?? 0;
   const history = state.data?.history ?? [];
   const winners = state.data?.top ?? [];
