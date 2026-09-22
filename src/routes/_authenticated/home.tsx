@@ -10,13 +10,17 @@ import { useSupabaseSession, useMyProfile, useWallet } from "@/hooks/use-session
 import { RoomCard, type RoomRow } from "@/components/RoomCard";
 import { EmptyState } from "@/components/AppShell";
 import { HomeBanners } from "@/components/HomeBanners";
+import { TrendStrip } from "@/components/TrendStrip";
 import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
       { title: "الرئيسية — التاج" },
-      { name: "description", content: "استعرض الغرف الصوتية النشطة والمشهورة والجديدة وابحث عن الأصدقاء برقم ID." },
+      {
+        name: "description",
+        content: "استعرض الغرف الصوتية النشطة والمشهورة والجديدة وابحث عن الأصدقاء برقم ID.",
+      },
       { property: "og:title", content: "الرئيسية — التاج" },
       { property: "og:description", content: "غرف صوتية نشطة، مستخدمون متصلون، وهدايا مباشرة." },
     ],
@@ -39,7 +43,9 @@ function HomePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("rooms")
-        .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified")
+        .select(
+          "id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified",
+        )
         .eq("is_disabled", false)
         .order("member_count", { ascending: false })
         .limit(50);
@@ -76,7 +82,9 @@ function HomePage() {
           .limit(10),
         supabase
           .from("rooms")
-          .select("id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified")
+          .select(
+            "id, room_code, name, description, image_url, category, room_type, member_count, popularity, created_at, owner_id, mic_count, xp, is_verified",
+          )
           .or(`name.ilike.%${q}%,room_code.eq.${/^\d+$/.test(q) ? q : "0"}`)
           .limit(10),
       ]);
@@ -111,7 +119,10 @@ function HomePage() {
         .select("id, display_name")
         .in("id", ownerIds);
       if (error) throw error;
-      return Object.fromEntries((data ?? []).map((p) => [p.id, p.display_name])) as Record<string, string>;
+      return Object.fromEntries((data ?? []).map((p) => [p.id, p.display_name])) as Record<
+        string,
+        string
+      >;
     },
   });
 
@@ -131,7 +142,9 @@ function HomePage() {
             <div className="min-w-0 flex-1">
               <BrandMark size={24} showName className="mb-0.5 text-xs" />
               <p className="text-sm font-bold">{profile.data?.display_name ?? "..."}</p>
-              <p className="text-[11px] text-muted-foreground">ID: {profile.data?.public_id ?? "—"}</p>
+              <p className="text-[11px] text-muted-foreground">
+                ID: {profile.data?.public_id ?? "—"}
+              </p>
             </div>
             <Link
               to="/wallet"
@@ -156,25 +169,38 @@ function HomePage() {
       {term.trim().length >= 2 ? (
         <section className="space-y-4">
           <h2 className="text-sm font-bold text-muted-foreground">نتائج البحث</h2>
-          {(searchResults.data?.users.length ?? 0) === 0 && (searchResults.data?.rooms.length ?? 0) === 0 ? (
+          {(searchResults.data?.users.length ?? 0) === 0 &&
+          (searchResults.data?.rooms.length ?? 0) === 0 ? (
             <EmptyState title="لا توجد نتائج" hint="جرّب اسمًا آخر أو رقم ID" />
           ) : (
             <>
               {searchResults.data?.users.map((u) => (
                 <button
                   key={u.id}
-                  onClick={() => void navigate({ to: "/u/$publicId", params: { publicId: u.public_id } })}
+                  onClick={() =>
+                    void navigate({ to: "/u/$publicId", params: { publicId: u.public_id } })
+                  }
                   className="surface-card flex w-full items-center gap-3 p-3 text-start"
                 >
-                  <UserAvatar src={u.avatar_url} name={u.display_name} size={44} vipLevel={u.vip_level} online={u.is_online} />
+                  <UserAvatar
+                    src={u.avatar_url}
+                    name={u.display_name}
+                    size={44}
+                    vipLevel={u.vip_level}
+                    online={u.is_online}
+                  />
                   <div>
                     <p className="text-sm font-semibold">{u.display_name}</p>
-                    <p className="text-[11px] text-muted-foreground">ID: {u.public_id} · مستوى {u.level}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      ID: {u.public_id} · مستوى {u.level}
+                    </p>
                   </div>
                 </button>
               ))}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {searchResults.data?.rooms.map((r) => <RoomCard key={r.id} room={r} />)}
+                {searchResults.data?.rooms.map((r) => (
+                  <RoomCard key={r.id} room={r} />
+                ))}
               </div>
             </>
           )}
@@ -182,6 +208,7 @@ function HomePage() {
       ) : (
         <div className="space-y-7">
           <HomeBanners />
+          <TrendStrip />
 
           <section>
             <SectionTitle icon={Flame} title="الغرف" />
@@ -217,7 +244,10 @@ function HomePage() {
                 title="لا توجد غرف في هذا التصنيف"
                 hint="جرّب تصنيفًا آخر أو أنشئ غرفة جديدة"
                 action={
-                  <Link to="/rooms" className="mt-3 rounded-full gradient-gold px-4 py-2 text-xs font-bold text-primary-foreground">
+                  <Link
+                    to="/rooms"
+                    className="mt-3 rounded-full gradient-gold px-4 py-2 text-xs font-bold text-primary-foreground"
+                  >
                     إنشاء غرفة
                   </Link>
                 }
@@ -231,7 +261,6 @@ function HomePage() {
             )}
           </section>
 
-
           <section>
             <SectionTitle icon={Users} title="مستخدمون نشطون" />
             <div className="flex gap-3 overflow-x-auto pb-2">
@@ -242,8 +271,16 @@ function HomePage() {
                   params={{ publicId: u.public_id }}
                   className="flex w-16 shrink-0 flex-col items-center gap-1"
                 >
-                  <UserAvatar src={u.avatar_url} name={u.display_name} size={54} vipLevel={u.vip_level} online={u.is_online} />
-                  <span className="w-full truncate text-center text-[11px] text-muted-foreground">{u.display_name}</span>
+                  <UserAvatar
+                    src={u.avatar_url}
+                    name={u.display_name}
+                    size={54}
+                    vipLevel={u.vip_level}
+                    online={u.is_online}
+                  />
+                  <span className="w-full truncate text-center text-[11px] text-muted-foreground">
+                    {u.display_name}
+                  </span>
                 </Link>
               ))}
             </div>
@@ -252,8 +289,12 @@ function HomePage() {
           <section>
             <SectionTitle icon={Crown} title="اكتشف المزيد" />
             <div className="grid grid-cols-2 gap-3">
-              <Link to="/store" className="surface-card gradient-vip p-4 text-sm font-bold">المتجر وVIP</Link>
-              <Link to="/games" className="surface-card gradient-rose p-4 text-sm font-bold">الألعاب</Link>
+              <Link to="/store" className="surface-card gradient-vip p-4 text-sm font-bold">
+                المتجر وVIP
+              </Link>
+              <Link to="/games" className="surface-card gradient-rose p-4 text-sm font-bold">
+                الألعاب
+              </Link>
             </div>
           </section>
         </div>

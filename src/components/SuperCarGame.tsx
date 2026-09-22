@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { fireMoment } from "@/components/effects/GoldenMoment";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AlarmClock, Loader2, Trophy, Users } from "lucide-react";
@@ -174,6 +175,20 @@ export function SuperCarGame({ roomId = null }: { roomId?: string | null }) {
     const t = window.setInterval(() => setNow(Date.now()), 500);
     return () => window.clearInterval(t);
   }, []);
+
+  // إعلان لحظة الفوز مرة واحدة لكل جولة
+  const lastWinRound = useRef<string | null>(null);
+  const winRoundId = state.data?.round?.id ?? null;
+  const winAmount = state.data?.my_payout ?? 0;
+  useEffect(() => {
+    if (!winRoundId || winAmount <= 0 || lastWinRound.current === winRoundId) return;
+    lastWinRound.current = winRoundId;
+    fireMoment({
+      title: "فوز كبير! 🎉",
+      subtitle: `ربحت ${winAmount.toLocaleString("en-US")} 💎`,
+      burst: true,
+    });
+  }, [winRoundId, winAmount]);
 
   const round = state.data?.round ?? null;
   const session = state.data?.session ?? null;

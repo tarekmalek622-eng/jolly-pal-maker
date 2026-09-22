@@ -14,6 +14,7 @@ import { VoiceRoomProvider } from "@/components/VoiceRoomProvider";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { GoldenMomentHost } from "@/components/effects/GoldenMoment";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -48,7 +49,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">لم يتم تحميل الصفحة</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          لم يتم تحميل الصفحة
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           حدث خطأ غير متوقع. يمكنك المحاولة مرة أخرى أو العودة للرئيسية.
         </p>
@@ -142,6 +145,7 @@ function RootComponent() {
       <VoiceRoomProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        <GoldenMomentHost />
         <Toaster position="top-center" />
       </VoiceRoomProvider>
     </QueryClientProvider>

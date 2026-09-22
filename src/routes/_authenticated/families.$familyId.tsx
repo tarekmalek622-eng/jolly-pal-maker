@@ -222,7 +222,7 @@ function FamilyPage() {
             <img
               src={s.family.animation_url || s.family.cover_url || ""}
               alt={`غلاف ${s.family.name}`}
-              className="h-36 w-full rounded-2xl object-cover"
+              className="cover-sheen h-36 w-full rounded-2xl object-cover"
             />
           )}
           <div className="flex items-center gap-3">
@@ -232,7 +232,7 @@ function FamilyPage() {
               styleKey={s.level_info?.style}
               level={s.family.level}
               size={64}
-              className={style.ring}
+              className={cn("crest-3d", style.ring)}
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-base font-black">{s.family.name}</p>

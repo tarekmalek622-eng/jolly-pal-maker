@@ -39,6 +39,7 @@ import { screenProfilePhoto } from "@/lib/moderation.functions";
 import { clearDeviceCredentials } from "@/lib/device-account";
 import { levelProgress } from "@/lib/levels";
 import { adminSectionLabel } from "@/lib/admin-sections";
+import { AppearanceSettings } from "@/components/AppearanceSettings";
 import { ProfileShowcase } from "@/components/ProfileShowcase";
 import { RelationshipShowcase } from "@/components/RelationshipShowcase";
 
@@ -495,6 +496,8 @@ function MePage() {
           </div>
         </section>
       )}
+
+      <AppearanceSettings />
 
       {/* حقيبتي — كل ما اشتريته من المتجر بصوره مع التفعيل المباشر */}
       <Sheet open={bagOpen} onOpenChange={setBagOpen}>

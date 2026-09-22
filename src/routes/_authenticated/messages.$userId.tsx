@@ -264,7 +264,11 @@ function ChatPage() {
               <div
                 className={cn(
                   "max-w-[75%] rounded-2xl px-3.5 py-2 text-sm",
-                  mine ? "gradient-gold text-primary-foreground" : "bg-surface",
+                  mine
+                    ? "gradient-gold text-primary-foreground"
+                    : (other.data?.vip_level ?? 0) >= 1
+                      ? "bubble-gold"
+                      : "bg-surface",
                 )}
               >
                 {m.kind === "voice" && m.audio_url ? (
@@ -310,6 +314,18 @@ function ChatPage() {
             ))}
           </div>
         )}
+        <div className="mb-2 flex gap-1.5 overflow-x-auto pb-0.5">
+          {["أهلاً 👋", "تمام ✅", "شكراً ❤️", "وينك؟", "تعال الغرفة 🎤"].map((quick) => (
+            <button
+              key={quick}
+              type="button"
+              onClick={() => setText(quick)}
+              className="shrink-0 rounded-full border border-border/60 bg-surface px-3 py-1 text-[11px] font-bold"
+            >
+              {quick}
+            </button>
+          ))}
+        </div>
         <div className="flex gap-2">
           <Button
             variant="outline"

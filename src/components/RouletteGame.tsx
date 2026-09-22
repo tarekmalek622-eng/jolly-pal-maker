@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, RotateCcw } from "lucide-react";
+import { fireMoment } from "@/components/effects/GoldenMoment";
 import { spinWheel } from "@/lib/games.functions";
 import { useRefreshMoney } from "@/hooks/use-session";
 import { formatCompact } from "@/lib/format";
@@ -54,6 +55,13 @@ export function RouletteGame({ bet: initialBet }: { bet?: number }) {
         setSpinning(false);
         setCountdown(null);
         setOutcome({ label: r.label, payout: r.payout });
+        if (r.payout > 0) {
+          fireMoment({
+            title: "فوز في الروليت! 🎉",
+            subtitle: `ربحت ${r.payout.toLocaleString("en-US")} 💎`,
+            burst: true,
+          });
+        }
         setTodayWin((v) => v + r.payout);
         setHistory((h) => [{ label: r.label, payout: r.payout }, ...h].slice(0, 10));
         refreshMoney();

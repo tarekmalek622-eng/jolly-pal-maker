@@ -620,3 +620,83 @@ iframe[title*="Lovable"] {
     opacity: 1;
   }
 }
+
+/* ============ لمسات "التاج" الفخمة ============ */
+@keyframes taj-halo {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.85 0.16 88 / 0.55), 0 0 14px oklch(0.85 0.16 88 / 0.35); }
+  50% { box-shadow: 0 0 0 7px oklch(0.85 0.16 88 / 0), 0 0 26px oklch(0.85 0.16 88 / 0.75); }
+}
+.speaker-halo { animation: taj-halo 1.2s ease-out infinite; }
+
+@keyframes taj-seat-in {
+  from { transform: scale(0.6) translateY(6px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+.seat-pop { animation: taj-seat-in 0.35s cubic-bezier(0.2, 1.4, 0.4, 1); }
+
+@keyframes taj-moment-in {
+  0% { transform: translateY(-120%) scale(0.9); opacity: 0; }
+  12% { transform: translateY(0) scale(1); opacity: 1; }
+  88% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-120%) scale(0.9); opacity: 0; }
+}
+.golden-moment {
+  animation: taj-moment-in 4.2s ease-in-out forwards;
+  background: linear-gradient(100deg, oklch(0.5 0.1 70), oklch(0.88 0.16 88), oklch(0.5 0.1 70));
+  color: oklch(0.2 0.05 60);
+  box-shadow: 0 12px 34px oklch(0.6 0.16 85 / 0.45);
+}
+
+@keyframes taj-fall {
+  from { transform: translateY(-12vh) rotate(0deg); opacity: 1; }
+  to { transform: translateY(105vh) rotate(320deg); opacity: 0.1; }
+}
+.diamond-drop { animation: taj-fall linear forwards; }
+
+@keyframes taj-aura {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.vip-aura {
+  background: linear-gradient(110deg, oklch(0.32 0.08 285), oklch(0.46 0.13 88), oklch(0.3 0.1 265), oklch(0.32 0.08 285));
+  background-size: 200% 200%;
+  animation: taj-aura 9s linear infinite;
+}
+.cover-sheen { position: relative; overflow: hidden; }
+.cover-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, oklch(1 0 0 / 0.22) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: taj-sheen 3.6s ease-in-out infinite;
+}
+@keyframes taj-sheen { 0%, 60% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+.crest-3d {
+  filter: drop-shadow(0 6px 10px oklch(0.3 0.08 60 / 0.55));
+  transform: perspective(600px) rotateX(9deg);
+}
+.bubble-gold {
+  background: linear-gradient(140deg, oklch(0.92 0.13 92), oklch(0.82 0.16 76));
+  color: oklch(0.26 0.06 50);
+  border: 1px solid oklch(0.72 0.14 80);
+}
+@keyframes taj-shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+.taj-skeleton {
+  background: linear-gradient(90deg, var(--surface-2, oklch(0.24 0.02 265)) 25%, oklch(0.34 0.03 265) 37%, var(--surface-2, oklch(0.24 0.02 265)) 63%);
+  background-size: 200% 100%;
+  animation: taj-shimmer 1.4s linear infinite;
+}
+
+/* ثيمات الغرف */
+.theme-royal { background-image: radial-gradient(circle at 50% 0%, oklch(0.36 0.09 300 / 0.85), transparent 60%), linear-gradient(180deg, oklch(0.18 0.04 285), oklch(0.12 0.02 280)); }
+.theme-night { background-image: radial-gradient(circle at 70% 10%, oklch(0.4 0.08 250 / 0.7), transparent 55%), linear-gradient(180deg, oklch(0.14 0.03 265), oklch(0.09 0.02 260)); }
+.theme-ocean { background-image: radial-gradient(circle at 30% 5%, oklch(0.45 0.1 210 / 0.75), transparent 60%), linear-gradient(180deg, oklch(0.18 0.05 220), oklch(0.11 0.03 225)); }
+.theme-rose { background-image: radial-gradient(circle at 50% 0%, oklch(0.45 0.13 15 / 0.7), transparent 58%), linear-gradient(180deg, oklch(0.19 0.05 20), oklch(0.11 0.03 15)); }
+.theme-gold { background-image: radial-gradient(circle at 50% 0%, oklch(0.5 0.12 85 / 0.7), transparent 58%), linear-gradient(180deg, oklch(0.2 0.04 70), oklch(0.11 0.02 65)); }
+
+/* حجم الخط */
+html[data-fs="large"] { font-size: 17.5px; }
+html[data-fs="xlarge"] { font-size: 19px; }
+
