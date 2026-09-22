@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { DominoGame } from "@/components/DominoGame";
 import { LiveWheel } from "@/components/LiveWheel";
 import { Game77 } from "@/components/Game77";
+import { RouletteGame } from "@/components/RouletteGame";
 import { SuperCarGame } from "@/components/SuperCarGame";
 import { EventsRail } from "@/components/EventsRail";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,12 +37,13 @@ export const Route = createFileRoute("/_authenticated/games")({
   component: GamesPage,
 });
 
-type GameKey = "domino" | "dice" | "wheel" | "seven77" | "supercar" | "cards" | "quiz" | "challenge";
+type GameKey = "domino" | "dice" | "wheel" | "roulette" | "seven77" | "supercar" | "cards" | "quiz" | "challenge";
 
 const GAME_TABS: { key: GameKey; label: string; icon: typeof Dices; flag: string }[] = [
   { key: "domino", label: "دومينو", icon: LayoutGrid, flag: "domino" },
   { key: "dice", label: "النرد", icon: Dices, flag: "dice" },
   { key: "wheel", label: "العجلة", icon: Sparkles, flag: "wheel" },
+  { key: "roulette", label: "روليت", icon: Dices, flag: "wheel" },
   { key: "seven77", label: "لعبة 77", icon: Cherry, flag: "seven77" },
   { key: "supercar", label: "سباق السيارات", icon: Sparkles, flag: "supercar" },
   { key: "cards", label: "الورق", icon: Spade, flag: "cards" },
