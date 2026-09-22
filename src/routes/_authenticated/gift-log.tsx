@@ -83,7 +83,9 @@ function GiftLogPage() {
               onClick={() => setTab(t.key)}
               className={cn(
                 "flex-1 rounded-2xl border px-3 py-2 text-[11px] font-bold",
-                tab === t.key ? "border-primary bg-primary/10 text-primary" : "border-border/60 bg-surface",
+                tab === t.key
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border/60 bg-surface",
               )}
             >
               {t.label}
@@ -128,7 +130,11 @@ function GiftLogPage() {
               <div key={r.id} className="surface-card flex items-center gap-3 p-3">
                 <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-surface-2">
                   {r.gifts?.image_url ? (
-                    <img src={r.gifts.image_url} alt={r.gifts.name} className="h-full w-full object-cover" />
+                    <img
+                      src={r.gifts.image_url}
+                      alt={r.gifts.name}
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     <Gift className="h-4 w-4 text-primary" />
                   )}

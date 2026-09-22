@@ -91,13 +91,22 @@ function ChatPage() {
 
   async function react(messageId: string, emoji: string) {
     if (!userId) return;
-    const existing = (reactions.data ?? []).find((r) => r.message_id === messageId && r.user_id === userId);
+    const existing = (reactions.data ?? []).find(
+      (r) => r.message_id === messageId && r.user_id === userId,
+    );
     if (existing?.emoji === emoji) {
-      await supabase.from("message_reactions").delete().eq("message_id", messageId).eq("user_id", userId);
+      await supabase
+        .from("message_reactions")
+        .delete()
+        .eq("message_id", messageId)
+        .eq("user_id", userId);
     } else {
       await supabase
         .from("message_reactions")
-        .upsert({ message_id: messageId, user_id: userId, emoji }, { onConflict: "message_id,user_id" });
+        .upsert(
+          { message_id: messageId, user_id: userId, emoji },
+          { onConflict: "message_id,user_id" },
+        );
     }
     void reactions.refetch();
   }
@@ -314,7 +323,9 @@ function ChatPage() {
                 </p>
                 <div className="mt-1 flex items-center gap-1">
                   {REACTION_EMOJIS.map((e) => {
-                    const count = (reactions.data ?? []).filter((r) => r.message_id === m.id && r.emoji === e).length;
+                    const count = (reactions.data ?? []).filter(
+                      (r) => r.message_id === m.id && r.emoji === e,
+                    ).length;
                     const active = (reactions.data ?? []).some(
                       (r) => r.message_id === m.id && r.emoji === e && r.user_id === userId,
                     );
