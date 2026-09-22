@@ -97,6 +97,15 @@ type Person = {
   mic_decoration_url: string | null;
 };
 
+const CHAT_FILTERS = [
+  { key: "all", label: "الكل" },
+  { key: "join", label: "أدخل" },
+  { key: "gift", label: "هدية" },
+  { key: "chat", label: "دردشة" },
+] as const;
+
+type ChatFilter = (typeof CHAT_FILTERS)[number]["key"];
+
 function pairKey(a: string, b: string) {
   return a < b ? `${a}|${b}` : `${b}|${a}`;
 }
@@ -107,6 +116,7 @@ function RoomPage() {
   const navigate = useNavigate();
 
   const [text, setText] = useState("");
+  const [chatFilter, setChatFilter] = useState<ChatFilter>("all");
   const [giftOpen, setGiftOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const [requestsOpen, setRequestsOpen] = useState(false);
