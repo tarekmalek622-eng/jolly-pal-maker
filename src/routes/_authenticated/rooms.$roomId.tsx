@@ -831,15 +831,16 @@ function RoomPage() {
         })}
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg rounded-t-3xl border border-b-0 border-border/50 bg-background/90 px-2.5 pb-[max(.65rem,env(safe-area-inset-bottom))] pt-2 shadow-2xl backdrop-blur-xl">
-        <div className="mb-2 flex items-center gap-2 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none]">
-          <RoomTreasureFloat
-            roomId={roomId}
-            onOpen={() => {
-              setRoomPanelsTab("treasure");
-              setRoomPanelsOpen(true);
-            }}
-          />
+      {/* أزرار الجانب الأيسر: الكنز وصالة VIP والألعاب والموسيقى — كما في التصميم المرجعي */}
+      <div className="pointer-events-none fixed bottom-48 start-2 z-40 flex flex-col items-center gap-2">
+        <RoomTreasureFloat
+          roomId={roomId}
+          onOpen={() => {
+            setRoomPanelsTab("treasure");
+            setRoomPanelsOpen(true);
+          }}
+        />
+        <div className="pointer-events-auto flex flex-col gap-2">
           <RoomUtility label="صالة VIP" onClick={() => setVipOpen(true)}>
             <Crown className="h-5 w-5" />
           </RoomUtility>
@@ -866,10 +867,15 @@ function RoomPage() {
           >
             <Music className="h-5 w-5" />
           </RoomUtility>
-          <div className="min-w-44 flex-1">
-            <LuckyBagStrip roomId={roomId} />
-          </div>
         </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg rounded-t-3xl border border-b-0 border-border/50 bg-background/90 px-2.5 pb-[max(.65rem,env(safe-area-inset-bottom))] pt-2 shadow-2xl backdrop-blur-xl">
+        {/* صندوق الحظ يظهر لجميع الحاضرين */}
+        <div className="mb-2">
+          <LuckyBagStrip roomId={roomId} />
+        </div>
+
         <div className="flex items-center gap-2">
           <Input
             value={text}
@@ -1013,20 +1019,23 @@ function RoomPage() {
             <SheetTitle className="text-start">إعدادات الغرفة</SheetTitle>
           </SheetHeader>
           <div className="mt-3 space-y-3 pb-4">
-            <button
-              type="button"
-              onClick={() => {
-                setRoomSettingsOpen(false);
-                setRoomPanelsTab("info");
-                setRoomPanelsOpen(true);
-              }}
-              className="flex w-full items-center justify-between rounded-2xl border border-primary/40 bg-primary/10 p-4 text-start"
-            >
-              <span className="text-sm font-bold text-primary">لوحة الغرفة</span>
-              <span className="text-[11px] text-muted-foreground">
-                المعلومات · الأعضاء · النشاطات · صندوق الكنز · الجوائز
-              </span>
-            </button>
+            {canManage && (
+              <button
+                type="button"
+                onClick={() => {
+                  setRoomSettingsOpen(false);
+                  setRoomPanelsTab("info");
+                  setRoomPanelsOpen(true);
+                }}
+                className="flex w-full items-center justify-between rounded-2xl border border-primary/40 bg-primary/10 p-4 text-start"
+              >
+                <span className="text-sm font-bold text-primary">لوحة الغرفة</span>
+                <span className="text-[11px] text-muted-foreground">
+                  المعلومات · الأعضاء · النشاطات · صندوق الكنز · الجوائز
+                </span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setGiftFx(!giftFxEnabled)}
