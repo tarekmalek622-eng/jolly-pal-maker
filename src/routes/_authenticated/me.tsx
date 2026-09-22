@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   Backpack,
   BarChart3,
+  BookOpen,
   Camera,
   Coins,
   Crown,
@@ -12,6 +13,7 @@ import {
   ListChecks,
   LogOut,
   Pencil,
+  Search,
   Shield,
   Sparkles,
   Users,
@@ -109,6 +111,23 @@ function MePage() {
         .from("user_items")
         .select("id, is_equipped, expires_at, store_items(name, category, image_url)")
         .eq("user_id", userId!);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const visitors = useQuery({
+    queryKey: ["profile-visitors", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profile_visits")
+        .select(
+          "visitor_id, updated_at, profiles:visitor_id(public_id, display_name, avatar_url, frame_url, vip_level)",
+        )
+        .eq("profile_id", userId!)
+        .order("updated_at", { ascending: false })
+        .limit(15);
       if (error) throw error;
       return data ?? [];
     },
@@ -411,6 +430,33 @@ function MePage() {
         )}
       </div>
 
+      {visitors.data && visitors.data.length > 0 && (
+        <section className="surface-card mt-4 p-4">
+          <p className="mb-3 text-sm font-black">زوّار ملفك</p>
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {visitors.data.map((v) => (
+              <Link
+                key={v.visitor_id}
+                to="/u/$publicId"
+                params={{ publicId: v.profiles?.public_id ?? "" }}
+                className="flex w-16 shrink-0 flex-col items-center gap-1"
+              >
+                <UserAvatar
+                  src={v.profiles?.avatar_url}
+                  frame={v.profiles?.frame_url}
+                  name={v.profiles?.display_name}
+                  size={48}
+                  vipLevel={v.profiles?.vip_level ?? 0}
+                />
+                <span className="w-full truncate text-center text-[10px] text-muted-foreground">
+                  {v.profiles?.display_name ?? "زائر"}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {userId && <RelationshipShowcase userId={userId} own />}
       {userId && <ProfileShowcase userId={userId} own />}
 
@@ -464,6 +510,18 @@ function MePage() {
             <ListChecks className="h-5 w-5 text-primary-foreground" />
           </span>
           <span className="text-sm font-bold">المهام والجوائز</span>
+        </Link>
+        <Link to="/search" className="surface-card flex items-center gap-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
+            <Search className="h-5 w-5 text-primary" />
+          </span>
+          <span className="text-sm font-bold">البحث الموحّد</span>
+        </Link>
+        <Link to="/help" className="surface-card flex items-center gap-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/15">
+            <BookOpen className="h-5 w-5 text-accent" />
+          </span>
+          <span className="text-sm font-bold">مركز المساعدة</span>
         </Link>
         <Link to="/support" className="surface-card flex items-center gap-3 p-4">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
