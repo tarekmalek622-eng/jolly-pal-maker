@@ -788,25 +788,25 @@ function RoomPage() {
               )}
               <div
                 className={cn(
-                  "relative flex h-14 w-14 items-center justify-center rounded-full border sm:h-16 sm:w-16",
-                  speaking ? "border-success ring-2 ring-success/50" : "border-border",
+                  "relative flex h-13 w-13 items-center justify-center rounded-full border sm:h-15 sm:w-15",
+                  speaking ? "border-success ring-2 ring-success/50" : "border-border/60",
                   person?.id === room.data!.owner_id
                     ? "border-primary bg-primary/10 shadow-glow"
-                    : "bg-surface",
+                    : "bg-background/35 backdrop-blur-md",
                 )}
               >
                 {person ? (
                   <UserAvatar
                     src={person.avatar_url}
                     name={person.display_name}
-                    size={54}
+                    size={48}
                     vipLevel={person.vip_level}
                     frame={person.frame_url}
                   />
                 ) : seat.is_locked ? (
                   <Lock className="h-5 w-5 text-muted-foreground" />
                 ) : (
-                  <Mic className="h-5 w-5 text-muted-foreground" />
+                  <Sofa className="h-6 w-6 text-success/70" />
                 )}
                 {(person?.mic_decoration_url ?? seat.decoration_url) && (
                   <CosmeticImage
