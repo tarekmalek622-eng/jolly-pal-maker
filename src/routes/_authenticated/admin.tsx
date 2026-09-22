@@ -441,13 +441,15 @@ function UsersTab({
                 ID {u.public_id} · مستوى {u.level} {u.is_suspended ? "· موقوف" : ""}
               </p>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => suspend.mutate({ id: u.id, suspended: !u.is_suspended })}
-              className="h-9 rounded-xl px-3 text-[11px]"
-            >
-              {u.is_suspended ? "إلغاء الإيقاف" : "إيقاف"}
-            </Button>
+            {canSuspend && (
+              <Button
+                variant="outline"
+                onClick={() => suspend.mutate({ id: u.id, suspended: !u.is_suspended })}
+                className="h-9 rounded-xl px-3 text-[11px]"
+              >
+                {u.is_suspended ? "إلغاء الإيقاف" : "إيقاف"}
+              </Button>
+            )}
           </div>
           <div className="mt-2 flex gap-2">
             <Input
@@ -530,13 +532,15 @@ function UsersTab({
               </Button>
             )}
           </div>
-          <Button
-            variant="outline"
-            onClick={() => onWelcome?.(u.public_id)}
-            className="mt-2 h-10 w-full rounded-xl border-primary/40 text-[11px] font-bold text-primary"
-          >
-            <PartyPopper className="me-1.5 h-4 w-4" /> مسؤولية الترحيبية
-          </Button>
+          {canWelcome && (
+            <Button
+              variant="outline"
+              onClick={() => onWelcome?.(u.public_id)}
+              className="mt-2 h-10 w-full rounded-xl border-primary/40 text-[11px] font-bold text-primary"
+            >
+              <PartyPopper className="me-1.5 h-4 w-4" /> مسؤولية الترحيبية
+            </Button>
+          )}
           {isSuper.data === true && (
             <div className="mt-2 space-y-2">
               <div className="flex gap-1">
