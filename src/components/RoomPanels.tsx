@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/UserAvatar";
+import { RoomLegend } from "@/components/RoomLegend";
 import { useSupabaseSession } from "@/hooks/use-session";
 import { formatCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
