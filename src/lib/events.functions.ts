@@ -3,7 +3,13 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { CupEntry } from "@/lib/cups.functions";
 
-export type EventPrize = { id: string; rank_from: number; rank_to: number; coins: number; label: string };
+export type EventPrize = {
+  id: string;
+  rank_from: number;
+  rank_to: number;
+  coins: number;
+  label: string;
+};
 
 export type EventCard = {
   id: string;
@@ -62,7 +68,11 @@ export const getEventDetails = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabaseAdmin as any;
-    const { data: event, error } = await db.from("cup_events").select(EVENT_COLUMNS).eq("id", data.eventId).maybeSingle();
+    const { data: event, error } = await db
+      .from("cup_events")
+      .select(EVENT_COLUMNS)
+      .eq("id", data.eventId)
+      .maybeSingle();
     if (error) throw new Error(error.message);
     if (!event) throw new Error("الحدث غير موجود");
 
@@ -71,9 +81,13 @@ export const getEventDetails = createServerFn({ method: "GET" })
     const leaderboard = (board.data ?? []) as CupEntry[];
     const myIndex = leaderboard.findIndex((row) => row.entity_id === context.userId);
 
-    const prizes = ((event.cup_event_prizes ?? []) as EventPrize[]).sort((a, b) => a.rank_from - b.rank_from);
+    const prizes = ((event.cup_event_prizes ?? []) as EventPrize[]).sort(
+      (a, b) => a.rank_from - b.rank_from,
+    );
     const myRank = myIndex >= 0 ? myIndex + 1 : null;
-    const myPrize = myRank ? prizes.find((p) => myRank >= p.rank_from && myRank <= p.rank_to) ?? null : null;
+    const myPrize = myRank
+      ? (prizes.find((p) => myRank >= p.rank_from && myRank <= p.rank_to) ?? null)
+      : null;
 
     return {
       event: { ...event, cup_event_prizes: undefined } as EventCard,
@@ -91,14 +105,23 @@ export type BreakAppStats = {
   period: string;
   since: string;
   gifts: { total_value: number; count: number; senders: number; receivers: number; rooms: number };
-  games: { bets: number; payouts: number; net: number; rounds: number; max_bet: number; max_payout: number };
+  games: {
+    bets: number;
+    payouts: number;
+    net: number;
+    rounds: number;
+    max_bet: number;
+    max_payout: number;
+  };
   topups: { coins: number; count: number; users: number };
 };
 
 /** إحصائيات كأس التطبيق من العمليات الفعلية. */
 export const getBreakAppStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ period: z.enum(["day", "week", "month"]) }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ period: z.enum(["day", "week", "month"]) }).parse(input),
+  )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

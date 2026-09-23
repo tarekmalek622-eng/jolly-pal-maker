@@ -3,11 +3,19 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function hasPermission(
-  supabase: { rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> },
+  supabase: {
+    rpc: (
+      name: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: unknown }>;
+  },
   userId: string,
   permission: "room_background" | "participant_remove" | "wheel_close",
 ) {
-  const { data, error } = await supabase.rpc("has_badge_permission", { _user_id: userId, _permission: permission });
+  const { data, error } = await supabase.rpc("has_badge_permission", {
+    _user_id: userId,
+    _permission: permission,
+  });
   if (error) throw new Error("تعذر التحقق من صلاحية الشارة");
   return data === true;
 }
@@ -26,11 +34,13 @@ export const getMyRoomBadgePermissions = createServerFn({ method: "GET" })
 export const updateOwnedRoomDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({
-      roomId: z.string().uuid(),
-      name: z.string().trim().min(2, "اسم الغرفة قصير").max(30, "اسم الغرفة طويل"),
-      imageUrl: z.string().trim().max(500).nullable(),
-    }).parse(input),
+    z
+      .object({
+        roomId: z.string().uuid(),
+        name: z.string().trim().min(2, "اسم الغرفة قصير").max(30, "اسم الغرفة طويل"),
+        imageUrl: z.string().trim().max(500).nullable(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const room = await context.supabase
@@ -39,7 +49,8 @@ export const updateOwnedRoomDetails = createServerFn({ method: "POST" })
       .eq("id", data.roomId)
       .maybeSingle();
     if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
-    if (room.data.owner_id !== context.userId) throw new Error("تعديل بيانات الغرفة متاح لمالكها فقط");
+    if (room.data.owner_id !== context.userId)
+      throw new Error("تعديل بيانات الغرفة متاح لمالكها فقط");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const result = await supabaseAdmin
@@ -63,18 +74,36 @@ export const updateOwnedRoomDetails = createServerFn({ method: "POST" })
 
 export const removeRoomParticipant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid(), targetId: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ roomId: z.string().uuid(), targetId: z.string().uuid() }).parse(input),
+  )
   .handler(async ({ data, context }) => {
-    const allowed = await hasPermission(context.supabase as never, context.userId, "participant_remove");
-    const room = await context.supabase.from("rooms").select("owner_id").eq("id", data.roomId).maybeSingle();
+    const allowed = await hasPermission(
+      context.supabase as never,
+      context.userId,
+      "participant_remove",
+    );
+    const room = await context.supabase
+      .from("rooms")
+      .select("owner_id")
+      .eq("id", data.roomId)
+      .maybeSingle();
     if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
     const manager = room.data.owner_id === context.userId || allowed;
     if (!manager) throw new Error("لا تملك صلاحية سحب المشاركين");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.targetId === room.data.owner_id) throw new Error("لا يمكن سحب مالك الغرفة");
-    const memberResult = await supabaseAdmin.from("room_members").delete().eq("room_id", data.roomId).eq("user_id", data.targetId);
+    const memberResult = await supabaseAdmin
+      .from("room_members")
+      .delete()
+      .eq("room_id", data.roomId)
+      .eq("user_id", data.targetId);
     if (memberResult.error) throw new Error(memberResult.error.message);
-    await supabaseAdmin.from("room_mics").update({ user_id: null, is_muted: false }).eq("room_id", data.roomId).eq("user_id", data.targetId);
+    await supabaseAdmin
+      .from("room_mics")
+      .update({ user_id: null, is_muted: false })
+      .eq("room_id", data.roomId)
+      .eq("user_id", data.targetId);
     await supabaseAdmin.from("audit_logs").insert({
       actor_id: context.userId,
       target_id: data.targetId,
@@ -89,11 +118,22 @@ export const closeWheelRound = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const allowed = await hasPermission(context.supabase as never, context.userId, "wheel_close");
-    const room = await context.supabase.from("rooms").select("owner_id").eq("id", data.roomId).maybeSingle();
+    const room = await context.supabase
+      .from("rooms")
+      .select("owner_id")
+      .eq("id", data.roomId)
+      .maybeSingle();
     if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
-    if (room.data.owner_id !== context.userId && !allowed) throw new Error("لا تملك صلاحية إغلاق الجولة");
+    if (room.data.owner_id !== context.userId && !allowed)
+      throw new Error("لا تملك صلاحية إغلاق الجولة");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const round = await supabaseAdmin.from("wheel_rounds").select("id").eq("status", "betting").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const round = await supabaseAdmin
+      .from("wheel_rounds")
+      .select("id")
+      .eq("status", "betting")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
     if (round.error) throw new Error(round.error.message);
     if (!round.data) throw new Error("لا توجد جولة مفتوحة");
     const { error } = await supabaseAdmin.rpc("wheel_settle", { _round_id: round.data.id });
@@ -111,14 +151,19 @@ export const closeWheelRound = createServerFn({ method: "POST" })
 /** تطبيق عنصر تزيين مملوك على الغرفة أو على مقعد المايك — كل التحقق على السيرفر */
 export const applyRoomCosmetic = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { roomId: string; userItemId: string | null; target: "background" | "decoration" | "mic" }) =>
-    z
-      .object({
-        roomId: z.string().uuid(),
-        userItemId: z.string().uuid().nullable(),
-        target: z.enum(["background", "decoration", "mic"]),
-      })
-      .parse(input),
+  .inputValidator(
+    (input: {
+      roomId: string;
+      userItemId: string | null;
+      target: "background" | "decoration" | "mic";
+    }) =>
+      z
+        .object({
+          roomId: z.string().uuid(),
+          userItemId: z.string().uuid().nullable(),
+          target: z.enum(["background", "decoration", "mic"]),
+        })
+        .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -131,9 +176,10 @@ export const applyRoomCosmetic = createServerFn({ method: "POST" })
     if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
 
     // الخلفية والزينة لصاحب الغرفة فقط، وزينة المايك لصاحب المقعد
-    const delegated = data.target !== "mic"
-      ? await hasPermission(supabase as never, userId, "room_background")
-      : false;
+    const delegated =
+      data.target !== "mic"
+        ? await hasPermission(supabase as never, userId, "room_background")
+        : false;
     if (data.target !== "mic" && room.data.owner_id !== userId && !delegated) {
       throw new Error("هذا الإجراء لصاحب الغرفة فقط");
     }
@@ -150,7 +196,10 @@ export const applyRoomCosmetic = createServerFn({ method: "POST" })
       if (owned.data.expires_at && new Date(owned.data.expires_at).getTime() < Date.now()) {
         throw new Error("انتهت صلاحية هذا العنصر");
       }
-      const item = owned.data.store_items as unknown as { category: string; image_url: string | null } | null;
+      const item = owned.data.store_items as unknown as {
+        category: string;
+        image_url: string | null;
+      } | null;
       if (!item?.image_url) throw new Error("هذا العنصر بدون صورة");
       const allowed =
         data.target === "background"
@@ -167,10 +216,16 @@ export const applyRoomCosmetic = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     if (data.target === "background") {
-      const res = await supabaseAdmin.from("rooms").update({ background_url: imageUrl }).eq("id", data.roomId);
+      const res = await supabaseAdmin
+        .from("rooms")
+        .update({ background_url: imageUrl })
+        .eq("id", data.roomId);
       if (res.error) throw new Error(res.error.message);
     } else if (data.target === "decoration") {
-      const res = await supabaseAdmin.from("rooms").update({ theme: imageUrl }).eq("id", data.roomId);
+      const res = await supabaseAdmin
+        .from("rooms")
+        .update({ theme: imageUrl })
+        .eq("id", data.roomId);
       if (res.error) throw new Error(res.error.message);
     } else {
       // زينة المايك تُخزَّن على حساب المستخدم نفسه لتبقى معه في أي مقعد يجلس عليه
@@ -179,7 +234,11 @@ export const applyRoomCosmetic = createServerFn({ method: "POST" })
         .update({ mic_decoration_url: imageUrl } as never)
         .eq("id", userId);
       if (res.error) throw new Error(res.error.message);
-      await supabaseAdmin.from("room_mics").update({ decoration_url: null }).eq("room_id", data.roomId).eq("user_id", userId);
+      await supabaseAdmin
+        .from("room_mics")
+        .update({ decoration_url: null })
+        .eq("room_id", data.roomId)
+        .eq("user_id", userId);
     }
 
     return { ok: true, imageUrl };
@@ -199,7 +258,14 @@ export const adminSetRoomSystemsSettings = createServerFn({ method: "POST" })
                 level: z.number().int().min(1).max(20),
                 name: z.string().trim().min(1).max(40),
                 target: z.number().int().min(1),
-                prizes: z.array(z.object({ rank: z.number().int().min(1).max(20), coins: z.number().int().min(0) })).max(20),
+                prizes: z
+                  .array(
+                    z.object({
+                      rank: z.number().int().min(1).max(20),
+                      coins: z.number().int().min(0),
+                    }),
+                  )
+                  .max(20),
               }),
             )
             .min(1)
@@ -229,12 +295,10 @@ export const adminSetRoomSystemsSettings = createServerFn({ method: "POST" })
     const admin = await context.supabase.rpc("is_admin", { _user_id: context.userId });
     if (admin.error || admin.data !== true) throw new Error("هذا الإجراء للإدارة فقط");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const res = await supabaseAdmin
-      .from("app_settings")
-      .upsert([
-        { key: "room_treasure", value: data.treasure },
-        { key: "room_rewards", value: data.rewards },
-      ] as never);
+    const res = await supabaseAdmin.from("app_settings").upsert([
+      { key: "room_treasure", value: data.treasure },
+      { key: "room_rewards", value: data.rewards },
+    ] as never);
     if (res.error) throw new Error(res.error.message);
     await supabaseAdmin.from("audit_logs").insert({
       actor_id: context.userId,
@@ -248,13 +312,18 @@ export const adminSetRoomSystemsSettings = createServerFn({ method: "POST" })
 export const adminSettleRoomRewardWeek = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ roomId: z.string().uuid(), weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).parse(input),
+    z
+      .object({ roomId: z.string().uuid(), weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const admin = await context.supabase.rpc("is_admin", { _user_id: context.userId });
     if (admin.error || admin.data !== true) throw new Error("هذا الإجراء للإدارة فقط");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const res = await supabaseAdmin.rpc("room_reward_settle_week", { _room_id: data.roomId, _week_start: data.weekStart });
+    const res = await supabaseAdmin.rpc("room_reward_settle_week", {
+      _room_id: data.roomId,
+      _week_start: data.weekStart,
+    });
     if (res.error) throw new Error(res.error.message);
     return { weekId: res.data as unknown as string };
   });

@@ -33,12 +33,21 @@ export function AdminBadgeCrest({
     (imageUrl && imageUrl.startsWith("/") ? imageUrl : null) ?? badgeArt(crestKey, styleKey);
   if (art) {
     return (
-      <div className={cn("relative flex flex-col items-center text-center", compact ? "w-24" : "w-full")}>
+      <div
+        className={cn(
+          "relative flex flex-col items-center text-center",
+          compact ? "w-24" : "w-full",
+        )}
+      >
         <img
           src={art}
           alt={name}
           loading="lazy"
-          className={cn("drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]", compact ? "h-20 w-20" : "h-28 w-28", "object-contain")}
+          className={cn(
+            "drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]",
+            compact ? "h-20 w-20" : "h-28 w-28",
+            "object-contain",
+          )}
         />
         <span
           className={cn(
@@ -52,7 +61,9 @@ export function AdminBadgeCrest({
     );
   }
   return (
-    <div className={cn("relative flex flex-col items-center text-center", compact ? "w-24" : "w-full")}>
+    <div
+      className={cn("relative flex flex-col items-center text-center", compact ? "w-24" : "w-full")}
+    >
       <div
         className={cn(
           "admin-crest relative flex items-center justify-center border-2 bg-gradient-to-br shadow-glow",
@@ -68,14 +79,27 @@ export function AdminBadgeCrest({
         {imageUrl ? (
           <img src={imageUrl} alt="" className="h-[72%] w-[72%] object-contain" loading="lazy" />
         ) : (
-          <Shield className={compact ? "h-9 w-9" : "h-14 w-14"} fill="currentColor" fillOpacity={0.2} />
+          <Shield
+            className={compact ? "h-9 w-9" : "h-14 w-14"}
+            fill="currentColor"
+            fillOpacity={0.2}
+          />
         )}
         <Sparkles className="absolute end-1 top-1 h-3 w-3" />
         <span className="absolute -bottom-2 flex gap-0.5 rounded-full border border-current bg-background px-2 py-0.5">
-          {[0, 1, 2].map((star) => <Star key={star} className="h-2.5 w-2.5 fill-current" />)}
+          {[0, 1, 2].map((star) => (
+            <Star key={star} className="h-2.5 w-2.5 fill-current" />
+          ))}
         </span>
       </div>
-      <span className={cn("relative z-20 mt-2 line-clamp-2 min-w-full rounded-full border border-primary/45 bg-background px-2 py-1 font-black leading-tight text-primary shadow-glow", compact ? "text-[9px]" : "text-[11px]")}>{name}</span>
+      <span
+        className={cn(
+          "relative z-20 mt-2 line-clamp-2 min-w-full rounded-full border border-primary/45 bg-background px-2 py-1 font-black leading-tight text-primary shadow-glow",
+          compact ? "text-[9px]" : "text-[11px]",
+        )}
+      >
+        {name}
+      </span>
     </div>
   );
 }

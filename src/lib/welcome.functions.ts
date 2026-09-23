@@ -28,7 +28,9 @@ const WELCOME_VIP_DAYS = 7;
 
 export const listWelcomeClaims = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ search: z.string().max(60).optional() }).parse(input ?? {}))
+  .inputValidator((input: unknown) =>
+    z.object({ search: z.string().max(60).optional() }).parse(input ?? {}),
+  )
   .handler(async ({ data, context }) => {
     await assertWelcomeManager(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -36,9 +38,11 @@ export const listWelcomeClaims = createServerFn({ method: "POST" })
     const db = supabaseAdmin as any;
     await db.rpc("expire_due_vip");
 
-    let query = db
+    const query = db
       .from("welcome_claims")
-      .select("id, user_id, device_identifier, claimed_by, welcome_package, video_url, status, claimed_at")
+      .select(
+        "id, user_id, device_identifier, claimed_by, welcome_package, video_url, status, claimed_at",
+      )
       .order("claimed_at", { ascending: false })
       .limit(100);
     const { data: rows, error } = await query;
@@ -46,12 +50,12 @@ export const listWelcomeClaims = createServerFn({ method: "POST" })
 
     const ids = (rows ?? []).map((r: { user_id: string }) => r.user_id);
     const profiles = ids.length
-      ? (
+      ? ((
           await supabaseAdmin
             .from("profiles")
             .select("id, public_id, display_name, avatar_url, vip_level, vip_expires_at")
             .in("id", ids)
-        ).data ?? []
+        ).data ?? [])
       : [];
 
     const search = (data.search ?? "").trim();
@@ -70,7 +74,9 @@ export const listWelcomeClaims = createServerFn({ method: "POST" })
 
 export const lookupWelcomeUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ publicId: z.string().min(3).max(20) }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ publicId: z.string().min(3).max(20) }).parse(input),
+  )
   .handler(async ({ data, context }) => {
     await assertWelcomeManager(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -122,7 +128,8 @@ export const sendWelcomePackage = createServerFn({ method: "POST" })
         .select("id")
         .eq("device_identifier", data.deviceIdentifier)
         .limit(1);
-      if ((sameDevice ?? []).length > 0) throw new Error("تم استلام الترحيبية من هذا الجهاز مسبقًا");
+      if ((sameDevice ?? []).length > 0)
+        throw new Error("تم استلام الترحيبية من هذا الجهاز مسبقًا");
     }
 
     const { data: wallet } = await supabaseAdmin
@@ -134,10 +141,15 @@ export const sendWelcomePackage = createServerFn({ method: "POST" })
     const after = before + WELCOME_COINS;
 
     if (wallet) {
-      const { error } = await supabaseAdmin.from("coin_wallets").update({ coins: after }).eq("user_id", data.userId);
+      const { error } = await supabaseAdmin
+        .from("coin_wallets")
+        .update({ coins: after })
+        .eq("user_id", data.userId);
       if (error) throw new Error(error.message);
     } else {
-      const { error } = await supabaseAdmin.from("coin_wallets").insert({ user_id: data.userId, coins: after });
+      const { error } = await supabaseAdmin
+        .from("coin_wallets")
+        .insert({ user_id: data.userId, coins: after });
       if (error) throw new Error(error.message);
     }
 

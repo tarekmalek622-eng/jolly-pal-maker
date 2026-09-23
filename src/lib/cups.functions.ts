@@ -29,7 +29,9 @@ export type CupEvent = {
 
 export const getAppCupLeaderboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ category: categorySchema, period: periodSchema }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ category: categorySchema, period: periodSchema }).parse(input),
+  )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const result = await supabaseAdmin.rpc("app_cup_leaderboard", {
@@ -43,7 +45,9 @@ export const getAppCupLeaderboard = createServerFn({ method: "GET" })
 
 export const getRoomCupLeaderboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid(), period: periodSchema }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ roomId: z.string().uuid(), period: periodSchema }).parse(input),
+  )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const result = await supabaseAdmin.rpc("room_cup_leaderboard", {
@@ -68,14 +72,19 @@ export const getActiveCupEvents = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: events, error } = await supabaseAdmin
       .from("cup_events")
-      .select("id, title, subtitle, description, image_url, ranking_kind, starts_at, ends_at, status, cup_event_prizes(id, rank_from, rank_to, coins, label)")
+      .select(
+        "id, title, subtitle, description, image_url, ranking_kind, starts_at, ends_at, status, cup_event_prizes(id, rank_from, rank_to, coins, label)",
+      )
       .in("status", ["active", "finished"])
       .order("starts_at", { ascending: false })
       .limit(4);
     if (error) throw new Error(error.message);
     const result: CupEvent[] = [];
     for (const event of events ?? []) {
-      const board = await supabaseAdmin.rpc("cup_event_leaderboard", { _event_id: event.id, _limit: 10 });
+      const board = await supabaseAdmin.rpc("cup_event_leaderboard", {
+        _event_id: event.id,
+        _limit: 10,
+      });
       if (board.error) throw new Error(board.error.message);
       result.push({
         ...event,

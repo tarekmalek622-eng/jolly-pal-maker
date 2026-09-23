@@ -25,7 +25,8 @@ export function AchievementOfDay({ userId }: { userId: string | null }) {
         db.from("user_badges").select("badge_key").eq("user_id", userId!),
       ]);
       const sent = (gifts ?? []).reduce(
-        (total: number, row: { total_price: number | null }) => total + Number(row.total_price ?? 0),
+        (total: number, row: { total_price: number | null }) =>
+          total + Number(row.total_price ?? 0),
         0,
       );
       const ownedKeys = new Set((owned ?? []).map((row: { badge_key: string }) => row.badge_key));

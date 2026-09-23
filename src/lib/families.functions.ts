@@ -7,11 +7,20 @@ type Rpc = {
 };
 
 async function assertAdmin(supabase: Rpc, userId: string) {
-  const { data, error } = await supabase.rpc("admin_has_section", { _user_id: userId, _section: "families" });
+  const { data, error } = await supabase.rpc("admin_has_section", {
+    _user_id: userId,
+    _section: "families",
+  });
   if (error || data !== true) throw new Error("لا تملك صلاحية قسم العائلات");
 }
 
-async function log(actorId: string, targetId: string, action: string, oldValue: unknown, newValue: unknown) {
+async function log(
+  actorId: string,
+  targetId: string,
+  action: string,
+  oldValue: unknown,
+  newValue: unknown,
+) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   await supabaseAdmin.from("audit_logs").insert({
     actor_id: actorId,
@@ -86,7 +95,10 @@ export const adminCreateFamily = createServerFn({ method: "POST" })
       .insert({ family_id: family.id, user_id: data.leaderId, role: "leader" });
     if (memberError) throw new Error(memberError.message);
 
-    await log(context.userId, family.id, "family_create", null, { name: family.name, code: family.family_code });
+    await log(context.userId, family.id, "family_create", null, {
+      name: family.name,
+      code: family.family_code,
+    });
     return family;
   });
 
@@ -150,7 +162,8 @@ export const adminUpdateFamily = createServerFn({ method: "POST" })
         .select("family_id")
         .eq("user_id", data.leaderId)
         .maybeSingle();
-      if (other && other.family_id !== data.familyId) throw new Error("القائد الجديد عضو في عائلة أخرى");
+      if (other && other.family_id !== data.familyId)
+        throw new Error("القائد الجديد عضو في عائلة أخرى");
       patch["leader_id"] = data.leaderId;
 
       if (before.leader_id) {
@@ -162,11 +175,17 @@ export const adminUpdateFamily = createServerFn({ method: "POST" })
       }
       await supabaseAdmin
         .from("family_members")
-        .upsert({ family_id: data.familyId, user_id: data.leaderId, role: "leader" }, { onConflict: "user_id" });
+        .upsert(
+          { family_id: data.familyId, user_id: data.leaderId, role: "leader" },
+          { onConflict: "user_id" },
+        );
     }
 
     if (Object.keys(patch).length > 0) {
-      const { error } = await supabaseAdmin.from("families").update(patch as never).eq("id", data.familyId);
+      const { error } = await supabaseAdmin
+        .from("families")
+        .update(patch as never)
+        .eq("id", data.familyId);
       if (error) throw new Error(error.message);
     }
 
@@ -209,7 +228,11 @@ export const adminSetFamilyMember = createServerFn({ method: "POST" })
         .eq("family_id", data.familyId)
         .eq("user_id", data.userId);
       if (error) throw new Error(error.message);
-      await supabaseAdmin.from("families").update({ leader_id: null }).eq("id", data.familyId).eq("leader_id", data.userId);
+      await supabaseAdmin
+        .from("families")
+        .update({ leader_id: null })
+        .eq("id", data.familyId)
+        .eq("leader_id", data.userId);
       await log(context.userId, data.userId, "family_member_remove", data.familyId, null);
       return { ok: true };
     }
@@ -228,13 +251,17 @@ export const adminSetFamilyMember = createServerFn({ method: "POST" })
       .select("family_id")
       .eq("user_id", data.userId)
       .maybeSingle();
-    if (current && current.family_id !== data.familyId) throw new Error("المستخدم عضو في عائلة أخرى");
-    if (!current && family.member_count >= family.max_members) throw new Error("العائلة وصلت للحد الأقصى للأعضاء");
+    if (current && current.family_id !== data.familyId)
+      throw new Error("المستخدم عضو في عائلة أخرى");
+    if (!current && family.member_count >= family.max_members)
+      throw new Error("العائلة وصلت للحد الأقصى للأعضاء");
 
     const role = data.role ?? "member";
     if (role === "deputy") {
       const settings = await supabaseAdmin.rpc("family_settings");
-      const maxDeputies = Number((settings.data as { max_deputies?: number } | null)?.max_deputies ?? 4);
+      const maxDeputies = Number(
+        (settings.data as { max_deputies?: number } | null)?.max_deputies ?? 4,
+      );
       const { count } = await supabaseAdmin
         .from("family_members")
         .select("id", { count: "exact", head: true })
@@ -250,7 +277,10 @@ export const adminSetFamilyMember = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     if (role === "leader") {
-      await supabaseAdmin.from("families").update({ leader_id: data.userId }).eq("id", data.familyId);
+      await supabaseAdmin
+        .from("families")
+        .update({ leader_id: data.userId })
+        .eq("id", data.familyId);
     }
 
     await log(context.userId, data.userId, "family_member_set", data.familyId, { role });
@@ -285,7 +315,10 @@ export const adminSetFamilySettings = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_settings")
-      .upsert({ key: "families", value: data as never, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      .upsert(
+        { key: "families", value: data as never, updated_at: new Date().toISOString() },
+        { onConflict: "key" },
+      );
     if (error) throw new Error(error.message);
     await log(context.userId, "families", "family_settings_update", null, data);
     return { ok: true };

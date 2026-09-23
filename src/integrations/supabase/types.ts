@@ -1,4267 +1,4242 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
+    PostgrestVersion: "14.5";
+  };
   public: {
     Tables: {
       admin_sections: {
         Row: {
-          created_at: string
-          granted_by: string | null
-          note: string | null
-          sections: string[]
-          updated_at: string
-          user_id: string
-        }
+          created_at: string;
+          granted_by: string | null;
+          note: string | null;
+          sections: string[];
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          granted_by?: string | null
-          note?: string | null
-          sections?: string[]
-          updated_at?: string
-          user_id: string
-        }
+          created_at?: string;
+          granted_by?: string | null;
+          note?: string | null;
+          sections?: string[];
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          granted_by?: string | null
-          note?: string | null
-          sections?: string[]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          granted_by?: string | null;
+          note?: string | null;
+          sections?: string[];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       app_settings: {
         Row: {
-          key: string
-          updated_at: string
-          value: Json
-        }
+          key: string;
+          updated_at: string;
+          value: Json;
+        };
         Insert: {
-          key: string
-          updated_at?: string
-          value?: Json
-        }
+          key: string;
+          updated_at?: string;
+          value?: Json;
+        };
         Update: {
-          key?: string
-          updated_at?: string
-          value?: Json
-        }
-        Relationships: []
-      }
+          key?: string;
+          updated_at?: string;
+          value?: Json;
+        };
+        Relationships: [];
+      };
       audit_logs: {
         Row: {
-          action: string
-          actor_id: string | null
-          created_at: string
-          id: string
-          new_value: Json | null
-          old_value: Json | null
-          target_id: string | null
-        }
+          action: string;
+          actor_id: string | null;
+          created_at: string;
+          id: string;
+          new_value: Json | null;
+          old_value: Json | null;
+          target_id: string | null;
+        };
         Insert: {
-          action: string
-          actor_id?: string | null
-          created_at?: string
-          id?: string
-          new_value?: Json | null
-          old_value?: Json | null
-          target_id?: string | null
-        }
+          action: string;
+          actor_id?: string | null;
+          created_at?: string;
+          id?: string;
+          new_value?: Json | null;
+          old_value?: Json | null;
+          target_id?: string | null;
+        };
         Update: {
-          action?: string
-          actor_id?: string | null
-          created_at?: string
-          id?: string
-          new_value?: Json | null
-          old_value?: Json | null
-          target_id?: string | null
-        }
-        Relationships: []
-      }
+          action?: string;
+          actor_id?: string | null;
+          created_at?: string;
+          id?: string;
+          new_value?: Json | null;
+          old_value?: Json | null;
+          target_id?: string | null;
+        };
+        Relationships: [];
+      };
       badge_definitions: {
         Row: {
-          audience: string
-          color_key: string
-          created_at: string
-          description: string | null
-          display_variant: string
-          icon_key: string
-          id: string
-          image_url: string | null
-          is_active: boolean
-          key: string
-          kind: string
-          name: string
-          permissions: string[]
-          sort_order: number
-          style_key: string
-          threshold: number
-          updated_at: string
-        }
+          audience: string;
+          color_key: string;
+          created_at: string;
+          description: string | null;
+          display_variant: string;
+          icon_key: string;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          key: string;
+          kind: string;
+          name: string;
+          permissions: string[];
+          sort_order: number;
+          style_key: string;
+          threshold: number;
+          updated_at: string;
+        };
         Insert: {
-          audience?: string
-          color_key?: string
-          created_at?: string
-          description?: string | null
-          display_variant?: string
-          icon_key?: string
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          key: string
-          kind?: string
-          name: string
-          permissions?: string[]
-          sort_order?: number
-          style_key?: string
-          threshold: number
-          updated_at?: string
-        }
+          audience?: string;
+          color_key?: string;
+          created_at?: string;
+          description?: string | null;
+          display_variant?: string;
+          icon_key?: string;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          key: string;
+          kind?: string;
+          name: string;
+          permissions?: string[];
+          sort_order?: number;
+          style_key?: string;
+          threshold: number;
+          updated_at?: string;
+        };
         Update: {
-          audience?: string
-          color_key?: string
-          created_at?: string
-          description?: string | null
-          display_variant?: string
-          icon_key?: string
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          key?: string
-          kind?: string
-          name?: string
-          permissions?: string[]
-          sort_order?: number
-          style_key?: string
-          threshold?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          audience?: string;
+          color_key?: string;
+          created_at?: string;
+          description?: string | null;
+          display_variant?: string;
+          icon_key?: string;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          key?: string;
+          kind?: string;
+          name?: string;
+          permissions?: string[];
+          sort_order?: number;
+          style_key?: string;
+          threshold?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       banned_words: {
         Row: {
-          created_at: string
-          id: string
-          updated_at: string
-          word: string
-        }
+          created_at: string;
+          id: string;
+          updated_at: string;
+          word: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          updated_at?: string
-          word: string
-        }
+          created_at?: string;
+          id?: string;
+          updated_at?: string;
+          word: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          updated_at?: string
-          word?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          id?: string;
+          updated_at?: string;
+          word?: string;
+        };
+        Relationships: [];
+      };
       banners: {
         Row: {
-          created_at: string
-          created_by: string | null
-          ends_at: string | null
-          id: string
-          image_url: string | null
-          is_active: boolean
-          kind: string
-          link_url: string | null
-          metadata: Json
-          sort_order: number
-          starts_at: string | null
-          subtitle: string | null
-          title: string
-          updated_at: string
-        }
+          created_at: string;
+          created_by: string | null;
+          ends_at: string | null;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          kind: string;
+          link_url: string | null;
+          metadata: Json;
+          sort_order: number;
+          starts_at: string | null;
+          subtitle: string | null;
+          title: string;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          created_by?: string | null
-          ends_at?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          kind?: string
-          link_url?: string | null
-          metadata?: Json
-          sort_order?: number
-          starts_at?: string | null
-          subtitle?: string | null
-          title: string
-          updated_at?: string
-        }
+          created_at?: string;
+          created_by?: string | null;
+          ends_at?: string | null;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          kind?: string;
+          link_url?: string | null;
+          metadata?: Json;
+          sort_order?: number;
+          starts_at?: string | null;
+          subtitle?: string | null;
+          title: string;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          created_by?: string | null
-          ends_at?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          kind?: string
-          link_url?: string | null
-          metadata?: Json
-          sort_order?: number
-          starts_at?: string | null
-          subtitle?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          created_by?: string | null;
+          ends_at?: string | null;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          kind?: string;
+          link_url?: string | null;
+          metadata?: Json;
+          sort_order?: number;
+          starts_at?: string | null;
+          subtitle?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       bans: {
         Row: {
-          created_at: string
-          created_by: string | null
-          expires_at: string | null
-          id: string
-          reason: string | null
-          room_id: string | null
-          scope: string
-          user_id: string
-        }
+          created_at: string;
+          created_by: string | null;
+          expires_at: string | null;
+          id: string;
+          reason: string | null;
+          room_id: string | null;
+          scope: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          created_by?: string | null
-          expires_at?: string | null
-          id?: string
-          reason?: string | null
-          room_id?: string | null
-          scope?: string
-          user_id: string
-        }
+          created_at?: string;
+          created_by?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          reason?: string | null;
+          room_id?: string | null;
+          scope?: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          created_by?: string | null
-          expires_at?: string | null
-          id?: string
-          reason?: string | null
-          room_id?: string | null
-          scope?: string
-          user_id?: string
-        }
+          created_at?: string;
+          created_by?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          reason?: string | null;
+          room_id?: string | null;
+          scope?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "bans_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "bans_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       blocks: {
         Row: {
-          blocked_id: string
-          blocker_id: string
-          created_at: string
-          id: string
-        }
+          blocked_id: string;
+          blocker_id: string;
+          created_at: string;
+          id: string;
+        };
         Insert: {
-          blocked_id: string
-          blocker_id: string
-          created_at?: string
-          id?: string
-        }
+          blocked_id: string;
+          blocker_id: string;
+          created_at?: string;
+          id?: string;
+        };
         Update: {
-          blocked_id?: string
-          blocker_id?: string
-          created_at?: string
-          id?: string
-        }
-        Relationships: []
-      }
+          blocked_id?: string;
+          blocker_id?: string;
+          created_at?: string;
+          id?: string;
+        };
+        Relationships: [];
+      };
       coin_packages: {
         Row: {
-          bonus_coins: number
-          coins: number
-          currency: string
-          discount_percent: number
-          id: string
-          image_url: string | null
-          is_active: boolean
-          name: string
-          price_cents: number
-          sort_order: number
-        }
+          bonus_coins: number;
+          coins: number;
+          currency: string;
+          discount_percent: number;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          name: string;
+          price_cents: number;
+          sort_order: number;
+        };
         Insert: {
-          bonus_coins?: number
-          coins: number
-          currency?: string
-          discount_percent?: number
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          name: string
-          price_cents: number
-          sort_order?: number
-        }
+          bonus_coins?: number;
+          coins: number;
+          currency?: string;
+          discount_percent?: number;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          name: string;
+          price_cents: number;
+          sort_order?: number;
+        };
         Update: {
-          bonus_coins?: number
-          coins?: number
-          currency?: string
-          discount_percent?: number
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          name?: string
-          price_cents?: number
-          sort_order?: number
-        }
-        Relationships: []
-      }
+          bonus_coins?: number;
+          coins?: number;
+          currency?: string;
+          discount_percent?: number;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          name?: string;
+          price_cents?: number;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
       coin_purchase_requests: {
         Row: {
-          amount_cents: number
-          coins: number
-          created_at: string
-          currency: string
-          id: string
-          method: string
-          note: string | null
-          package_id: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          sender_reference: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
+          amount_cents: number;
+          coins: number;
+          created_at: string;
+          currency: string;
+          id: string;
+          method: string;
+          note: string | null;
+          package_id: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          sender_reference: string;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          amount_cents: number
-          coins: number
-          created_at?: string
-          currency?: string
-          id?: string
-          method: string
-          note?: string | null
-          package_id?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          sender_reference: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
+          amount_cents: number;
+          coins: number;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          method: string;
+          note?: string | null;
+          package_id?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          sender_reference: string;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          amount_cents?: number
-          coins?: number
-          created_at?: string
-          currency?: string
-          id?: string
-          method?: string
-          note?: string | null
-          package_id?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          sender_reference?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
+          amount_cents?: number;
+          coins?: number;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          method?: string;
+          note?: string | null;
+          package_id?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          sender_reference?: string;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "coin_purchase_requests_package_id_fkey"
-            columns: ["package_id"]
-            isOneToOne: false
-            referencedRelation: "coin_packages"
-            referencedColumns: ["id"]
+            foreignKeyName: "coin_purchase_requests_package_id_fkey";
+            columns: ["package_id"];
+            isOneToOne: false;
+            referencedRelation: "coin_packages";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       coin_transactions: {
         Row: {
-          amount: number
-          balance_after: number
-          balance_before: number
-          created_at: string
-          id: string
-          kind: string
-          reference: string | null
-          status: string
-          user_id: string
-        }
+          amount: number;
+          balance_after: number;
+          balance_before: number;
+          created_at: string;
+          id: string;
+          kind: string;
+          reference: string | null;
+          status: string;
+          user_id: string;
+        };
         Insert: {
-          amount: number
-          balance_after: number
-          balance_before: number
-          created_at?: string
-          id?: string
-          kind: string
-          reference?: string | null
-          status?: string
-          user_id: string
-        }
+          amount: number;
+          balance_after: number;
+          balance_before: number;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          reference?: string | null;
+          status?: string;
+          user_id: string;
+        };
         Update: {
-          amount?: number
-          balance_after?: number
-          balance_before?: number
-          created_at?: string
-          id?: string
-          kind?: string
-          reference?: string | null
-          status?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          amount?: number;
+          balance_after?: number;
+          balance_before?: number;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          reference?: string | null;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       coin_wallets: {
         Row: {
-          coins: number
-          recharge_points: number
-          support_coins: number
-          total_received: number
-          total_sent: number
-          updated_at: string
-          user_id: string
-        }
+          coins: number;
+          recharge_points: number;
+          support_coins: number;
+          total_received: number;
+          total_sent: number;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          coins?: number
-          recharge_points?: number
-          support_coins?: number
-          total_received?: number
-          total_sent?: number
-          updated_at?: string
-          user_id: string
-        }
+          coins?: number;
+          recharge_points?: number;
+          support_coins?: number;
+          total_received?: number;
+          total_sent?: number;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          coins?: number
-          recharge_points?: number
-          support_coins?: number
-          total_received?: number
-          total_sent?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          coins?: number;
+          recharge_points?: number;
+          support_coins?: number;
+          total_received?: number;
+          total_sent?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       crown_messages: {
         Row: {
-          body: string
-          created_at: string
-          created_by: string | null
-          event_id: string | null
-          id: string
-          image_url: string | null
-          is_active: boolean
-          kind: string
-          metadata: Json
-          title: string
-          updated_at: string
-        }
+          body: string;
+          created_at: string;
+          created_by: string | null;
+          event_id: string | null;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          kind: string;
+          metadata: Json;
+          title: string;
+          updated_at: string;
+        };
         Insert: {
-          body: string
-          created_at?: string
-          created_by?: string | null
-          event_id?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          kind?: string
-          metadata?: Json
-          title: string
-          updated_at?: string
-        }
+          body: string;
+          created_at?: string;
+          created_by?: string | null;
+          event_id?: string | null;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          kind?: string;
+          metadata?: Json;
+          title: string;
+          updated_at?: string;
+        };
         Update: {
-          body?: string
-          created_at?: string
-          created_by?: string | null
-          event_id?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          kind?: string
-          metadata?: Json
-          title?: string
-          updated_at?: string
-        }
+          body?: string;
+          created_at?: string;
+          created_by?: string | null;
+          event_id?: string | null;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          kind?: string;
+          metadata?: Json;
+          title?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "crown_messages_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "cup_events"
-            referencedColumns: ["id"]
+            foreignKeyName: "crown_messages_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "cup_events";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       crown_reads: {
         Row: {
-          last_seen_at: string
-          updated_at: string
-          user_id: string
-        }
+          last_seen_at: string;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          last_seen_at?: string
-          updated_at?: string
-          user_id: string
-        }
+          last_seen_at?: string;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          last_seen_at?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          last_seen_at?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       cup_event_payouts: {
         Row: {
-          beneficiary_user_id: string
-          coins: number
-          event_id: string
-          id: string
-          paid_at: string
-          rank: number
-          score: number
-        }
+          beneficiary_user_id: string;
+          coins: number;
+          event_id: string;
+          id: string;
+          paid_at: string;
+          rank: number;
+          score: number;
+        };
         Insert: {
-          beneficiary_user_id: string
-          coins: number
-          event_id: string
-          id?: string
-          paid_at?: string
-          rank: number
-          score: number
-        }
+          beneficiary_user_id: string;
+          coins: number;
+          event_id: string;
+          id?: string;
+          paid_at?: string;
+          rank: number;
+          score: number;
+        };
         Update: {
-          beneficiary_user_id?: string
-          coins?: number
-          event_id?: string
-          id?: string
-          paid_at?: string
-          rank?: number
-          score?: number
-        }
+          beneficiary_user_id?: string;
+          coins?: number;
+          event_id?: string;
+          id?: string;
+          paid_at?: string;
+          rank?: number;
+          score?: number;
+        };
         Relationships: [
           {
-            foreignKeyName: "cup_event_payouts_beneficiary_user_id_fkey"
-            columns: ["beneficiary_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "cup_event_payouts_beneficiary_user_id_fkey";
+            columns: ["beneficiary_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "cup_event_payouts_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "cup_events"
-            referencedColumns: ["id"]
+            foreignKeyName: "cup_event_payouts_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "cup_events";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       cup_event_prizes: {
         Row: {
-          coins: number
-          created_at: string
-          event_id: string
-          id: string
-          label: string
-          rank_from: number
-          rank_to: number
-        }
+          coins: number;
+          created_at: string;
+          event_id: string;
+          id: string;
+          label: string;
+          rank_from: number;
+          rank_to: number;
+        };
         Insert: {
-          coins: number
-          created_at?: string
-          event_id: string
-          id?: string
-          label: string
-          rank_from: number
-          rank_to: number
-        }
+          coins: number;
+          created_at?: string;
+          event_id: string;
+          id?: string;
+          label: string;
+          rank_from: number;
+          rank_to: number;
+        };
         Update: {
-          coins?: number
-          created_at?: string
-          event_id?: string
-          id?: string
-          label?: string
-          rank_from?: number
-          rank_to?: number
-        }
+          coins?: number;
+          created_at?: string;
+          event_id?: string;
+          id?: string;
+          label?: string;
+          rank_from?: number;
+          rank_to?: number;
+        };
         Relationships: [
           {
-            foreignKeyName: "cup_event_prizes_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "cup_events"
-            referencedColumns: ["id"]
+            foreignKeyName: "cup_event_prizes_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "cup_events";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       cup_events: {
         Row: {
-          created_at: string
-          created_by: string | null
-          description: string | null
-          ends_at: string
-          id: string
-          image_url: string | null
-          points_note: string | null
-          ranking_kind: string
-          rules: string | null
-          starts_at: string
-          status: string
-          style: string
-          subtitle: string | null
-          title: string
-          updated_at: string
-        }
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          ends_at: string;
+          id: string;
+          image_url: string | null;
+          points_note: string | null;
+          ranking_kind: string;
+          rules: string | null;
+          starts_at: string;
+          status: string;
+          style: string;
+          subtitle: string | null;
+          title: string;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          ends_at: string
-          id?: string
-          image_url?: string | null
-          points_note?: string | null
-          ranking_kind: string
-          rules?: string | null
-          starts_at: string
-          status?: string
-          style?: string
-          subtitle?: string | null
-          title: string
-          updated_at?: string
-        }
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          ends_at: string;
+          id?: string;
+          image_url?: string | null;
+          points_note?: string | null;
+          ranking_kind: string;
+          rules?: string | null;
+          starts_at: string;
+          status?: string;
+          style?: string;
+          subtitle?: string | null;
+          title: string;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          ends_at?: string
-          id?: string
-          image_url?: string | null
-          points_note?: string | null
-          ranking_kind?: string
-          rules?: string | null
-          starts_at?: string
-          status?: string
-          style?: string
-          subtitle?: string | null
-          title?: string
-          updated_at?: string
-        }
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          ends_at?: string;
+          id?: string;
+          image_url?: string | null;
+          points_note?: string | null;
+          ranking_kind?: string;
+          rules?: string | null;
+          starts_at?: string;
+          status?: string;
+          style?: string;
+          subtitle?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "cup_events_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "cup_events_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       cvip_plans: {
         Row: {
-          background_url: string | null
-          badge_url: string | null
-          created_at: string
-          decorations: Json
-          description: string | null
-          duration_days: number
-          frame_url: string | null
-          id: string
-          is_active: boolean
-          name: string
-          name_effect: string | null
-          perks: Json
-          price: number
-          room_effect: string | null
-          sort_order: number
-          updated_at: string
-        }
+          background_url: string | null;
+          badge_url: string | null;
+          created_at: string;
+          decorations: Json;
+          description: string | null;
+          duration_days: number;
+          frame_url: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          name_effect: string | null;
+          perks: Json;
+          price: number;
+          room_effect: string | null;
+          sort_order: number;
+          updated_at: string;
+        };
         Insert: {
-          background_url?: string | null
-          badge_url?: string | null
-          created_at?: string
-          decorations?: Json
-          description?: string | null
-          duration_days: number
-          frame_url?: string | null
-          id?: string
-          is_active?: boolean
-          name: string
-          name_effect?: string | null
-          perks?: Json
-          price: number
-          room_effect?: string | null
-          sort_order?: number
-          updated_at?: string
-        }
+          background_url?: string | null;
+          badge_url?: string | null;
+          created_at?: string;
+          decorations?: Json;
+          description?: string | null;
+          duration_days: number;
+          frame_url?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          name_effect?: string | null;
+          perks?: Json;
+          price: number;
+          room_effect?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+        };
         Update: {
-          background_url?: string | null
-          badge_url?: string | null
-          created_at?: string
-          decorations?: Json
-          description?: string | null
-          duration_days?: number
-          frame_url?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          name_effect?: string | null
-          perks?: Json
-          price?: number
-          room_effect?: string | null
-          sort_order?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          background_url?: string | null;
+          badge_url?: string | null;
+          created_at?: string;
+          decorations?: Json;
+          description?: string | null;
+          duration_days?: number;
+          frame_url?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          name_effect?: string | null;
+          perks?: Json;
+          price?: number;
+          room_effect?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       daily_checkins: {
         Row: {
-          created_at: string
-          id: string
-          last_day: string
-          streak: number
-          total_days: number
-          updated_at: string
-          user_id: string
-        }
+          created_at: string;
+          id: string;
+          last_day: string;
+          streak: number;
+          total_days: number;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          last_day: string
-          streak?: number
-          total_days?: number
-          updated_at?: string
-          user_id: string
-        }
+          created_at?: string;
+          id?: string;
+          last_day: string;
+          streak?: number;
+          total_days?: number;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          last_day?: string
-          streak?: number
-          total_days?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          id?: string;
+          last_day?: string;
+          streak?: number;
+          total_days?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       direct_messages: {
         Row: {
-          audio_duration_ms: number | null
-          audio_url: string | null
-          body: string
-          created_at: string
-          id: string
-          kind: string
-          metadata: Json | null
-          read_at: string | null
-          receiver_id: string
-          sender_id: string
-        }
+          audio_duration_ms: number | null;
+          audio_url: string | null;
+          body: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          metadata: Json | null;
+          read_at: string | null;
+          receiver_id: string;
+          sender_id: string;
+        };
         Insert: {
-          audio_duration_ms?: number | null
-          audio_url?: string | null
-          body: string
-          created_at?: string
-          id?: string
-          kind?: string
-          metadata?: Json | null
-          read_at?: string | null
-          receiver_id: string
-          sender_id: string
-        }
+          audio_duration_ms?: number | null;
+          audio_url?: string | null;
+          body: string;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          metadata?: Json | null;
+          read_at?: string | null;
+          receiver_id: string;
+          sender_id: string;
+        };
         Update: {
-          audio_duration_ms?: number | null
-          audio_url?: string | null
-          body?: string
-          created_at?: string
-          id?: string
-          kind?: string
-          metadata?: Json | null
-          read_at?: string | null
-          receiver_id?: string
-          sender_id?: string
-        }
-        Relationships: []
-      }
+          audio_duration_ms?: number | null;
+          audio_url?: string | null;
+          body?: string;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          metadata?: Json | null;
+          read_at?: string | null;
+          receiver_id?: string;
+          sender_id?: string;
+        };
+        Relationships: [];
+      };
       domino_games: {
         Row: {
-          bet: number
-          created_at: string
-          id: string
-          player1_id: string
-          player2_id: string | null
-          room_id: string | null
-          state: Json
-          status: string
-          updated_at: string
-          winner_id: string | null
-        }
+          bet: number;
+          created_at: string;
+          id: string;
+          player1_id: string;
+          player2_id: string | null;
+          room_id: string | null;
+          state: Json;
+          status: string;
+          updated_at: string;
+          winner_id: string | null;
+        };
         Insert: {
-          bet: number
-          created_at?: string
-          id?: string
-          player1_id: string
-          player2_id?: string | null
-          room_id?: string | null
-          state?: Json
-          status?: string
-          updated_at?: string
-          winner_id?: string | null
-        }
+          bet: number;
+          created_at?: string;
+          id?: string;
+          player1_id: string;
+          player2_id?: string | null;
+          room_id?: string | null;
+          state?: Json;
+          status?: string;
+          updated_at?: string;
+          winner_id?: string | null;
+        };
         Update: {
-          bet?: number
-          created_at?: string
-          id?: string
-          player1_id?: string
-          player2_id?: string | null
-          room_id?: string | null
-          state?: Json
-          status?: string
-          updated_at?: string
-          winner_id?: string | null
-        }
+          bet?: number;
+          created_at?: string;
+          id?: string;
+          player1_id?: string;
+          player2_id?: string | null;
+          room_id?: string | null;
+          state?: Json;
+          status?: string;
+          updated_at?: string;
+          winner_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "domino_games_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "domino_games_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       families: {
         Row: {
-          animation_url: string | null
-          cover_url: string | null
-          created_at: string
-          created_by: string | null
-          description: string | null
-          family_code: string
-          id: string
-          is_active: boolean
-          is_suspended: boolean
-          join_mode: string
-          leader_id: string | null
-          level: number
-          logo_url: string | null
-          max_members: number
-          member_count: number
-          name: string
-          permissions: Json
-          points: number
-          updated_at: string
-        }
+          animation_url: string | null;
+          cover_url: string | null;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          family_code: string;
+          id: string;
+          is_active: boolean;
+          is_suspended: boolean;
+          join_mode: string;
+          leader_id: string | null;
+          level: number;
+          logo_url: string | null;
+          max_members: number;
+          member_count: number;
+          name: string;
+          permissions: Json;
+          points: number;
+          updated_at: string;
+        };
         Insert: {
-          animation_url?: string | null
-          cover_url?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          family_code: string
-          id?: string
-          is_active?: boolean
-          is_suspended?: boolean
-          join_mode?: string
-          leader_id?: string | null
-          level?: number
-          logo_url?: string | null
-          max_members?: number
-          member_count?: number
-          name: string
-          permissions?: Json
-          points?: number
-          updated_at?: string
-        }
+          animation_url?: string | null;
+          cover_url?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          family_code: string;
+          id?: string;
+          is_active?: boolean;
+          is_suspended?: boolean;
+          join_mode?: string;
+          leader_id?: string | null;
+          level?: number;
+          logo_url?: string | null;
+          max_members?: number;
+          member_count?: number;
+          name: string;
+          permissions?: Json;
+          points?: number;
+          updated_at?: string;
+        };
         Update: {
-          animation_url?: string | null
-          cover_url?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          family_code?: string
-          id?: string
-          is_active?: boolean
-          is_suspended?: boolean
-          join_mode?: string
-          leader_id?: string | null
-          level?: number
-          logo_url?: string | null
-          max_members?: number
-          member_count?: number
-          name?: string
-          permissions?: Json
-          points?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          animation_url?: string | null;
+          cover_url?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          family_code?: string;
+          id?: string;
+          is_active?: boolean;
+          is_suspended?: boolean;
+          join_mode?: string;
+          leader_id?: string | null;
+          level?: number;
+          logo_url?: string | null;
+          max_members?: number;
+          member_count?: number;
+          name?: string;
+          permissions?: Json;
+          points?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       family_join_requests: {
         Row: {
-          created_at: string
-          family_id: string
-          id: string
-          reviewed_at: string | null
-          reviewed_by: string | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
+          created_at: string;
+          family_id: string;
+          id: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          family_id: string
-          id?: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
+          created_at?: string;
+          family_id: string;
+          id?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          family_id?: string
-          id?: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
+          created_at?: string;
+          family_id?: string;
+          id?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "family_join_requests_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
+            foreignKeyName: "family_join_requests_family_id_fkey";
+            columns: ["family_id"];
+            isOneToOne: false;
+            referencedRelation: "families";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       family_members: {
         Row: {
-          family_id: string
-          id: string
-          joined_at: string
-          permissions: Json
-          points: number
-          role: string
-          user_id: string
-        }
+          family_id: string;
+          id: string;
+          joined_at: string;
+          permissions: Json;
+          points: number;
+          role: string;
+          user_id: string;
+        };
         Insert: {
-          family_id: string
-          id?: string
-          joined_at?: string
-          permissions?: Json
-          points?: number
-          role?: string
-          user_id: string
-        }
+          family_id: string;
+          id?: string;
+          joined_at?: string;
+          permissions?: Json;
+          points?: number;
+          role?: string;
+          user_id: string;
+        };
         Update: {
-          family_id?: string
-          id?: string
-          joined_at?: string
-          permissions?: Json
-          points?: number
-          role?: string
-          user_id?: string
-        }
+          family_id?: string;
+          id?: string;
+          joined_at?: string;
+          permissions?: Json;
+          points?: number;
+          role?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "family_members_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
+            foreignKeyName: "family_members_family_id_fkey";
+            columns: ["family_id"];
+            isOneToOne: false;
+            referencedRelation: "families";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       follows: {
         Row: {
-          created_at: string
-          follower_id: string
-          following_id: string
-          id: string
-        }
+          created_at: string;
+          follower_id: string;
+          following_id: string;
+          id: string;
+        };
         Insert: {
-          created_at?: string
-          follower_id: string
-          following_id: string
-          id?: string
-        }
+          created_at?: string;
+          follower_id: string;
+          following_id: string;
+          id?: string;
+        };
         Update: {
-          created_at?: string
-          follower_id?: string
-          following_id?: string
-          id?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          follower_id?: string;
+          following_id?: string;
+          id?: string;
+        };
+        Relationships: [];
+      };
       friend_requests: {
         Row: {
-          addressee_id: string
-          created_at: string
-          id: string
-          requester_id: string
-          status: Database["public"]["Enums"]["friend_status"]
-        }
+          addressee_id: string;
+          created_at: string;
+          id: string;
+          requester_id: string;
+          status: Database["public"]["Enums"]["friend_status"];
+        };
         Insert: {
-          addressee_id: string
-          created_at?: string
-          id?: string
-          requester_id: string
-          status?: Database["public"]["Enums"]["friend_status"]
-        }
+          addressee_id: string;
+          created_at?: string;
+          id?: string;
+          requester_id: string;
+          status?: Database["public"]["Enums"]["friend_status"];
+        };
         Update: {
-          addressee_id?: string
-          created_at?: string
-          id?: string
-          requester_id?: string
-          status?: Database["public"]["Enums"]["friend_status"]
-        }
-        Relationships: []
-      }
+          addressee_id?: string;
+          created_at?: string;
+          id?: string;
+          requester_id?: string;
+          status?: Database["public"]["Enums"]["friend_status"];
+        };
+        Relationships: [];
+      };
       friends: {
         Row: {
-          created_at: string
-          friend_id: string
-          id: string
-          user_id: string
-        }
+          created_at: string;
+          friend_id: string;
+          id: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          friend_id: string
-          id?: string
-          user_id: string
-        }
+          created_at?: string;
+          friend_id: string;
+          id?: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          friend_id?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          friend_id?: string;
+          id?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       game_sessions: {
         Row: {
-          bet: number
-          created_at: string
-          game: string
-          id: string
-          payout: number
-          result: Json
-          status: string
-          updated_at: string
-          user_id: string
-        }
+          bet: number;
+          created_at: string;
+          game: string;
+          id: string;
+          payout: number;
+          result: Json;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          bet?: number
-          created_at?: string
-          game: string
-          id?: string
-          payout?: number
-          result?: Json
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
+          bet?: number;
+          created_at?: string;
+          game: string;
+          id?: string;
+          payout?: number;
+          result?: Json;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          bet?: number
-          created_at?: string
-          game?: string
-          id?: string
-          payout?: number
-          result?: Json
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          bet?: number;
+          created_at?: string;
+          game?: string;
+          id?: string;
+          payout?: number;
+          result?: Json;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       gift_box_opens: {
         Row: {
-          cost: number
-          created_at: string
-          id: string
-          rarity: string
-          reward: number
-          tier: string
-          updated_at: string
-          user_id: string
-        }
+          cost: number;
+          created_at: string;
+          id: string;
+          rarity: string;
+          reward: number;
+          tier: string;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          cost: number
-          created_at?: string
-          id?: string
-          rarity: string
-          reward: number
-          tier: string
-          updated_at?: string
-          user_id: string
-        }
+          cost: number;
+          created_at?: string;
+          id?: string;
+          rarity: string;
+          reward: number;
+          tier: string;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          cost?: number
-          created_at?: string
-          id?: string
-          rarity?: string
-          reward?: number
-          tier?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          cost?: number;
+          created_at?: string;
+          id?: string;
+          rarity?: string;
+          reward?: number;
+          tier?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       gift_transactions: {
         Row: {
-          created_at: string
-          gift_id: string
-          id: string
-          quantity: number
-          receiver_id: string
-          room_id: string | null
-          sender_id: string
-          total_price: number
-        }
+          created_at: string;
+          gift_id: string;
+          id: string;
+          quantity: number;
+          receiver_id: string;
+          room_id: string | null;
+          sender_id: string;
+          total_price: number;
+        };
         Insert: {
-          created_at?: string
-          gift_id: string
-          id?: string
-          quantity?: number
-          receiver_id: string
-          room_id?: string | null
-          sender_id: string
-          total_price: number
-        }
+          created_at?: string;
+          gift_id: string;
+          id?: string;
+          quantity?: number;
+          receiver_id: string;
+          room_id?: string | null;
+          sender_id: string;
+          total_price: number;
+        };
         Update: {
-          created_at?: string
-          gift_id?: string
-          id?: string
-          quantity?: number
-          receiver_id?: string
-          room_id?: string | null
-          sender_id?: string
-          total_price?: number
-        }
+          created_at?: string;
+          gift_id?: string;
+          id?: string;
+          quantity?: number;
+          receiver_id?: string;
+          room_id?: string | null;
+          sender_id?: string;
+          total_price?: number;
+        };
         Relationships: [
           {
-            foreignKeyName: "gift_transactions_gift_id_fkey"
-            columns: ["gift_id"]
-            isOneToOne: false
-            referencedRelation: "gifts"
-            referencedColumns: ["id"]
+            foreignKeyName: "gift_transactions_gift_id_fkey";
+            columns: ["gift_id"];
+            isOneToOne: false;
+            referencedRelation: "gifts";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "gift_transactions_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "gift_transactions_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       gifts: {
         Row: {
-          animation_url: string | null
-          available_from: string | null
-          available_until: string | null
-          category: string
-          created_at: string
-          display_scale: number
-          duration_ms: number
-          emoji: string | null
-          id: string
-          image_url: string | null
-          is_active: boolean
-          is_seasonal: boolean
-          name: string
-          price: number
-          rarity: string
-          required_vip: number
-          sort_order: number
-          sound_enabled: boolean
-          sound_url: string | null
-          thumb_url: string | null
-          updated_at: string
-          video_url: string | null
-        }
+          animation_url: string | null;
+          available_from: string | null;
+          available_until: string | null;
+          category: string;
+          created_at: string;
+          display_scale: number;
+          duration_ms: number;
+          emoji: string | null;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          is_seasonal: boolean;
+          name: string;
+          price: number;
+          rarity: string;
+          required_vip: number;
+          sort_order: number;
+          sound_enabled: boolean;
+          sound_url: string | null;
+          thumb_url: string | null;
+          updated_at: string;
+          video_url: string | null;
+        };
         Insert: {
-          animation_url?: string | null
-          available_from?: string | null
-          available_until?: string | null
-          category?: string
-          created_at?: string
-          display_scale?: number
-          duration_ms?: number
-          emoji?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          is_seasonal?: boolean
-          name: string
-          price: number
-          rarity?: string
-          required_vip?: number
-          sort_order?: number
-          sound_enabled?: boolean
-          sound_url?: string | null
-          thumb_url?: string | null
-          updated_at?: string
-          video_url?: string | null
-        }
+          animation_url?: string | null;
+          available_from?: string | null;
+          available_until?: string | null;
+          category?: string;
+          created_at?: string;
+          display_scale?: number;
+          duration_ms?: number;
+          emoji?: string | null;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          is_seasonal?: boolean;
+          name: string;
+          price: number;
+          rarity?: string;
+          required_vip?: number;
+          sort_order?: number;
+          sound_enabled?: boolean;
+          sound_url?: string | null;
+          thumb_url?: string | null;
+          updated_at?: string;
+          video_url?: string | null;
+        };
         Update: {
-          animation_url?: string | null
-          available_from?: string | null
-          available_until?: string | null
-          category?: string
-          created_at?: string
-          display_scale?: number
-          duration_ms?: number
-          emoji?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          is_seasonal?: boolean
-          name?: string
-          price?: number
-          rarity?: string
-          required_vip?: number
-          sort_order?: number
-          sound_enabled?: boolean
-          sound_url?: string | null
-          thumb_url?: string | null
-          updated_at?: string
-          video_url?: string | null
-        }
-        Relationships: []
-      }
+          animation_url?: string | null;
+          available_from?: string | null;
+          available_until?: string | null;
+          category?: string;
+          created_at?: string;
+          display_scale?: number;
+          duration_ms?: number;
+          emoji?: string | null;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          is_seasonal?: boolean;
+          name?: string;
+          price?: number;
+          rarity?: string;
+          required_vip?: number;
+          sort_order?: number;
+          sound_enabled?: boolean;
+          sound_url?: string | null;
+          thumb_url?: string | null;
+          updated_at?: string;
+          video_url?: string | null;
+        };
+        Relationships: [];
+      };
       lucky_bag_claims: {
         Row: {
-          amount: number
-          bag_id: string
-          created_at: string
-          id: string
-          user_id: string
-        }
+          amount: number;
+          bag_id: string;
+          created_at: string;
+          id: string;
+          user_id: string;
+        };
         Insert: {
-          amount: number
-          bag_id: string
-          created_at?: string
-          id?: string
-          user_id: string
-        }
+          amount: number;
+          bag_id: string;
+          created_at?: string;
+          id?: string;
+          user_id: string;
+        };
         Update: {
-          amount?: number
-          bag_id?: string
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
+          amount?: number;
+          bag_id?: string;
+          created_at?: string;
+          id?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "lucky_bag_claims_bag_id_fkey"
-            columns: ["bag_id"]
-            isOneToOne: false
-            referencedRelation: "lucky_bags"
-            referencedColumns: ["id"]
+            foreignKeyName: "lucky_bag_claims_bag_id_fkey";
+            columns: ["bag_id"];
+            isOneToOne: false;
+            referencedRelation: "lucky_bags";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       lucky_bags: {
         Row: {
-          claimed_count: number
-          created_at: string
-          expires_at: string
-          id: string
-          message: string | null
-          remaining_amount: number
-          room_id: string
-          sender_id: string
-          status: string
-          total_amount: number
-          winners_count: number
-        }
+          claimed_count: number;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          message: string | null;
+          remaining_amount: number;
+          room_id: string;
+          sender_id: string;
+          status: string;
+          total_amount: number;
+          winners_count: number;
+        };
         Insert: {
-          claimed_count?: number
-          created_at?: string
-          expires_at?: string
-          id?: string
-          message?: string | null
-          remaining_amount: number
-          room_id: string
-          sender_id: string
-          status?: string
-          total_amount: number
-          winners_count: number
-        }
+          claimed_count?: number;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          message?: string | null;
+          remaining_amount: number;
+          room_id: string;
+          sender_id: string;
+          status?: string;
+          total_amount: number;
+          winners_count: number;
+        };
         Update: {
-          claimed_count?: number
-          created_at?: string
-          expires_at?: string
-          id?: string
-          message?: string | null
-          remaining_amount?: number
-          room_id?: string
-          sender_id?: string
-          status?: string
-          total_amount?: number
-          winners_count?: number
-        }
+          claimed_count?: number;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          message?: string | null;
+          remaining_amount?: number;
+          room_id?: string;
+          sender_id?: string;
+          status?: string;
+          total_amount?: number;
+          winners_count?: number;
+        };
         Relationships: [
           {
-            foreignKeyName: "lucky_bags_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "lucky_bags_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       message_reactions: {
         Row: {
-          created_at: string
-          emoji: string
-          id: string
-          message_id: string
-          updated_at: string
-          user_id: string
-        }
+          created_at: string;
+          emoji: string;
+          id: string;
+          message_id: string;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          emoji: string
-          id?: string
-          message_id: string
-          updated_at?: string
-          user_id: string
-        }
+          created_at?: string;
+          emoji: string;
+          id?: string;
+          message_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          emoji?: string
-          id?: string
-          message_id?: string
-          updated_at?: string
-          user_id?: string
-        }
+          created_at?: string;
+          emoji?: string;
+          id?: string;
+          message_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "message_reactions_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "direct_messages"
-            referencedColumns: ["id"]
+            foreignKeyName: "message_reactions_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "direct_messages";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "message_reactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "message_reactions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       mic_requests: {
         Row: {
-          created_at: string
-          id: string
-          room_id: string
-          seat_index: number | null
-          status: string
-          user_id: string
-        }
+          created_at: string;
+          id: string;
+          room_id: string;
+          seat_index: number | null;
+          status: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          room_id: string
-          seat_index?: number | null
-          status?: string
-          user_id: string
-        }
+          created_at?: string;
+          id?: string;
+          room_id: string;
+          seat_index?: number | null;
+          status?: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          room_id?: string
-          seat_index?: number | null
-          status?: string
-          user_id?: string
-        }
+          created_at?: string;
+          id?: string;
+          room_id?: string;
+          seat_index?: number | null;
+          status?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "mic_requests_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "mic_requests_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       notifications: {
         Row: {
-          body: string | null
-          created_at: string
-          id: string
-          kind: string
-          metadata: Json | null
-          read_at: string | null
-          title: string
-          user_id: string
-        }
+          body: string | null;
+          created_at: string;
+          id: string;
+          kind: string;
+          metadata: Json | null;
+          read_at: string | null;
+          title: string;
+          user_id: string;
+        };
         Insert: {
-          body?: string | null
-          created_at?: string
-          id?: string
-          kind: string
-          metadata?: Json | null
-          read_at?: string | null
-          title: string
-          user_id: string
-        }
+          body?: string | null;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          metadata?: Json | null;
+          read_at?: string | null;
+          title: string;
+          user_id: string;
+        };
         Update: {
-          body?: string | null
-          created_at?: string
-          id?: string
-          kind?: string
-          metadata?: Json | null
-          read_at?: string | null
-          title?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          body?: string | null;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          metadata?: Json | null;
+          read_at?: string | null;
+          title?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       platform_revenue: {
         Row: {
-          amount: number
-          created_at: string
-          from_user: string | null
-          id: string
-          reference: string | null
-          source: string
-          to_user: string | null
-        }
+          amount: number;
+          created_at: string;
+          from_user: string | null;
+          id: string;
+          reference: string | null;
+          source: string;
+          to_user: string | null;
+        };
         Insert: {
-          amount: number
-          created_at?: string
-          from_user?: string | null
-          id?: string
-          reference?: string | null
-          source: string
-          to_user?: string | null
-        }
+          amount: number;
+          created_at?: string;
+          from_user?: string | null;
+          id?: string;
+          reference?: string | null;
+          source: string;
+          to_user?: string | null;
+        };
         Update: {
-          amount?: number
-          created_at?: string
-          from_user?: string | null
-          id?: string
-          reference?: string | null
-          source?: string
-          to_user?: string | null
-        }
-        Relationships: []
-      }
+          amount?: number;
+          created_at?: string;
+          from_user?: string | null;
+          id?: string;
+          reference?: string | null;
+          source?: string;
+          to_user?: string | null;
+        };
+        Relationships: [];
+      };
       profile_gift_totals: {
         Row: {
-          gift_id: string
-          quantity: number
-          total_value: number
-          updated_at: string
-          user_id: string
-        }
+          gift_id: string;
+          quantity: number;
+          total_value: number;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          gift_id: string
-          quantity?: number
-          total_value?: number
-          updated_at?: string
-          user_id: string
-        }
+          gift_id: string;
+          quantity?: number;
+          total_value?: number;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          gift_id?: string
-          quantity?: number
-          total_value?: number
-          updated_at?: string
-          user_id?: string
-        }
+          gift_id?: string;
+          quantity?: number;
+          total_value?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "profile_gift_totals_gift_id_fkey"
-            columns: ["gift_id"]
-            isOneToOne: false
-            referencedRelation: "gifts"
-            referencedColumns: ["id"]
+            foreignKeyName: "profile_gift_totals_gift_id_fkey";
+            columns: ["gift_id"];
+            isOneToOne: false;
+            referencedRelation: "gifts";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       profile_visits: {
         Row: {
-          created_at: string
-          id: string
-          profile_id: string
-          updated_at: string
-          visitor_id: string
-        }
+          created_at: string;
+          id: string;
+          profile_id: string;
+          updated_at: string;
+          visitor_id: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          profile_id: string
-          updated_at?: string
-          visitor_id: string
-        }
+          created_at?: string;
+          id?: string;
+          profile_id: string;
+          updated_at?: string;
+          visitor_id: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          profile_id?: string
-          updated_at?: string
-          visitor_id?: string
-        }
+          created_at?: string;
+          id?: string;
+          profile_id?: string;
+          updated_at?: string;
+          visitor_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "profile_visits_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "profile_visits_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "profile_visits_visitor_id_fkey"
-            columns: ["visitor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "profile_visits_visitor_id_fkey";
+            columns: ["visitor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       profiles: {
         Row: {
-          avatar_url: string | null
-          bio: string | null
-          birth_date: string | null
-          city: string | null
-          country: string | null
-          created_at: string
-          cvip_expires_at: string | null
-          cvip_level: number
-          display_name: string
-          frame_url: string | null
-          gender: Database["public"]["Enums"]["gender_type"] | null
-          id: string
-          is_cvip: boolean
-          is_online: boolean
-          is_suspended: boolean
-          last_seen: string
-          level: number
-          mic_decoration_url: string | null
-          name_color: string | null
-          profile_background_url: string | null
-          public_id: string
-          status_text: string | null
-          updated_at: string
-          vip_expires_at: string | null
-          vip_level: number
-          xp: number
-        }
+          avatar_url: string | null;
+          bio: string | null;
+          birth_date: string | null;
+          city: string | null;
+          country: string | null;
+          created_at: string;
+          cvip_expires_at: string | null;
+          cvip_level: number;
+          display_name: string;
+          frame_url: string | null;
+          gender: Database["public"]["Enums"]["gender_type"] | null;
+          id: string;
+          is_cvip: boolean;
+          is_online: boolean;
+          is_suspended: boolean;
+          last_seen: string;
+          level: number;
+          mic_decoration_url: string | null;
+          name_color: string | null;
+          profile_background_url: string | null;
+          public_id: string;
+          status_text: string | null;
+          updated_at: string;
+          vip_expires_at: string | null;
+          vip_level: number;
+          xp: number;
+        };
         Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          birth_date?: string | null
-          city?: string | null
-          country?: string | null
-          created_at?: string
-          cvip_expires_at?: string | null
-          cvip_level?: number
-          display_name: string
-          frame_url?: string | null
-          gender?: Database["public"]["Enums"]["gender_type"] | null
-          id: string
-          is_cvip?: boolean
-          is_online?: boolean
-          is_suspended?: boolean
-          last_seen?: string
-          level?: number
-          mic_decoration_url?: string | null
-          name_color?: string | null
-          profile_background_url?: string | null
-          public_id: string
-          status_text?: string | null
-          updated_at?: string
-          vip_expires_at?: string | null
-          vip_level?: number
-          xp?: number
-        }
+          avatar_url?: string | null;
+          bio?: string | null;
+          birth_date?: string | null;
+          city?: string | null;
+          country?: string | null;
+          created_at?: string;
+          cvip_expires_at?: string | null;
+          cvip_level?: number;
+          display_name: string;
+          frame_url?: string | null;
+          gender?: Database["public"]["Enums"]["gender_type"] | null;
+          id: string;
+          is_cvip?: boolean;
+          is_online?: boolean;
+          is_suspended?: boolean;
+          last_seen?: string;
+          level?: number;
+          mic_decoration_url?: string | null;
+          name_color?: string | null;
+          profile_background_url?: string | null;
+          public_id: string;
+          status_text?: string | null;
+          updated_at?: string;
+          vip_expires_at?: string | null;
+          vip_level?: number;
+          xp?: number;
+        };
         Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          birth_date?: string | null
-          city?: string | null
-          country?: string | null
-          created_at?: string
-          cvip_expires_at?: string | null
-          cvip_level?: number
-          display_name?: string
-          frame_url?: string | null
-          gender?: Database["public"]["Enums"]["gender_type"] | null
-          id?: string
-          is_cvip?: boolean
-          is_online?: boolean
-          is_suspended?: boolean
-          last_seen?: string
-          level?: number
-          mic_decoration_url?: string | null
-          name_color?: string | null
-          profile_background_url?: string | null
-          public_id?: string
-          status_text?: string | null
-          updated_at?: string
-          vip_expires_at?: string | null
-          vip_level?: number
-          xp?: number
-        }
-        Relationships: []
-      }
+          avatar_url?: string | null;
+          bio?: string | null;
+          birth_date?: string | null;
+          city?: string | null;
+          country?: string | null;
+          created_at?: string;
+          cvip_expires_at?: string | null;
+          cvip_level?: number;
+          display_name?: string;
+          frame_url?: string | null;
+          gender?: Database["public"]["Enums"]["gender_type"] | null;
+          id?: string;
+          is_cvip?: boolean;
+          is_online?: boolean;
+          is_suspended?: boolean;
+          last_seen?: string;
+          level?: number;
+          mic_decoration_url?: string | null;
+          name_color?: string | null;
+          profile_background_url?: string | null;
+          public_id?: string;
+          status_text?: string | null;
+          updated_at?: string;
+          vip_expires_at?: string | null;
+          vip_level?: number;
+          xp?: number;
+        };
+        Relationships: [];
+      };
       quiz_questions: {
         Row: {
-          choices: Json
-          correct_index: number
-          created_at: string
-          difficulty: number
-          id: string
-          is_active: boolean
-          question: string
-          updated_at: string
-        }
+          choices: Json;
+          correct_index: number;
+          created_at: string;
+          difficulty: number;
+          id: string;
+          is_active: boolean;
+          question: string;
+          updated_at: string;
+        };
         Insert: {
-          choices: Json
-          correct_index: number
-          created_at?: string
-          difficulty?: number
-          id?: string
-          is_active?: boolean
-          question: string
-          updated_at?: string
-        }
+          choices: Json;
+          correct_index: number;
+          created_at?: string;
+          difficulty?: number;
+          id?: string;
+          is_active?: boolean;
+          question: string;
+          updated_at?: string;
+        };
         Update: {
-          choices?: Json
-          correct_index?: number
-          created_at?: string
-          difficulty?: number
-          id?: string
-          is_active?: boolean
-          question?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          choices?: Json;
+          correct_index?: number;
+          created_at?: string;
+          difficulty?: number;
+          id?: string;
+          is_active?: boolean;
+          question?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       referrals: {
         Row: {
-          coins_invitee: number
-          coins_inviter: number
-          created_at: string
-          id: string
-          invitee_id: string
-          inviter_id: string
-        }
+          coins_invitee: number;
+          coins_inviter: number;
+          created_at: string;
+          id: string;
+          invitee_id: string;
+          inviter_id: string;
+        };
         Insert: {
-          coins_invitee?: number
-          coins_inviter?: number
-          created_at?: string
-          id?: string
-          invitee_id: string
-          inviter_id: string
-        }
+          coins_invitee?: number;
+          coins_inviter?: number;
+          created_at?: string;
+          id?: string;
+          invitee_id: string;
+          inviter_id: string;
+        };
         Update: {
-          coins_invitee?: number
-          coins_inviter?: number
-          created_at?: string
-          id?: string
-          invitee_id?: string
-          inviter_id?: string
-        }
-        Relationships: []
-      }
+          coins_invitee?: number;
+          coins_inviter?: number;
+          created_at?: string;
+          id?: string;
+          invitee_id?: string;
+          inviter_id?: string;
+        };
+        Relationships: [];
+      };
       relationship_points_log: {
         Row: {
-          amount: number
-          created_at: string
-          from_user: string
-          id: string
-          level_after: number
-          points: number
-          relationship_id: string
-          to_user: string
-        }
+          amount: number;
+          created_at: string;
+          from_user: string;
+          id: string;
+          level_after: number;
+          points: number;
+          relationship_id: string;
+          to_user: string;
+        };
         Insert: {
-          amount: number
-          created_at?: string
-          from_user: string
-          id?: string
-          level_after: number
-          points: number
-          relationship_id: string
-          to_user: string
-        }
+          amount: number;
+          created_at?: string;
+          from_user: string;
+          id?: string;
+          level_after: number;
+          points: number;
+          relationship_id: string;
+          to_user: string;
+        };
         Update: {
-          amount?: number
-          created_at?: string
-          from_user?: string
-          id?: string
-          level_after?: number
-          points?: number
-          relationship_id?: string
-          to_user?: string
-        }
+          amount?: number;
+          created_at?: string;
+          from_user?: string;
+          id?: string;
+          level_after?: number;
+          points?: number;
+          relationship_id?: string;
+          to_user?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "relationship_points_log_relationship_id_fkey"
-            columns: ["relationship_id"]
-            isOneToOne: false
-            referencedRelation: "relationships"
-            referencedColumns: ["id"]
+            foreignKeyName: "relationship_points_log_relationship_id_fkey";
+            columns: ["relationship_id"];
+            isOneToOne: false;
+            referencedRelation: "relationships";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       relationships: {
         Row: {
-          created_at: string
-          ended_at: string | null
-          id: string
-          last_level_at: string | null
-          level: number
-          partner_id: string
-          points: number
-          requester_id: string
-          started_at: string | null
-          status: string
-          type: Database["public"]["Enums"]["relation_type"]
-          updated_at: string
-        }
+          created_at: string;
+          ended_at: string | null;
+          id: string;
+          last_level_at: string | null;
+          level: number;
+          partner_id: string;
+          points: number;
+          requester_id: string;
+          started_at: string | null;
+          status: string;
+          type: Database["public"]["Enums"]["relation_type"];
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          ended_at?: string | null
-          id?: string
-          last_level_at?: string | null
-          level?: number
-          partner_id: string
-          points?: number
-          requester_id: string
-          started_at?: string | null
-          status?: string
-          type: Database["public"]["Enums"]["relation_type"]
-          updated_at?: string
-        }
+          created_at?: string;
+          ended_at?: string | null;
+          id?: string;
+          last_level_at?: string | null;
+          level?: number;
+          partner_id: string;
+          points?: number;
+          requester_id: string;
+          started_at?: string | null;
+          status?: string;
+          type: Database["public"]["Enums"]["relation_type"];
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          ended_at?: string | null
-          id?: string
-          last_level_at?: string | null
-          level?: number
-          partner_id?: string
-          points?: number
-          requester_id?: string
-          started_at?: string | null
-          status?: string
-          type?: Database["public"]["Enums"]["relation_type"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          ended_at?: string | null;
+          id?: string;
+          last_level_at?: string | null;
+          level?: number;
+          partner_id?: string;
+          points?: number;
+          requester_id?: string;
+          started_at?: string | null;
+          status?: string;
+          type?: Database["public"]["Enums"]["relation_type"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       reports: {
         Row: {
-          created_at: string
-          details: string | null
-          id: string
-          reason: string
-          reporter_id: string
-          status: string
-          target_id: string
-          target_type: string
-        }
+          created_at: string;
+          details: string | null;
+          id: string;
+          reason: string;
+          reporter_id: string;
+          status: string;
+          target_id: string;
+          target_type: string;
+        };
         Insert: {
-          created_at?: string
-          details?: string | null
-          id?: string
-          reason: string
-          reporter_id: string
-          status?: string
-          target_id: string
-          target_type: string
-        }
+          created_at?: string;
+          details?: string | null;
+          id?: string;
+          reason: string;
+          reporter_id: string;
+          status?: string;
+          target_id: string;
+          target_type: string;
+        };
         Update: {
-          created_at?: string
-          details?: string | null
-          id?: string
-          reason?: string
-          reporter_id?: string
-          status?: string
-          target_id?: string
-          target_type?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          details?: string | null;
+          id?: string;
+          reason?: string;
+          reporter_id?: string;
+          status?: string;
+          target_id?: string;
+          target_type?: string;
+        };
+        Relationships: [];
+      };
       room_activities: {
         Row: {
-          created_at: string
-          created_by: string
-          description: string | null
-          duration_minutes: number
-          id: string
-          kind: string
-          room_id: string
-          starts_at: string
-          status: string
-          title: string
-          updated_at: string
-        }
+          created_at: string;
+          created_by: string;
+          description: string | null;
+          duration_minutes: number;
+          id: string;
+          kind: string;
+          room_id: string;
+          starts_at: string;
+          status: string;
+          title: string;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          created_by: string
-          description?: string | null
-          duration_minutes?: number
-          id?: string
-          kind?: string
-          room_id: string
-          starts_at?: string
-          status?: string
-          title: string
-          updated_at?: string
-        }
+          created_at?: string;
+          created_by: string;
+          description?: string | null;
+          duration_minutes?: number;
+          id?: string;
+          kind?: string;
+          room_id: string;
+          starts_at?: string;
+          status?: string;
+          title: string;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          created_by?: string
-          description?: string | null
-          duration_minutes?: number
-          id?: string
-          kind?: string
-          room_id?: string
-          starts_at?: string
-          status?: string
-          title?: string
-          updated_at?: string
-        }
+          created_at?: string;
+          created_by?: string;
+          description?: string | null;
+          duration_minutes?: number;
+          id?: string;
+          kind?: string;
+          room_id?: string;
+          starts_at?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_activities_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_activities_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_members: {
         Row: {
-          id: string
-          is_muted: boolean
-          joined_at: string
-          room_id: string
-          user_id: string
-        }
+          id: string;
+          is_muted: boolean;
+          joined_at: string;
+          room_id: string;
+          user_id: string;
+        };
         Insert: {
-          id?: string
-          is_muted?: boolean
-          joined_at?: string
-          room_id: string
-          user_id: string
-        }
+          id?: string;
+          is_muted?: boolean;
+          joined_at?: string;
+          room_id: string;
+          user_id: string;
+        };
         Update: {
-          id?: string
-          is_muted?: boolean
-          joined_at?: string
-          room_id?: string
-          user_id?: string
-        }
+          id?: string;
+          is_muted?: boolean;
+          joined_at?: string;
+          room_id?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_members_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_members_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_messages: {
         Row: {
-          body: string
-          created_at: string
-          id: string
-          kind: string
-          metadata: Json | null
-          room_id: string
-          user_id: string
-        }
+          body: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          metadata: Json | null;
+          room_id: string;
+          user_id: string;
+        };
         Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          kind?: string
-          metadata?: Json | null
-          room_id: string
-          user_id: string
-        }
+          body: string;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          metadata?: Json | null;
+          room_id: string;
+          user_id: string;
+        };
         Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          kind?: string
-          metadata?: Json | null
-          room_id?: string
-          user_id?: string
-        }
+          body?: string;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          metadata?: Json | null;
+          room_id?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_messages_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_messages_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_mics: {
         Row: {
-          decoration_url: string | null
-          id: string
-          is_locked: boolean
-          is_muted: boolean
-          room_id: string
-          seat_index: number
-          updated_at: string
-          user_id: string | null
-        }
+          decoration_url: string | null;
+          id: string;
+          is_locked: boolean;
+          is_muted: boolean;
+          room_id: string;
+          seat_index: number;
+          updated_at: string;
+          user_id: string | null;
+        };
         Insert: {
-          decoration_url?: string | null
-          id?: string
-          is_locked?: boolean
-          is_muted?: boolean
-          room_id: string
-          seat_index: number
-          updated_at?: string
-          user_id?: string | null
-        }
+          decoration_url?: string | null;
+          id?: string;
+          is_locked?: boolean;
+          is_muted?: boolean;
+          room_id: string;
+          seat_index: number;
+          updated_at?: string;
+          user_id?: string | null;
+        };
         Update: {
-          decoration_url?: string | null
-          id?: string
-          is_locked?: boolean
-          is_muted?: boolean
-          room_id?: string
-          seat_index?: number
-          updated_at?: string
-          user_id?: string | null
-        }
+          decoration_url?: string | null;
+          id?: string;
+          is_locked?: boolean;
+          is_muted?: boolean;
+          room_id?: string;
+          seat_index?: number;
+          updated_at?: string;
+          user_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_mics_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_mics_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_moderators: {
         Row: {
-          created_at: string
-          id: string
-          room_id: string
-          user_id: string
-        }
+          created_at: string;
+          id: string;
+          room_id: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          room_id: string
-          user_id: string
-        }
+          created_at?: string;
+          id?: string;
+          room_id: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          room_id?: string
-          user_id?: string
-        }
+          created_at?: string;
+          id?: string;
+          room_id?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_moderators_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_moderators_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_ratings: {
         Row: {
-          created_at: string
-          id: string
-          room_id: string
-          stars: number
-          updated_at: string
-          user_id: string
-        }
+          created_at: string;
+          id: string;
+          room_id: string;
+          stars: number;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          room_id: string
-          stars: number
-          updated_at?: string
-          user_id: string
-        }
+          created_at?: string;
+          id?: string;
+          room_id: string;
+          stars: number;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          room_id?: string
-          stars?: number
-          updated_at?: string
-          user_id?: string
-        }
+          created_at?: string;
+          id?: string;
+          room_id?: string;
+          stars?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_ratings_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_ratings_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "room_ratings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_ratings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_reward_payouts: {
         Row: {
-          coins: number
-          created_at: string
-          id: string
-          role: string
-          room_id: string
-          user_id: string
-          week_id: string
-        }
+          coins: number;
+          created_at: string;
+          id: string;
+          role: string;
+          room_id: string;
+          user_id: string;
+          week_id: string;
+        };
         Insert: {
-          coins?: number
-          created_at?: string
-          id?: string
-          role: string
-          room_id: string
-          user_id: string
-          week_id: string
-        }
+          coins?: number;
+          created_at?: string;
+          id?: string;
+          role: string;
+          room_id: string;
+          user_id: string;
+          week_id: string;
+        };
         Update: {
-          coins?: number
-          created_at?: string
-          id?: string
-          role?: string
-          room_id?: string
-          user_id?: string
-          week_id?: string
-        }
+          coins?: number;
+          created_at?: string;
+          id?: string;
+          role?: string;
+          room_id?: string;
+          user_id?: string;
+          week_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_reward_payouts_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_reward_payouts_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "room_reward_payouts_week_id_fkey"
-            columns: ["week_id"]
-            isOneToOne: false
-            referencedRelation: "room_reward_weeks"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_reward_payouts_week_id_fkey";
+            columns: ["week_id"];
+            isOneToOne: false;
+            referencedRelation: "room_reward_weeks";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_reward_weeks: {
         Row: {
-          admin_coins: number
-          created_at: string
-          id: string
-          owner_coins: number
-          revenue: number
-          room_id: string
-          settled_at: string
-          status: string
-          week_start: string
-        }
+          admin_coins: number;
+          created_at: string;
+          id: string;
+          owner_coins: number;
+          revenue: number;
+          room_id: string;
+          settled_at: string;
+          status: string;
+          week_start: string;
+        };
         Insert: {
-          admin_coins?: number
-          created_at?: string
-          id?: string
-          owner_coins?: number
-          revenue?: number
-          room_id: string
-          settled_at?: string
-          status?: string
-          week_start: string
-        }
+          admin_coins?: number;
+          created_at?: string;
+          id?: string;
+          owner_coins?: number;
+          revenue?: number;
+          room_id: string;
+          settled_at?: string;
+          status?: string;
+          week_start: string;
+        };
         Update: {
-          admin_coins?: number
-          created_at?: string
-          id?: string
-          owner_coins?: number
-          revenue?: number
-          room_id?: string
-          settled_at?: string
-          status?: string
-          week_start?: string
-        }
+          admin_coins?: number;
+          created_at?: string;
+          id?: string;
+          owner_coins?: number;
+          revenue?: number;
+          room_id?: string;
+          settled_at?: string;
+          status?: string;
+          week_start?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_reward_weeks_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_reward_weeks_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_support_registrations: {
         Row: {
-          admin_ids: string[]
-          created_at: string
-          id: string
-          registered_by: string
-          room_id: string
-          status: string
-          updated_at: string
-        }
+          admin_ids: string[];
+          created_at: string;
+          id: string;
+          registered_by: string;
+          room_id: string;
+          status: string;
+          updated_at: string;
+        };
         Insert: {
-          admin_ids?: string[]
-          created_at?: string
-          id?: string
-          registered_by: string
-          room_id: string
-          status?: string
-          updated_at?: string
-        }
+          admin_ids?: string[];
+          created_at?: string;
+          id?: string;
+          registered_by: string;
+          room_id: string;
+          status?: string;
+          updated_at?: string;
+        };
         Update: {
-          admin_ids?: string[]
-          created_at?: string
-          id?: string
-          registered_by?: string
-          room_id?: string
-          status?: string
-          updated_at?: string
-        }
+          admin_ids?: string[];
+          created_at?: string;
+          id?: string;
+          registered_by?: string;
+          room_id?: string;
+          status?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_support_registrations_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: true
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_support_registrations_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: true;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_treasure: {
         Row: {
-          created_at: string
-          last_opened_at: string | null
-          level: number
-          progress: number
-          room_id: string
-          total_opened: number
-          updated_at: string
-        }
+          created_at: string;
+          last_opened_at: string | null;
+          level: number;
+          progress: number;
+          room_id: string;
+          total_opened: number;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          last_opened_at?: string | null
-          level?: number
-          progress?: number
-          room_id: string
-          total_opened?: number
-          updated_at?: string
-        }
+          created_at?: string;
+          last_opened_at?: string | null;
+          level?: number;
+          progress?: number;
+          room_id: string;
+          total_opened?: number;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          last_opened_at?: string | null
-          level?: number
-          progress?: number
-          room_id?: string
-          total_opened?: number
-          updated_at?: string
-        }
+          created_at?: string;
+          last_opened_at?: string | null;
+          level?: number;
+          progress?: number;
+          room_id?: string;
+          total_opened?: number;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_treasure_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: true
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_treasure_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: true;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_treasure_contribs: {
         Row: {
-          amount: number
-          room_id: string
-          updated_at: string
-          user_id: string
-        }
+          amount: number;
+          room_id: string;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          amount?: number
-          room_id: string
-          updated_at?: string
-          user_id: string
-        }
+          amount?: number;
+          room_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          amount?: number
-          room_id?: string
-          updated_at?: string
-          user_id?: string
-        }
+          amount?: number;
+          room_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_treasure_contribs_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_treasure_contribs_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_treasure_opens: {
         Row: {
-          created_at: string
-          id: string
-          level: number
-          room_id: string
-          target: number
-          total_prize: number
-          winners: number
-        }
+          created_at: string;
+          id: string;
+          level: number;
+          room_id: string;
+          target: number;
+          total_prize: number;
+          winners: number;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          level: number
-          room_id: string
-          target: number
-          total_prize?: number
-          winners?: number
-        }
+          created_at?: string;
+          id?: string;
+          level: number;
+          room_id: string;
+          target: number;
+          total_prize?: number;
+          winners?: number;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          level?: number
-          room_id?: string
-          target?: number
-          total_prize?: number
-          winners?: number
-        }
+          created_at?: string;
+          id?: string;
+          level?: number;
+          room_id?: string;
+          target?: number;
+          total_prize?: number;
+          winners?: number;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_treasure_opens_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_treasure_opens_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       room_treasure_payouts: {
         Row: {
-          coins: number
-          contribution: number
-          created_at: string
-          id: string
-          open_id: string
-          rank: number
-          room_id: string
-          user_id: string
-        }
+          coins: number;
+          contribution: number;
+          created_at: string;
+          id: string;
+          open_id: string;
+          rank: number;
+          room_id: string;
+          user_id: string;
+        };
         Insert: {
-          coins?: number
-          contribution?: number
-          created_at?: string
-          id?: string
-          open_id: string
-          rank: number
-          room_id: string
-          user_id: string
-        }
+          coins?: number;
+          contribution?: number;
+          created_at?: string;
+          id?: string;
+          open_id: string;
+          rank: number;
+          room_id: string;
+          user_id: string;
+        };
         Update: {
-          coins?: number
-          contribution?: number
-          created_at?: string
-          id?: string
-          open_id?: string
-          rank?: number
-          room_id?: string
-          user_id?: string
-        }
+          coins?: number;
+          contribution?: number;
+          created_at?: string;
+          id?: string;
+          open_id?: string;
+          rank?: number;
+          room_id?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "room_treasure_payouts_open_id_fkey"
-            columns: ["open_id"]
-            isOneToOne: false
-            referencedRelation: "room_treasure_opens"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_treasure_payouts_open_id_fkey";
+            columns: ["open_id"];
+            isOneToOne: false;
+            referencedRelation: "room_treasure_opens";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "room_treasure_payouts_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "room_treasure_payouts_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       rooms: {
         Row: {
-          background_url: string | null
-          category: string
-          chat_locked: boolean
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          is_active: boolean
-          is_disabled: boolean
-          is_verified: boolean
-          max_users: number
-          member_count: number
-          mic_count: number
-          name: string
-          owner_id: string
-          password: string | null
-          popularity: number
-          room_code: string
-          room_type: Database["public"]["Enums"]["room_type"]
-          theme: string | null
-          theme_style: string
-          updated_at: string
-          xp: number
-        }
+          background_url: string | null;
+          category: string;
+          chat_locked: boolean;
+          created_at: string;
+          description: string | null;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          is_disabled: boolean;
+          is_verified: boolean;
+          max_users: number;
+          member_count: number;
+          mic_count: number;
+          name: string;
+          owner_id: string;
+          password: string | null;
+          popularity: number;
+          room_code: string;
+          room_type: Database["public"]["Enums"]["room_type"];
+          theme: string | null;
+          theme_style: string;
+          updated_at: string;
+          xp: number;
+        };
         Insert: {
-          background_url?: string | null
-          category?: string
-          chat_locked?: boolean
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          is_disabled?: boolean
-          is_verified?: boolean
-          max_users?: number
-          member_count?: number
-          mic_count?: number
-          name: string
-          owner_id: string
-          password?: string | null
-          popularity?: number
-          room_code: string
-          room_type?: Database["public"]["Enums"]["room_type"]
-          theme?: string | null
-          theme_style?: string
-          updated_at?: string
-          xp?: number
-        }
+          background_url?: string | null;
+          category?: string;
+          chat_locked?: boolean;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          is_disabled?: boolean;
+          is_verified?: boolean;
+          max_users?: number;
+          member_count?: number;
+          mic_count?: number;
+          name: string;
+          owner_id: string;
+          password?: string | null;
+          popularity?: number;
+          room_code: string;
+          room_type?: Database["public"]["Enums"]["room_type"];
+          theme?: string | null;
+          theme_style?: string;
+          updated_at?: string;
+          xp?: number;
+        };
         Update: {
-          background_url?: string | null
-          category?: string
-          chat_locked?: boolean
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          is_disabled?: boolean
-          is_verified?: boolean
-          max_users?: number
-          member_count?: number
-          mic_count?: number
-          name?: string
-          owner_id?: string
-          password?: string | null
-          popularity?: number
-          room_code?: string
-          room_type?: Database["public"]["Enums"]["room_type"]
-          theme?: string | null
-          theme_style?: string
-          updated_at?: string
-          xp?: number
-        }
-        Relationships: []
-      }
+          background_url?: string | null;
+          category?: string;
+          chat_locked?: boolean;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          is_disabled?: boolean;
+          is_verified?: boolean;
+          max_users?: number;
+          member_count?: number;
+          mic_count?: number;
+          name?: string;
+          owner_id?: string;
+          password?: string | null;
+          popularity?: number;
+          room_code?: string;
+          room_type?: Database["public"]["Enums"]["room_type"];
+          theme?: string | null;
+          theme_style?: string;
+          updated_at?: string;
+          xp?: number;
+        };
+        Relationships: [];
+      };
       store_items: {
         Row: {
-          art_key: string | null
-          category: string
-          created_at: string
-          description: string | null
-          duration_days: number | null
-          id: string
-          image_url: string | null
-          is_active: boolean
-          name: string
-          price: number
-          rarity: string
-          required_vip: number
-          updated_at: string
-        }
+          art_key: string | null;
+          category: string;
+          created_at: string;
+          description: string | null;
+          duration_days: number | null;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          name: string;
+          price: number;
+          rarity: string;
+          required_vip: number;
+          updated_at: string;
+        };
         Insert: {
-          art_key?: string | null
-          category: string
-          created_at?: string
-          description?: string | null
-          duration_days?: number | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          name: string
-          price?: number
-          rarity?: string
-          required_vip?: number
-          updated_at?: string
-        }
+          art_key?: string | null;
+          category: string;
+          created_at?: string;
+          description?: string | null;
+          duration_days?: number | null;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          name: string;
+          price?: number;
+          rarity?: string;
+          required_vip?: number;
+          updated_at?: string;
+        };
         Update: {
-          art_key?: string | null
-          category?: string
-          created_at?: string
-          description?: string | null
-          duration_days?: number | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          name?: string
-          price?: number
-          rarity?: string
-          required_vip?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          art_key?: string | null;
+          category?: string;
+          created_at?: string;
+          description?: string | null;
+          duration_days?: number | null;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          name?: string;
+          price?: number;
+          rarity?: string;
+          required_vip?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       supercar_bets: {
         Row: {
-          amount: number
-          created_at: string
-          id: string
-          payout: number
-          room_id: string | null
-          round_id: string
-          slot_key: string
-          user_id: string
-        }
+          amount: number;
+          created_at: string;
+          id: string;
+          payout: number;
+          room_id: string | null;
+          round_id: string;
+          slot_key: string;
+          user_id: string;
+        };
         Insert: {
-          amount: number
-          created_at?: string
-          id?: string
-          payout?: number
-          room_id?: string | null
-          round_id: string
-          slot_key: string
-          user_id: string
-        }
+          amount: number;
+          created_at?: string;
+          id?: string;
+          payout?: number;
+          room_id?: string | null;
+          round_id: string;
+          slot_key: string;
+          user_id: string;
+        };
         Update: {
-          amount?: number
-          created_at?: string
-          id?: string
-          payout?: number
-          room_id?: string | null
-          round_id?: string
-          slot_key?: string
-          user_id?: string
-        }
+          amount?: number;
+          created_at?: string;
+          id?: string;
+          payout?: number;
+          room_id?: string | null;
+          round_id?: string;
+          slot_key?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "supercar_bets_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "supercar_bets_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "supercar_bets_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "supercar_rounds"
-            referencedColumns: ["id"]
+            foreignKeyName: "supercar_bets_round_id_fkey";
+            columns: ["round_id"];
+            isOneToOne: false;
+            referencedRelation: "supercar_rounds";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       supercar_rounds: {
         Row: {
-          attempts: number
-          created_at: string
-          ends_at: string
-          id: string
-          last_error: string | null
-          processing_started_at: string | null
-          round_no: number
-          session_id: string | null
-          session_round_no: number | null
-          settled_at: string | null
-          slots: Json
-          started_at: string
-          status: string
-          total_amount: number
-          total_bets: number
-          total_payout: number
-          winning_key: string | null
-        }
+          attempts: number;
+          created_at: string;
+          ends_at: string;
+          id: string;
+          last_error: string | null;
+          processing_started_at: string | null;
+          round_no: number;
+          session_id: string | null;
+          session_round_no: number | null;
+          settled_at: string | null;
+          slots: Json;
+          started_at: string;
+          status: string;
+          total_amount: number;
+          total_bets: number;
+          total_payout: number;
+          winning_key: string | null;
+        };
         Insert: {
-          attempts?: number
-          created_at?: string
-          ends_at: string
-          id?: string
-          last_error?: string | null
-          processing_started_at?: string | null
-          round_no?: number
-          session_id?: string | null
-          session_round_no?: number | null
-          settled_at?: string | null
-          slots?: Json
-          started_at?: string
-          status?: string
-          total_amount?: number
-          total_bets?: number
-          total_payout?: number
-          winning_key?: string | null
-        }
+          attempts?: number;
+          created_at?: string;
+          ends_at: string;
+          id?: string;
+          last_error?: string | null;
+          processing_started_at?: string | null;
+          round_no?: number;
+          session_id?: string | null;
+          session_round_no?: number | null;
+          settled_at?: string | null;
+          slots?: Json;
+          started_at?: string;
+          status?: string;
+          total_amount?: number;
+          total_bets?: number;
+          total_payout?: number;
+          winning_key?: string | null;
+        };
         Update: {
-          attempts?: number
-          created_at?: string
-          ends_at?: string
-          id?: string
-          last_error?: string | null
-          processing_started_at?: string | null
-          round_no?: number
-          session_id?: string | null
-          session_round_no?: number | null
-          settled_at?: string | null
-          slots?: Json
-          started_at?: string
-          status?: string
-          total_amount?: number
-          total_bets?: number
-          total_payout?: number
-          winning_key?: string | null
-        }
+          attempts?: number;
+          created_at?: string;
+          ends_at?: string;
+          id?: string;
+          last_error?: string | null;
+          processing_started_at?: string | null;
+          round_no?: number;
+          session_id?: string | null;
+          session_round_no?: number | null;
+          settled_at?: string | null;
+          slots?: Json;
+          started_at?: string;
+          status?: string;
+          total_amount?: number;
+          total_bets?: number;
+          total_payout?: number;
+          winning_key?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "supercar_rounds_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "supercar_sessions"
-            referencedColumns: ["id"]
+            foreignKeyName: "supercar_rounds_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "supercar_sessions";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       supercar_sessions: {
         Row: {
-          created_at: string
-          ended_at: string | null
-          id: string
-          max_rounds: number
-          session_date: string
-          settled_at: string | null
-          started_at: string
-          status: string
-          total_rounds: number
-          updated_at: string
-        }
+          created_at: string;
+          ended_at: string | null;
+          id: string;
+          max_rounds: number;
+          session_date: string;
+          settled_at: string | null;
+          started_at: string;
+          status: string;
+          total_rounds: number;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          ended_at?: string | null
-          id?: string
-          max_rounds?: number
-          session_date: string
-          settled_at?: string | null
-          started_at?: string
-          status?: string
-          total_rounds?: number
-          updated_at?: string
-        }
+          created_at?: string;
+          ended_at?: string | null;
+          id?: string;
+          max_rounds?: number;
+          session_date: string;
+          settled_at?: string | null;
+          started_at?: string;
+          status?: string;
+          total_rounds?: number;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          ended_at?: string | null
-          id?: string
-          max_rounds?: number
-          session_date?: string
-          settled_at?: string | null
-          started_at?: string
-          status?: string
-          total_rounds?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          ended_at?: string | null;
+          id?: string;
+          max_rounds?: number;
+          session_date?: string;
+          settled_at?: string | null;
+          started_at?: string;
+          status?: string;
+          total_rounds?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       support_messages: {
         Row: {
-          body: string
-          created_at: string
-          id: string
-          is_staff: boolean
-          sender_id: string
-          ticket_id: string
-        }
+          body: string;
+          created_at: string;
+          id: string;
+          is_staff: boolean;
+          sender_id: string;
+          ticket_id: string;
+        };
         Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          is_staff?: boolean
-          sender_id: string
-          ticket_id: string
-        }
+          body: string;
+          created_at?: string;
+          id?: string;
+          is_staff?: boolean;
+          sender_id: string;
+          ticket_id: string;
+        };
         Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          is_staff?: boolean
-          sender_id?: string
-          ticket_id?: string
-        }
+          body?: string;
+          created_at?: string;
+          id?: string;
+          is_staff?: boolean;
+          sender_id?: string;
+          ticket_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "support_messages_ticket_id_fkey"
-            columns: ["ticket_id"]
-            isOneToOne: false
-            referencedRelation: "support_tickets"
-            referencedColumns: ["id"]
+            foreignKeyName: "support_messages_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "support_tickets";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       support_tickets: {
         Row: {
-          category: string
-          created_at: string
-          id: string
-          status: string
-          subject: string
-          updated_at: string
-          user_id: string
-        }
+          category: string;
+          created_at: string;
+          id: string;
+          status: string;
+          subject: string;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          category?: string
-          created_at?: string
-          id?: string
-          status?: string
-          subject: string
-          updated_at?: string
-          user_id: string
-        }
+          category?: string;
+          created_at?: string;
+          id?: string;
+          status?: string;
+          subject: string;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          category?: string
-          created_at?: string
-          id?: string
-          status?: string
-          subject?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          category?: string;
+          created_at?: string;
+          id?: string;
+          status?: string;
+          subject?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       task_claims: {
         Row: {
-          created_at: string
-          id: string
-          period_start: string
-          reward_coins: number
-          task_key: string
-          user_id: string
-        }
+          created_at: string;
+          id: string;
+          period_start: string;
+          reward_coins: number;
+          task_key: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          period_start: string
-          reward_coins?: number
-          task_key: string
-          user_id: string
-        }
+          created_at?: string;
+          id?: string;
+          period_start: string;
+          reward_coins?: number;
+          task_key: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          period_start?: string
-          reward_coins?: number
-          task_key?: string
-          user_id?: string
-        }
+          created_at?: string;
+          id?: string;
+          period_start?: string;
+          reward_coins?: number;
+          task_key?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "task_claims_task_key_fkey"
-            columns: ["task_key"]
-            isOneToOne: false
-            referencedRelation: "task_definitions"
-            referencedColumns: ["key"]
+            foreignKeyName: "task_claims_task_key_fkey";
+            columns: ["task_key"];
+            isOneToOne: false;
+            referencedRelation: "task_definitions";
+            referencedColumns: ["key"];
           },
-        ]
-      }
+        ];
+      };
       task_definitions: {
         Row: {
-          created_at: string
-          description: string
-          is_active: boolean
-          key: string
-          metric: string
-          period: string
-          reward_coins: number
-          sort_order: number
-          target: number
-          title: string
-        }
+          created_at: string;
+          description: string;
+          is_active: boolean;
+          key: string;
+          metric: string;
+          period: string;
+          reward_coins: number;
+          sort_order: number;
+          target: number;
+          title: string;
+        };
         Insert: {
-          created_at?: string
-          description?: string
-          is_active?: boolean
-          key: string
-          metric: string
-          period?: string
-          reward_coins?: number
-          sort_order?: number
-          target?: number
-          title: string
-        }
+          created_at?: string;
+          description?: string;
+          is_active?: boolean;
+          key: string;
+          metric: string;
+          period?: string;
+          reward_coins?: number;
+          sort_order?: number;
+          target?: number;
+          title: string;
+        };
         Update: {
-          created_at?: string
-          description?: string
-          is_active?: boolean
-          key?: string
-          metric?: string
-          period?: string
-          reward_coins?: number
-          sort_order?: number
-          target?: number
-          title?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          description?: string;
+          is_active?: boolean;
+          key?: string;
+          metric?: string;
+          period?: string;
+          reward_coins?: number;
+          sort_order?: number;
+          target?: number;
+          title?: string;
+        };
+        Relationships: [];
+      };
       user_badges: {
         Row: {
-          awarded_at: string
-          badge_id: string
-          id: string
-          progress: number
-          user_id: string
-        }
+          awarded_at: string;
+          badge_id: string;
+          id: string;
+          progress: number;
+          user_id: string;
+        };
         Insert: {
-          awarded_at?: string
-          badge_id: string
-          id?: string
-          progress?: number
-          user_id: string
-        }
+          awarded_at?: string;
+          badge_id: string;
+          id?: string;
+          progress?: number;
+          user_id: string;
+        };
         Update: {
-          awarded_at?: string
-          badge_id?: string
-          id?: string
-          progress?: number
-          user_id?: string
-        }
+          awarded_at?: string;
+          badge_id?: string;
+          id?: string;
+          progress?: number;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "user_badges_badge_id_fkey"
-            columns: ["badge_id"]
-            isOneToOne: false
-            referencedRelation: "badge_definitions"
-            referencedColumns: ["id"]
+            foreignKeyName: "user_badges_badge_id_fkey";
+            columns: ["badge_id"];
+            isOneToOne: false;
+            referencedRelation: "badge_definitions";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       user_items: {
         Row: {
-          created_at: string
-          expires_at: string | null
-          id: string
-          is_equipped: boolean
-          item_id: string
-          user_id: string
-        }
+          created_at: string;
+          expires_at: string | null;
+          id: string;
+          is_equipped: boolean;
+          item_id: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          is_equipped?: boolean
-          item_id: string
-          user_id: string
-        }
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          is_equipped?: boolean;
+          item_id: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          is_equipped?: boolean
-          item_id?: string
-          user_id?: string
-        }
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          is_equipped?: boolean;
+          item_id?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "user_items_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "store_items"
-            referencedColumns: ["id"]
+            foreignKeyName: "user_items_item_id_fkey";
+            columns: ["item_id"];
+            isOneToOne: false;
+            referencedRelation: "store_items";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       user_roles: {
         Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
+          created_at: string;
+          id: string;
+          role: Database["public"]["Enums"]["app_role"];
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
+          created_at?: string;
+          id?: string;
+          role: Database["public"]["Enums"]["app_role"];
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          id?: string;
+          role?: Database["public"]["Enums"]["app_role"];
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       vip_levels: {
         Row: {
-          badge_url: string | null
-          duration_days: number
-          entrance_animation: string | null
-          frame_url: string | null
-          is_active: boolean
-          level: number
-          mic_protection: number
-          name: string
-          name_effect: string | null
-          perks: Json
-          price: number
-          profile_effect: string | null
-          room_effect: string | null
-        }
+          badge_url: string | null;
+          duration_days: number;
+          entrance_animation: string | null;
+          frame_url: string | null;
+          is_active: boolean;
+          level: number;
+          mic_protection: number;
+          name: string;
+          name_effect: string | null;
+          perks: Json;
+          price: number;
+          profile_effect: string | null;
+          room_effect: string | null;
+        };
         Insert: {
-          badge_url?: string | null
-          duration_days?: number
-          entrance_animation?: string | null
-          frame_url?: string | null
-          is_active?: boolean
-          level: number
-          mic_protection?: number
-          name: string
-          name_effect?: string | null
-          perks?: Json
-          price: number
-          profile_effect?: string | null
-          room_effect?: string | null
-        }
+          badge_url?: string | null;
+          duration_days?: number;
+          entrance_animation?: string | null;
+          frame_url?: string | null;
+          is_active?: boolean;
+          level: number;
+          mic_protection?: number;
+          name: string;
+          name_effect?: string | null;
+          perks?: Json;
+          price: number;
+          profile_effect?: string | null;
+          room_effect?: string | null;
+        };
         Update: {
-          badge_url?: string | null
-          duration_days?: number
-          entrance_animation?: string | null
-          frame_url?: string | null
-          is_active?: boolean
-          level?: number
-          mic_protection?: number
-          name?: string
-          name_effect?: string | null
-          perks?: Json
-          price?: number
-          profile_effect?: string | null
-          room_effect?: string | null
-        }
-        Relationships: []
-      }
+          badge_url?: string | null;
+          duration_days?: number;
+          entrance_animation?: string | null;
+          frame_url?: string | null;
+          is_active?: boolean;
+          level?: number;
+          mic_protection?: number;
+          name?: string;
+          name_effect?: string | null;
+          perks?: Json;
+          price?: number;
+          profile_effect?: string | null;
+          room_effect?: string | null;
+        };
+        Relationships: [];
+      };
       weekly_rank_payouts: {
         Row: {
-          category: string
-          coins: number
-          created_at: string
-          id: string
-          rank: number
-          score: number
-          user_id: string
-          week_start: string
-        }
+          category: string;
+          coins: number;
+          created_at: string;
+          id: string;
+          rank: number;
+          score: number;
+          user_id: string;
+          week_start: string;
+        };
         Insert: {
-          category: string
-          coins?: number
-          created_at?: string
-          id?: string
-          rank: number
-          score?: number
-          user_id: string
-          week_start: string
-        }
+          category: string;
+          coins?: number;
+          created_at?: string;
+          id?: string;
+          rank: number;
+          score?: number;
+          user_id: string;
+          week_start: string;
+        };
         Update: {
-          category?: string
-          coins?: number
-          created_at?: string
-          id?: string
-          rank?: number
-          score?: number
-          user_id?: string
-          week_start?: string
-        }
-        Relationships: []
-      }
+          category?: string;
+          coins?: number;
+          created_at?: string;
+          id?: string;
+          rank?: number;
+          score?: number;
+          user_id?: string;
+          week_start?: string;
+        };
+        Relationships: [];
+      };
       weekly_rank_weeks: {
         Row: {
-          category: string
-          id: string
-          settled_at: string
-          week_start: string
-        }
+          category: string;
+          id: string;
+          settled_at: string;
+          week_start: string;
+        };
         Insert: {
-          category: string
-          id?: string
-          settled_at?: string
-          week_start: string
-        }
+          category: string;
+          id?: string;
+          settled_at?: string;
+          week_start: string;
+        };
         Update: {
-          category?: string
-          id?: string
-          settled_at?: string
-          week_start?: string
-        }
-        Relationships: []
-      }
+          category?: string;
+          id?: string;
+          settled_at?: string;
+          week_start?: string;
+        };
+        Relationships: [];
+      };
       welcome_claims: {
         Row: {
-          claimed_at: string
-          claimed_by: string | null
-          created_at: string
-          device_identifier: string | null
-          id: string
-          status: string
-          user_id: string
-          video_url: string | null
-          welcome_package: Json
-        }
+          claimed_at: string;
+          claimed_by: string | null;
+          created_at: string;
+          device_identifier: string | null;
+          id: string;
+          status: string;
+          user_id: string;
+          video_url: string | null;
+          welcome_package: Json;
+        };
         Insert: {
-          claimed_at?: string
-          claimed_by?: string | null
-          created_at?: string
-          device_identifier?: string | null
-          id?: string
-          status?: string
-          user_id: string
-          video_url?: string | null
-          welcome_package?: Json
-        }
+          claimed_at?: string;
+          claimed_by?: string | null;
+          created_at?: string;
+          device_identifier?: string | null;
+          id?: string;
+          status?: string;
+          user_id: string;
+          video_url?: string | null;
+          welcome_package?: Json;
+        };
         Update: {
-          claimed_at?: string
-          claimed_by?: string | null
-          created_at?: string
-          device_identifier?: string | null
-          id?: string
-          status?: string
-          user_id?: string
-          video_url?: string | null
-          welcome_package?: Json
-        }
-        Relationships: []
-      }
+          claimed_at?: string;
+          claimed_by?: string | null;
+          created_at?: string;
+          device_identifier?: string | null;
+          id?: string;
+          status?: string;
+          user_id?: string;
+          video_url?: string | null;
+          welcome_package?: Json;
+        };
+        Relationships: [];
+      };
       wheel_bets: {
         Row: {
-          amount: number
-          created_at: string
-          id: string
-          payout: number
-          room_id: string | null
-          round_id: string
-          slot_key: string
-          user_id: string
-        }
+          amount: number;
+          created_at: string;
+          id: string;
+          payout: number;
+          room_id: string | null;
+          round_id: string;
+          slot_key: string;
+          user_id: string;
+        };
         Insert: {
-          amount: number
-          created_at?: string
-          id?: string
-          payout?: number
-          room_id?: string | null
-          round_id: string
-          slot_key: string
-          user_id: string
-        }
+          amount: number;
+          created_at?: string;
+          id?: string;
+          payout?: number;
+          room_id?: string | null;
+          round_id: string;
+          slot_key: string;
+          user_id: string;
+        };
         Update: {
-          amount?: number
-          created_at?: string
-          id?: string
-          payout?: number
-          room_id?: string | null
-          round_id?: string
-          slot_key?: string
-          user_id?: string
-        }
+          amount?: number;
+          created_at?: string;
+          id?: string;
+          payout?: number;
+          room_id?: string | null;
+          round_id?: string;
+          slot_key?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "wheel_bets_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "wheel_bets_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "wheel_bets_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "wheel_rounds"
-            referencedColumns: ["id"]
+            foreignKeyName: "wheel_bets_round_id_fkey";
+            columns: ["round_id"];
+            isOneToOne: false;
+            referencedRelation: "wheel_rounds";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       wheel_daily_results: {
         Row: {
-          created_at: string
-          id: string
-          net_result: number
-          rank: number | null
-          reward_coins: number
-          rewarded_at: string | null
-          session_id: string
-          total_bet: number
-          total_payout: number
-          user_id: string
-        }
+          created_at: string;
+          id: string;
+          net_result: number;
+          rank: number | null;
+          reward_coins: number;
+          rewarded_at: string | null;
+          session_id: string;
+          total_bet: number;
+          total_payout: number;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          net_result?: number
-          rank?: number | null
-          reward_coins?: number
-          rewarded_at?: string | null
-          session_id: string
-          total_bet?: number
-          total_payout?: number
-          user_id: string
-        }
+          created_at?: string;
+          id?: string;
+          net_result?: number;
+          rank?: number | null;
+          reward_coins?: number;
+          rewarded_at?: string | null;
+          session_id: string;
+          total_bet?: number;
+          total_payout?: number;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          net_result?: number
-          rank?: number | null
-          reward_coins?: number
-          rewarded_at?: string | null
-          session_id?: string
-          total_bet?: number
-          total_payout?: number
-          user_id?: string
-        }
+          created_at?: string;
+          id?: string;
+          net_result?: number;
+          rank?: number | null;
+          reward_coins?: number;
+          rewarded_at?: string | null;
+          session_id?: string;
+          total_bet?: number;
+          total_payout?: number;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "wheel_daily_results_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "wheel_sessions"
-            referencedColumns: ["id"]
+            foreignKeyName: "wheel_daily_results_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "wheel_sessions";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       wheel_rounds: {
         Row: {
-          attempts: number
-          created_at: string
-          ends_at: string
-          id: string
-          last_error: string | null
-          processing_started_at: string | null
-          round_no: number
-          session_id: string | null
-          session_round_no: number | null
-          settled_at: string | null
-          slots: Json
-          started_at: string
-          status: string
-          total_amount: number
-          total_bets: number
-          total_payout: number
-          winning_key: string | null
-        }
+          attempts: number;
+          created_at: string;
+          ends_at: string;
+          id: string;
+          last_error: string | null;
+          processing_started_at: string | null;
+          round_no: number;
+          session_id: string | null;
+          session_round_no: number | null;
+          settled_at: string | null;
+          slots: Json;
+          started_at: string;
+          status: string;
+          total_amount: number;
+          total_bets: number;
+          total_payout: number;
+          winning_key: string | null;
+        };
         Insert: {
-          attempts?: number
-          created_at?: string
-          ends_at: string
-          id?: string
-          last_error?: string | null
-          processing_started_at?: string | null
-          round_no?: number
-          session_id?: string | null
-          session_round_no?: number | null
-          settled_at?: string | null
-          slots: Json
-          started_at?: string
-          status?: string
-          total_amount?: number
-          total_bets?: number
-          total_payout?: number
-          winning_key?: string | null
-        }
+          attempts?: number;
+          created_at?: string;
+          ends_at: string;
+          id?: string;
+          last_error?: string | null;
+          processing_started_at?: string | null;
+          round_no?: number;
+          session_id?: string | null;
+          session_round_no?: number | null;
+          settled_at?: string | null;
+          slots: Json;
+          started_at?: string;
+          status?: string;
+          total_amount?: number;
+          total_bets?: number;
+          total_payout?: number;
+          winning_key?: string | null;
+        };
         Update: {
-          attempts?: number
-          created_at?: string
-          ends_at?: string
-          id?: string
-          last_error?: string | null
-          processing_started_at?: string | null
-          round_no?: number
-          session_id?: string | null
-          session_round_no?: number | null
-          settled_at?: string | null
-          slots?: Json
-          started_at?: string
-          status?: string
-          total_amount?: number
-          total_bets?: number
-          total_payout?: number
-          winning_key?: string | null
-        }
+          attempts?: number;
+          created_at?: string;
+          ends_at?: string;
+          id?: string;
+          last_error?: string | null;
+          processing_started_at?: string | null;
+          round_no?: number;
+          session_id?: string | null;
+          session_round_no?: number | null;
+          settled_at?: string | null;
+          slots?: Json;
+          started_at?: string;
+          status?: string;
+          total_amount?: number;
+          total_bets?: number;
+          total_payout?: number;
+          winning_key?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "wheel_rounds_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "wheel_sessions"
-            referencedColumns: ["id"]
+            foreignKeyName: "wheel_rounds_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "wheel_sessions";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       wheel_sessions: {
         Row: {
-          created_at: string
-          ended_at: string | null
-          id: string
-          max_rounds: number
-          session_date: string
-          settled_at: string | null
-          started_at: string
-          status: string
-          total_rounds: number
-          updated_at: string
-        }
+          created_at: string;
+          ended_at: string | null;
+          id: string;
+          max_rounds: number;
+          session_date: string;
+          settled_at: string | null;
+          started_at: string;
+          status: string;
+          total_rounds: number;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          ended_at?: string | null
-          id?: string
-          max_rounds?: number
-          session_date: string
-          settled_at?: string | null
-          started_at?: string
-          status?: string
-          total_rounds?: number
-          updated_at?: string
-        }
+          created_at?: string;
+          ended_at?: string | null;
+          id?: string;
+          max_rounds?: number;
+          session_date: string;
+          settled_at?: string | null;
+          started_at?: string;
+          status?: string;
+          total_rounds?: number;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          ended_at?: string | null
-          id?: string
-          max_rounds?: number
-          session_date?: string
-          settled_at?: string | null
-          started_at?: string
-          status?: string
-          total_rounds?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-    }
+          created_at?: string;
+          ended_at?: string | null;
+          id?: string;
+          max_rounds?: number;
+          session_date?: string;
+          settled_at?: string | null;
+          started_at?: string;
+          status?: string;
+          total_rounds?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
       admin_end_relationship: {
-        Args: { _relationship_id: string }
-        Returns: boolean
-      }
+        Args: { _relationship_id: string };
+        Returns: boolean;
+      };
       admin_has_section: {
-        Args: { _section: string; _user_id: string }
-        Returns: boolean
-      }
-      admin_sections_for: { Args: { _user_id: string }; Returns: string[] }
+        Args: { _section: string; _user_id: string };
+        Returns: boolean;
+      };
+      admin_sections_for: { Args: { _user_id: string }; Returns: string[] };
       admin_set_profile_suspended: {
-        Args: { _suspended: boolean; _user_id: string }
-        Returns: boolean
-      }
+        Args: { _suspended: boolean; _user_id: string };
+        Returns: boolean;
+      };
       app_cup_leaderboard: {
-        Args: { _category: string; _limit?: number; _period?: string }
+        Args: { _category: string; _limit?: number; _period?: string };
         Returns: {
-          avatar_url: string
-          display_name: string
-          entity_id: string
-          image_url: string
-          public_id: string
-          score: number
-        }[]
-      }
+          avatar_url: string;
+          display_name: string;
+          entity_id: string;
+          image_url: string;
+          public_id: string;
+          score: number;
+        }[];
+      };
       approve_coin_purchase: {
-        Args: { _admin: string; _request_id: string }
-        Returns: number
-      }
-      award_gift_badges: { Args: { _user_id: string }; Returns: number }
-      break_app_stats: { Args: { _period: string }; Returns: Json }
+        Args: { _admin: string; _request_id: string };
+        Returns: number;
+      };
+      award_gift_badges: { Args: { _user_id: string }; Returns: number };
+      break_app_stats: { Args: { _period: string }; Returns: Json };
       can_manage_room: {
-        Args: { _room_id: string; _user_id: string }
-        Returns: boolean
-      }
+        Args: { _room_id: string; _user_id: string };
+        Returns: boolean;
+      };
       convert_support_balance: {
-        Args: { _amount: number }
+        Args: { _amount: number };
         Returns: {
-          coins: number
-          recharge_points: number
-          support_coins: number
-          total_received: number
-          total_sent: number
-          updated_at: string
-          user_id: string
-        }
+          coins: number;
+          recharge_points: number;
+          support_coins: number;
+          total_received: number;
+          total_sent: number;
+          updated_at: string;
+          user_id: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "coin_wallets"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "coin_wallets";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       create_lucky_bag: {
         Args: {
-          _message?: string
-          _room_id: string
-          _total: number
-          _winners: number
-        }
-        Returns: string
-      }
+          _message?: string;
+          _room_id: string;
+          _total: number;
+          _winners: number;
+        };
+        Returns: string;
+      };
       create_room: {
         Args: {
-          _background_url?: string
-          _category: string
-          _description: string
-          _image_url?: string
-          _mic_count: number
-          _name: string
-          _password: string
-          _room_type: Database["public"]["Enums"]["room_type"]
-        }
+          _background_url?: string;
+          _category: string;
+          _description: string;
+          _image_url?: string;
+          _mic_count: number;
+          _name: string;
+          _password: string;
+          _room_type: Database["public"]["Enums"]["room_type"];
+        };
         Returns: {
-          background_url: string | null
-          category: string
-          chat_locked: boolean
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          is_active: boolean
-          is_disabled: boolean
-          is_verified: boolean
-          max_users: number
-          member_count: number
-          mic_count: number
-          name: string
-          owner_id: string
-          password: string | null
-          popularity: number
-          room_code: string
-          room_type: Database["public"]["Enums"]["room_type"]
-          theme: string | null
-          theme_style: string
-          updated_at: string
-          xp: number
-        }
+          background_url: string | null;
+          category: string;
+          chat_locked: boolean;
+          created_at: string;
+          description: string | null;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          is_disabled: boolean;
+          is_verified: boolean;
+          max_users: number;
+          member_count: number;
+          mic_count: number;
+          name: string;
+          owner_id: string;
+          password: string | null;
+          popularity: number;
+          room_code: string;
+          room_type: Database["public"]["Enums"]["room_type"];
+          theme: string | null;
+          theme_style: string;
+          updated_at: string;
+          xp: number;
+        };
         SetofOptions: {
-          from: "*"
-          to: "rooms"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "rooms";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       cup_event_leaderboard: {
-        Args: { _event_id: string; _limit?: number }
+        Args: { _event_id: string; _limit?: number };
         Returns: {
-          avatar_url: string
-          display_name: string
-          entity_id: string
-          image_url: string
-          public_id: string
-          score: number
-        }[]
-      }
-      cup_window_start: { Args: { _period: string }; Returns: string }
-      cvip_apply: { Args: { _user_id: string }; Returns: number }
-      cvip_level_for: { Args: { _points: number }; Returns: number }
-      cvip_settings: { Args: never; Returns: Json }
-      cvip_state: { Args: never; Returns: Json }
-      daily_checkin: { Args: never; Returns: Json }
+          avatar_url: string;
+          display_name: string;
+          entity_id: string;
+          image_url: string;
+          public_id: string;
+          score: number;
+        }[];
+      };
+      cup_window_start: { Args: { _period: string }; Returns: string };
+      cvip_apply: { Args: { _user_id: string }; Returns: number };
+      cvip_level_for: { Args: { _points: number }; Returns: number };
+      cvip_settings: { Args: never; Returns: Json };
+      cvip_state: { Args: never; Returns: Json };
+      daily_checkin: { Args: never; Returns: Json };
       domino_cancel: {
-        Args: { _game_id: string; _uid: string }
-        Returns: undefined
-      }
+        Args: { _game_id: string; _uid: string };
+        Returns: undefined;
+      };
       domino_credit: {
-        Args: { _amount: number; _ref: string; _user_id: string }
-        Returns: undefined
-      }
-      domino_deal: { Args: never; Returns: Json }
+        Args: { _amount: number; _ref: string; _user_id: string };
+        Returns: undefined;
+      };
+      domino_deal: { Args: never; Returns: Json };
       domino_forfeit: {
-        Args: { _game_id: string; _uid: string }
-        Returns: Json
-      }
+        Args: { _game_id: string; _uid: string };
+        Returns: Json;
+      };
       domino_has_playable: {
-        Args: { seat: string; state: Json }
-        Returns: boolean
-      }
+        Args: { seat: string; state: Json };
+        Returns: boolean;
+      };
       domino_join: {
-        Args: { _bet: number; _room_id?: string; _uid: string }
-        Returns: string
-      }
-      domino_log: { Args: { entry: Json; state: Json }; Returns: Json }
+        Args: { _bet: number; _room_id?: string; _uid: string };
+        Returns: string;
+      };
+      domino_log: { Args: { entry: Json; state: Json }; Returns: Json };
       domino_move: {
-        Args: { _game_id: string; _side: string; _tile: number; _uid: string }
-        Returns: Json
-      }
-      domino_pass: { Args: { _game_id: string; _uid: string }; Returns: Json }
-      domino_pips: { Args: { seat: string; state: Json }; Returns: number }
-      domino_settings: { Args: never; Returns: Json }
-      domino_tile_a: { Args: { t: number }; Returns: number }
-      domino_tile_b: { Args: { t: number }; Returns: number }
-      end_relationship: { Args: { _relationship_id: string }; Returns: boolean }
+        Args: { _game_id: string; _side: string; _tile: number; _uid: string };
+        Returns: Json;
+      };
+      domino_pass: { Args: { _game_id: string; _uid: string }; Returns: Json };
+      domino_pips: { Args: { seat: string; state: Json }; Returns: number };
+      domino_settings: { Args: never; Returns: Json };
+      domino_tile_a: { Args: { t: number }; Returns: number };
+      domino_tile_b: { Args: { t: number }; Returns: number };
+      end_relationship: { Args: { _relationship_id: string }; Returns: boolean };
       equip_item: {
-        Args: { _equip: boolean; _user_item_id: string }
+        Args: { _equip: boolean; _user_item_id: string };
         Returns: {
-          avatar_url: string | null
-          bio: string | null
-          birth_date: string | null
-          city: string | null
-          country: string | null
-          created_at: string
-          cvip_expires_at: string | null
-          cvip_level: number
-          display_name: string
-          frame_url: string | null
-          gender: Database["public"]["Enums"]["gender_type"] | null
-          id: string
-          is_cvip: boolean
-          is_online: boolean
-          is_suspended: boolean
-          last_seen: string
-          level: number
-          mic_decoration_url: string | null
-          name_color: string | null
-          profile_background_url: string | null
-          public_id: string
-          status_text: string | null
-          updated_at: string
-          vip_expires_at: string | null
-          vip_level: number
-          xp: number
-        }
+          avatar_url: string | null;
+          bio: string | null;
+          birth_date: string | null;
+          city: string | null;
+          country: string | null;
+          created_at: string;
+          cvip_expires_at: string | null;
+          cvip_level: number;
+          display_name: string;
+          frame_url: string | null;
+          gender: Database["public"]["Enums"]["gender_type"] | null;
+          id: string;
+          is_cvip: boolean;
+          is_online: boolean;
+          is_suspended: boolean;
+          last_seen: string;
+          level: number;
+          mic_decoration_url: string | null;
+          name_color: string | null;
+          profile_background_url: string | null;
+          public_id: string;
+          status_text: string | null;
+          updated_at: string;
+          vip_expires_at: string | null;
+          vip_level: number;
+          xp: number;
+        };
         SetofOptions: {
-          from: "*"
-          to: "profiles"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      event_templates: { Args: never; Returns: Json }
-      events_tick: { Args: never; Returns: number }
-      expire_due_vip: { Args: never; Returns: number }
+          from: "*";
+          to: "profiles";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      event_templates: { Args: never; Returns: Json };
+      events_tick: { Args: never; Returns: number };
+      expire_due_vip: { Args: never; Returns: number };
       family_can: {
-        Args: { _family_id: string; _permission: string; _user_id: string }
-        Returns: boolean
-      }
-      family_level_for: { Args: { _points: number }; Returns: number }
+        Args: { _family_id: string; _permission: string; _user_id: string };
+        Returns: boolean;
+      };
+      family_level_for: { Args: { _points: number }; Returns: number };
       family_manage_member: {
         Args: {
-          _action: string
-          _family_id: string
-          _member_id: string
-          _permissions?: Json
-        }
-        Returns: boolean
-      }
-      family_request_join: { Args: { _family_id: string }; Returns: Json }
+          _action: string;
+          _family_id: string;
+          _member_id: string;
+          _permissions?: Json;
+        };
+        Returns: boolean;
+      };
+      family_request_join: { Args: { _family_id: string }; Returns: Json };
       family_respond_join_request: {
-        Args: { _accept: boolean; _request_id: string }
-        Returns: boolean
-      }
-      family_settings: { Args: never; Returns: Json }
-      family_stats: { Args: { _family_id: string }; Returns: Json }
+        Args: { _accept: boolean; _request_id: string };
+        Returns: boolean;
+      };
+      family_settings: { Args: never; Returns: Json };
+      family_stats: { Args: { _family_id: string }; Returns: Json };
       family_update_own_profile: {
         Args: {
-          _animation_url: string
-          _cover_url: string
-          _description: string
-          _family_id: string
-          _join_mode: string
-          _logo_url: string
-        }
-        Returns: boolean
-      }
+          _animation_url: string;
+          _cover_url: string;
+          _description: string;
+          _family_id: string;
+          _join_mode: string;
+          _logo_url: string;
+        };
+        Returns: boolean;
+      };
       family_war_leaderboard: {
-        Args: { _limit?: number }
+        Args: { _limit?: number };
         Returns: {
-          family_id: string
-          logo_url: string
-          name: string
-          points: number
-        }[]
-      }
-      gen_family_code: { Args: never; Returns: string }
-      gen_public_id: { Args: never; Returns: string }
-      gen_room_code: { Args: never; Returns: string }
-      gift_stats: { Args: { _since?: string }; Returns: Json }
+          family_id: string;
+          logo_url: string;
+          name: string;
+          points: number;
+        }[];
+      };
+      gen_family_code: { Args: never; Returns: string };
+      gen_public_id: { Args: never; Returns: string };
+      gen_room_code: { Args: never; Returns: string };
+      gift_stats: { Args: { _since?: string }; Returns: Json };
       gift_vip: {
-        Args: { _level: number; _receiver_id: string }
+        Args: { _level: number; _receiver_id: string };
         Returns: {
-          avatar_url: string | null
-          bio: string | null
-          birth_date: string | null
-          city: string | null
-          country: string | null
-          created_at: string
-          cvip_expires_at: string | null
-          cvip_level: number
-          display_name: string
-          frame_url: string | null
-          gender: Database["public"]["Enums"]["gender_type"] | null
-          id: string
-          is_cvip: boolean
-          is_online: boolean
-          is_suspended: boolean
-          last_seen: string
-          level: number
-          mic_decoration_url: string | null
-          name_color: string | null
-          profile_background_url: string | null
-          public_id: string
-          status_text: string | null
-          updated_at: string
-          vip_expires_at: string | null
-          vip_level: number
-          xp: number
-        }
+          avatar_url: string | null;
+          bio: string | null;
+          birth_date: string | null;
+          city: string | null;
+          country: string | null;
+          created_at: string;
+          cvip_expires_at: string | null;
+          cvip_level: number;
+          display_name: string;
+          frame_url: string | null;
+          gender: Database["public"]["Enums"]["gender_type"] | null;
+          id: string;
+          is_cvip: boolean;
+          is_online: boolean;
+          is_suspended: boolean;
+          last_seen: string;
+          level: number;
+          mic_decoration_url: string | null;
+          name_color: string | null;
+          profile_background_url: string | null;
+          public_id: string;
+          status_text: string | null;
+          updated_at: string;
+          vip_expires_at: string | null;
+          vip_level: number;
+          xp: number;
+        };
         SetofOptions: {
-          from: "*"
-          to: "profiles"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "profiles";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       has_badge_permission: {
-        Args: { _permission: string; _user_id: string }
-        Returns: boolean
-      }
-      is_admin: { Args: { _user_id: string }; Returns: boolean }
-      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
-      level_for_xp: { Args: { _xp: number }; Returns: number }
+        Args: { _permission: string; _user_id: string };
+        Returns: boolean;
+      };
+      is_admin: { Args: { _user_id: string }; Returns: boolean };
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean };
+      level_for_xp: { Args: { _xp: number }; Returns: number };
       lock_relationship_slot: {
         Args: {
-          _type: Database["public"]["Enums"]["relation_type"]
-          _user_id: string
-        }
-        Returns: undefined
-      }
-      maintenance_cleanup: { Args: never; Returns: Json }
+          _type: Database["public"]["Enums"]["relation_type"];
+          _user_id: string;
+        };
+        Returns: undefined;
+      };
+      maintenance_cleanup: { Args: never; Returns: Json };
       mark_direct_messages_read: {
-        Args: { _sender_id: string }
-        Returns: number
-      }
-      mic_protection_for: { Args: { _user_id: string }; Returns: number }
-      open_gift_box: { Args: { _tier: string }; Returns: Json }
-      open_lucky_bag: { Args: { _bag_id: string }; Returns: number }
-      owner_dashboard: { Args: never; Returns: Json }
+        Args: { _sender_id: string };
+        Returns: number;
+      };
+      mic_protection_for: { Args: { _user_id: string }; Returns: number };
+      open_gift_box: { Args: { _tier: string }; Returns: Json };
+      open_lucky_bag: { Args: { _bag_id: string }; Returns: number };
+      owner_dashboard: { Args: never; Returns: Json };
       purchase_cvip: {
-        Args: { _plan_id: string }
+        Args: { _plan_id: string };
         Returns: {
-          avatar_url: string | null
-          bio: string | null
-          birth_date: string | null
-          city: string | null
-          country: string | null
-          created_at: string
-          cvip_expires_at: string | null
-          cvip_level: number
-          display_name: string
-          frame_url: string | null
-          gender: Database["public"]["Enums"]["gender_type"] | null
-          id: string
-          is_cvip: boolean
-          is_online: boolean
-          is_suspended: boolean
-          last_seen: string
-          level: number
-          mic_decoration_url: string | null
-          name_color: string | null
-          profile_background_url: string | null
-          public_id: string
-          status_text: string | null
-          updated_at: string
-          vip_expires_at: string | null
-          vip_level: number
-          xp: number
-        }
+          avatar_url: string | null;
+          bio: string | null;
+          birth_date: string | null;
+          city: string | null;
+          country: string | null;
+          created_at: string;
+          cvip_expires_at: string | null;
+          cvip_level: number;
+          display_name: string;
+          frame_url: string | null;
+          gender: Database["public"]["Enums"]["gender_type"] | null;
+          id: string;
+          is_cvip: boolean;
+          is_online: boolean;
+          is_suspended: boolean;
+          last_seen: string;
+          level: number;
+          mic_decoration_url: string | null;
+          name_color: string | null;
+          profile_background_url: string | null;
+          public_id: string;
+          status_text: string | null;
+          updated_at: string;
+          vip_expires_at: string | null;
+          vip_level: number;
+          xp: number;
+        };
         SetofOptions: {
-          from: "*"
-          to: "profiles"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "profiles";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       purchase_item: {
-        Args: { _item_id: string }
+        Args: { _item_id: string };
         Returns: {
-          created_at: string
-          expires_at: string | null
-          id: string
-          is_equipped: boolean
-          item_id: string
-          user_id: string
-        }
+          created_at: string;
+          expires_at: string | null;
+          id: string;
+          is_equipped: boolean;
+          item_id: string;
+          user_id: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "user_items"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "user_items";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       purchase_vip: {
-        Args: { _level: number }
+        Args: { _level: number };
         Returns: {
-          avatar_url: string | null
-          bio: string | null
-          birth_date: string | null
-          city: string | null
-          country: string | null
-          created_at: string
-          cvip_expires_at: string | null
-          cvip_level: number
-          display_name: string
-          frame_url: string | null
-          gender: Database["public"]["Enums"]["gender_type"] | null
-          id: string
-          is_cvip: boolean
-          is_online: boolean
-          is_suspended: boolean
-          last_seen: string
-          level: number
-          mic_decoration_url: string | null
-          name_color: string | null
-          profile_background_url: string | null
-          public_id: string
-          status_text: string | null
-          updated_at: string
-          vip_expires_at: string | null
-          vip_level: number
-          xp: number
-        }
+          avatar_url: string | null;
+          bio: string | null;
+          birth_date: string | null;
+          city: string | null;
+          country: string | null;
+          created_at: string;
+          cvip_expires_at: string | null;
+          cvip_level: number;
+          display_name: string;
+          frame_url: string | null;
+          gender: Database["public"]["Enums"]["gender_type"] | null;
+          id: string;
+          is_cvip: boolean;
+          is_online: boolean;
+          is_suspended: boolean;
+          last_seen: string;
+          level: number;
+          mic_decoration_url: string | null;
+          name_color: string | null;
+          profile_background_url: string | null;
+          public_id: string;
+          status_text: string | null;
+          updated_at: string;
+          vip_expires_at: string | null;
+          vip_level: number;
+          xp: number;
+        };
         SetofOptions: {
-          from: "*"
-          to: "profiles"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      purge_event: { Args: { _event_id: string }; Returns: undefined }
-      referral_redeem: { Args: { _code: string }; Returns: Json }
-      refund_item: { Args: { _user_item_id: string }; Returns: number }
+          from: "*";
+          to: "profiles";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      purge_event: { Args: { _event_id: string }; Returns: undefined };
+      referral_redeem: { Args: { _code: string }; Returns: Json };
+      refund_item: { Args: { _user_item_id: string }; Returns: number };
       relationship_award: {
-        Args: { _a: string; _amount: number; _b: string }
-        Returns: undefined
-      }
-      relationship_level_for: { Args: { _points: number }; Returns: number }
-      relationship_settings: { Args: never; Returns: Json }
-      remove_friend: { Args: { _friend_id: string }; Returns: boolean }
+        Args: { _a: string; _amount: number; _b: string };
+        Returns: undefined;
+      };
+      relationship_level_for: { Args: { _points: number }; Returns: number };
+      relationship_settings: { Args: never; Returns: Json };
+      remove_friend: { Args: { _friend_id: string }; Returns: boolean };
       replace_relationship: {
         Args: {
-          _partner_id: string
-          _type: Database["public"]["Enums"]["relation_type"]
-        }
+          _partner_id: string;
+          _type: Database["public"]["Enums"]["relation_type"];
+        };
         Returns: {
-          created_at: string
-          ended_at: string | null
-          id: string
-          last_level_at: string | null
-          level: number
-          partner_id: string
-          points: number
-          requester_id: string
-          started_at: string | null
-          status: string
-          type: Database["public"]["Enums"]["relation_type"]
-          updated_at: string
-        }
+          created_at: string;
+          ended_at: string | null;
+          id: string;
+          last_level_at: string | null;
+          level: number;
+          partner_id: string;
+          points: number;
+          requester_id: string;
+          started_at: string | null;
+          status: string;
+          type: Database["public"]["Enums"]["relation_type"];
+          updated_at: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "relationships"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "relationships";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       request_relationship: {
         Args: {
-          _partner_id: string
-          _type: Database["public"]["Enums"]["relation_type"]
-        }
+          _partner_id: string;
+          _type: Database["public"]["Enums"]["relation_type"];
+        };
         Returns: {
-          created_at: string
-          ended_at: string | null
-          id: string
-          last_level_at: string | null
-          level: number
-          partner_id: string
-          points: number
-          requester_id: string
-          started_at: string | null
-          status: string
-          type: Database["public"]["Enums"]["relation_type"]
-          updated_at: string
-        }
+          created_at: string;
+          ended_at: string | null;
+          id: string;
+          last_level_at: string | null;
+          level: number;
+          partner_id: string;
+          points: number;
+          requester_id: string;
+          started_at: string | null;
+          status: string;
+          type: Database["public"]["Enums"]["relation_type"];
+          updated_at: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "relationships"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "relationships";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       respond_friend_request: {
-        Args: { _accept: boolean; _request_id: string }
-        Returns: boolean
-      }
+        Args: { _accept: boolean; _request_id: string };
+        Returns: boolean;
+      };
       respond_relationship: {
-        Args: { _accept: boolean; _relationship_id: string }
+        Args: { _accept: boolean; _relationship_id: string };
         Returns: {
-          created_at: string
-          ended_at: string | null
-          id: string
-          last_level_at: string | null
-          level: number
-          partner_id: string
-          points: number
-          requester_id: string
-          started_at: string | null
-          status: string
-          type: Database["public"]["Enums"]["relation_type"]
-          updated_at: string
-        }
+          created_at: string;
+          ended_at: string | null;
+          id: string;
+          last_level_at: string | null;
+          level: number;
+          partner_id: string;
+          points: number;
+          requester_id: string;
+          started_at: string | null;
+          status: string;
+          type: Database["public"]["Enums"]["relation_type"];
+          updated_at: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "relationships"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "relationships";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       room_couples: {
-        Args: { _room_id: string }
+        Args: { _room_id: string };
         Returns: {
-          type: Database["public"]["Enums"]["relation_type"]
-          user_a: string
-          user_b: string
-        }[]
-      }
+          type: Database["public"]["Enums"]["relation_type"];
+          user_a: string;
+          user_b: string;
+        }[];
+      };
       room_cup_leaderboard: {
-        Args: { _limit?: number; _period?: string; _room_id: string }
+        Args: { _limit?: number; _period?: string; _room_id: string };
         Returns: {
-          avatar_url: string
-          display_name: string
-          public_id: string
-          score: number
-          user_id: string
-          vip_level: number
-        }[]
-      }
-      room_level_for: { Args: { _xp: number }; Returns: number }
+          avatar_url: string;
+          display_name: string;
+          public_id: string;
+          score: number;
+          user_id: string;
+          vip_level: number;
+        }[];
+      };
+      room_level_for: { Args: { _xp: number }; Returns: number };
       room_reward_settle_week: {
-        Args: { _room_id: string; _week_start: string }
-        Returns: string
-      }
-      room_rewards_settings: { Args: never; Returns: Json }
-      room_rewards_state: { Args: { _room_id: string }; Returns: Json }
+        Args: { _room_id: string; _week_start: string };
+        Returns: string;
+      };
+      room_rewards_settings: { Args: never; Returns: Json };
+      room_rewards_state: { Args: { _room_id: string }; Returns: Json };
       room_support_register: {
-        Args: { _room_id: string }
+        Args: { _room_id: string };
         Returns: {
-          admin_ids: string[]
-          created_at: string
-          id: string
-          registered_by: string
-          room_id: string
-          status: string
-          updated_at: string
-        }
+          admin_ids: string[];
+          created_at: string;
+          id: string;
+          registered_by: string;
+          room_id: string;
+          status: string;
+          updated_at: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "room_support_registrations"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "room_support_registrations";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       room_support_set_admins: {
-        Args: { _ids: string[]; _room_id: string }
+        Args: { _ids: string[]; _room_id: string };
         Returns: {
-          admin_ids: string[]
-          created_at: string
-          id: string
-          registered_by: string
-          room_id: string
-          status: string
-          updated_at: string
-        }
+          admin_ids: string[];
+          created_at: string;
+          id: string;
+          registered_by: string;
+          room_id: string;
+          status: string;
+          updated_at: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "room_support_registrations"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "room_support_registrations";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       room_treasure_open: {
-        Args: { _level: number; _room_id: string; _s: Json; _target: number }
-        Returns: undefined
-      }
-      room_treasure_settings: { Args: never; Returns: Json }
-      room_treasure_state: { Args: { _room_id: string }; Returns: Json }
-      room_week_start: { Args: never; Returns: string }
+        Args: { _level: number; _room_id: string; _s: Json; _target: number };
+        Returns: undefined;
+      };
+      room_treasure_settings: { Args: never; Returns: Json };
+      room_treasure_state: { Args: { _room_id: string }; Returns: Json };
+      room_week_start: { Args: never; Returns: string };
       send_direct_gift: {
-        Args: { _gift_id: string; _quantity?: number; _receiver_id: string }
+        Args: { _gift_id: string; _quantity?: number; _receiver_id: string };
         Returns: {
-          created_at: string
-          gift_id: string
-          id: string
-          quantity: number
-          receiver_id: string
-          room_id: string | null
-          sender_id: string
-          total_price: number
-        }
+          created_at: string;
+          gift_id: string;
+          id: string;
+          quantity: number;
+          receiver_id: string;
+          room_id: string | null;
+          sender_id: string;
+          total_price: number;
+        };
         SetofOptions: {
-          from: "*"
-          to: "gift_transactions"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "gift_transactions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       send_friend_request: {
-        Args: { _addressee_id: string }
+        Args: { _addressee_id: string };
         Returns: {
-          addressee_id: string
-          created_at: string
-          id: string
-          requester_id: string
-          status: Database["public"]["Enums"]["friend_status"]
-        }
+          addressee_id: string;
+          created_at: string;
+          id: string;
+          requester_id: string;
+          status: Database["public"]["Enums"]["friend_status"];
+        };
         SetofOptions: {
-          from: "*"
-          to: "friend_requests"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "friend_requests";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       send_gift: {
         Args: {
-          _gift_id: string
-          _quantity?: number
-          _receiver_id: string
-          _room_id: string
-        }
+          _gift_id: string;
+          _quantity?: number;
+          _receiver_id: string;
+          _room_id: string;
+        };
         Returns: {
-          created_at: string
-          gift_id: string
-          id: string
-          quantity: number
-          receiver_id: string
-          room_id: string | null
-          sender_id: string
-          total_price: number
-        }
+          created_at: string;
+          gift_id: string;
+          id: string;
+          quantity: number;
+          receiver_id: string;
+          room_id: string | null;
+          sender_id: string;
+          total_price: number;
+        };
         SetofOptions: {
-          from: "*"
-          to: "gift_transactions"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "gift_transactions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       send_gift_bulk: {
         Args: {
-          _gift_id: string
-          _quantity?: number
-          _receiver_ids: string[]
-          _room_id?: string
-        }
-        Returns: Json
-      }
+          _gift_id: string;
+          _quantity?: number;
+          _receiver_ids: string[];
+          _room_id?: string;
+        };
+        Returns: Json;
+      };
       send_room_message: {
-        Args: { _body: string; _room_id: string }
+        Args: { _body: string; _room_id: string };
         Returns: {
-          body: string
-          created_at: string
-          id: string
-          kind: string
-          metadata: Json | null
-          room_id: string
-          user_id: string
-        }
+          body: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          metadata: Json | null;
+          room_id: string;
+          user_id: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "room_messages"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "room_messages";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       settle_cup_event: {
-        Args: { _admin: string; _event_id: string }
-        Returns: number
-      }
+        Args: { _admin: string; _event_id: string };
+        Returns: number;
+      };
       settle_game: {
         Args: {
-          _bet: number
-          _label: string
-          _payout: number
-          _user_id: string
-        }
-        Returns: number
-      }
+          _bet: number;
+          _label: string;
+          _payout: number;
+          _user_id: string;
+        };
+        Returns: number;
+      };
       setup_account: {
         Args: {
-          _avatar_url: string
-          _bio?: string
-          _birth_date: string
-          _city: string
-          _country: string
-          _display_name: string
-          _gender: Database["public"]["Enums"]["gender_type"]
-        }
+          _avatar_url: string;
+          _bio?: string;
+          _birth_date: string;
+          _city: string;
+          _country: string;
+          _display_name: string;
+          _gender: Database["public"]["Enums"]["gender_type"];
+        };
         Returns: {
-          avatar_url: string | null
-          bio: string | null
-          birth_date: string | null
-          city: string | null
-          country: string | null
-          created_at: string
-          cvip_expires_at: string | null
-          cvip_level: number
-          display_name: string
-          frame_url: string | null
-          gender: Database["public"]["Enums"]["gender_type"] | null
-          id: string
-          is_cvip: boolean
-          is_online: boolean
-          is_suspended: boolean
-          last_seen: string
-          level: number
-          mic_decoration_url: string | null
-          name_color: string | null
-          profile_background_url: string | null
-          public_id: string
-          status_text: string | null
-          updated_at: string
-          vip_expires_at: string | null
-          vip_level: number
-          xp: number
-        }
+          avatar_url: string | null;
+          bio: string | null;
+          birth_date: string | null;
+          city: string | null;
+          country: string | null;
+          created_at: string;
+          cvip_expires_at: string | null;
+          cvip_level: number;
+          display_name: string;
+          frame_url: string | null;
+          gender: Database["public"]["Enums"]["gender_type"] | null;
+          id: string;
+          is_cvip: boolean;
+          is_online: boolean;
+          is_suspended: boolean;
+          last_seen: string;
+          level: number;
+          mic_decoration_url: string | null;
+          name_color: string | null;
+          profile_background_url: string | null;
+          public_id: string;
+          status_text: string | null;
+          updated_at: string;
+          vip_expires_at: string | null;
+          vip_level: number;
+          xp: number;
+        };
         SetofOptions: {
-          from: "*"
-          to: "profiles"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "profiles";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       spawn_next_event: {
-        Args: { _avoid_title?: string }
+        Args: { _avoid_title?: string };
         Returns: {
-          created_at: string
-          created_by: string | null
-          description: string | null
-          ends_at: string
-          id: string
-          image_url: string | null
-          points_note: string | null
-          ranking_kind: string
-          rules: string | null
-          starts_at: string
-          status: string
-          style: string
-          subtitle: string | null
-          title: string
-          updated_at: string
-        }
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          ends_at: string;
+          id: string;
+          image_url: string | null;
+          points_note: string | null;
+          ranking_kind: string;
+          rules: string | null;
+          starts_at: string;
+          status: string;
+          style: string;
+          subtitle: string | null;
+          title: string;
+          updated_at: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "cup_events"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "cup_events";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       supercar_bet: {
-        Args: { _amount: number; _room_id?: string; _slot_key: string }
+        Args: { _amount: number; _room_id?: string; _slot_key: string };
         Returns: {
-          amount: number
-          created_at: string
-          id: string
-          payout: number
-          room_id: string | null
-          round_id: string
-          slot_key: string
-          user_id: string
-        }
+          amount: number;
+          created_at: string;
+          id: string;
+          payout: number;
+          room_id: string | null;
+          round_id: string;
+          slot_key: string;
+          user_id: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "supercar_bets"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "supercar_bets";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       supercar_daily_top: {
-        Args: { _limit?: number }
+        Args: { _limit?: number };
         Returns: {
-          avatar_url: string
-          display_name: string
-          gross_win: number
-          net_result: number
-          public_id: string
-          rank: number
-          total_bet: number
-          user_id: string
-        }[]
-      }
-      supercar_round_state: { Args: never; Returns: Json }
+          avatar_url: string;
+          display_name: string;
+          gross_win: number;
+          net_result: number;
+          public_id: string;
+          rank: number;
+          total_bet: number;
+          user_id: string;
+        }[];
+      };
+      supercar_round_state: { Args: never; Returns: Json };
       supercar_session_today: {
-        Args: never
+        Args: never;
         Returns: {
-          created_at: string
-          ended_at: string | null
-          id: string
-          max_rounds: number
-          session_date: string
-          settled_at: string | null
-          started_at: string
-          status: string
-          total_rounds: number
-          updated_at: string
-        }
+          created_at: string;
+          ended_at: string | null;
+          id: string;
+          max_rounds: number;
+          session_date: string;
+          settled_at: string | null;
+          started_at: string;
+          status: string;
+          total_rounds: number;
+          updated_at: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "supercar_sessions"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      supercar_settings: { Args: never; Returns: Json }
-      supercar_settle: { Args: { _round_id: string }; Returns: undefined }
+          from: "*";
+          to: "supercar_sessions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      supercar_settings: { Args: never; Returns: Json };
+      supercar_settle: { Args: { _round_id: string }; Returns: undefined };
       supercar_tick: {
-        Args: never
+        Args: never;
         Returns: {
-          attempts: number
-          created_at: string
-          ends_at: string
-          id: string
-          last_error: string | null
-          processing_started_at: string | null
-          round_no: number
-          session_id: string | null
-          session_round_no: number | null
-          settled_at: string | null
-          slots: Json
-          started_at: string
-          status: string
-          total_amount: number
-          total_bets: number
-          total_payout: number
-          winning_key: string | null
-        }
+          attempts: number;
+          created_at: string;
+          ends_at: string;
+          id: string;
+          last_error: string | null;
+          processing_started_at: string | null;
+          round_no: number;
+          session_id: string | null;
+          session_round_no: number | null;
+          settled_at: string | null;
+          slots: Json;
+          started_at: string;
+          status: string;
+          total_amount: number;
+          total_bets: number;
+          total_payout: number;
+          winning_key: string | null;
+        };
         SetofOptions: {
-          from: "*"
-          to: "supercar_rounds"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "supercar_rounds";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       support_create_ticket: {
-        Args: { _body: string; _category: string; _subject: string }
-        Returns: string
-      }
+        Args: { _body: string; _category: string; _subject: string };
+        Returns: string;
+      };
       support_reply: {
-        Args: { _body: string; _close?: boolean; _ticket_id: string }
-        Returns: boolean
-      }
+        Args: { _body: string; _close?: boolean; _ticket_id: string };
+        Returns: boolean;
+      };
       suppress_duplicate_role_notification_marker: {
-        Args: never
-        Returns: undefined
-      }
+        Args: never;
+        Returns: undefined;
+      };
       take_mic: {
-        Args: { _room_id: string; _seat: number }
+        Args: { _room_id: string; _seat: number };
         Returns: {
-          decoration_url: string | null
-          id: string
-          is_locked: boolean
-          is_muted: boolean
-          room_id: string
-          seat_index: number
-          updated_at: string
-          user_id: string | null
-        }
+          decoration_url: string | null;
+          id: string;
+          is_locked: boolean;
+          is_muted: boolean;
+          room_id: string;
+          seat_index: number;
+          updated_at: string;
+          user_id: string | null;
+        };
         SetofOptions: {
-          from: "*"
-          to: "room_mics"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      task_claim: { Args: { _key: string }; Returns: number }
+          from: "*";
+          to: "room_mics";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      task_claim: { Args: { _key: string }; Returns: number };
       task_metric_value: {
-        Args: { _metric: string; _since: string; _user_id: string }
-        Returns: number
-      }
-      task_period_start: { Args: { _period: string }; Returns: string }
-      tasks_state: { Args: never; Returns: Json }
+        Args: { _metric: string; _since: string; _user_id: string };
+        Returns: number;
+      };
+      task_period_start: { Args: { _period: string }; Returns: string };
+      tasks_state: { Args: never; Returns: Json };
       verify_room_password: {
-        Args: { _password: string; _room_id: string }
-        Returns: boolean
-      }
-      wallet_settings: { Args: never; Returns: Json }
+        Args: { _password: string; _room_id: string };
+        Returns: boolean;
+      };
+      wallet_settings: { Args: never; Returns: Json };
       weekly_ranking_leaderboard: {
-        Args: { _category: string; _limit?: number; _week_start: string }
+        Args: { _category: string; _limit?: number; _week_start: string };
         Returns: {
-          score: number
-          user_id: string
-        }[]
-      }
-      weekly_ranking_settings: { Args: never; Returns: Json }
-      weekly_ranking_settle: { Args: { _week_start?: string }; Returns: number }
+          score: number;
+          user_id: string;
+        }[];
+      };
+      weekly_ranking_settings: { Args: never; Returns: Json };
+      weekly_ranking_settle: { Args: { _week_start?: string }; Returns: number };
       wheel_bet: {
-        Args: { _amount: number; _room_id?: string; _slot_key: string }
+        Args: { _amount: number; _room_id?: string; _slot_key: string };
         Returns: {
-          amount: number
-          created_at: string
-          id: string
-          payout: number
-          room_id: string | null
-          round_id: string
-          slot_key: string
-          user_id: string
-        }
+          amount: number;
+          created_at: string;
+          id: string;
+          payout: number;
+          room_id: string | null;
+          round_id: string;
+          slot_key: string;
+          user_id: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "wheel_bets"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+          from: "*";
+          to: "wheel_bets";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       wheel_daily_top: {
-        Args: { _limit?: number }
+        Args: { _limit?: number };
         Returns: {
-          avatar_url: string
-          display_name: string
-          gross_win: number
-          net_result: number
-          public_id: string
-          rank: number
-          total_bet: number
-          user_id: string
-        }[]
-      }
-      wheel_round_state: { Args: never; Returns: Json }
+          avatar_url: string;
+          display_name: string;
+          gross_win: number;
+          net_result: number;
+          public_id: string;
+          rank: number;
+          total_bet: number;
+          user_id: string;
+        }[];
+      };
+      wheel_round_state: { Args: never; Returns: Json };
       wheel_round_winners: {
-        Args: { _round_id: string }
+        Args: { _round_id: string };
         Returns: {
-          amount: number
-          avatar_url: string
-          display_name: string
-          payout: number
-          slot_key: string
-          user_id: string
-        }[]
-      }
+          amount: number;
+          avatar_url: string;
+          display_name: string;
+          payout: number;
+          slot_key: string;
+          user_id: string;
+        }[];
+      };
       wheel_session_today: {
-        Args: never
+        Args: never;
         Returns: {
-          created_at: string
-          ended_at: string | null
-          id: string
-          max_rounds: number
-          session_date: string
-          settled_at: string | null
-          started_at: string
-          status: string
-          total_rounds: number
-          updated_at: string
-        }
+          created_at: string;
+          ended_at: string | null;
+          id: string;
+          max_rounds: number;
+          session_date: string;
+          settled_at: string | null;
+          started_at: string;
+          status: string;
+          total_rounds: number;
+          updated_at: string;
+        };
         SetofOptions: {
-          from: "*"
-          to: "wheel_sessions"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      wheel_settings: { Args: never; Returns: Json }
-      wheel_settle: { Args: { _round_id: string }; Returns: undefined }
-      wheel_settle_day: { Args: { _session_id: string }; Returns: number }
+          from: "*";
+          to: "wheel_sessions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      wheel_settings: { Args: never; Returns: Json };
+      wheel_settle: { Args: { _round_id: string }; Returns: undefined };
+      wheel_settle_day: { Args: { _session_id: string }; Returns: number };
       wheel_tick: {
-        Args: never
+        Args: never;
         Returns: {
-          attempts: number
-          created_at: string
-          ends_at: string
-          id: string
-          last_error: string | null
-          processing_started_at: string | null
-          round_no: number
-          session_id: string | null
-          session_round_no: number | null
-          settled_at: string | null
-          slots: Json
-          started_at: string
-          status: string
-          total_amount: number
-          total_bets: number
-          total_payout: number
-          winning_key: string | null
-        }
+          attempts: number;
+          created_at: string;
+          ends_at: string;
+          id: string;
+          last_error: string | null;
+          processing_started_at: string | null;
+          round_no: number;
+          session_id: string | null;
+          session_round_no: number | null;
+          settled_at: string | null;
+          slots: Json;
+          started_at: string;
+          status: string;
+          total_amount: number;
+          total_bets: number;
+          total_payout: number;
+          winning_key: string | null;
+        };
         SetofOptions: {
-          from: "*"
-          to: "wheel_rounds"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      xp_total_for_level: { Args: { _level: number }; Returns: number }
-    }
+          from: "*";
+          to: "wheel_rounds";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      xp_total_for_level: { Args: { _level: number }; Returns: number };
+    };
     Enums: {
-      app_role:
-        | "super_admin"
-        | "admin"
-        | "moderator"
-        | "host"
-        | "user"
-        | "welcome_manager"
-      friend_status: "pending" | "accepted" | "rejected"
-      gender_type: "male" | "female"
-      relation_type: "couple" | "soulmate" | "favorite_friend" | "close_friend"
-      room_type: "public" | "private"
-    }
+      app_role: "super_admin" | "admin" | "moderator" | "host" | "user" | "welcome_manager";
+      friend_status: "pending" | "accepted" | "rejected";
+      gender_type: "male" | "female";
+      relation_type: "couple" | "soulmate" | "favorite_friend" | "close_friend";
+      room_type: "public" | "private";
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+      Row: infer R;
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
       }
       ? R
       : never
-    : never
+    : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+      Insert: infer I;
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
+        Insert: infer I;
       }
       ? I
       : never
-    : never
+    : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+      Update: infer U;
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
+        Update: infer U;
       }
       ? U
       : never
-    : never
+    : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["CompositeTypes"] | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+    : never;
 
 export const Constants = {
   public: {
     Enums: {
-      app_role: [
-        "super_admin",
-        "admin",
-        "moderator",
-        "host",
-        "user",
-        "welcome_manager",
-      ],
+      app_role: ["super_admin", "admin", "moderator", "host", "user", "welcome_manager"],
       friend_status: ["pending", "accepted", "rejected"],
       gender_type: ["male", "female"],
       relation_type: ["couple", "soulmate", "favorite_friend", "close_friend"],
       room_type: ["public", "private"],
     },
   },
-} as const
+} as const;

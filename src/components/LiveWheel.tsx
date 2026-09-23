@@ -11,8 +11,13 @@ import { formatCompact, formatFull } from "@/lib/format";
 import { wheelArt } from "@/lib/wheel-art";
 import mascot from "@/assets/wheel/mascot-lion.png";
 
-
-export type WheelSlot = { key: string; label: string; emoji: string; multiplier: number; weight?: number };
+export type WheelSlot = {
+  key: string;
+  label: string;
+  emoji: string;
+  multiplier: number;
+  weight?: number;
+};
 
 type WheelRound = {
   id: string;
@@ -57,7 +62,10 @@ type WheelBet = {
 // generated types lag behind the new wheel tables/RPCs
 const db = supabase as unknown as {
   from: (t: string) => any;
-  rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: any; error: { message: string } | null }>;
+  rpc: (
+    fn: string,
+    args?: Record<string, unknown>,
+  ) => Promise<{ data: any; error: { message: string } | null }>;
 };
 
 const BET_STEPS = [10_000_000, 50_000_000, 100_000_000, 200_000_000];
@@ -96,7 +104,9 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
         .maybeSingle();
       if (last.error) throw new Error(error.message);
       if (!last.data) return null;
-      return { round: { ...last.data, round_no: last.data.session_round_no ?? last.data.round_no } } as WheelState;
+      return {
+        round: { ...last.data, round_no: last.data.session_round_no ?? last.data.round_no },
+      } as WheelState;
     },
   });
 
@@ -145,7 +155,7 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const myToday = (dailyTop.data ?? []).find((row) => row.user_id === userId) ?? null;
   const todayWin = Number(myToday?.gross_win ?? 0);
 
-  const resultRound = round.data?.status === "finished" ? round.data : history.data?.[0] ?? null;
+  const resultRound = round.data?.status === "finished" ? round.data : (history.data?.[0] ?? null);
   const resultRoundId = resultRound?.id ?? null;
   // قائمة فائزين آمنة من السيرفر دون كشف رهانات اللاعبين الآخرين مباشرة.
   const resultBets = useQuery({
@@ -193,7 +203,9 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
   const roundRef = useRef<WheelRound | null>(null);
   roundRef.current = round.data ?? null;
   const finished = round.data?.status === "finished";
-  const remaining = round.data ? Math.max(0, Math.ceil((new Date(round.data.ends_at).getTime() - now) / 1000)) : 0;
+  const remaining = round.data
+    ? Math.max(0, Math.ceil((new Date(round.data.ends_at).getTime() - now) / 1000))
+    : 0;
 
   // عند تسوية الجولة: المؤشر يلف على كل الفواكه ٤ ثوانٍ ثم يتوقف على الفائزة
   const roundKey = `${round.data?.id ?? ""}:${round.data?.status ?? ""}:${round.data?.winning_key ?? ""}`;
@@ -210,14 +222,20 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
     lastSettled.current = id;
     // نتيجة قديمة (فُتحت الصفحة بعد انتهاء الجولة): تُعرض بدون تعطيل المراهنة
     const settledAgo = Date.now() - new Date(data.settled_at ?? data.ends_at).getTime();
-    const target = Math.max(0, data.slots.findIndex((s) => s.key === key));
+    const target = Math.max(
+      0,
+      data.slots.findIndex((s) => s.key === key),
+    );
     if (settledAgo > 15_000) {
       setHighlight(target);
       return;
     }
     const count = Math.max(1, data.slots.length);
     const steps = count * 3 + 1;
-    const weights = Array.from({ length: steps }, (_, i) => 1 + Math.pow(i / Math.max(1, steps - 1), 2.6) * 9);
+    const weights = Array.from(
+      { length: steps },
+      (_, i) => 1 + Math.pow(i / Math.max(1, steps - 1), 2.6) * 9,
+    );
     const sum = weights.reduce((a, b) => a + b, 0);
     const delays = weights.map((w) => (w / sum) * 4000);
     setSpinning(true);
@@ -348,7 +366,6 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
           </span>
         </div>
 
-
         {/* هيكل العجلة: أسلاك + كبائن الفواكه حولها + قلب العدّاد */}
         <div className="relative mx-auto mt-3 aspect-square w-full max-w-[360px] sm:max-w-[460px]">
           {/* الإطار والأسلاك */}
@@ -371,7 +388,8 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             const stat = perSlot.get(s.key) ?? { total: 0, mine: 0, players: 0 };
             const active = spinning && highlight === i;
             const isWinner = finished && !spinning && round.data?.winning_key === s.key;
-            const heat = stat.total >= 200_000_000 ? 3 : stat.total >= 50_000_000 ? 2 : stat.total > 0 ? 1 : 0;
+            const heat =
+              stat.total >= 200_000_000 ? 3 : stat.total >= 50_000_000 ? 2 : stat.total > 0 ? 1 : 0;
             return (
               <button
                 key={s.key}
@@ -393,7 +411,9 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                 {/* رأس الكبينة: صورة الطبق + المضاعف */}
                 <span className="flex items-center justify-between gap-1 bg-white px-1.5 py-1">
                   <SlotIcon slotKey={s.key} emoji={s.emoji} size={24} />
-                  <span className="wheel-mult text-[13px] font-black italic leading-none">x{s.multiplier}</span>
+                  <span className="wheel-mult text-[13px] font-black italic leading-none">
+                    x{s.multiplier}
+                  </span>
                 </span>
                 {/* رهاني */}
                 <span className="wheel-cabin-body block px-1 py-[3px] text-[10px] font-extrabold leading-tight">
@@ -404,7 +424,9 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                   {heat > 0 ? (
                     <>
                       {Array.from({ length: heat }).map((_, f) => (
-                        <span key={f} className="emoji text-[10px] leading-none">🔥</span>
+                        <span key={f} className="emoji text-[10px] leading-none">
+                          🔥
+                        </span>
                       ))}
                       <span className="ms-0.5">{formatCompact(stat.total)}</span>
                     </>
@@ -440,9 +462,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                 remaining
               )}
             </span>
-            {finished && !spinning && winning && <span className="text-[10px] font-bold">x{winning.multiplier}</span>}
+            {finished && !spinning && winning && (
+              <span className="text-[10px] font-bold">x{winning.multiplier}</span>
+            )}
           </div>
-
         </div>
 
         {/* منصّتا الجانبين + قاعدة العجلة الزرقاء مع عملات الرهان */}
@@ -465,7 +488,8 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                 onClick={() => setAmount(n)}
                 className={cn(
                   "wheel-chip flex h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl border-[3px] text-xs font-black transition-all",
-                  amount === n && "wheel-chip-active scale-105 shadow-[0_0_16px_-2px_oklch(0.78_0.17_75/0.9)]",
+                  amount === n &&
+                    "wheel-chip-active scale-105 shadow-[0_0_16px_-2px_oklch(0.78_0.17_75/0.9)]",
                 )}
               >
                 <Coins className="h-4 w-4" />
@@ -479,7 +503,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
         <div className="wheel-bar mt-2 flex items-center gap-2 rounded-2xl px-2 py-2">
           <div className="flex flex-1 items-center justify-between rounded-full bg-white/90 px-3 py-1.5 text-stone-800">
             <span className="text-[10px] font-bold">رصيدي</span>
-            <span className="flex items-center gap-1 text-xs font-black" title={formatFull(wallet.data?.coins ?? 0)}>
+            <span
+              className="flex items-center gap-1 text-xs font-black"
+              title={formatFull(wallet.data?.coins ?? 0)}
+            >
               <Coins className="h-3.5 w-3.5 text-amber-500" />
               {formatCompact(wallet.data?.coins ?? 0)}
             </span>
@@ -497,7 +524,6 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             </span>
           </div>
         </div>
-
 
         {/* شريط نتائج الجولات السابقة */}
         <div className="wheel-bar mt-2 flex items-center gap-2 overflow-x-auto rounded-2xl px-3 py-2">
@@ -517,9 +543,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
               </span>
             );
           })}
-          {(history.data?.length ?? 0) === 0 && <span className="text-[10px] opacity-80">لا جولات سابقة</span>}
+          {(history.data?.length ?? 0) === 0 && (
+            <span className="text-[10px] opacity-80">لا جولات سابقة</span>
+          )}
         </div>
-
 
         {/* لافتة الفوز الكبير */}
         {resultRound && !spinning && resultMyWin > 0 && (
@@ -537,7 +564,9 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             <span className="font-bold">نتيجة سحب الجولة {resultRound.round_no}</span>
             <span className="flex items-center gap-1 font-bold text-primary">
               {resultWinning?.label}
-              {resultWinning && <SlotIcon slotKey={resultWinning.key} emoji={resultWinning.emoji} size={20} />}
+              {resultWinning && (
+                <SlotIcon slotKey={resultWinning.key} emoji={resultWinning.emoji} size={20} />
+              )}
             </span>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2 text-center">
@@ -547,7 +576,9 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
             </div>
             <div className="rounded-2xl bg-surface-2 py-2">
               <p className="text-[10px] text-muted-foreground">أرباح هذه الجولة</p>
-              <p className="text-sm font-bold text-success">{resultMyWin.toLocaleString("en-US")}</p>
+              <p className="text-sm font-bold text-success">
+                {resultMyWin.toLocaleString("en-US")}
+              </p>
             </div>
           </div>
 
@@ -564,7 +595,11 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                   const pl = resultPlayers.get(uid);
                   const first = idx === 0;
                   const rankColor =
-                    idx === 0 ? "border-primary" : idx === 1 ? "border-muted-foreground" : "border-warning";
+                    idx === 0
+                      ? "border-primary"
+                      : idx === 1
+                        ? "border-muted-foreground"
+                        : "border-warning";
                   return (
                     <div
                       key={uid}
@@ -620,8 +655,12 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                     return (
                       <div key={uid} className="flex items-center gap-2 text-xs">
                         <span className="w-4 font-bold text-muted-foreground">{i + 4}</span>
-                        <span className="min-w-0 flex-1 truncate">{pl?.display_name ?? "لاعب"}</span>
-                        <span className="font-bold text-success">+{total.toLocaleString("en-US")}</span>
+                        <span className="min-w-0 flex-1 truncate">
+                          {pl?.display_name ?? "لاعب"}
+                        </span>
+                        <span className="font-bold text-success">
+                          +{total.toLocaleString("en-US")}
+                        </span>
                       </div>
                     );
                   })}
@@ -639,7 +678,9 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
       <div className="surface-card p-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-extrabold text-primary">🏆 كأس اليوم — أفضل 10</p>
-          <span className="text-[10px] text-muted-foreground">صافي النتيجة = الأرباح − الرهانات</span>
+          <span className="text-[10px] text-muted-foreground">
+            صافي النتيجة = الأرباح − الرهانات
+          </span>
         </div>
         {(dailyTop.data ?? []).length === 0 ? (
           <p className="mt-3 rounded-2xl bg-surface-2 py-3 text-center text-[11px] text-muted-foreground">
@@ -676,7 +717,10 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
                   {formatCompact(row.gross_win)}
                 </span>
                 <span
-                  className={cn("font-extrabold", Number(row.net_result) >= 0 ? "text-success" : "text-destructive")}
+                  className={cn(
+                    "font-extrabold",
+                    Number(row.net_result) >= 0 ? "text-success" : "text-destructive",
+                  )}
                   title={`${formatFull(row.net_result)} كوينز`}
                 >
                   {Number(row.net_result) >= 0 ? "+" : "−"}
@@ -693,7 +737,12 @@ export function LiveWheel({ roomId = null }: { roomId?: string | null }) {
 
 function SlotIcon({ slotKey, emoji, size }: { slotKey: string; emoji?: string; size: number }) {
   const src = wheelArt(slotKey);
-  if (!src) return <span className="emoji" style={{ fontSize: size }}>{emoji ?? "؟"}</span>;
+  if (!src)
+    return (
+      <span className="emoji" style={{ fontSize: size }}>
+        {emoji ?? "؟"}
+      </span>
+    );
   return (
     <img
       src={src}

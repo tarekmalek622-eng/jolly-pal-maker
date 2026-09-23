@@ -46,7 +46,9 @@ export function LuckyBagStrip({ roomId }: { roomId: string }) {
     queryFn: async () => {
       const { data, error } = await db
         .from("lucky_bags")
-        .select("id, sender_id, total_amount, winners_count, claimed_count, remaining_amount, status, expires_at, message")
+        .select(
+          "id, sender_id, total_amount, winners_count, claimed_count, remaining_amount, status, expires_at, message",
+        )
         .eq("room_id", roomId)
         .eq("status", "open")
         .gt("expires_at", new Date().toISOString())
@@ -65,7 +67,11 @@ export function LuckyBagStrip({ roomId }: { roomId: string }) {
     enabled: Boolean(userId) && (bags.data?.length ?? 0) > 0,
     queryFn: async () => {
       const ids = (bags.data ?? []).map((b) => b.id);
-      const { data, error } = await db.from("lucky_bag_claims").select("bag_id").eq("user_id", userId).in("bag_id", ids);
+      const { data, error } = await db
+        .from("lucky_bag_claims")
+        .select("bag_id")
+        .eq("user_id", userId)
+        .in("bag_id", ids);
       if (error) throw error;
       return (data ?? []).map((r: { bag_id: string }) => r.bag_id);
     },
@@ -75,9 +81,13 @@ export function LuckyBagStrip({ roomId }: { roomId: string }) {
   useEffect(() => {
     const channel = supabase
       .channel(`lucky-bags-${roomId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "lucky_bags", filter: `room_id=eq.${roomId}` }, () => {
-        void qc.invalidateQueries({ queryKey: ["lucky-bags", roomId] });
-      })
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "lucky_bags", filter: `room_id=eq.${roomId}` },
+        () => {
+          void qc.invalidateQueries({ queryKey: ["lucky-bags", roomId] });
+        },
+      )
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
@@ -94,7 +104,10 @@ export function LuckyBagStrip({ roomId }: { roomId: string }) {
       setWon(amount);
       window.setTimeout(() => setWon(null), 3000);
       refreshMoney();
-      await Promise.all([bags.refetch(), qc.invalidateQueries({ queryKey: ["lucky-bag-claims", roomId, userId] })]);
+      await Promise.all([
+        bags.refetch(),
+        qc.invalidateQueries({ queryKey: ["lucky-bag-claims", roomId, userId] }),
+      ]);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر فتح الحقيبة"),
   });
@@ -112,11 +125,15 @@ export function LuckyBagStrip({ roomId }: { roomId: string }) {
       {list.map((bag) => {
         const claimed = (myClaims.data ?? []).includes(bag.id);
         return (
-          <div key={bag.id} className="lucky-envelope flex items-center gap-2 rounded-2xl px-3 py-2">
+          <div
+            key={bag.id}
+            className="lucky-envelope flex items-center gap-2 rounded-2xl px-3 py-2"
+          >
             <span className="text-xl">🧧</span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[11px] font-extrabold text-white">
-                حقيبة حظ {bag.total_amount.toLocaleString("en-US")} كوينز · {bag.winners_count} فائزين
+                حقيبة حظ {bag.total_amount.toLocaleString("en-US")} كوينز · {bag.winners_count}{" "}
+                فائزين
               </p>
               <p className="text-[10px] text-white/75">
                 {bag.claimed_count} من {bag.winners_count} حصلوا عليها
@@ -188,7 +205,9 @@ export function LuckyBagSheet({
         <div className="lucky-envelope mt-3 rounded-3xl p-4 text-center">
           <p className="text-[11px] text-white/80">قيمة الحقيبة</p>
           <p className="text-2xl font-extrabold text-white">{total.toLocaleString("en-US")}</p>
-          <p className="mt-1 text-[11px] text-white/80">{winners} فائزين · متوسط {perWinner.toLocaleString("en-US")}</p>
+          <p className="mt-1 text-[11px] text-white/80">
+            {winners} فائزين · متوسط {perWinner.toLocaleString("en-US")}
+          </p>
         </div>
 
         <p className="mt-4 text-[11px] font-bold text-muted-foreground">المبلغ الإجمالي</p>
@@ -245,10 +264,18 @@ export function LuckyBagSheet({
           disabled={create.isPending || total < 1_000_000 || total > balance}
           className="mt-3 h-12 w-full rounded-2xl gradient-gold font-extrabold text-primary-foreground"
         >
-          {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="me-1 h-4 w-4" />}
+          {create.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Gift className="me-1 h-4 w-4" />
+          )}
           إرسال حقيبة الحظ
         </Button>
-        {total > balance && <p className="mt-2 text-center text-[11px] text-destructive">رصيدك غير كافٍ لهذه الحقيبة</p>}
+        {total > balance && (
+          <p className="mt-2 text-center text-[11px] text-destructive">
+            رصيدك غير كافٍ لهذه الحقيبة
+          </p>
+        )}
         <div className="pb-4" />
       </SheetContent>
     </Sheet>

@@ -40,7 +40,8 @@ export const createCoinPurchaseRequest = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .eq("status", "pending");
     if (countError) throw new Error(countError.message);
-    if ((count ?? 0) >= 3) throw new Error("لديك 3 طلبات قيد المراجعة حاليًا — يمكنك إلغاء أحدها أو انتظار تأكيدها");
+    if ((count ?? 0) >= 3)
+      throw new Error("لديك 3 طلبات قيد المراجعة حاليًا — يمكنك إلغاء أحدها أو انتظار تأكيدها");
 
     const payload = {
       user_id: context.userId,

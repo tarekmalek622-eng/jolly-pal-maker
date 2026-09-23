@@ -12,7 +12,10 @@ type Rpc = {
  */
 async function assertAdmin(supabase: Rpc, userId?: string, section?: string) {
   if (section && userId) {
-    const { data, error } = await supabase.rpc("admin_has_section", { _user_id: userId, _section: section });
+    const { data, error } = await supabase.rpc("admin_has_section", {
+      _user_id: userId,
+      _section: section,
+    });
     if (error || data !== true) throw new Error("لا تملك صلاحية هذا القسم");
     return;
   }
@@ -25,7 +28,13 @@ async function assertSuperAdmin(supabase: Rpc, userId: string) {
   if (error || data !== true) throw new Error("هذه العملية للمدير العام فقط");
 }
 
-async function log(actorId: string, targetId: string, action: string, oldValue: string, newValue: string) {
+async function log(
+  actorId: string,
+  targetId: string,
+  action: string,
+  oldValue: string,
+  newValue: string,
+) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   await supabaseAdmin.from("audit_logs").insert({
     actor_id: actorId,
@@ -95,7 +104,13 @@ export const adminSetSuspended = createServerFn({ method: "POST" })
       _suspended: data.suspended,
     });
     if (error) throw new Error(error.message);
-    await log(context.userId, data.userId, "set_suspended", String(!data.suspended), String(data.suspended));
+    await log(
+      context.userId,
+      data.userId,
+      "set_suspended",
+      String(!data.suspended),
+      String(data.suspended),
+    );
     return { ok: true };
   });
 
@@ -112,23 +127,44 @@ export const adminSetRoomDisabled = createServerFn({ method: "POST" })
       .update({ is_disabled: data.disabled })
       .eq("id", data.roomId);
     if (error) throw new Error(error.message);
-    await log(context.userId, data.roomId, "set_room_disabled", String(!data.disabled), String(data.disabled));
+    await log(
+      context.userId,
+      data.roomId,
+      "set_room_disabled",
+      String(!data.disabled),
+      String(data.disabled),
+    );
     return { ok: true };
   });
 
 export const adminUpdateRoomBackground = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ roomId: z.string().uuid(), backgroundUrl: z.string().max(500).nullable() }).parse(input),
+    z
+      .object({ roomId: z.string().uuid(), backgroundUrl: z.string().max(500).nullable() })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId, "rooms");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const previous = await supabaseAdmin.from("rooms").select("background_url").eq("id", data.roomId).maybeSingle();
+    const previous = await supabaseAdmin
+      .from("rooms")
+      .select("background_url")
+      .eq("id", data.roomId)
+      .maybeSingle();
     if (previous.error || !previous.data) throw new Error("الغرفة غير موجودة");
-    const { error } = await supabaseAdmin.from("rooms").update({ background_url: data.backgroundUrl }).eq("id", data.roomId);
+    const { error } = await supabaseAdmin
+      .from("rooms")
+      .update({ background_url: data.backgroundUrl })
+      .eq("id", data.roomId);
     if (error) throw new Error(error.message);
-    await log(context.userId, data.roomId, "admin_room_background", previous.data.background_url ?? "", data.backgroundUrl ?? "");
+    await log(
+      context.userId,
+      data.roomId,
+      "admin_room_background",
+      previous.data.background_url ?? "",
+      data.backgroundUrl ?? "",
+    );
     return { ok: true };
   });
 
@@ -198,8 +234,18 @@ export const adminUpdateRoomDetails = createServerFn({ method: "POST" })
       context.userId,
       data.roomId,
       "admin_room_details",
-      JSON.stringify({ name: previous.data.name, image_url: previous.data.image_url, owner_id: previous.data.owner_id, room_code: previous.data.room_code }),
-      JSON.stringify({ name: result.data.name, image_url: result.data.image_url, owner_id: result.data.owner_id, room_code: result.data.room_code }),
+      JSON.stringify({
+        name: previous.data.name,
+        image_url: previous.data.image_url,
+        owner_id: previous.data.owner_id,
+        room_code: previous.data.room_code,
+      }),
+      JSON.stringify({
+        name: result.data.name,
+        image_url: result.data.image_url,
+        owner_id: result.data.owner_id,
+        room_code: result.data.room_code,
+      }),
     );
     return result.data;
   });
@@ -210,21 +256,39 @@ export const adminCloseWheelRound = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId, "gameEngine");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const round = await supabaseAdmin.from("wheel_rounds").select("id, round_no").eq("status", "betting").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const round = await supabaseAdmin
+      .from("wheel_rounds")
+      .select("id, round_no")
+      .eq("status", "betting")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
     if (round.error) throw new Error(round.error.message);
     if (!round.data) throw new Error("لا توجد جولة مفتوحة");
     const settled = await supabaseAdmin.rpc("wheel_settle", { _round_id: round.data.id });
     if (settled.error) throw new Error(settled.error.message);
-    const result = await supabaseAdmin.from("wheel_rounds").select("id, round_no, status, winning_key").eq("id", round.data.id).single();
+    const result = await supabaseAdmin
+      .from("wheel_rounds")
+      .select("id, round_no, status, winning_key")
+      .eq("id", round.data.id)
+      .single();
     if (result.error) throw new Error(result.error.message);
-    await log(context.userId, round.data.id, "admin_wheel_close", "betting", JSON.stringify({ room_id: data.roomId, winning_key: result.data.winning_key }));
+    await log(
+      context.userId,
+      round.data.id,
+      "admin_wheel_close",
+      "betting",
+      JSON.stringify({ room_id: data.roomId, winning_key: result.data.winning_key }),
+    );
     return result.data;
   });
 
 export const adminResolveReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ reportId: z.string().uuid(), status: z.enum(["resolved", "rejected", "pending"]) }).parse(input),
+    z
+      .object({ reportId: z.string().uuid(), status: z.enum(["resolved", "rejected", "pending"]) })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId, "reports");
@@ -285,14 +349,21 @@ export const adminDeleteGift = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId, "gifts");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: gift } = await supabaseAdmin.from("gifts").select("name").eq("id", data.id).maybeSingle();
+    const { data: gift } = await supabaseAdmin
+      .from("gifts")
+      .select("name")
+      .eq("id", data.id)
+      .maybeSingle();
     const { count } = await supabaseAdmin
       .from("gift_transactions")
       .select("id", { count: "exact", head: true })
       .eq("gift_id", data.id);
     if ((count ?? 0) > 0) {
       // الهدية مستخدمة في سجل عمليات — نخفيها بدل حذف السجل
-      const { error } = await supabaseAdmin.from("gifts").update({ is_active: false }).eq("id", data.id);
+      const { error } = await supabaseAdmin
+        .from("gifts")
+        .update({ is_active: false })
+        .eq("id", data.id);
       if (error) throw new Error(error.message);
       await log(context.userId, data.id, "hide_gift", gift?.name ?? "", "مخفية (لها سجل إرسال)");
       return { deleted: false, hidden: true };
@@ -328,7 +399,13 @@ export const adminUpsertStoreItem = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
-    await log(context.userId, row.id, data.id ? "update_store_item" : "create_store_item", "", data.name);
+    await log(
+      context.userId,
+      row.id,
+      data.id ? "update_store_item" : "create_store_item",
+      "",
+      data.name,
+    );
     return { id: row.id };
   });
 
@@ -357,7 +434,13 @@ export const adminSetActive = createServerFn({ method: "POST" })
             .update({ is_active: data.active } as never)
             .eq("id", String(data.id));
     if (error) throw new Error(error.message);
-    await log(context.userId, String(data.id), `set_active_${data.table}`, String(!data.active), String(data.active));
+    await log(
+      context.userId,
+      String(data.id),
+      `set_active_${data.table}`,
+      String(!data.active),
+      String(data.active),
+    );
     return { ok: true };
   });
 
@@ -490,12 +573,10 @@ export const adminSetGameSettings = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId, "games");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("app_settings")
-      .upsert([
-        { key: "games", value: data.games },
-        { key: "limits", value: data.limits },
-      ] as never);
+    const { error } = await supabaseAdmin.from("app_settings").upsert([
+      { key: "games", value: data.games },
+      { key: "limits", value: data.limits },
+    ] as never);
     if (error) throw new Error(error.message);
     await log(context.userId, "settings", "update_game_settings", "", JSON.stringify(data));
     return { ok: true };
@@ -525,13 +606,17 @@ export const adminSetWheelSettings = createServerFn({ method: "POST" })
           .max(16),
       })
       .refine((v) => v.max_bet >= v.min_bet, { message: "الحد الأعلى أقل من الأدنى" })
-      .refine((v) => new Set(v.slots.map((s) => s.key)).size === v.slots.length, { message: "مفاتيح الخانات مكررة" })
+      .refine((v) => new Set(v.slots.map((s) => s.key)).size === v.slots.length, {
+        message: "مفاتيح الخانات مكررة",
+      })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId, "games");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("app_settings").upsert([{ key: "wheel", value: data }] as never);
+    const { error } = await supabaseAdmin
+      .from("app_settings")
+      .upsert([{ key: "wheel", value: data }] as never);
     if (error) throw new Error(error.message);
     await log(context.userId, "settings", "update_wheel_settings", "", JSON.stringify(data));
     return { ok: true };
@@ -590,14 +675,22 @@ export const adminSetUserRole = createServerFn({ method: "POST" })
         .eq("role", data.role as never);
       if (error) throw new Error(error.message);
     }
-    await log(context.userId, data.userId, data.grant ? "grant_role" : "revoke_role", "", data.role);
+    await log(
+      context.userId,
+      data.userId,
+      data.grant ? "grant_role" : "revoke_role",
+      "",
+      data.role,
+    );
     return { ok: true };
   });
 
 export const adminSetUserBadge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ userId: z.string().uuid(), badgeId: z.string().uuid(), grant: z.boolean() }).parse(input),
+    z
+      .object({ userId: z.string().uuid(), badgeId: z.string().uuid(), grant: z.boolean() })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context.supabase as never, context.userId);
@@ -615,7 +708,10 @@ export const adminSetUserBadge = createServerFn({ method: "POST" })
     if (data.grant) {
       const { error } = await supabaseAdmin
         .from("user_badges")
-        .upsert({ user_id: data.userId, badge_id: data.badgeId, progress: 1 }, { onConflict: "user_id,badge_id" });
+        .upsert(
+          { user_id: data.userId, badge_id: data.badgeId, progress: 1 },
+          { onConflict: "user_id,badge_id" },
+        );
       if (error) throw new Error(error.message);
       await supabaseAdmin.from("notifications").insert({
         user_id: data.userId,
@@ -632,27 +728,41 @@ export const adminSetUserBadge = createServerFn({ method: "POST" })
         .eq("badge_id", data.badgeId);
       if (error) throw new Error(error.message);
     }
-    await log(context.userId, data.userId, data.grant ? "grant_admin_badge" : "revoke_admin_badge", "", badge.name);
+    await log(
+      context.userId,
+      data.userId,
+      data.grant ? "grant_admin_badge" : "revoke_admin_badge",
+      "",
+      badge.name,
+    );
     return { ok: true };
   });
 
 export const adminUpsertBadgeDefinition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({
-    id: z.string().uuid().optional(),
-    key: z.string().min(2).max(50).regex(/^[a-z0-9_]+$/),
-    name: z.string().min(2).max(60),
-    description: z.string().max(240).nullable().optional(),
-    kind: z.enum(["administrative", "achievement"]),
-    imageUrl: z.string().url().max(2000).nullable().optional(),
-    iconKey: z.string().max(40),
-    colorKey: z.string().max(40),
-    displayVariant: z.enum(["crest", "ribbon", "medal", "glass"]),
-    audience: z.enum(["assigned", "admin", "moderator", "host", "vip", "all"]),
-    sortOrder: z.number().int().min(0).max(10000),
-    threshold: z.number().int().min(0).max(100000000),
-    isActive: z.boolean(),
-  }).parse(input))
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        key: z
+          .string()
+          .min(2)
+          .max(50)
+          .regex(/^[a-z0-9_]+$/),
+        name: z.string().min(2).max(60),
+        description: z.string().max(240).nullable().optional(),
+        kind: z.enum(["administrative", "achievement"]),
+        imageUrl: z.string().url().max(2000).nullable().optional(),
+        iconKey: z.string().max(40),
+        colorKey: z.string().max(40),
+        displayVariant: z.enum(["crest", "ribbon", "medal", "glass"]),
+        audience: z.enum(["assigned", "admin", "moderator", "host", "vip", "all"]),
+        sortOrder: z.number().int().min(0).max(10000),
+        threshold: z.number().int().min(0).max(100000000),
+        isActive: z.boolean(),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -672,10 +782,21 @@ export const adminUpsertBadgeDefinition = createServerFn({ method: "POST" })
       is_active: data.isActive,
     };
     const result = data.id
-      ? await supabaseAdmin.from("badge_definitions").update(payload).eq("id", data.id).select("id").single()
+      ? await supabaseAdmin
+          .from("badge_definitions")
+          .update(payload)
+          .eq("id", data.id)
+          .select("id")
+          .single()
       : await supabaseAdmin.from("badge_definitions").insert(payload).select("id").single();
     if (result.error) throw new Error(result.error.message);
-    await log(context.userId, result.data.id, data.id ? "update_badge_definition" : "create_badge_definition", "", data.name);
+    await log(
+      context.userId,
+      result.data.id,
+      data.id ? "update_badge_definition" : "create_badge_definition",
+      "",
+      data.name,
+    );
     return { id: result.data.id };
   });
 
@@ -684,9 +805,12 @@ export const adminEndRelationship = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ relationshipId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId, "users");
-    const { data: ended, error } = await (context.supabase as unknown as Rpc).rpc("admin_end_relationship", {
-      _relationship_id: data.relationshipId,
-    });
+    const { data: ended, error } = await (context.supabase as unknown as Rpc).rpc(
+      "admin_end_relationship",
+      {
+        _relationship_id: data.relationshipId,
+      },
+    );
     if (error) throw new Error(error instanceof Error ? error.message : "تعذر إنهاء العلاقة");
     return { ok: ended === true };
   });
@@ -720,7 +844,13 @@ export const adminUpsertQuizQuestion = createServerFn({ method: "POST" })
       : supabaseAdmin.from("quiz_questions").insert(payload).select("id").single();
     const { data: row, error } = await query;
     if (error) throw new Error(error.message);
-    await log(context.userId, row.id, data.id ? "update_quiz_question" : "create_quiz_question", "", data.question);
+    await log(
+      context.userId,
+      row.id,
+      data.id ? "update_quiz_question" : "create_quiz_question",
+      "",
+      data.question,
+    );
     return { id: row.id };
   });
 
@@ -782,9 +912,15 @@ export const adminReviewCoinPurchase = createServerFn({ method: "POST" })
 
     if (data.approve) {
       const client = supabaseAdmin as unknown as {
-        rpc: (f: string, a: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+        rpc: (
+          f: string,
+          a: Record<string, unknown>,
+        ) => Promise<{ data: unknown; error: { message: string } | null }>;
       };
-      const { error } = await client.rpc("approve_coin_purchase", { _request_id: data.id, _admin: context.userId });
+      const { error } = await client.rpc("approve_coin_purchase", {
+        _request_id: data.id,
+        _admin: context.userId,
+      });
       if (error) throw new Error(error.message);
       await log(context.userId, data.id, "approve_coin_purchase", "pending", "approved");
       return { ok: true };
@@ -838,7 +974,13 @@ export const adminSetPaymentAccounts = createServerFn({ method: "POST" })
       .from("app_settings")
       .upsert([{ key: "payment_accounts", value: data }] as never);
     if (error) throw new Error(error.message);
-    await log(context.userId, "payment_accounts", "update_payment_accounts", "", JSON.stringify(data));
+    await log(
+      context.userId,
+      "payment_accounts",
+      "update_payment_accounts",
+      "",
+      JSON.stringify(data),
+    );
     return { ok: true };
   });
 
@@ -881,10 +1023,10 @@ export const adminUpdateUserIdentity = createServerFn({ method: "POST" })
         .maybeSingle();
       if (takenError) throw new Error(takenError.message);
       if (taken) throw new Error("هذا الـID مستخدم بالفعل");
-      patch['public_id'] = data.publicId;
+      patch["public_id"] = data.publicId;
     }
     if (data.displayName && data.displayName !== current.display_name) {
-      patch['display_name'] = data.displayName;
+      patch["display_name"] = data.displayName;
     }
     if (Object.keys(patch).length === 0) return { ok: true, changed: false };
 
@@ -895,8 +1037,8 @@ export const adminUpdateUserIdentity = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // عند تغيير الـID: يصبح كود غرفة المستخدم نفس الـID الشخصي + إشعار له
-    if (patch['public_id']) {
-      const newId = String(patch['public_id']);
+    if (patch["public_id"]) {
+      const newId = String(patch["public_id"]);
       const { data: myRoom } = await supabaseAdmin
         .from("rooms")
         .select("id")
@@ -910,7 +1052,10 @@ export const adminUpdateUserIdentity = createServerFn({ method: "POST" })
           .eq("room_code", newId)
           .maybeSingle();
         if (!codeTaken) {
-          await supabaseAdmin.from("rooms").update({ room_code: newId } as never).eq("id", myRoom.id);
+          await supabaseAdmin
+            .from("rooms")
+            .update({ room_code: newId } as never)
+            .eq("id", myRoom.id);
         }
       }
       await supabaseAdmin.from("notifications").insert({
@@ -960,7 +1105,11 @@ export const adminCreateRoom = createServerFn({ method: "POST" })
 
     let ownerId = context.userId;
     if (data.ownerPublicId) {
-      const owner = await supabaseAdmin.from("profiles").select("id").eq("public_id", data.ownerPublicId).maybeSingle();
+      const owner = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("public_id", data.ownerPublicId)
+        .maybeSingle();
       if (owner.error) throw new Error(owner.error.message);
       if (!owner.data) throw new Error("لا يوجد مستخدم بهذا المعرّف");
       ownerId = owner.data.id;
@@ -968,7 +1117,8 @@ export const adminCreateRoom = createServerFn({ method: "POST" })
 
     const mics = Math.min(16, Math.max(4, data.micCount));
     const code = await (supabaseAdmin as unknown as Rpc).rpc("gen_room_code", {});
-    if (code.error) throw new Error((code.error as { message?: string }).message ?? "تعذر توليد رقم الغرفة");
+    if (code.error)
+      throw new Error((code.error as { message?: string }).message ?? "تعذر توليد رقم الغرفة");
 
     const created = await supabaseAdmin
       .from("rooms")
@@ -992,7 +1142,13 @@ export const adminCreateRoom = createServerFn({ method: "POST" })
     const mic = await supabaseAdmin.from("room_mics").insert(seats);
     if (mic.error) throw new Error(mic.error.message);
 
-    await log(context.userId, room.id, "admin_room_created", "", JSON.stringify({ name: room.name, code: room.room_code, owner_id: ownerId }));
+    await log(
+      context.userId,
+      room.id,
+      "admin_room_created",
+      "",
+      JSON.stringify({ name: room.name, code: room.room_code, owner_id: ownerId }),
+    );
     return room;
   });
 
@@ -1000,18 +1156,31 @@ export const adminCreateRoom = createServerFn({ method: "POST" })
 export const adminSetRoomModerator = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ roomId: z.string().uuid(), publicId: z.string().trim().min(3).max(30), enable: z.boolean() }).parse(input),
+    z
+      .object({
+        roomId: z.string().uuid(),
+        publicId: z.string().trim().min(3).max(30),
+        enable: z.boolean(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId, "rooms");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const target = await supabaseAdmin.from("profiles").select("id").eq("public_id", data.publicId).maybeSingle();
+    const target = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("public_id", data.publicId)
+      .maybeSingle();
     if (target.error) throw new Error(target.error.message);
     if (!target.data) throw new Error("لا يوجد مستخدم بهذا المعرّف");
     if (data.enable) {
       const { error } = await supabaseAdmin
         .from("room_moderators")
-        .upsert({ room_id: data.roomId, user_id: target.data.id }, { onConflict: "room_id,user_id" });
+        .upsert(
+          { room_id: data.roomId, user_id: target.data.id },
+          { onConflict: "room_id,user_id" },
+        );
       if (error) throw new Error(error.message);
     } else {
       const { error } = await supabaseAdmin
@@ -1021,22 +1190,42 @@ export const adminSetRoomModerator = createServerFn({ method: "POST" })
         .eq("user_id", target.data.id);
       if (error) throw new Error(error.message);
     }
-    await log(context.userId, data.roomId, data.enable ? "admin_room_mod_added" : "admin_room_mod_removed", "", target.data.id);
+    await log(
+      context.userId,
+      data.roomId,
+      data.enable ? "admin_room_mod_added" : "admin_room_mod_removed",
+      "",
+      target.data.id,
+    );
     return { ok: true };
   });
 
 /** إخراج مشارك من الغرفة وإنزاله من المايك */
 export const adminRemoveRoomMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid(), userId: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ roomId: z.string().uuid(), userId: z.string().uuid() }).parse(input),
+  )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId, "rooms");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const room = await supabaseAdmin.from("rooms").select("owner_id").eq("id", data.roomId).maybeSingle();
+    const room = await supabaseAdmin
+      .from("rooms")
+      .select("owner_id")
+      .eq("id", data.roomId)
+      .maybeSingle();
     if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
     if (room.data.owner_id === data.userId) throw new Error("لا يمكن إخراج مالك الغرفة");
-    await supabaseAdmin.from("room_mics").update({ user_id: null }).eq("room_id", data.roomId).eq("user_id", data.userId);
-    const { error } = await supabaseAdmin.from("room_members").delete().eq("room_id", data.roomId).eq("user_id", data.userId);
+    await supabaseAdmin
+      .from("room_mics")
+      .update({ user_id: null })
+      .eq("room_id", data.roomId)
+      .eq("user_id", data.userId);
+    const { error } = await supabaseAdmin
+      .from("room_members")
+      .delete()
+      .eq("room_id", data.roomId)
+      .eq("user_id", data.userId);
     if (error) throw new Error(error.message);
     await log(context.userId, data.roomId, "admin_room_member_removed", data.userId, "");
     return { ok: true };
@@ -1057,7 +1246,13 @@ export const adminDeleteRoomMessage = createServerFn({ method: "POST" })
     if (previous.error || !previous.data) throw new Error("الرسالة غير موجودة");
     const { error } = await supabaseAdmin.from("room_messages").delete().eq("id", data.messageId);
     if (error) throw new Error(error.message);
-    await log(context.userId, previous.data.room_id, "admin_room_message_deleted", previous.data.body, "");
+    await log(
+      context.userId,
+      previous.data.room_id,
+      "admin_room_message_deleted",
+      previous.data.body,
+      "",
+    );
     return { ok: true };
   });
 
@@ -1085,8 +1280,15 @@ export const adminResendRoomMessage = createServerFn({ method: "POST" })
       })
       .select("id")
       .maybeSingle();
-    if (inserted.error || !inserted.data) throw new Error(inserted.error?.message ?? "تعذر إعادة الإرسال");
-    await log(context.userId, source.data.room_id, "admin_room_message_resent", data.messageId, inserted.data.id);
+    if (inserted.error || !inserted.data)
+      throw new Error(inserted.error?.message ?? "تعذر إعادة الإرسال");
+    await log(
+      context.userId,
+      source.data.room_id,
+      "admin_room_message_resent",
+      data.messageId,
+      inserted.data.id,
+    );
     return inserted.data;
   });
 
@@ -1125,16 +1327,43 @@ export const adminUpsertBanner = createServerFn({ method: "POST" })
     };
     const db = supabaseAdmin as unknown as {
       from: (t: string) => {
-        insert: (v: unknown) => { select: (c: string) => { maybeSingle: () => Promise<{ data: { id: string } | null; error: { message: string } | null }> } };
-        update: (v: unknown) => { eq: (c: string, v2: string) => { select: (c2: string) => { maybeSingle: () => Promise<{ data: { id: string } | null; error: { message: string } | null }> } } };
-        delete: () => { eq: (c: string, v2: string) => Promise<{ error: { message: string } | null }> };
+        insert: (v: unknown) => {
+          select: (c: string) => {
+            maybeSingle: () => Promise<{
+              data: { id: string } | null;
+              error: { message: string } | null;
+            }>;
+          };
+        };
+        update: (v: unknown) => {
+          eq: (
+            c: string,
+            v2: string,
+          ) => {
+            select: (c2: string) => {
+              maybeSingle: () => Promise<{
+                data: { id: string } | null;
+                error: { message: string } | null;
+              }>;
+            };
+          };
+        };
+        delete: () => {
+          eq: (c: string, v2: string) => Promise<{ error: { message: string } | null }>;
+        };
       };
     };
     const result = data.id
       ? await db.from("banners").update(row).eq("id", data.id).select("id").maybeSingle()
       : await db.from("banners").insert(row).select("id").maybeSingle();
     if (result.error || !result.data) throw new Error(result.error?.message ?? "تعذر حفظ البنر");
-    await log(context.userId, result.data.id, data.id ? "admin_banner_updated" : "admin_banner_created", "", data.title);
+    await log(
+      context.userId,
+      result.data.id,
+      data.id ? "admin_banner_updated" : "admin_banner_created",
+      "",
+      data.title,
+    );
     return result.data;
   });
 
@@ -1144,7 +1373,13 @@ export const adminDeleteBanner = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase as never, context.userId, "banners");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const db = supabaseAdmin as unknown as { from: (t: string) => { delete: () => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> } } };
+    const db = supabaseAdmin as unknown as {
+      from: (t: string) => {
+        delete: () => {
+          eq: (c: string, v: string) => Promise<{ error: { message: string } | null }>;
+        };
+      };
+    };
     const { error } = await db.from("banners").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     await log(context.userId, data.id, "admin_banner_deleted", "", "");
@@ -1191,21 +1426,22 @@ export const adminSetUserSections = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const unique = [...new Set(data.sections)];
     if (unique.length === 0) {
-      const { error } = await supabaseAdmin.from("admin_sections").delete().eq("user_id", data.userId);
-      if (error) throw new Error(error.message);
-    } else {
       const { error } = await supabaseAdmin
         .from("admin_sections")
-        .upsert(
-          {
-            user_id: data.userId,
-            sections: unique,
-            granted_by: context.userId,
-            note: data.note ?? null,
-            updated_at: new Date().toISOString(),
-          } as never,
-          { onConflict: "user_id" },
-        );
+        .delete()
+        .eq("user_id", data.userId);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabaseAdmin.from("admin_sections").upsert(
+        {
+          user_id: data.userId,
+          sections: unique,
+          granted_by: context.userId,
+          note: data.note ?? null,
+          updated_at: new Date().toISOString(),
+        } as never,
+        { onConflict: "user_id" },
+      );
       if (error) throw new Error(error.message);
     }
     await log(context.userId, data.userId, "set_admin_sections", "", unique.join(","));

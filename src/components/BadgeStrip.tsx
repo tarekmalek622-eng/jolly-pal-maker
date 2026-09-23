@@ -23,10 +23,25 @@ export function BadgeStrip({ count, rank, className, userId }: BadgeStripProps) 
     enabled: Boolean(userId),
     queryFn: async () => {
       const [badges, roles, profile, ownedRoom] = await Promise.all([
-        supabase.from("user_badges").select("id", { count: "exact", head: true }).eq("user_id", userId ?? ""),
-        supabase.from("user_roles").select("role").eq("user_id", userId ?? ""),
-        supabase.from("profiles").select("vip_level").eq("id", userId ?? "").maybeSingle(),
-        supabase.from("rooms").select("id").eq("owner_id", userId ?? "").eq("is_active", true).limit(1),
+        supabase
+          .from("user_badges")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId ?? ""),
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId ?? ""),
+        supabase
+          .from("profiles")
+          .select("vip_level")
+          .eq("id", userId ?? "")
+          .maybeSingle(),
+        supabase
+          .from("rooms")
+          .select("id")
+          .eq("owner_id", userId ?? "")
+          .eq("is_active", true)
+          .limit(1),
       ]);
       if (badges.error) throw badges.error;
       if (roles.error) throw roles.error;
@@ -48,10 +63,12 @@ export function BadgeStrip({ count, rank, className, userId }: BadgeStripProps) 
   if (!shownCount && !shownRank && !roomOwner) return null;
 
   return (
-    <div className={cn(
-      "flex items-center gap-1.5 rounded-full bg-background/60 px-2 py-0.5 text-[9px] font-bold backdrop-blur-md border border-white/10 shadow-sm transition-all",
-      className
-    )}>
+    <div
+      className={cn(
+        "flex items-center gap-1.5 rounded-full bg-background/60 px-2 py-0.5 text-[9px] font-bold backdrop-blur-md border border-white/10 shadow-sm transition-all",
+        className,
+      )}
+    >
       <Award className="h-3 w-3 text-primary" />
       {shownRank && <span>{shownRank}</span>}
       {roomOwner && (

@@ -113,7 +113,9 @@ export const getGameMonitor = createServerFn({ method: "POST" })
         : Math.round(
             settledRounds.reduce(
               (sum, r) =>
-                sum + (new Date(r.settled_at!).getTime() - new Date(r.processing_started_at ?? r.started_at!).getTime()),
+                sum +
+                (new Date(r.settled_at!).getTime() -
+                  new Date(r.processing_started_at ?? r.started_at!).getTime()),
               0,
             ) / settledRounds.length,
           );
@@ -123,7 +125,11 @@ export const getGameMonitor = createServerFn({ method: "POST" })
     if (session) {
       const roundIds = rounds.map((r) => r.id);
       if (roundIds.length > 0) {
-        const bets = await supabaseAdmin.from("wheel_bets").select("payout").in("round_id", roundIds).limit(5000);
+        const bets = await supabaseAdmin
+          .from("wheel_bets")
+          .select("payout")
+          .in("round_id", roundIds)
+          .limit(5000);
         for (const b of bets.data ?? []) {
           if ((b.payout ?? 0) > 0) winners += 1;
           else losers += 1;
@@ -135,15 +141,29 @@ export const getGameMonitor = createServerFn({ method: "POST" })
     const recoveryRes = await supabaseAdmin
       .from("audit_logs")
       .select("id, action, created_at, new_value")
-      .in("action", ["admin_wheel_close", "wheel_recover", "wheel_settle_day", "admin_wheel_settle_day", "admin_wheel_force_result"])
+      .in("action", [
+        "admin_wheel_close",
+        "wheel_recover",
+        "wheel_settle_day",
+        "admin_wheel_settle_day",
+        "admin_wheel_force_result",
+      ])
       .order("created_at", { ascending: false })
       .limit(20);
 
     const current = (currentRes.data ?? null) as GameRoundRow | null;
     let slots: GameMonitorData["slots"] = [];
     if (current) {
-      const slotsRes = await supabaseAdmin.from("wheel_rounds").select("slots").eq("id", current.id).maybeSingle();
-      const raw = (slotsRes.data?.slots ?? []) as { key?: string; label?: string; multiplier?: number }[];
+      const slotsRes = await supabaseAdmin
+        .from("wheel_rounds")
+        .select("slots")
+        .eq("id", current.id)
+        .maybeSingle();
+      const raw = (slotsRes.data?.slots ?? []) as {
+        key?: string;
+        label?: string;
+        multiplier?: number;
+      }[];
       slots = (Array.isArray(raw) ? raw : []).map((s) => ({
         key: String(s.key ?? ""),
         label: String(s.label ?? s.key ?? ""),
@@ -183,7 +203,11 @@ export const adminRecoverRound = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const settled = await supabaseAdmin.rpc("wheel_settle", { _round_id: data.roundId });
     if (settled.error) throw new Error(settled.error.message);
-    const after = await supabaseAdmin.from("wheel_rounds").select(ROUND_COLS).eq("id", data.roundId).single();
+    const after = await supabaseAdmin
+      .from("wheel_rounds")
+      .select(ROUND_COLS)
+      .eq("id", data.roundId)
+      .single();
     if (after.error) throw new Error(after.error.message);
     await supabaseAdmin.from("audit_logs").insert({
       actor_id: context.userId,

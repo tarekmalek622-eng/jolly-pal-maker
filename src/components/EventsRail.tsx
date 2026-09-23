@@ -112,10 +112,15 @@ export function EventsRail() {
 
             <div className="space-y-2 p-3">
               <div className="h-1.5 overflow-hidden rounded-full bg-black/40">
-                <div className={cn("h-full rounded-full", style.bar)} style={{ width: `${pct}%` }} />
+                <div
+                  className={cn("h-full rounded-full", style.bar)}
+                  style={{ width: `${pct}%` }}
+                />
               </div>
               <div className="flex items-center justify-between">
-                <span className={cn("rounded-full border px-2 py-1 text-[10px] font-bold", style.chip)}>
+                <span
+                  className={cn("rounded-full border px-2 py-1 text-[10px] font-bold", style.chip)}
+                >
                   {KIND_LABEL[event.ranking_kind] ?? event.ranking_kind}
                 </span>
                 <span className="flex items-center gap-2 text-[11px] font-black text-white">

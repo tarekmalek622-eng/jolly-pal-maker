@@ -41,7 +41,9 @@ function FamiliesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("families")
-        .select("id, family_code, name, logo_url, cover_url, animation_url, description, level, points, member_count, max_members, is_suspended")
+        .select(
+          "id, family_code, name, logo_url, cover_url, animation_url, description, level, points, member_count, max_members, is_suspended",
+        )
         .eq("is_active", true)
         .order("points", { ascending: false })
         .limit(100);
@@ -56,8 +58,12 @@ function FamiliesPage() {
     <AppShell header={<PageHeader title="العائلات" subtitle="ترتيب العائلات حسب نقاط الدعم" />}>
       <div className="space-y-2 px-4 pb-6">
         <FamilyWar />
-        {families.isLoading && <div className="surface-card p-4 text-xs text-muted-foreground">جارٍ التحميل…</div>}
-        {families.data?.length === 0 && <EmptyState title="لا توجد عائلات بعد" hint="إنشاء العائلات يتم من الإدارة." />}
+        {families.isLoading && (
+          <div className="surface-card p-4 text-xs text-muted-foreground">جارٍ التحميل…</div>
+        )}
+        {families.data?.length === 0 && (
+          <EmptyState title="لا توجد عائلات بعد" hint="إنشاء العائلات يتم من الإدارة." />
+        )}
         {(families.data ?? []).map((f, i) => {
           const lvl = levels.data?.find((l) => l.level === f.level);
           const style = familyStyle(lvl?.style);
@@ -66,13 +72,32 @@ function FamiliesPage() {
               key={f.id}
               to="/families/$familyId"
               params={{ familyId: f.id }}
-              className={cn("surface-card flex items-center gap-3 bg-gradient-to-br p-3", style.card, f.level >= 7 && style.glow)}
+              className={cn(
+                "surface-card flex items-center gap-3 bg-gradient-to-br p-3",
+                style.card,
+                f.level >= 7 && style.glow,
+              )}
             >
               {(f.animation_url || f.cover_url) && (
-                <img src={f.animation_url || f.cover_url || ""} alt="" loading="lazy" decoding="async" className="h-12 w-16 shrink-0 rounded-xl object-cover" />
+                <img
+                  src={f.animation_url || f.cover_url || ""}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="h-12 w-16 shrink-0 rounded-xl object-cover"
+                />
               )}
-              <span className="w-5 text-center text-xs font-black text-muted-foreground">{i + 1}</span>
-              <FamilyCrest name={f.name} logoUrl={f.logo_url} styleKey={lvl?.style} level={f.level} size={46} className={style.ring} />
+              <span className="w-5 text-center text-xs font-black text-muted-foreground">
+                {i + 1}
+              </span>
+              <FamilyCrest
+                name={f.name}
+                logoUrl={f.logo_url}
+                styleKey={lvl?.style}
+                level={f.level}
+                size={46}
+                className={style.ring}
+              />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-black">{f.name}</p>
                 <p className="truncate text-[10px] text-muted-foreground">

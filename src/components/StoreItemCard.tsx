@@ -2,12 +2,7 @@ import { useEffect, useState } from "react";
 import { Coins } from "lucide-react";
 import { resolveMediaUrl } from "@/lib/media";
 import { Button } from "@/components/ui/button";
-import {
-  CATEGORY_LABEL,
-  RARITY_LABEL,
-  storeArt,
-  storeGlyph,
-} from "@/lib/store-art";
+import { CATEGORY_LABEL, RARITY_LABEL, storeArt, storeGlyph } from "@/lib/store-art";
 
 export type StoreItem = {
   id: string;

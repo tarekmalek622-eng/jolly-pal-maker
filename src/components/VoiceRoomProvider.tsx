@@ -30,7 +30,11 @@ export function VoiceRoomProvider({ children }: { children: ReactNode }) {
   const voice = useVoiceRoom(activeRoom?.id ?? null, canPublish);
 
   const enterRoom = useCallback((room: ActiveRoom, publish: boolean) => {
-    setActiveRoom((prev) => (prev && prev.id === room.id && prev.name === room.name && prev.imageUrl === room.imageUrl ? prev : room));
+    setActiveRoom((prev) =>
+      prev && prev.id === room.id && prev.name === room.name && prev.imageUrl === room.imageUrl
+        ? prev
+        : room,
+    );
     setCanPublish(publish);
     setMinimized(false);
   }, []);
@@ -51,7 +55,9 @@ export function VoiceRoomProvider({ children }: { children: ReactNode }) {
   return (
     <VoiceRoomContext.Provider value={value}>
       {children}
-      {activeRoom && minimized && <MiniRoomBubble room={activeRoom} micOn={voice.micEnabled} onClose={exitRoom} />}
+      {activeRoom && minimized && (
+        <MiniRoomBubble room={activeRoom} micOn={voice.micEnabled} onClose={exitRoom} />
+      )}
     </VoiceRoomContext.Provider>
   );
 }
@@ -102,7 +108,11 @@ function MiniRoomBubble({
               micOn ? "bg-success" : "bg-surface-2",
             )}
           >
-            {micOn ? <Mic className="h-3 w-3 text-background" /> : <MicOff className="h-3 w-3 text-muted-foreground" />}
+            {micOn ? (
+              <Mic className="h-3 w-3 text-background" />
+            ) : (
+              <MicOff className="h-3 w-3 text-muted-foreground" />
+            )}
           </span>
         </Link>
         <button

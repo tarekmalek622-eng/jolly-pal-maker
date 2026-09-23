@@ -42,7 +42,12 @@ export const getVoiceToken = createServerFn({ method: "POST" })
       .or(`room_id.eq.${data.roomId},scope.eq.global`)
       .limit(1);
     if (ban && ban.length > 0) {
-      return { configured: false as const, token: null, url: null, reason: "أنت محظور من هذه الغرفة" };
+      return {
+        configured: false as const,
+        token: null,
+        url: null,
+        reason: "أنت محظور من هذه الغرفة",
+      };
     }
 
     let canPublish = false;

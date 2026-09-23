@@ -26,7 +26,15 @@ const RARITY_ART: Record<string, { ring: string; bg: string }> = {
 };
 
 /** بطاقة الهدية المصمّمة: تُستخدم لكل هدية لا تحتوي ملف صورة مرفوعًا. */
-export function GiftArt({ gift, size = 48, className }: { gift: GiftMediaRow; size?: number; className?: string | undefined }) {
+export function GiftArt({
+  gift,
+  size = 48,
+  className,
+}: {
+  gift: GiftMediaRow;
+  size?: number;
+  className?: string | undefined;
+}) {
   const art = RARITY_ART[gift.rarity ?? "common"] ?? RARITY_ART["common"]!;
   const glyph = gift.emoji && gift.emoji.trim() ? gift.emoji : "🎁";
   return (
@@ -42,7 +50,10 @@ export function GiftArt({ gift, size = 48, className }: { gift: GiftMediaRow; si
     >
       <span className="absolute -top-1/3 h-1/2 w-[140%] rotate-12 bg-white/10 blur-[6px]" />
       <span className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,0.22),transparent_60%)]" />
-      <span className="relative leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]" style={{ fontSize: size * 0.54 }}>
+      <span
+        className="relative leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]"
+        style={{ fontSize: size * 0.54 }}
+      >
         {glyph}
       </span>
     </div>
@@ -51,7 +62,12 @@ export function GiftArt({ gift, size = 48, className }: { gift: GiftMediaRow; si
 
 /** يحوّل مسارات التخزين إلى روابط قابلة للعرض ويعيد التحميل عند التغيير. */
 export function useGiftUrls(gift: GiftMediaRow | null | undefined) {
-  const [urls, setUrls] = useState<{ thumb: string | null; anim: string | null; video: string | null; sound: string | null }>({
+  const [urls, setUrls] = useState<{
+    thumb: string | null;
+    anim: string | null;
+    video: string | null;
+    sound: string | null;
+  }>({
     thumb: null,
     anim: null,
     video: null,
@@ -59,14 +75,26 @@ export function useGiftUrls(gift: GiftMediaRow | null | undefined) {
   });
 
   const keys = useMemo(
-    () => [gift?.thumb_url ?? gift?.image_url ?? null, gift?.animation_url ?? null, gift?.video_url ?? null, gift?.sound_url ?? null] as const,
+    () =>
+      [
+        gift?.thumb_url ?? gift?.image_url ?? null,
+        gift?.animation_url ?? null,
+        gift?.video_url ?? null,
+        gift?.sound_url ?? null,
+      ] as const,
     [gift?.thumb_url, gift?.image_url, gift?.animation_url, gift?.video_url, gift?.sound_url],
   );
 
   useEffect(() => {
     let alive = true;
     void Promise.all(keys.map((k) => resolveMediaUrl(k))).then(([thumb, anim, video, sound]) => {
-      if (alive) setUrls({ thumb: thumb ?? null, anim: anim ?? null, video: video ?? null, sound: sound ?? null });
+      if (alive)
+        setUrls({
+          thumb: thumb ?? null,
+          anim: anim ?? null,
+          video: video ?? null,
+          sound: sound ?? null,
+        });
     });
     return () => {
       alive = false;
@@ -77,7 +105,15 @@ export function useGiftUrls(gift: GiftMediaRow | null | undefined) {
 }
 
 /** صورة الهدية المصغّرة داخل القوائم — تحميل عند الحاجة فقط. */
-export function GiftThumb({ gift, size = 48, className }: { gift: GiftMediaRow; size?: number; className?: string }) {
+export function GiftThumb({
+  gift,
+  size = 48,
+  className,
+}: {
+  gift: GiftMediaRow;
+  size?: number;
+  className?: string;
+}) {
   const [sources, setSources] = useState<string[]>([]);
   const [sourceIndex, setSourceIndex] = useState(0);
   useEffect(() => {
@@ -87,7 +123,11 @@ export function GiftThumb({ gift, size = 48, className }: { gift: GiftMediaRow; 
       resolveMediaUrl(gift.thumb_url ?? gift.image_url),
     ]).then((resolved) => {
       if (!alive) return;
-      setSources(resolved.filter((url, index, all): url is string => Boolean(url) && all.indexOf(url) === index));
+      setSources(
+        resolved.filter(
+          (url, index, all): url is string => Boolean(url) && all.indexOf(url) === index,
+        ),
+      );
       setSourceIndex(0);
     });
     return () => {
@@ -152,30 +192,45 @@ export function GiftPlayer({
     }
   }, [playing, urls.video, urls.sound, soundOn]);
 
-  const media = urls.video && !videoFailed ? (
-    <video
-      ref={videoRef}
-      src={urls.video}
-      className="h-full w-full object-contain"
-      autoPlay={playing}
-      muted={!soundOn}
-      playsInline
-      loop={false}
-      preload="none"
-      poster={urls.thumb ?? undefined}
-      onError={() => setVideoFailed(true)}
-    />
-  ) : urls.anim && !animationFailed ? (
-    <img src={urls.anim} alt={gift.name} className="h-full w-full object-contain" decoding="async" onError={() => setAnimationFailed(true)} />
-  ) : urls.thumb ? (
-    <img src={urls.thumb} alt={gift.name} className="h-full w-full object-contain" decoding="async" />
-  ) : (
-    <GiftArt gift={gift} size={200} className="h-full w-full" />
-  );
+  const media =
+    urls.video && !videoFailed ? (
+      <video
+        ref={videoRef}
+        src={urls.video}
+        className="h-full w-full object-contain"
+        autoPlay={playing}
+        muted={!soundOn}
+        playsInline
+        loop={false}
+        preload="none"
+        poster={urls.thumb ?? undefined}
+        onError={() => setVideoFailed(true)}
+      />
+    ) : urls.anim && !animationFailed ? (
+      <img
+        src={urls.anim}
+        alt={gift.name}
+        className="h-full w-full object-contain"
+        decoding="async"
+        onError={() => setAnimationFailed(true)}
+      />
+    ) : urls.thumb ? (
+      <img
+        src={urls.thumb}
+        alt={gift.name}
+        className="h-full w-full object-contain"
+        decoding="async"
+      />
+    ) : (
+      <GiftArt gift={gift} size={200} className="h-full w-full" />
+    );
 
   return (
     <div className={cn("relative flex items-center justify-center", className)}>
-      <div className="h-full w-full transition-transform duration-500" style={{ transform: `scale(${scale})` }}>
+      <div
+        className="h-full w-full transition-transform duration-500"
+        style={{ transform: `scale(${scale})` }}
+      >
         {media}
       </div>
       {urls.sound && soundOn ? <audio ref={audioRef} src={urls.sound} preload="none" /> : null}
@@ -192,7 +247,13 @@ export type GiftShowEvent = {
 };
 
 /** طبقة عرض تأثير الهدية داخل الغرفة لجميع الحاضرين، واحدة تلو الأخرى. */
-export function GiftOverlay({ event, onDone }: { event: GiftShowEvent | null; onDone: () => void }) {
+export function GiftOverlay({
+  event,
+  onDone,
+}: {
+  event: GiftShowEvent | null;
+  onDone: () => void;
+}) {
   useEffect(() => {
     if (!event) return;
     const ms = Math.min(Math.max(event.gift.duration_ms ?? 3000, 800), 12000);
@@ -206,7 +267,12 @@ export function GiftOverlay({ event, onDone }: { event: GiftShowEvent | null; on
   return (
     <div className="pointer-events-none fixed inset-0 z-[70] flex flex-col items-center justify-center">
       <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px] animate-fade-in" />
-      <div className={cn("relative animate-scale-in", rare && "drop-shadow-[0_0_40px_rgba(255,190,60,0.65)]")}>
+      <div
+        className={cn(
+          "relative animate-scale-in",
+          rare && "drop-shadow-[0_0_40px_rgba(255,190,60,0.65)]",
+        )}
+      >
         {rare ? (
           <div className="absolute -inset-10 rounded-full bg-[radial-gradient(circle,rgba(255,196,74,0.35),transparent_65%)] pulse" />
         ) : null}
