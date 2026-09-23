@@ -6,6 +6,7 @@ import {
   Backpack,
   BarChart3,
   BookOpen,
+  Award,
   Camera,
   Coins,
   Crown,
