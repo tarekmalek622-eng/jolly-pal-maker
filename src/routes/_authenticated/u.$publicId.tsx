@@ -275,6 +275,7 @@ function UserPage() {
   if (!target) {
     return <AppShell hideNav>لا يوجد مستخدم بهذا الرقم.</AppShell>;
   }
+  const activeRoom = currentRoom.data;
 
   return (
     <AppShell
@@ -375,7 +376,7 @@ function UserPage() {
               إعادة المحاولة
             </Button>
           </div>
-        ) : currentRoom.data ? (
+        ) : activeRoom ? (
           <div className="flex min-w-0 items-center gap-3">
             <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-success/15 text-success">
               <Radio className="h-5 w-5" />
@@ -383,26 +384,26 @@ function UserPage() {
             </span>
             <div className="min-w-0 flex-1 text-start">
               <p className="text-[10px] font-bold text-success">موجود في غرفة الآن</p>
-              {currentRoom.data.room_type === "private" ? (
+              {activeRoom.room_type === "private" ? (
                 <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
                   <Lock className="h-3.5 w-3.5" /> غرفة خاصة
                 </p>
               ) : (
                 <>
-                  <p className="mt-0.5 truncate text-sm font-bold">{currentRoom.data.name}</p>
+                  <p className="mt-0.5 truncate text-sm font-bold">{activeRoom.name}</p>
                   <p className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
-                    <Users className="h-3 w-3" /> {currentRoom.data.member_count} داخل الغرفة
+                    <Users className="h-3 w-3" /> {activeRoom.member_count} داخل الغرفة
                   </p>
                 </>
               )}
             </div>
-            {currentRoom.data.room_type === "public" && (
+            {activeRoom.room_type === "public" && (
               <Button
                 size="sm"
                 onClick={() =>
                   void navigate({
                     to: "/rooms/$roomId",
-                    params: { roomId: currentRoom.data.id },
+                    params: { roomId: activeRoom.id },
                   })
                 }
                 className="h-9 shrink-0 rounded-xl px-3 text-xs font-bold"
