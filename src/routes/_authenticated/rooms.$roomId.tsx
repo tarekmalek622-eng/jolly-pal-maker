@@ -1451,10 +1451,13 @@ function RoomPage() {
             {(requests.data ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">لا توجد طلبات.</p>
             ) : (
-              requests.data?.map((r) => {
+              requests.data?.map((r, index) => {
                 const person = personOf(r.user_id);
                 return (
                   <div key={r.id} className="surface-card flex items-center gap-3 p-3">
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-surface text-[11px] font-black">
+                      {index + 1}
+                    </span>
                     <UserAvatar src={person?.avatar_url} name={person?.display_name} size={40} />
                     <p className="flex-1 text-sm font-semibold">
                       {person?.display_name ?? "مستخدم"}
