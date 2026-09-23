@@ -228,16 +228,15 @@ function MePage() {
 
   return (
     <AppShell header={<PageHeader title="ملفي" />}>
-      <div className="surface-card overflow-hidden p-0">
+      <div className="surface-card overflow-hidden p-5">
         {/* غلاف متحرك يتغيّر حسب مستوى VIP */}
         <div
           className={cn(
-            "cover-sheen h-20 w-full",
+            "cover-sheen -mx-5 -mt-5 mb-4 h-20 w-[calc(100%+2.5rem)]",
             (p?.vip_level ?? 0) >= 1 ? "vip-aura" : "bg-surface-2",
-            (p?.vip_level ?? 0) >= 6 && "shadow-[inset_0_-24px_40px_rgba(0,0,0,0.45)]",
           )}
         />
-        <div className="flex items-center gap-4 p-5">
+        <div className="flex items-center gap-4">
           <button type="button" onClick={() => fileRef.current?.click()} className="relative">
             <UserAvatar
               src={p?.avatar_url}
