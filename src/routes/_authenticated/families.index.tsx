@@ -54,6 +54,7 @@ function FamiliesPage() {
   return (
     <AppShell header={<PageHeader title="العائلات" subtitle="ترتيب العائلات حسب نقاط الدعم" />}>
       <div className="space-y-2 px-4 pb-6">
+        <FamilyWar />
         {families.isLoading && <div className="surface-card p-4 text-xs text-muted-foreground">جارٍ التحميل…</div>}
         {families.data?.length === 0 && <EmptyState title="لا توجد عائلات بعد" hint="إنشاء العائلات يتم من الإدارة." />}
         {(families.data ?? []).map((f, i) => {
