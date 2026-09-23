@@ -978,6 +978,45 @@ export type Database = {
           },
         ]
       }
+      family_messages: {
+        Row: {
+          body: string
+          created_at: string
+          family_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          family_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          family_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_messages_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
@@ -1318,6 +1357,64 @@ export type Database = {
           },
         ]
       }
+      market_listings: {
+        Row: {
+          buyer_id: string | null
+          created_at: string
+          id: string
+          item_id: string
+          price: number
+          seller_id: string
+          sold_at: string | null
+          status: string
+          user_item_id: string
+        }
+        Insert: {
+          buyer_id?: string | null
+          created_at?: string
+          id?: string
+          item_id: string
+          price: number
+          seller_id: string
+          sold_at?: string | null
+          status?: string
+          user_item_id: string
+        }
+        Update: {
+          buyer_id?: string | null
+          created_at?: string
+          id?: string
+          item_id?: string
+          price?: number
+          seller_id?: string
+          sold_at?: string | null
+          status?: string
+          user_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_listings_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "store_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "market_listings_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "market_listings_user_item_id_fkey"
+            columns: ["user_item_id"]
+            isOneToOne: false
+            referencedRelation: "user_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_reactions: {
         Row: {
           created_at: string
@@ -1490,6 +1587,35 @@ export type Database = {
           },
         ]
       }
+      profile_photos: {
+        Row: {
+          created_at: string
+          id: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_photos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_visits: {
         Row: {
           created_at: string
@@ -1542,7 +1668,9 @@ export type Database = {
           display_name: string
           frame_url: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
+          hide_online: boolean
           id: string
+          interests: string[]
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
@@ -1570,7 +1698,9 @@ export type Database = {
           display_name: string
           frame_url?: string | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
+          hide_online?: boolean
           id: string
+          interests?: string[]
           is_cvip?: boolean
           is_online?: boolean
           is_suspended?: boolean
@@ -1598,7 +1728,9 @@ export type Database = {
           display_name?: string
           frame_url?: string | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
+          hide_online?: boolean
           id?: string
+          interests?: string[]
           is_cvip?: boolean
           is_online?: boolean
           is_suspended?: boolean
@@ -1767,6 +1899,7 @@ export type Database = {
           created_at: string
           details: string | null
           id: string
+          priority: string
           reason: string
           reporter_id: string
           status: string
@@ -1777,6 +1910,7 @@ export type Database = {
           created_at?: string
           details?: string | null
           id?: string
+          priority?: string
           reason: string
           reporter_id: string
           status?: string
@@ -1787,6 +1921,7 @@ export type Database = {
           created_at?: string
           details?: string | null
           id?: string
+          priority?: string
           reason?: string
           reporter_id?: string
           status?: string
@@ -2815,6 +2950,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_warnings: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_warnings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vip_levels: {
         Row: {
           badge_url: string | null
@@ -3160,6 +3327,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _wallet_move: {
+        Args: { _delta: number; _kind: string; _ref: string; _uid: string }
+        Returns: number
+      }
+      admin_broadcast: {
+        Args: { _body: string; _title: string }
+        Returns: number
+      }
       admin_end_relationship: {
         Args: { _relationship_id: string }
         Returns: boolean
@@ -3172,6 +3347,10 @@ export type Database = {
       admin_set_profile_suspended: {
         Args: { _suspended: boolean; _user_id: string }
         Returns: boolean
+      }
+      admin_warn_user: {
+        Args: { _reason: string; _user_id: string }
+        Returns: number
       }
       app_cup_leaderboard: {
         Args: { _category: string; _limit?: number; _period?: string }
@@ -3327,7 +3506,9 @@ export type Database = {
           display_name: string
           frame_url: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
+          hide_online: boolean
           id: string
+          interests: string[]
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
@@ -3412,7 +3593,9 @@ export type Database = {
           display_name: string
           frame_url: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
+          hide_online: boolean
           id: string
+          interests: string[]
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
@@ -3454,6 +3637,12 @@ export type Database = {
         Args: { _sender_id: string }
         Returns: number
       }
+      market_buy: { Args: { _listing_id: string }; Returns: boolean }
+      market_cancel: { Args: { _listing_id: string }; Returns: boolean }
+      market_list: {
+        Args: { _price: number; _user_item_id: string }
+        Returns: string
+      }
       mic_protection_for: { Args: { _user_id: string }; Returns: number }
       open_gift_box: { Args: { _tier: string }; Returns: Json }
       open_lucky_bag: { Args: { _bag_id: string }; Returns: number }
@@ -3472,7 +3661,9 @@ export type Database = {
           display_name: string
           frame_url: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
+          hide_online: boolean
           id: string
+          interests: string[]
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
@@ -3526,7 +3717,9 @@ export type Database = {
           display_name: string
           frame_url: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
+          hide_online: boolean
           id: string
+          interests: string[]
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
@@ -3828,7 +4021,9 @@ export type Database = {
           display_name: string
           frame_url: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
+          hide_online: boolean
           id: string
+          interests: string[]
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
@@ -3999,6 +4194,10 @@ export type Database = {
       }
       task_period_start: { Args: { _period: string }; Returns: string }
       tasks_state: { Args: never; Returns: Json }
+      transfer_coins: {
+        Args: { _amount: number; _to: string }
+        Returns: number
+      }
       verify_room_password: {
         Args: { _password: string; _room_id: string }
         Returns: boolean
