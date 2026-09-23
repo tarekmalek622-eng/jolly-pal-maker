@@ -217,6 +217,7 @@ function InfoPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean }) {
           {rewards.data?.tier?.percent ?? 0}%
         </p>
       </div>
+      <RoomLegend roomId={roomId} />
       <RoomRating roomId={roomId} />
       {isOwner && (
         <ChatLockToggle
