@@ -134,7 +134,7 @@ function BoxesPage() {
         <section className="space-y-2">
           <p className="text-xs font-bold text-muted-foreground">آخر الفتحات</p>
           {(history.data ?? []).length === 0 ? (
-            <EmptyState title="لا توجد فتحات بعد" description="افتح أول صندوق وشاهد جائزتك هنا" />
+            <EmptyState title="لا توجد فتحات بعد" hint="افتح أول صندوق وشاهد جائزتك هنا" />
           ) : (
             (history.data ?? []).map((row) => (
               <div key={row.id} className="flex items-center gap-2 rounded-xl bg-surface p-2">
