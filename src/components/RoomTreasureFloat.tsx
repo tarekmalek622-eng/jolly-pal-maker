@@ -31,8 +31,21 @@ export function RoomTreasureFloat({ roomId, onOpen }: { roomId: string; onOpen: 
   const progress = Number(state.data?.progress ?? 0);
   const pct = target > 0 ? Math.min(100, Math.round((progress / target) * 100)) : 0;
 
+  /* مطر هدايا لجميع الحاضرين عند وصول الكنز لهدفه */
+  const [rain, setRain] = useState(false);
+  const firedLevel = useRef<number | null>(null);
+  useEffect(() => {
+    if (pct < 100 || firedLevel.current === level) return;
+    firedLevel.current = level;
+    setRain(true);
+    const timer = window.setTimeout(() => setRain(false), 4200);
+    return () => window.clearTimeout(timer);
+  }, [pct, level]);
+
   return (
-    <button
+    <>
+      <GiftRain active={rain} />
+      <button
       type="button"
       onClick={onOpen}
       aria-label="صندوق كنز الغرفة"
