@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
+import { FamilyWar } from "@/components/FamilyWar";
 import { FamilyCrest } from "@/components/FamilyCrest";
 import { familyStyle } from "@/lib/family-art";
 import { formatCoins } from "@/lib/format";
