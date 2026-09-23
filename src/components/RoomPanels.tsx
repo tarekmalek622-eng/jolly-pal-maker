@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/UserAvatar";
+import { RoomLegend } from "@/components/RoomLegend";
 import { useSupabaseSession } from "@/hooks/use-session";
 import { formatCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -217,6 +218,7 @@ function InfoPanel({ roomId, isOwner }: { roomId: string; isOwner: boolean }) {
           {rewards.data?.tier?.percent ?? 0}%
         </p>
       </div>
+      <RoomLegend roomId={roomId} />
       <RoomRating roomId={roomId} />
       {isOwner && (
         <ChatLockToggle

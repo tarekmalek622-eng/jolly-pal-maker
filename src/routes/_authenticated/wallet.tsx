@@ -17,7 +17,10 @@ export const Route = createFileRoute("/_authenticated/wallet")({
   head: () => ({
     meta: [
       { title: "المحفظة — التاج" },
-      { name: "description", content: "رصيد الكوينز، حزم الشحن، وسجل كل عمليات الإرسال والاستلام داخل التطبيق." },
+      {
+        name: "description",
+        content: "رصيد الكوينز، حزم الشحن، وسجل كل عمليات الإرسال والاستلام داخل التطبيق.",
+      },
       { property: "og:title", content: "المحفظة — التاج" },
       { property: "og:description", content: "تابع رصيدك وسجل معاملاتك واشترِ حزم الكوينز." },
     ],
@@ -76,9 +79,17 @@ type SelectedPackage = { id: string; coins: number; price: number; currency: str
 type SupabaseAny = {
   from: (table: string) => {
     select: (cols: string) => {
-      eq: (col: string, val: unknown) => {
-        order: (col: string, opts: { ascending: boolean }) => {
-          limit: (n: number) => Promise<{ data: unknown[] | null; error: { message: string } | null }>;
+      eq: (
+        col: string,
+        val: unknown,
+      ) => {
+        order: (
+          col: string,
+          opts: { ascending: boolean },
+        ) => {
+          limit: (
+            n: number,
+          ) => Promise<{ data: unknown[] | null; error: { message: string } | null }>;
         };
       };
     };
@@ -185,7 +196,6 @@ function WalletPage() {
     },
   });
 
-
   const convert = useMutation({
     mutationFn: async () => {
       const amount = Math.floor(Number(convertAmount) || 0);
@@ -221,10 +231,10 @@ function WalletPage() {
       </div>
 
       <div className="mt-4 flex gap-2 rounded-2xl bg-surface-2 p-1">
-        {([
+        {[
           { key: "topup" as const, label: "شحن" },
           { key: "convert" as const, label: "استبدال" },
-        ]).map((t) => (
+        ].map((t) => (
           <button
             key={t.key}
             onClick={() => setMode(t.key)}
@@ -242,7 +252,9 @@ function WalletPage() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground">رصيد الدعم</p>
-            <p className="text-2xl font-black text-primary">{supportCoins.toLocaleString("en-US")}</p>
+            <p className="text-2xl font-black text-primary">
+              {supportCoins.toLocaleString("en-US")}
+            </p>
           </div>
           <span className="rounded-full bg-surface-2 px-3 py-1 text-[10px] text-muted-foreground">
             حصتك من الهدايا المستلمة
@@ -272,7 +284,8 @@ function WalletPage() {
           استبدال كل الرصيد
         </button>
         <p className="mt-1 text-[10px] text-muted-foreground">
-          الاستبدال يحوّل رصيد الدعم إلى رصيد قابل للاستخدام في الهدايا والألعاب والمتجر، وكل عملية تُسجَّل في سجل معاملاتك.
+          الاستبدال يحوّل رصيد الدعم إلى رصيد قابل للاستخدام في الهدايا والألعاب والمتجر، وكل عملية
+          تُسجَّل في سجل معاملاتك.
         </p>
       </section>
 
@@ -304,8 +317,11 @@ function WalletPage() {
               />
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              باقي {Math.max(0, cvip.data.next.points - (cvip.data.recharge_points ?? 0)).toLocaleString("en-US")} نقطة
-              للوصول إلى {cvip.data.next.name}
+              باقي{" "}
+              {Math.max(0, cvip.data.next.points - (cvip.data.recharge_points ?? 0)).toLocaleString(
+                "en-US",
+              )}{" "}
+              نقطة للوصول إلى {cvip.data.next.name}
             </p>
           </>
         ) : (
@@ -317,19 +333,24 @@ function WalletPage() {
       </section>
 
       <section className={cn("mt-6", mode !== "topup" && "hidden")}>
-
         <h2 className="mb-1 text-sm font-bold">حزم الشحن</h2>
         <p className="mb-3 text-[11px] text-muted-foreground">
-          حوّل المبلغ على {accounts.vodafone_cash ? `فودافون كاش ${accounts.vodafone_cash}` : "فودافون كاش"}
-          {accounts.instapay ? ` أو InstaPay ${accounts.instapay}` : " أو InstaPay"}، ثم أرسل رقم عملية التحويل ليتم
-          تأكيد الشحن من الإدارة.
+          حوّل المبلغ على{" "}
+          {accounts.vodafone_cash ? `فودافون كاش ${accounts.vodafone_cash}` : "فودافون كاش"}
+          {accounts.instapay ? ` أو InstaPay ${accounts.instapay}` : " أو InstaPay"}، ثم أرسل رقم
+          عملية التحويل ليتم تأكيد الشحن من الإدارة.
         </p>
         <div className="grid grid-cols-2 gap-3">
           {(packages.data ?? []).map((p) => (
             <button
               key={p.id}
               onClick={() => {
-                setSelected({ id: p.id, coins: p.coins + (p.bonus_coins ?? 0), price: p.price_cents, currency: p.currency });
+                setSelected({
+                  id: p.id,
+                  coins: p.coins + (p.bonus_coins ?? 0),
+                  price: p.price_cents,
+                  currency: p.currency,
+                });
                 setReference("");
               }}
               className="surface-card p-4 text-start"
@@ -337,7 +358,9 @@ function WalletPage() {
               <p className="text-lg font-black text-primary">{p.coins.toLocaleString("en-US")}</p>
               <p className="text-[11px] text-muted-foreground">كوينز</p>
               {p.bonus_coins > 0 && (
-                <p className="mt-1 text-[11px] text-success">+{p.bonus_coins.toLocaleString("en-US")} مكافأة</p>
+                <p className="mt-1 text-[11px] text-success">
+                  +{p.bonus_coins.toLocaleString("en-US")} مكافأة
+                </p>
               )}
               <p className="mt-2 text-sm font-bold">
                 {(p.price_cents / 100).toFixed(2)} {p.currency}
@@ -357,8 +380,8 @@ function WalletPage() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">{r.coins.toLocaleString("en-US")} كوينز</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {METHOD_LABEL[r.method] ?? r.method} · {(r.amount_cents / 100).toFixed(2)} {r.currency} ·{" "}
-                    {new Date(r.created_at).toLocaleString("ar")}
+                    {METHOD_LABEL[r.method] ?? r.method} · {(r.amount_cents / 100).toFixed(2)}{" "}
+                    {r.currency} · {new Date(r.created_at).toLocaleString("ar")}
                   </p>
                   {r.note ? <p className="text-[11px] text-muted-foreground">{r.note}</p> : null}
                 </div>
@@ -388,7 +411,9 @@ function WalletPage() {
           {selected && (
             <div className="space-y-3 pb-6">
               <div className="surface-card p-3 text-sm">
-                <p className="font-bold text-primary">{selected.coins.toLocaleString("en-US")} كوينز</p>
+                <p className="font-bold text-primary">
+                  {selected.coins.toLocaleString("en-US")} كوينز
+                </p>
                 <p className="text-[11px] text-muted-foreground">
                   المبلغ المطلوب: {(selected.price / 100).toFixed(2)} {selected.currency}
                 </p>
@@ -430,7 +455,11 @@ function WalletPage() {
                 onClick={() => submit.mutate()}
                 className="h-12 w-full rounded-2xl gradient-gold font-bold text-primary-foreground"
               >
-                {submit.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "إرسال الطلب للإدارة"}
+                {submit.isPending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  "إرسال الطلب للإدارة"
+                )}
               </Button>
             </div>
           )}
@@ -451,21 +480,34 @@ function WalletPage() {
               const positive = t.amount > 0;
               return (
                 <div key={t.id} className="surface-card flex items-center gap-3 p-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${positive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
-                    {positive ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${positive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}
+                  >
+                    {positive ? (
+                      <ArrowDownLeft className="h-4 w-4" />
+                    ) : (
+                      <ArrowUpRight className="h-4 w-4" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold">
                       {KIND_LABEL[t.kind] ?? t.kind}
-                      {t.reference ? <span className="text-[11px] text-muted-foreground"> · {t.reference}</span> : null}
+                      {t.reference ? (
+                        <span className="text-[11px] text-muted-foreground"> · {t.reference}</span>
+                      ) : null}
                     </p>
                     <p className="truncate text-[11px] text-muted-foreground">
-                      {new Date(t.created_at).toLocaleString("ar")} · {STATUS_LABEL[t.status] ?? t.status}
+                      {new Date(t.created_at).toLocaleString("ar")} ·{" "}
+                      {STATUS_LABEL[t.status] ?? t.status}
                     </p>
-                    <p className="truncate text-[10px] text-muted-foreground/70">رقم العملية: {t.id.slice(0, 8)}</p>
+                    <p className="truncate text-[10px] text-muted-foreground/70">
+                      رقم العملية: {t.id.slice(0, 8)}
+                    </p>
                   </div>
                   <div className="text-end">
-                    <p className={`text-sm font-bold ${positive ? "text-success" : "text-destructive"}`}>
+                    <p
+                      className={`text-sm font-bold ${positive ? "text-success" : "text-destructive"}`}
+                    >
                       {positive ? "+" : ""}
                       {t.amount.toLocaleString("en-US")}
                     </p>

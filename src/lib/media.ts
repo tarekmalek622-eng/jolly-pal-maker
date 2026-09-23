@@ -79,8 +79,8 @@ export function uploadGiftMedia(
 
     const ext = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
     const path = `${kind}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const base = import.meta.env['VITE_SUPABASE_URL'] as string;
-    const apikey = import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] as string;
+    const base = import.meta.env["VITE_SUPABASE_URL"] as string;
+    const apikey = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string;
 
     return await new Promise<string>((resolve, reject) => {
       xhr.open("POST", `${base}/storage/v1/object/gifts/${path}`);

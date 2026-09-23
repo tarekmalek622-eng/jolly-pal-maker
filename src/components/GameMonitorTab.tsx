@@ -44,7 +44,8 @@ function RoundLine({
     <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-surface px-3 py-2">
       <div className="min-w-0">
         <p className="truncate text-xs font-bold">
-          جولة {round.session_round_no ?? round.round_no} · {STATUS_LABEL[round.status] ?? round.status}
+          جولة {round.session_round_no ?? round.round_no} ·{" "}
+          {STATUS_LABEL[round.status] ?? round.status}
           {round.winning_key ? ` · ${round.winning_key}` : ""}
         </p>
         <p className="truncate text-[10px] text-muted-foreground">
@@ -54,7 +55,13 @@ function RoundLine({
         </p>
       </div>
       {onRecover && (
-        <Button size="sm" variant="outline" className="shrink-0" onClick={onRecover} disabled={busy}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="shrink-0"
+          onClick={onRecover}
+          disabled={busy}
+        >
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "استكمال"}
         </Button>
       )}
@@ -110,7 +117,11 @@ export function GameMonitorTab() {
     );
   }
   if (monitor.error) {
-    return <p className="py-8 text-center text-xs text-destructive">{(monitor.error as Error).message}</p>;
+    return (
+      <p className="py-8 text-center text-xs text-destructive">
+        {(monitor.error as Error).message}
+      </p>
+    );
   }
 
   const data = monitor.data!;
@@ -137,7 +148,11 @@ export function GameMonitorTab() {
                 onClick={() => settleMutation.mutate(s.id)}
                 disabled={settleMutation.isPending || Boolean(s.settled_at)}
               >
-                {settleMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+                {settleMutation.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                )}
                 تسوية اليوم
               </Button>
             )}
@@ -161,44 +176,47 @@ export function GameMonitorTab() {
           <p className="text-[11px] text-muted-foreground">لا توجد جولة مفتوحة</p>
         )}
 
-        {data.current && (data.current.status === "betting" || data.current.status === "waiting") && (
-          <div className="mt-2 rounded-2xl border border-border bg-surface p-3">
-            <p className="text-[11px] font-black">
-              النتيجة القادمة:{" "}
-              {data.forced_key
-                ? (data.slots.find((x) => x.key === data.forced_key)?.label ?? data.forced_key)
-                : "عشوائية (لم تُحدَّد)"}
-            </p>
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              اختر عنصرًا لتحديد نتيجة هذه الجولة، أو «عشوائي» لتعود للسحب التلقائي. لا يراها اللاعبون قبل الإعلان.
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {data.slots.map((slot) => (
+        {data.current &&
+          (data.current.status === "betting" || data.current.status === "waiting") && (
+            <div className="mt-2 rounded-2xl border border-border bg-surface p-3">
+              <p className="text-[11px] font-black">
+                النتيجة القادمة:{" "}
+                {data.forced_key
+                  ? (data.slots.find((x) => x.key === data.forced_key)?.label ?? data.forced_key)
+                  : "عشوائية (لم تُحدَّد)"}
+              </p>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                اختر عنصرًا لتحديد نتيجة هذه الجولة، أو «عشوائي» لتعود للسحب التلقائي. لا يراها
+                اللاعبون قبل الإعلان.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {data.slots.map((slot) => (
+                  <Button
+                    key={slot.key}
+                    size="sm"
+                    variant={data.forced_key === slot.key ? "default" : "outline"}
+                    disabled={forceMutation.isPending}
+                    onClick={() =>
+                      forceMutation.mutate({ roundId: data.current!.id, slotKey: slot.key })
+                    }
+                    className="h-8 rounded-xl px-3 text-[11px]"
+                  >
+                    {slot.label} ×{slot.multiplier}
+                  </Button>
+                ))}
                 <Button
-                  key={slot.key}
                   size="sm"
-                  variant={data.forced_key === slot.key ? "default" : "outline"}
+                  variant={data.forced_key ? "outline" : "default"}
                   disabled={forceMutation.isPending}
-                  onClick={() => forceMutation.mutate({ roundId: data.current!.id, slotKey: slot.key })}
+                  onClick={() => forceMutation.mutate({ roundId: data.current!.id, slotKey: null })}
                   className="h-8 rounded-xl px-3 text-[11px]"
                 >
-                  {slot.label} ×{slot.multiplier}
+                  عشوائي
                 </Button>
-              ))}
-              <Button
-                size="sm"
-                variant={data.forced_key ? "outline" : "default"}
-                disabled={forceMutation.isPending}
-                onClick={() => forceMutation.mutate({ roundId: data.current!.id, slotKey: null })}
-                className="h-8 rounded-xl px-3 text-[11px]"
-              >
-                عشوائي
-              </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
-
 
       <div>
         <p className="mb-2 text-xs font-black">إحصائيات آخر {data.stats.rounds} جولة</p>
@@ -220,9 +238,14 @@ export function GameMonitorTab() {
           <Trophy className="h-3.5 w-3.5 text-primary" /> أفضل 10 اليوم (الصافي)
         </p>
         <div className="space-y-2">
-          {data.top.length === 0 && <p className="text-[11px] text-muted-foreground">لا نتائج اليوم</p>}
+          {data.top.length === 0 && (
+            <p className="text-[11px] text-muted-foreground">لا نتائج اليوم</p>
+          )}
           {data.top.map((t, i) => (
-            <div key={t.user_id} className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
+            <div
+              key={t.user_id}
+              className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2"
+            >
               <span className="w-5 text-center text-xs font-black text-primary">{i + 1}</span>
               <UserAvatar src={t.avatar_url} name={t.display_name ?? ""} size={32} />
               <div className="min-w-0 flex-1">
@@ -230,11 +253,19 @@ export function GameMonitorTab() {
                 <p className="text-[10px] text-muted-foreground">ID {t.public_id ?? "—"}</p>
               </div>
               <div className="text-end" title={formatFull(t.net_result)}>
-                <p className={t.net_result >= 0 ? "text-xs font-black text-primary" : "text-xs font-black text-destructive"}>
+                <p
+                  className={
+                    t.net_result >= 0
+                      ? "text-xs font-black text-primary"
+                      : "text-xs font-black text-destructive"
+                  }
+                >
                   {t.net_result >= 0 ? "+" : "-"}
                   {formatCompact(Math.abs(t.net_result))}
                 </p>
-                <p className="text-[10px] text-muted-foreground">ربح {formatCompact(t.gross_win)}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  ربح {formatCompact(t.gross_win)}
+                </p>
               </div>
             </div>
           ))}
@@ -244,9 +275,16 @@ export function GameMonitorTab() {
       <div>
         <p className="mb-2 text-xs font-black">معاملات فاشلة / جولات متعطلة</p>
         <div className="space-y-2">
-          {data.failed.length === 0 && <p className="text-[11px] text-muted-foreground">لا مشاكل مسجّلة</p>}
+          {data.failed.length === 0 && (
+            <p className="text-[11px] text-muted-foreground">لا مشاكل مسجّلة</p>
+          )}
           {data.failed.map((r) => (
-            <RoundLine key={r.id} round={r} onRecover={() => recoverMutation.mutate(r.id)} busy={recoverMutation.isPending} />
+            <RoundLine
+              key={r.id}
+              round={r}
+              onRecover={() => recoverMutation.mutate(r.id)}
+              busy={recoverMutation.isPending}
+            />
           ))}
         </div>
       </div>
@@ -254,7 +292,9 @@ export function GameMonitorTab() {
       <div>
         <p className="mb-2 text-xs font-black">سجل الاستعادة والتسوية</p>
         <div className="space-y-2">
-          {data.recovery.length === 0 && <p className="text-[11px] text-muted-foreground">لا سجلات</p>}
+          {data.recovery.length === 0 && (
+            <p className="text-[11px] text-muted-foreground">لا سجلات</p>
+          )}
           {data.recovery.map((r) => (
             <div key={r.id} className="rounded-xl border border-border bg-surface px-3 py-2">
               <p className="text-[11px] font-bold">{r.action}</p>

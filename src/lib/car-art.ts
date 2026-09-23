@@ -9,7 +9,18 @@ import diamond from "@/assets/car-white-diamond.png";
 import crown from "@/assets/car-gold-crown.png";
 import shield from "@/assets/car-royal-shield.png";
 
-const ART: Record<string, string> = { arrow, wing, suv, flags, bolt, lion, horse, diamond, crown, shield };
+const ART: Record<string, string> = {
+  arrow,
+  wing,
+  suv,
+  flags,
+  bolt,
+  lion,
+  horse,
+  diamond,
+  crown,
+  shield,
+};
 
 /** شعار السيارة لخانة معيّنة، أو null إذا لم توجد صورة */
 export function carArt(key: string | null | undefined): string | null {

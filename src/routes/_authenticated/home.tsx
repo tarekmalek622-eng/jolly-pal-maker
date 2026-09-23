@@ -11,6 +11,7 @@ import { RoomCard, type RoomRow } from "@/components/RoomCard";
 import { EmptyState } from "@/components/AppShell";
 import { HomeBanners } from "@/components/HomeBanners";
 import { TrendStrip } from "@/components/TrendStrip";
+import { AchievementOfDay } from "@/components/AchievementOfDay";
 import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -209,6 +210,7 @@ function HomePage() {
         <div className="space-y-7">
           <HomeBanners />
           <TrendStrip />
+          <AchievementOfDay userId={userId} />
 
           <section>
             <SectionTitle icon={Flame} title="الغرف" />

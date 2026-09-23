@@ -45,8 +45,25 @@ export function RoomSupporters({
         </SheetHeader>
 
         <div className="mt-3 grid grid-cols-3 gap-2">
-          {([["day", "يومي"], ["week", "أسبوعي"], ["month", "شهري"]] as const).map(([key, label]) => (
-            <button key={key} onClick={() => setPeriod(key)} className={cn("rounded-xl border py-2 text-xs font-bold", period === key ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground")}>{label}</button>
+          {(
+            [
+              ["day", "يومي"],
+              ["week", "أسبوعي"],
+              ["month", "شهري"],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setPeriod(key)}
+              className={cn(
+                "rounded-xl border py-2 text-xs font-bold",
+                period === key
+                  ? "border-primary bg-primary/15 text-primary"
+                  : "border-border bg-surface text-muted-foreground",
+              )}
+            >
+              {label}
+            </button>
           ))}
         </div>
 
@@ -55,7 +72,9 @@ export function RoomSupporters({
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
           </div>
         ) : (board.data ?? []).length === 0 ? (
-          <p className="py-10 text-center text-xs text-muted-foreground">لا توجد هدايا في هذه الغرفة بعد.</p>
+          <p className="py-10 text-center text-xs text-muted-foreground">
+            لا توجد هدايا في هذه الغرفة بعد.
+          </p>
         ) : (
           <ol className="mt-4 space-y-2 pb-6">
             {(board.data ?? []).map((s, i) => (
@@ -73,12 +92,19 @@ export function RoomSupporters({
                 )}
               >
                 <span className="w-7 text-center text-sm font-bold">{MEDALS[i] ?? i + 1}</span>
-                <UserAvatar src={s.avatar_url} name={s.display_name} size={40} vipLevel={s.vip_level} />
+                <UserAvatar
+                  src={s.avatar_url}
+                  name={s.display_name}
+                  size={40}
+                  vipLevel={s.vip_level}
+                />
                 <div className="min-w-0 flex-1">
                   <VipName name={s.display_name} vipLevel={s.vip_level} className="block text-sm" />
                   <p className="text-[10px] text-muted-foreground">داعم للغرفة</p>
                 </div>
-                <span className="text-xs font-bold text-primary">{s.coins.toLocaleString("en-US")}</span>
+                <span className="text-xs font-bold text-primary">
+                  {s.coins.toLocaleString("en-US")}
+                </span>
               </li>
             ))}
           </ol>

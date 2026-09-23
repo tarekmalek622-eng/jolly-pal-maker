@@ -40,9 +40,15 @@ async function settle(
   });
 }
 
-async function assertGameEnabled(game: "dice" | "wheel" | "cards" | "quiz" | "challenge" | "seven77", bet: number) {
+async function assertGameEnabled(
+  game: "dice" | "wheel" | "cards" | "quiz" | "challenge" | "seven77",
+  bet: number,
+) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("app_settings").select("key, value").in("key", ["games", "limits"]);
+  const { data } = await supabaseAdmin
+    .from("app_settings")
+    .select("key, value")
+    .in("key", ["games", "limits"]);
   const map = new Map((data ?? []).map((r) => [r.key, r.value as Record<string, unknown>]));
   const games = (map.get("games") ?? {}) as Record<string, boolean | undefined>;
   const key = game === "challenge" ? "quiz" : game;
@@ -65,7 +71,11 @@ export const playDice = createServerFn({ method: "POST" })
     const won = roll === data.guess;
     const payout = won ? data.bet * 5 : 0;
     await assertGameEnabled("dice", data.bet);
-    await settle(context.userId, data.bet, payout, `dice:${roll}`, "dice", { roll, guess: data.guess, won });
+    await settle(context.userId, data.bet, payout, `dice:${roll}`, "dice", {
+      roll,
+      guess: data.guess,
+      won,
+    });
     return { roll, won, payout };
   });
 
@@ -110,7 +120,8 @@ export const playCards = createServerFn({ method: "POST" })
     await assertGameEnabled("cards", data.bet);
     const player = drawCard();
     const dealer = drawCard();
-    const outcome = player.rank > dealer.rank ? "win" : player.rank === dealer.rank ? "draw" : "lose";
+    const outcome =
+      player.rank > dealer.rank ? "win" : player.rank === dealer.rank ? "draw" : "lose";
     const payout = outcome === "win" ? data.bet * 2 : outcome === "draw" ? data.bet : 0;
     await settle(context.userId, data.bet, payout, `cards:${outcome}`, "cards", {
       player: player.label,
@@ -230,7 +241,8 @@ export const playChallenge = createServerFn({ method: "POST" })
 export interface DominoLogEntry {
   at: string;
   seat?: "p1" | "p2";
-  action: "create" | "start" | "move" | "draw" | "pass" | "win" | "blocked_win" | "forfeit" | "draw_end";
+  action:
+    "create" | "start" | "move" | "draw" | "pass" | "win" | "blocked_win" | "forfeit" | "draw_end";
   tile?: [number, number];
   side?: "left" | "right";
   count?: number;
@@ -256,7 +268,10 @@ export interface DominoState {
 async function rpcAdmin<T = void>(fn: string, args: Record<string, unknown>): Promise<T> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const client = supabaseAdmin as unknown as {
-    rpc: (f: string, a?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+    rpc: (
+      f: string,
+      a?: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: { message: string } | null }>;
   };
   const { data, error } = await client.rpc(fn, args);
   if (error) throw new Error(error.message);
@@ -265,15 +280,21 @@ async function rpcAdmin<T = void>(fn: string, args: Record<string, unknown>): Pr
 
 async function assertDominoEnabled() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("app_settings").select("key, value").eq("key", "games").maybeSingle();
-  const games = ((data?.value ?? {}) as Record<string, boolean | undefined>);
-  if (games['domino'] === false) throw new Error("الدومينو موقوف حاليًا");
+  const { data } = await supabaseAdmin
+    .from("app_settings")
+    .select("key, value")
+    .eq("key", "games")
+    .maybeSingle();
+  const games = (data?.value ?? {}) as Record<string, boolean | undefined>;
+  if (games["domino"] === false) throw new Error("الدومينو موقوف حاليًا");
 }
 
 export const dominoJoin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ bet: z.number().int().min(10).max(100000), roomId: z.string().uuid().nullish() }).parse(input),
+    z
+      .object({ bet: z.number().int().min(10).max(100000), roomId: z.string().uuid().nullish() })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertDominoEnabled();
@@ -289,7 +310,11 @@ export const dominoMove = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
-      .object({ gameId: z.string().uuid(), tile: z.number().int().min(0).max(54), side: z.enum(["left", "right"]) })
+      .object({
+        gameId: z.string().uuid(),
+        tile: z.number().int().min(0).max(54),
+        side: z.enum(["left", "right"]),
+      })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -306,7 +331,10 @@ export const dominoPass = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ gameId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const state = await rpcAdmin<DominoState>("domino_pass", { _uid: context.userId, _game_id: data.gameId });
+    const state = await rpcAdmin<DominoState>("domino_pass", {
+      _uid: context.userId,
+      _game_id: data.gameId,
+    });
     return { state };
   });
 
@@ -314,7 +342,10 @@ export const dominoForfeit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ gameId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const state = await rpcAdmin<DominoState>("domino_forfeit", { _uid: context.userId, _game_id: data.gameId });
+    const state = await rpcAdmin<DominoState>("domino_forfeit", {
+      _uid: context.userId,
+      _game_id: data.gameId,
+    });
     return { state: state as DominoState };
   });
 

@@ -55,7 +55,9 @@ export const publishCrownMessage = createServerFn({ method: "POST" })
         title: z.string().trim().min(2).max(120),
         body: z.string().trim().min(2).max(4000),
         imageUrl: z.string().trim().max(500).nullish(),
-        kind: z.enum(["announcement", "event_result", "event_start", "maintenance", "update"]).default("announcement"),
+        kind: z
+          .enum(["announcement", "event_result", "event_start", "maintenance", "update"])
+          .default("announcement"),
       })
       .parse(input),
   )
@@ -115,7 +117,10 @@ export const markCrownRead = createServerFn({ method: "POST" })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (context.supabase as any)
       .from("crown_reads")
-      .upsert({ user_id: context.userId, last_seen_at: now, updated_at: now }, { onConflict: "user_id" });
+      .upsert(
+        { user_id: context.userId, last_seen_at: now, updated_at: now },
+        { onConflict: "user_id" },
+      );
     if (error) throw new Error(error.message);
     return { ok: true };
   });

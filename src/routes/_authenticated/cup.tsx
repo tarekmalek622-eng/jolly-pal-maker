@@ -13,9 +13,15 @@ export const Route = createFileRoute("/_authenticated/cup")({
   head: () => ({
     meta: [
       { title: "كأس التطبيق — التاج" },
-      { name: "description", content: "لوحة كأس التاج: الداعمون والمستلمون والشاحنون ومكاسب الألعاب بأرقام حقيقية." },
+      {
+        name: "description",
+        content: "لوحة كأس التاج: الداعمون والمستلمون والشاحنون ومكاسب الألعاب بأرقام حقيقية.",
+      },
       { property: "og:title", content: "كأس التطبيق — التاج" },
-      { property: "og:description", content: "ترتيب وإحصائيات يومية وأسبوعية وشهرية من عمليات التاج الفعلية." },
+      {
+        property: "og:description",
+        content: "ترتيب وإحصائيات يومية وأسبوعية وشهرية من عمليات التاج الفعلية.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -61,7 +67,9 @@ function CupPage() {
   });
 
   return (
-    <AppShell header={<PageHeader title="كأس التطبيق" subtitle="أرقام حقيقية محسوبة من عمليات التطبيق" />}>
+    <AppShell
+      header={<PageHeader title="كأس التطبيق" subtitle="أرقام حقيقية محسوبة من عمليات التطبيق" />}
+    >
       <div className="mb-3 flex gap-2">
         {PERIODS.map(([key, label]) => (
           <button
@@ -69,7 +77,9 @@ function CupPage() {
             onClick={() => setPeriod(key)}
             className={cn(
               "flex-1 rounded-2xl border py-2 text-[11px] font-bold",
-              period === key ? "border-primary/60 gradient-gold text-primary-foreground" : "border-border bg-surface text-muted-foreground",
+              period === key
+                ? "border-primary/60 gradient-gold text-primary-foreground"
+                : "border-border bg-surface text-muted-foreground",
             )}
           >
             {label}
@@ -84,7 +94,9 @@ function CupPage() {
             onClick={() => setSection(key)}
             className={cn(
               "flex shrink-0 items-center gap-1.5 rounded-2xl border px-3 py-2 text-[11px] font-bold",
-              section === key ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface text-muted-foreground",
+              section === key
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-border bg-surface text-muted-foreground",
             )}
           >
             <Icon className="h-3.5 w-3.5" />
@@ -124,7 +136,9 @@ function CupPage() {
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
       ) : (board.data?.length ?? 0) === 0 ? (
-        <p className="py-8 text-center text-xs text-muted-foreground">لا توجد عمليات مؤكدة في هذه الفترة بعد.</p>
+        <p className="py-8 text-center text-xs text-muted-foreground">
+          لا توجد عمليات مؤكدة في هذه الفترة بعد.
+        </p>
       ) : (
         <ol className="space-y-2">
           {(board.data ?? []).map((entry: CupEntry, i) => (
@@ -136,7 +150,11 @@ function CupPage() {
               )}
             >
               <span className="w-7 text-center text-sm font-black">{MEDALS[i] ?? i + 1}</span>
-              <UserAvatar src={entry.avatar_url ?? entry.image_url} name={entry.display_name} size={36} />
+              <UserAvatar
+                src={entry.avatar_url ?? entry.image_url}
+                name={entry.display_name}
+                size={36}
+              />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-bold">{entry.display_name}</p>
                 <p className="text-[9px] text-muted-foreground">ID: {entry.public_id}</p>

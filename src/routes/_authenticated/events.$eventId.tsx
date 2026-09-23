@@ -84,7 +84,13 @@ function EventDetailsPage() {
   const { event, prizes, leaderboard, me } = query.data;
   const style = eventStyle(event.style);
   const statusLabel =
-    event.status === "active" ? "جارٍ الآن" : event.status === "finished" ? "منتهٍ" : event.status === "settling" ? "جارٍ التوزيع" : event.status;
+    event.status === "active"
+      ? "جارٍ الآن"
+      : event.status === "finished"
+        ? "منتهٍ"
+        : event.status === "settling"
+          ? "جارٍ التوزيع"
+          : event.status;
 
   return (
     <AppShell>
@@ -107,8 +113,14 @@ function EventDetailsPage() {
           </Link>
           <div className="absolute inset-x-0 bottom-0 space-y-1 p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black backdrop-blur ${style.chip}`}>{statusLabel}</span>
-              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold backdrop-blur ${style.chip}`}>
+              <span
+                className={`rounded-full border px-2 py-0.5 text-[10px] font-black backdrop-blur ${style.chip}`}
+              >
+                {statusLabel}
+              </span>
+              <span
+                className={`rounded-full border px-2 py-0.5 text-[10px] font-bold backdrop-blur ${style.chip}`}
+              >
                 <CalendarDays className="me-1 inline h-3 w-3" />
                 {countdown}
               </span>
@@ -126,7 +138,9 @@ function EventDetailsPage() {
             onClick={() => setTab(key)}
             className={cn(
               "flex shrink-0 items-center gap-1.5 rounded-2xl border px-3 py-2 text-[11px] font-bold",
-              tab === key ? "border-primary/60 gradient-gold text-primary-foreground" : "border-border bg-surface text-muted-foreground",
+              tab === key
+                ? "border-primary/60 gradient-gold text-primary-foreground"
+                : "border-border bg-surface text-muted-foreground",
             )}
           >
             <Icon className="h-3.5 w-3.5" />
@@ -137,7 +151,9 @@ function EventDetailsPage() {
 
       {tab === "board" &&
         (leaderboard.length === 0 ? (
-          <p className="py-10 text-center text-xs text-muted-foreground">تبدأ المراكز مع أول عملية مؤكدة داخل الحدث.</p>
+          <p className="py-10 text-center text-xs text-muted-foreground">
+            تبدأ المراكز مع أول عملية مؤكدة داخل الحدث.
+          </p>
         ) : (
           <ol className="space-y-2">
             {leaderboard.map((entry, i) => (
@@ -149,7 +165,11 @@ function EventDetailsPage() {
                 )}
               >
                 <span className="w-7 text-center text-sm font-black">{MEDALS[i] ?? i + 1}</span>
-                <UserAvatar src={entry.avatar_url ?? entry.image_url} name={entry.display_name} size={36} />
+                <UserAvatar
+                  src={entry.avatar_url ?? entry.image_url}
+                  name={entry.display_name}
+                  size={36}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-bold">{entry.display_name}</p>
                   <p className="text-[9px] text-muted-foreground">ID: {entry.public_id}</p>
@@ -165,11 +185,16 @@ function EventDetailsPage() {
       {tab === "rewards" && (
         <div className="space-y-2">
           {prizes.map((prize) => (
-            <div key={prize.id} className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3">
+            <div
+              key={prize.id}
+              className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3"
+            >
               <div>
                 <p className="text-xs font-black">{prize.label}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {prize.rank_from === prize.rank_to ? `المركز ${prize.rank_from}` : `المراكز ${prize.rank_from} - ${prize.rank_to}`}
+                  {prize.rank_from === prize.rank_to
+                    ? `المركز ${prize.rank_from}`
+                    : `المراكز ${prize.rank_from} - ${prize.rank_to}`}
                 </p>
               </div>
               <b className="text-sm text-amber-400" title={`${formatFull(prize.coins)} كوينز`}>
@@ -184,7 +209,9 @@ function EventDetailsPage() {
         <div className="space-y-3">
           <section className="rounded-2xl border border-border bg-surface p-3">
             <p className="mb-1 text-xs font-black">السياسات</p>
-            <p className="text-[11px] leading-6 text-muted-foreground">{event.rules ?? "لا توجد سياسات مضافة."}</p>
+            <p className="text-[11px] leading-6 text-muted-foreground">
+              {event.rules ?? "لا توجد سياسات مضافة."}
+            </p>
           </section>
           <section className="rounded-2xl border border-border bg-surface p-3">
             <p className="mb-1 text-xs font-black">تفاصيل الحدث</p>
@@ -203,7 +230,11 @@ function EventDetailsPage() {
           <div className="grid grid-cols-3 gap-2">
             <Stat label="مركزك" value={me.rank ? `#${me.rank}` : "—"} />
             <Stat label="نقاطك" value={formatCompact(me.score)} full={formatFull(me.score)} />
-            <Stat label="جائزتك الحالية" value={formatCompact(me.prize)} full={formatFull(me.prize)} />
+            <Stat
+              label="جائزتك الحالية"
+              value={formatCompact(me.prize)}
+              full={formatFull(me.prize)}
+            />
           </div>
           <p className="rounded-2xl border border-border bg-surface p-3 text-[11px] leading-6 text-muted-foreground">
             {event.points_note}

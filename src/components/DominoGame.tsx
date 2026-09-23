@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/AppShell";
 import { useSupabaseSession, useRefreshMoney } from "@/hooks/use-session";
-import { dominoCancel, dominoForfeit, dominoJoin, dominoMove, dominoPass } from "@/lib/games.functions";
+import {
+  dominoCancel,
+  dominoForfeit,
+  dominoJoin,
+  dominoMove,
+  dominoPass,
+} from "@/lib/games.functions";
 import type { DominoLogEntry, DominoState } from "@/lib/games.functions";
 import { cn } from "@/lib/utils";
 
@@ -121,14 +127,29 @@ function Half({ n }: { n: number }) {
       {Array.from({ length: 9 }, (_, i) => (
         <span
           key={i}
-          className={cn("m-auto block h-1 w-1 rounded-full sm:h-1.5 sm:w-1.5", PIPS[n]?.includes(i) ? "bg-foreground" : "bg-transparent")}
+          className={cn(
+            "m-auto block h-1 w-1 rounded-full sm:h-1.5 sm:w-1.5",
+            PIPS[n]?.includes(i) ? "bg-foreground" : "bg-transparent",
+          )}
         />
       ))}
     </div>
   );
 }
 
-function TileFace({ a, b, className, onClick, disabled }: { a: number; b: number; className?: string; onClick?: () => void; disabled?: boolean }) {
+function TileFace({
+  a,
+  b,
+  className,
+  onClick,
+  disabled,
+}: {
+  a: number;
+  b: number;
+  className?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
@@ -238,7 +259,8 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
   const fail = (e: unknown) => toast.error(e instanceof Error ? e.message : "حدث خطأ");
 
   const join = useMutation({
-    mutationFn: async (input: { bet: number }) => dominoJoin({ data: { bet: input.bet, roomId: roomId ?? null } }),
+    mutationFn: async (input: { bet: number }) =>
+      dominoJoin({ data: { bet: input.bet, roomId: roomId ?? null } }),
     onSuccess: (r) => {
       joinedRef.current = true;
       setGameId(r.gameId);
@@ -294,7 +316,14 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
   });
 
   const row = game.data;
-  const seat = row && userId ? (row.player1_id === userId ? "p1" : row.player2_id === userId ? "p2" : null) : null;
+  const seat =
+    row && userId
+      ? row.player1_id === userId
+        ? "p1"
+        : row.player2_id === userId
+          ? "p2"
+          : null
+      : null;
   const st = row?.state;
   const myTurn = row?.status === "playing" && seat != null && st?.turn === seat;
   const oppSeat = seat === "p1" ? "p2" : "p1";
@@ -335,10 +364,14 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
             <div className="surface-card flex items-center justify-between p-3">
               <div className="text-xs">
                 <p className="font-bold">الرهان: {row.bet.toLocaleString("en-US")} كوينز</p>
-                <p className="text-muted-foreground">الخصم: {oppCount} قطعة · البقرة: {boneCount}</p>
+                <p className="text-muted-foreground">
+                  الخصم: {oppCount} قطعة · البقرة: {boneCount}
+                </p>
               </div>
               {row.status === "waiting" ? (
-                <span className="rounded-full bg-surface-2 px-3 py-1 text-[10px] font-bold">بانتظار لاعب…</span>
+                <span className="rounded-full bg-surface-2 px-3 py-1 text-[10px] font-bold">
+                  بانتظار لاعب…
+                </span>
               ) : row.status === "playing" ? (
                 <span
                   className={cn(
@@ -369,18 +402,30 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
                 disabled={cancel.isPending}
                 className="w-full rounded-2xl"
               >
-                {cancel.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+                {cancel.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <X className="h-4 w-4" />
+                )}
                 إلغاء الطاولة واسترداد الرهان
               </Button>
             ) : row.status === "finished" ? (
-              <Button onClick={() => setGameId(null)} className="w-full rounded-2xl gradient-gold font-bold text-primary-foreground">
+              <Button
+                onClick={() => setGameId(null)}
+                className="w-full rounded-2xl gradient-gold font-bold text-primary-foreground"
+              >
                 العودة إلى اللوبي
               </Button>
             ) : (
               <>
-                <div dir="ltr" className="surface-card flex min-h-24 items-center gap-1.5 overflow-x-auto p-3">
+                <div
+                  dir="ltr"
+                  className="surface-card flex min-h-24 items-center gap-1.5 overflow-x-auto p-3"
+                >
                   {(st?.board ?? []).length === 0 ? (
-                    <p className="mx-auto text-center text-[11px] text-muted-foreground">الطاولة فارغة — ضع أول قطعة</p>
+                    <p className="mx-auto text-center text-[11px] text-muted-foreground">
+                      الطاولة فارغة — ضع أول قطعة
+                    </p>
                   ) : (
                     (st?.board ?? []).map(([a, b], i) => <TileFace key={i} a={a} b={b} />)
                   )}
@@ -391,13 +436,27 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
                   {pendingTile !== null && (
                     <div className="mb-2 flex items-center gap-2 rounded-xl bg-surface-2 p-2 text-[11px]">
                       <span>اختر الجهة:</span>
-                      <Button size="sm" variant="secondary" onClick={() => move.mutate({ tile: pendingTile, side: "left" })} disabled={move.isPending}>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => move.mutate({ tile: pendingTile, side: "left" })}
+                        disabled={move.isPending}
+                      >
                         يسار
                       </Button>
-                      <Button size="sm" variant="secondary" onClick={() => move.mutate({ tile: pendingTile, side: "right" })} disabled={move.isPending}>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => move.mutate({ tile: pendingTile, side: "right" })}
+                        disabled={move.isPending}
+                      >
                         يمين
                       </Button>
-                      <button type="button" onClick={() => setPendingTile(null)} className="text-muted-foreground">
+                      <button
+                        type="button"
+                        onClick={() => setPendingTile(null)}
+                        className="text-muted-foreground"
+                      >
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -415,17 +474,30 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
                             if (sides.length === 1) move.mutate({ tile: t, side: sides[0]! });
                             else setPendingTile(t);
                           }}
-                          className={cn(sides.length > 0 && "border-primary shadow-[0_0_8px] shadow-primary/40")}
+                          className={cn(
+                            sides.length > 0 && "border-primary shadow-[0_0_8px] shadow-primary/40",
+                          )}
                         />
                       );
                     })}
-                    {myHand.length === 0 && <p className="text-[11px] text-muted-foreground">لا قطع — انتهت</p>}
+                    {myHand.length === 0 && (
+                      <p className="text-[11px] text-muted-foreground">لا قطع — انتهت</p>
+                    )}
                   </div>
 
                   <div className="mt-3 flex gap-2">
                     {myTurn && !anyPlayable && (
-                      <Button onClick={() => pass.mutate()} disabled={pass.isPending} className="flex-1 rounded-xl" variant="secondary">
-                        {pass.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "سحب / تمرير"}
+                      <Button
+                        onClick={() => pass.mutate()}
+                        disabled={pass.isPending}
+                        className="flex-1 rounded-xl"
+                        variant="secondary"
+                      >
+                        {pass.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "سحب / تمرير"
+                        )}
                       </Button>
                     )}
                     <Button
@@ -456,7 +528,8 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
       <div className="surface-card p-4">
         <p className="text-sm font-bold">أنشئ طاولة دومينو</p>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          كل لاعب يدفع الرهان عند الدخول، والفائز يأخذ الوعاء كاملًا (ضعف الرهان). اسحب من البقرة عند الحاجة.
+          كل لاعب يدفع الرهان عند الدخول، والفائز يأخذ الوعاء كاملًا (ضعف الرهان). اسحب من البقرة
+          عند الحاجة.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {BETS.map((n) => (
@@ -465,7 +538,9 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
               onClick={() => setBet(n)}
               className={cn(
                 "rounded-full border px-3 py-1.5 text-xs",
-                bet === n ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground",
+                bet === n
+                  ? "border-primary bg-primary/15 text-primary"
+                  : "border-border bg-surface-2 text-muted-foreground",
               )}
             >
               {n.toLocaleString("en-US")}
@@ -512,12 +587,20 @@ export function DominoGame({ roomId }: { roomId?: string | null }) {
               return (
                 <div key={r.id} className="surface-card flex items-center gap-3 p-3">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-semibold">{owner?.display_name ?? "لاعب"}</p>
+                    <p className="truncate text-xs font-semibold">
+                      {owner?.display_name ?? "لاعب"}
+                    </p>
                     <p className="text-[10px] text-muted-foreground">
-                      رهان {r.bet.toLocaleString("en-US")} كوينز · الوعاء {(r.bet * 2).toLocaleString("en-US")}
+                      رهان {r.bet.toLocaleString("en-US")} كوينز · الوعاء{" "}
+                      {(r.bet * 2).toLocaleString("en-US")}
                     </p>
                   </div>
-                  <Button size="sm" onClick={() => join.mutate({ bet: r.bet })} disabled={join.isPending} className="rounded-xl px-4">
+                  <Button
+                    size="sm"
+                    onClick={() => join.mutate({ bet: r.bet })}
+                    disabled={join.isPending}
+                    className="rounded-xl px-4"
+                  >
                     دخول
                   </Button>
                 </div>

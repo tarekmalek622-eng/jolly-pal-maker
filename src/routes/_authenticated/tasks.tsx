@@ -8,6 +8,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/UserAvatar";
+import { DailyCheckin } from "@/components/DailyCheckin";
 import { useSupabaseSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
@@ -178,6 +179,16 @@ function TasksPage() {
       }
     >
       <div className="space-y-5 pb-28">
+        <DailyCheckin userId={userId} />
+        <Link
+          to="/boxes"
+          className="surface-card flex items-center gap-3 p-4 text-sm font-bold"
+          aria-label="صناديق الهدايا"
+        >
+          <span className="text-2xl">🎁</span>
+          <span className="flex-1">صناديق الهدايا العشوائية</span>
+          <span className="text-[11px] text-primary">افتح الآن</span>
+        </Link>
         {tasks.isLoading && (
           <p className="py-10 text-center text-sm text-muted-foreground">جارٍ التحميل...</p>
         )}

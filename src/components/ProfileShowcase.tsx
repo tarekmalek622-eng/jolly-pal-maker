@@ -55,7 +55,10 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
   const roles = useQuery({
     queryKey: ["profile-role-badges", userId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
       if (error) throw error;
       return (data ?? []).map((row) => row.role as Role);
     },
@@ -66,7 +69,9 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_badges")
-        .select("id, progress, awarded_at, badge_definitions(key, name, description, kind, threshold, sort_order, style_key, image_url, color_key, display_variant)")
+        .select(
+          "id, progress, awarded_at, badge_definitions(key, name, description, kind, threshold, sort_order, style_key, image_url, color_key, display_variant)",
+        )
         .eq("user_id", userId)
         .order("awarded_at", { ascending: false });
       if (error) throw error;
@@ -93,7 +98,9 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profile_gift_totals")
-        .select("gift_id, quantity, total_value, gifts(id, name, image_url, animation_url, video_url, thumb_url, sound_url, sound_enabled, duration_ms, display_scale, rarity)")
+        .select(
+          "gift_id, quantity, total_value, gifts(id, name, image_url, animation_url, video_url, thumb_url, sound_url, sound_enabled, duration_ms, display_scale, rarity)",
+        )
         .eq("user_id", userId)
         .order("total_value", { ascending: false })
         .limit(18);
@@ -107,24 +114,44 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
       const def = ROLE_BADGES[role];
       return def ? { ...def, roleKey: role } : null;
     })
-    .filter((role): role is { label: string; note: string; styleKey: string; roleKey: Role } => Boolean(role));
+    .filter((role): role is { label: string; note: string; styleKey: string; roleKey: Role } =>
+      Boolean(role),
+    );
   const earned = (badges.data ?? []).filter((badge) => badge.badge_definitions);
-  const administrative = earned.filter((badge) => badge.badge_definitions?.kind === "administrative");
+  const administrative = earned.filter(
+    (badge) => badge.badge_definitions?.kind === "administrative",
+  );
   const achievements = earned.filter((badge) => badge.badge_definitions?.kind !== "administrative");
   const received = (gifts.data ?? []).filter((gift) => gift.gifts);
 
   const badgeTiles: ReactNode[] = [];
   if (ownedRoom.data) {
     badgeTiles.push(
-      <div key="room-owner" className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-primary/5 p-2">
-        <AdminBadgeCrest name={`مالك غرفة · ${ownedRoom.data.name}`} styleKey="royal" crestKey="room_owner" compact />
+      <div
+        key="room-owner"
+        className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-primary/5 p-2"
+      >
+        <AdminBadgeCrest
+          name={`مالك غرفة · ${ownedRoom.data.name}`}
+          styleKey="royal"
+          crestKey="room_owner"
+          compact
+        />
       </div>,
     );
   }
   roleBadges.forEach((role) => {
     badgeTiles.push(
-      <div key={`role-${role.roleKey}`} className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-primary/5 p-2">
-        <AdminBadgeCrest name={`${role.label} · ${role.note}`} styleKey={role.styleKey} crestKey={role.roleKey} compact />
+      <div
+        key={`role-${role.roleKey}`}
+        className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-primary/5 p-2"
+      >
+        <AdminBadgeCrest
+          name={`${role.label} · ${role.note}`}
+          styleKey={role.styleKey}
+          crestKey={role.roleKey}
+          compact
+        />
       </div>,
     );
   });
@@ -132,7 +159,10 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
     const definition = badge.badge_definitions;
     if (!definition) return;
     badgeTiles.push(
-      <div key={badge.id} className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-surface-2 p-2">
+      <div
+        key={badge.id}
+        className="flex min-h-28 items-center justify-center rounded-2xl border border-primary/25 bg-surface-2 p-2"
+      >
         <AdminBadgeCrest
           name={definition.name}
           styleKey={definition.color_key || definition.style_key}
@@ -150,7 +180,12 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
     badgeTiles.push(
       <div key={badge.id} className="flex min-w-0 items-center gap-2 rounded-2xl bg-surface-2 p-2">
         {definition.image_url ? (
-          <img src={definition.image_url} alt="" className="h-12 w-12 shrink-0 object-contain" loading="lazy" />
+          <img
+            src={definition.image_url}
+            alt=""
+            className="h-12 w-12 shrink-0 object-contain"
+            loading="lazy"
+          />
         ) : (
           <BadgeMark name={definition.name} />
         )}
@@ -199,7 +234,9 @@ export function ProfileShowcase({ userId, own = false }: { userId: string; own?:
                 className="mt-3 flex w-full items-center justify-center gap-1 rounded-2xl border border-primary/30 bg-surface-2 py-2 text-[11px] font-bold text-primary"
               >
                 {badgesOpen ? "إخفاء الشارات" : `عرض المزيد (${badgeTiles.length - 2})`}
-                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", badgesOpen && "rotate-180")} />
+                <ChevronDown
+                  className={cn("h-3.5 w-3.5 transition-transform", badgesOpen && "rotate-180")}
+                />
               </button>
             )}
           </>

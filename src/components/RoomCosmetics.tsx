@@ -52,7 +52,9 @@ export function RoomCosmetics({
   onOpenChange: (v: boolean) => void;
   onApplied: () => void;
 }) {
-  const [target, setTarget] = useState<"background" | "decoration" | "mic">(isOwner || canCustomize ? "background" : "mic");
+  const [target, setTarget] = useState<"background" | "decoration" | "mic">(
+    isOwner || canCustomize ? "background" : "mic",
+  );
   const apply = useServerFn(applyRoomCosmetic);
 
   const owned = useQuery({
@@ -69,7 +71,8 @@ export function RoomCosmetics({
   });
 
   const save = useMutation({
-    mutationFn: async (userItemId: string | null) => apply({ data: { roomId, userItemId, target } }),
+    mutationFn: async (userItemId: string | null) =>
+      apply({ data: { roomId, userItemId, target } }),
     onSuccess: () => {
       onApplied();
       onOpenChange(false);
@@ -123,7 +126,10 @@ export function RoomCosmetics({
                 className="overflow-hidden rounded-2xl border border-border bg-surface-2 p-1.5 text-center transition-transform active:scale-95"
               >
                 <div className="flex h-20 items-center justify-center overflow-hidden rounded-xl bg-surface">
-                  <CosmeticImage url={o.store_items?.image_url ?? null} className="h-full w-full object-cover" />
+                  <CosmeticImage
+                    url={o.store_items?.image_url ?? null}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <p className="mt-1 truncate text-[10px] font-bold">{o.store_items?.name}</p>
               </button>

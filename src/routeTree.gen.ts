@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedBoxesRouteImport } from './routes/_authenticated/boxes'
 import { Route as AuthenticatedCrownRouteImport } from './routes/_authenticated/crown'
 import { Route as AuthenticatedCupRouteImport } from './routes/_authenticated/cup'
 import { Route as AuthenticatedFriendsRouteImport } from './routes/_authenticated/friends'
@@ -56,6 +57,11 @@ const AuthenticatedAchievementsRoute =
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBoxesRoute = AuthenticatedBoxesRouteImport.update({
+  id: '/boxes',
+  path: '/boxes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCrownRoute = AuthenticatedCrownRouteImport.update({
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/boxes': typeof AuthenticatedBoxesRoute
   '/crown': typeof AuthenticatedCrownRoute
   '/cup': typeof AuthenticatedCupRoute
   '/friends': typeof AuthenticatedFriendsRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/boxes': typeof AuthenticatedBoxesRoute
   '/crown': typeof AuthenticatedCrownRoute
   '/cup': typeof AuthenticatedCupRoute
   '/friends': typeof AuthenticatedFriendsRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/boxes': typeof AuthenticatedBoxesRoute
   '/_authenticated/crown': typeof AuthenticatedCrownRoute
   '/_authenticated/cup': typeof AuthenticatedCupRoute
   '/_authenticated/friends': typeof AuthenticatedFriendsRoute
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/admin'
+    | '/boxes'
     | '/crown'
     | '/cup'
     | '/friends'
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/admin'
+    | '/boxes'
     | '/crown'
     | '/cup'
     | '/friends'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/_authenticated/achievements'
     | '/_authenticated/admin'
+    | '/_authenticated/boxes'
     | '/_authenticated/crown'
     | '/_authenticated/cup'
     | '/_authenticated/friends'
@@ -399,6 +411,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/boxes': {
+      id: '/_authenticated/boxes'
+      path: '/boxes'
+      fullPath: '/boxes'
+      preLoaderRoute: typeof AuthenticatedBoxesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/crown': {
@@ -575,6 +594,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAchievementsRoute: typeof AuthenticatedAchievementsRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedBoxesRoute: typeof AuthenticatedBoxesRoute
   AuthenticatedCrownRoute: typeof AuthenticatedCrownRoute
   AuthenticatedCupRoute: typeof AuthenticatedCupRoute
   AuthenticatedFriendsRoute: typeof AuthenticatedFriendsRoute
@@ -604,6 +624,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAchievementsRoute: AuthenticatedAchievementsRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedBoxesRoute: AuthenticatedBoxesRoute,
   AuthenticatedCrownRoute: AuthenticatedCrownRoute,
   AuthenticatedCupRoute: AuthenticatedCupRoute,
   AuthenticatedFriendsRoute: AuthenticatedFriendsRoute,

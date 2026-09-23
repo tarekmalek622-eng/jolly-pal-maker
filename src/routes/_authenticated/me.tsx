@@ -16,11 +16,29 @@ import {
   LogOut,
   Pencil,
   Search,
+  Share2,
   Shield,
   Sparkles,
   Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+
+/** مشاركة بطاقة الملف الشخصي خارج التطبيق أو نسخ الرابط. */
+async function shareProfile(name?: string | null, publicId?: string | null) {
+  if (!publicId) return;
+  const url = `${window.location.origin}/u/${publicId}`;
+  const text = `${name ?? "مستخدم"} على تطبيق التاج — ID: ${publicId}`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: "بطاقة ملفي في التاج", text, url });
+      return;
+    }
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+    toast.success("تم نسخ بطاقة ملفك");
+  } catch {
+    /* المستخدم أغلق نافذة المشاركة */
+  }
+}
 import { cn } from "@/lib/utils";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -228,7 +246,14 @@ function MePage() {
 
   return (
     <AppShell header={<PageHeader title="ملفي" />}>
-      <div className="surface-card p-5">
+      <div className="surface-card overflow-hidden p-5">
+        {/* غلاف متحرك يتغيّر حسب مستوى VIP */}
+        <div
+          className={cn(
+            "cover-sheen -mx-5 -mt-5 mb-4 h-20 w-[calc(100%+2.5rem)]",
+            (p?.vip_level ?? 0) >= 1 ? "vip-aura" : "bg-surface-2",
+          )}
+        />
         <div className="flex items-center gap-4">
           <button type="button" onClick={() => fileRef.current?.click()} className="relative">
             <UserAvatar
@@ -299,6 +324,15 @@ function MePage() {
             </div>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => void shareProfile(p?.display_name, p?.public_id)}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface-2 py-2.5 text-xs font-bold"
+        >
+          <Share2 className="h-4 w-4" />
+          مشاركة بطاقة ملفي
+        </button>
 
         <div className="mt-4">
           <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">

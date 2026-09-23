@@ -29,7 +29,14 @@ function Face({ face, spinning }: { face: string; spinning: boolean }) {
       )}
     >
       {src ? (
-        <img src={src} alt={face} loading="lazy" width={816} height={816} className="h-16 w-16 object-contain" />
+        <img
+          src={src}
+          alt={face}
+          loading="lazy"
+          width={816}
+          height={816}
+          className="h-16 w-16 object-contain"
+        />
       ) : (
         <span className="emoji text-4xl">{face}</span>
       )}
@@ -48,7 +55,11 @@ export function Game77({ bet, onSettled }: { bet: number; onSettled?: (text: str
   });
   const [auto, setAuto] = useState(false);
   const [todayWin, setTodayWin] = useState(0);
-  const [outcome, setOutcome] = useState<{ label: string; payout: number; multiplier: number } | null>(null);
+  const [outcome, setOutcome] = useState<{
+    label: string;
+    payout: number;
+    multiplier: number;
+  } | null>(null);
   const timers = useRef<number[]>([]);
   const currentBet = BET_STEPS[betIndex] ?? BET_STEPS[0]!;
 
@@ -143,7 +154,9 @@ export function Game77({ bet, onSettled }: { bet: number; onSettled?: (text: str
         <p
           className={cn(
             "mt-2 rounded-xl py-1.5 text-center text-xs font-extrabold",
-            outcome.payout > 0 ? "bg-emerald-500/20 text-emerald-200" : "bg-black/40 text-amber-100/70",
+            outcome.payout > 0
+              ? "bg-emerald-500/20 text-emerald-200"
+              : "bg-black/40 text-amber-100/70",
           )}
         >
           {outcome.label}
@@ -196,7 +209,10 @@ export function Game77({ bet, onSettled }: { bet: number; onSettled?: (text: str
       <div className="mt-2 space-y-1 rounded-2xl bg-black/40 p-3">
         <p className="text-[11px] font-extrabold text-amber-200">جدول الأرباح</p>
         {PAYTABLE.map((row) => (
-          <div key={row.combo} className="flex items-center justify-between text-[11px] text-amber-100/80">
+          <div
+            key={row.combo}
+            className="flex items-center justify-between text-[11px] text-amber-100/80"
+          >
             <span className="emoji font-bold">{row.combo}</span>
             <span>{row.label}</span>
             <span className="font-extrabold text-amber-300">{row.mult}</span>

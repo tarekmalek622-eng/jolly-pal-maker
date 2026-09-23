@@ -39,14 +39,27 @@ function AchievementsPage() {
           .select("id, key, name, description, kind, threshold, style_key, image_url, sort_order")
           .eq("is_active", true)
           .order("sort_order", { ascending: true }),
-        supabase.from("user_badges").select("badge_id, progress, awarded_at").eq("user_id", userId!),
-        supabase.from("gift_transactions").select("total_price").eq("sender_id", userId!).limit(1000),
+        supabase
+          .from("user_badges")
+          .select("badge_id, progress, awarded_at")
+          .eq("user_id", userId!),
+        supabase
+          .from("gift_transactions")
+          .select("total_price")
+          .eq("sender_id", userId!)
+          .limit(1000),
       ]);
       if (defs.error) throw defs.error;
       if (mine.error) throw mine.error;
       if (sent.error) throw sent.error;
-      const totalSent = (sent.data ?? []).reduce((sum, row) => sum + Number(row.total_price ?? 0), 0);
-      const progressMax = (mine.data ?? []).reduce((max, row) => Math.max(max, Number(row.progress ?? 0)), 0);
+      const totalSent = (sent.data ?? []).reduce(
+        (sum, row) => sum + Number(row.total_price ?? 0),
+        0,
+      );
+      const progressMax = (mine.data ?? []).reduce(
+        (max, row) => Math.max(max, Number(row.progress ?? 0)),
+        0,
+      );
       return {
         definitions: defs.data ?? [],
         owned: new Map((mine.data ?? []).map((row) => [row.badge_id, row])),
@@ -135,14 +148,18 @@ function AchievementsPage() {
                         <span
                           className={cn(
                             "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold",
-                            isOwned ? "gradient-gold text-primary-foreground" : "bg-surface text-muted-foreground",
+                            isOwned
+                              ? "gradient-gold text-primary-foreground"
+                              : "bg-surface text-muted-foreground",
                           )}
                         >
                           {isOwned ? "مفتوحة" : `${percent}%`}
                         </span>
                       </div>
                       {badge.description && (
-                        <p className="truncate text-[11px] text-muted-foreground">{badge.description}</p>
+                        <p className="truncate text-[11px] text-muted-foreground">
+                          {badge.description}
+                        </p>
                       )}
                       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
                         <div className="h-full gradient-gold" style={{ width: `${percent}%` }} />
@@ -164,10 +181,17 @@ function AchievementsPage() {
                 {otherOwned.map((badge) => {
                   const art = badge.image_url || badgeArt(badge.key, badge.style_key);
                   return (
-                    <div key={badge.id} className="surface-card flex flex-col items-center gap-2 p-3">
+                    <div
+                      key={badge.id}
+                      className="surface-card flex flex-col items-center gap-2 p-3"
+                    >
                       <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-surface">
                         {art ? (
-                          <img src={art} alt={badge.name} className="h-full w-full object-contain" />
+                          <img
+                            src={art}
+                            alt={badge.name}
+                            className="h-full w-full object-contain"
+                          />
                         ) : (
                           <Award className="h-5 w-5 text-primary" />
                         )}

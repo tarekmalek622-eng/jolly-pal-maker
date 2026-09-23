@@ -13,7 +13,15 @@ type Props = {
   className?: string | undefined;
 };
 
-export function UserAvatar({ src, name, size = 48, vipLevel = 0, frame, online, className }: Props) {
+export function UserAvatar({
+  src,
+  name,
+  size = 48,
+  vipLevel = 0,
+  frame,
+  online,
+  className,
+}: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [frameUrl, setFrameUrl] = useState<string | null>(null);
 
@@ -41,11 +49,12 @@ export function UserAvatar({ src, name, size = 48, vipLevel = 0, frame, online, 
   const fallbackFrame = getVipFrame(vipLevel);
   const activeFrame = frameUrl ?? fallbackFrame;
   const frameKey = String(frame ?? fallbackFrame ?? "");
-  const frameAnim = frameUrl && /frame-03|fire|نار/i.test(frameKey)
-    ? "animate-frame-fire"
-    : activeFrame
-      ? (getVipVisual(vipLevel)?.frameClass ?? "animate-frame-glow")
-      : "";
+  const frameAnim =
+    frameUrl && /frame-03|fire|نار/i.test(frameKey)
+      ? "animate-frame-fire"
+      : activeFrame
+        ? (getVipVisual(vipLevel)?.frameClass ?? "animate-frame-glow")
+        : "";
 
   return (
     <div className={cn("relative shrink-0", className)} style={{ width: size, height: size }}>
@@ -56,7 +65,12 @@ export function UserAvatar({ src, name, size = 48, vipLevel = 0, frame, online, 
         )}
       >
         {url ? (
-          <img src={url} alt={name ?? "صورة المستخدم"} className="h-full w-full object-cover" loading="lazy" />
+          <img
+            src={url}
+            alt={name ?? "صورة المستخدم"}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-muted-foreground">
             <span style={{ fontSize: size * 0.4 }}>{initial}</span>

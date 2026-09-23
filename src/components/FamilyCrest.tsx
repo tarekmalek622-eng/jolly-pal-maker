@@ -77,9 +77,7 @@ export function FamilyCrest({
         strokeWidth="1.5"
       />
       <path d="M32 8 52 14v21c0 9-8 16-20 20-12-4-20-11-20-20V14L32 8Z" fill="rgba(0,0,0,0.18)" />
-      {level >= 6 && (
-        <path d="M22 20l6 5 4-8 4 8 6-5-2 10H24l-2-10Z" fill={p.ink} opacity="0.9" />
-      )}
+      {level >= 6 && <path d="M22 20l6 5 4-8 4 8 6-5-2 10H24l-2-10Z" fill={p.ink} opacity="0.9" />}
       <text
         x="32"
         y={level >= 6 ? 47 : 41}
