@@ -115,6 +115,7 @@ function UserPage() {
       return roomIds.map((roomId) => roomById.get(roomId)).find(Boolean) ?? null;
     },
   });
+  const refetchCurrentRoom = currentRoom.refetch;
 
   useEffect(() => {
     if (!target?.id) return;
@@ -128,14 +129,14 @@ function UserPage() {
           table: "room_members",
           filter: `user_id=eq.${target.id}`,
         },
-        () => void currentRoom.refetch(),
+        () => void refetchCurrentRoom(),
       )
       .subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [target?.id, currentRoom.refetch]);
+  }, [target?.id, refetchCurrentRoom]);
 
   useEffect(() => {
     if (!userId || !target?.id || target.id === userId) return;
