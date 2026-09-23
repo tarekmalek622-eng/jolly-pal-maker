@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminToolsRouteImport } from './routes/_authenticated/admin-tools'
+import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated/agents'
 import { Route as AuthenticatedBoxesRouteImport } from './routes/_authenticated/boxes'
 import { Route as AuthenticatedCrownRouteImport } from './routes/_authenticated/crown'
 import { Route as AuthenticatedCupRouteImport } from './routes/_authenticated/cup'
@@ -22,7 +23,6 @@ import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedGiftLogRouteImport } from './routes/_authenticated/gift-log'
 import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
-import { Route as AuthenticatedMarketRouteImport } from './routes/_authenticated/market'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedMyStatsRouteImport } from './routes/_authenticated/my-stats'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -67,6 +67,11 @@ const AuthenticatedAdminToolsRoute = AuthenticatedAdminToolsRouteImport.update({
   path: '/admin-tools',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAgentsRoute = AuthenticatedAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBoxesRoute = AuthenticatedBoxesRouteImport.update({
   id: '/boxes',
   path: '/boxes',
@@ -105,11 +110,6 @@ const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMarketRoute = AuthenticatedMarketRouteImport.update({
-  id: '/market',
-  path: '/market',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
@@ -216,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-tools': typeof AuthenticatedAdminToolsRoute
+  '/agents': typeof AuthenticatedAgentsRoute
   '/boxes': typeof AuthenticatedBoxesRoute
   '/crown': typeof AuthenticatedCrownRoute
   '/cup': typeof AuthenticatedCupRoute
@@ -224,7 +225,6 @@ export interface FileRoutesByFullPath {
   '/gift-log': typeof AuthenticatedGiftLogRoute
   '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
-  '/market': typeof AuthenticatedMarketRoute
   '/me': typeof AuthenticatedMeRoute
   '/my-stats': typeof AuthenticatedMyStatsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -249,6 +249,7 @@ export interface FileRoutesByTo {
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-tools': typeof AuthenticatedAdminToolsRoute
+  '/agents': typeof AuthenticatedAgentsRoute
   '/boxes': typeof AuthenticatedBoxesRoute
   '/crown': typeof AuthenticatedCrownRoute
   '/cup': typeof AuthenticatedCupRoute
@@ -257,7 +258,6 @@ export interface FileRoutesByTo {
   '/gift-log': typeof AuthenticatedGiftLogRoute
   '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
-  '/market': typeof AuthenticatedMarketRoute
   '/me': typeof AuthenticatedMeRoute
   '/my-stats': typeof AuthenticatedMyStatsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -284,6 +284,7 @@ export interface FileRoutesById {
   '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/admin-tools': typeof AuthenticatedAdminToolsRoute
+  '/_authenticated/agents': typeof AuthenticatedAgentsRoute
   '/_authenticated/boxes': typeof AuthenticatedBoxesRoute
   '/_authenticated/crown': typeof AuthenticatedCrownRoute
   '/_authenticated/cup': typeof AuthenticatedCupRoute
@@ -292,7 +293,6 @@ export interface FileRoutesById {
   '/_authenticated/gift-log': typeof AuthenticatedGiftLogRoute
   '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
-  '/_authenticated/market': typeof AuthenticatedMarketRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
   '/_authenticated/my-stats': typeof AuthenticatedMyStatsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -319,6 +319,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/admin'
     | '/admin-tools'
+    | '/agents'
     | '/boxes'
     | '/crown'
     | '/cup'
@@ -327,7 +328,6 @@ export interface FileRouteTypes {
     | '/gift-log'
     | '/help'
     | '/home'
-    | '/market'
     | '/me'
     | '/my-stats'
     | '/notifications'
@@ -352,6 +352,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/admin'
     | '/admin-tools'
+    | '/agents'
     | '/boxes'
     | '/crown'
     | '/cup'
@@ -360,7 +361,6 @@ export interface FileRouteTypes {
     | '/gift-log'
     | '/help'
     | '/home'
-    | '/market'
     | '/me'
     | '/my-stats'
     | '/notifications'
@@ -386,6 +386,7 @@ export interface FileRouteTypes {
     | '/_authenticated/achievements'
     | '/_authenticated/admin'
     | '/_authenticated/admin-tools'
+    | '/_authenticated/agents'
     | '/_authenticated/boxes'
     | '/_authenticated/crown'
     | '/_authenticated/cup'
@@ -394,7 +395,6 @@ export interface FileRouteTypes {
     | '/_authenticated/gift-log'
     | '/_authenticated/help'
     | '/_authenticated/home'
-    | '/_authenticated/market'
     | '/_authenticated/me'
     | '/_authenticated/my-stats'
     | '/_authenticated/notifications'
@@ -457,6 +457,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminToolsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/agents': {
+      id: '/_authenticated/agents'
+      path: '/agents'
+      fullPath: '/agents'
+      preLoaderRoute: typeof AuthenticatedAgentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/boxes': {
       id: '/_authenticated/boxes'
       path: '/boxes'
@@ -511,13 +518,6 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/market': {
-      id: '/_authenticated/market'
-      path: '/market'
-      fullPath: '/market'
-      preLoaderRoute: typeof AuthenticatedMarketRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/me': {
@@ -653,6 +653,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAchievementsRoute: typeof AuthenticatedAchievementsRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAdminToolsRoute: typeof AuthenticatedAdminToolsRoute
+  AuthenticatedAgentsRoute: typeof AuthenticatedAgentsRoute
   AuthenticatedBoxesRoute: typeof AuthenticatedBoxesRoute
   AuthenticatedCrownRoute: typeof AuthenticatedCrownRoute
   AuthenticatedCupRoute: typeof AuthenticatedCupRoute
@@ -661,7 +662,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGiftLogRoute: typeof AuthenticatedGiftLogRoute
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
-  AuthenticatedMarketRoute: typeof AuthenticatedMarketRoute
   AuthenticatedMeRoute: typeof AuthenticatedMeRoute
   AuthenticatedMyStatsRoute: typeof AuthenticatedMyStatsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -686,6 +686,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAchievementsRoute: AuthenticatedAchievementsRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAdminToolsRoute: AuthenticatedAdminToolsRoute,
+  AuthenticatedAgentsRoute: AuthenticatedAgentsRoute,
   AuthenticatedBoxesRoute: AuthenticatedBoxesRoute,
   AuthenticatedCrownRoute: AuthenticatedCrownRoute,
   AuthenticatedCupRoute: AuthenticatedCupRoute,
@@ -694,7 +695,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGiftLogRoute: AuthenticatedGiftLogRoute,
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
-  AuthenticatedMarketRoute: AuthenticatedMarketRoute,
   AuthenticatedMeRoute: AuthenticatedMeRoute,
   AuthenticatedMyStatsRoute: AuthenticatedMyStatsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
