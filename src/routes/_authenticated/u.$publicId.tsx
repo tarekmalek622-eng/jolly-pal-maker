@@ -18,6 +18,7 @@ import {
   UserRoundCheck,
 } from "lucide-react";
 import { BadgeCheck } from "lucide-react";
+import { resolveMediaUrl } from "@/lib/media";
 import {
   RELATION_LABELS,
   RELATION_STYLES,
@@ -61,6 +62,14 @@ export const Route = createFileRoute("/_authenticated/u/$publicId")({
   component: UserPage,
 });
 
+function AlbumImg({ path }: { path: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    void resolveMediaUrl(path).then(setUrl);
+  }, [path]);
+  return url ? <img src={url} alt="" loading="lazy" className="h-full w-full object-cover" /> : null;
+}
+
 function UserPage() {
   const { publicId } = Route.useParams();
   const { userId } = useSupabaseSession();
@@ -75,7 +84,7 @@ function UserPage() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id, public_id, display_name, avatar_url, frame_url, bio, country, city, level, xp, vip_level, is_cvip, is_online, is_verified",
+          "id, public_id, display_name, avatar_url, frame_url, bio, country, city, level, xp, vip_level, is_cvip, is_online, is_verified, hide_online, interests",
         )
         .eq("public_id", publicId)
         .maybeSingle();
@@ -85,6 +94,24 @@ function UserPage() {
   });
 
   const target = profile.data;
+
+  const album = useQuery({
+    queryKey: ["profile-album", target?.id],
+    enabled: Boolean(target?.id),
+    staleTime: 60_000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from("profile_photos")
+        .select("id, url")
+        .eq("user_id", target?.id)
+        .order("created_at", { ascending: false })
+        .limit(9);
+      if (error) throw error;
+      return (data ?? []) as Array<{ id: string; url: string }>;
+    },
+  });
+  const interests = ((target as { interests?: string[] | null } | undefined)?.interests ?? []) as string[];
 
   const currentRoom = useQuery({
     queryKey: ["profile-current-room", target?.id],
@@ -345,7 +372,7 @@ function UserPage() {
             size={88}
             vipLevel={target.vip_level}
             frame={target.frame_url}
-            online={target.is_online}
+            online={Boolean(target.is_online) && !(target as { hide_online?: boolean }).hide_online}
           />
         </div>
         <p className="mt-3 flex items-center justify-center gap-1 text-lg font-bold">
@@ -358,6 +385,24 @@ function UserPage() {
           )}
         </p>
         <p className="text-[11px] text-muted-foreground">ID: {target.public_id}</p>
+        {interests.length > 0 && (
+          <div className="mt-2 flex flex-wrap justify-center gap-1">
+            {interests.map((i) => (
+              <span key={i} className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">
+                {i}
+              </span>
+            ))}
+          </div>
+        )}
+        {(album.data?.length ?? 0) > 0 && (
+          <div className="mt-3 grid grid-cols-3 gap-1.5">
+            {album.data?.map((ph) => (
+              <div key={ph.id} className="aspect-square overflow-hidden rounded-xl bg-surface">
+                <AlbumImg path={ph.url} />
+              </div>
+            ))}
+          </div>
+        )}
         <div className="mt-2 flex flex-wrap justify-center gap-1.5">
           <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px]">
             مستوى {target.level}
