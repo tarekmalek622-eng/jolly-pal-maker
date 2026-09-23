@@ -22,6 +22,18 @@ const VISUALS = {
   couple: { icon: Gem, className: "relationship-duo" },
 } satisfies Record<RelationType, { icon: typeof Heart; className: string }>;
 
+/** عدد الشهور المكتملة على العلاقة لعرض ذكراها. */
+function monthsSince(startedAt: string | null): number {
+  if (!startedAt) return 0;
+  const start = new Date(startedAt);
+  if (Number.isNaN(start.getTime())) return 0;
+  const now = new Date();
+  let months =
+    (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+  if (now.getDate() < start.getDate()) months -= 1;
+  return Math.max(0, months);
+}
+
 type Person = {
   id: string;
   public_id: string;
