@@ -22,6 +22,23 @@ import {
   Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+
+/** مشاركة بطاقة الملف الشخصي خارج التطبيق أو نسخ الرابط. */
+async function shareProfile(name?: string | null, publicId?: string | null) {
+  if (!publicId) return;
+  const url = `${window.location.origin}/u/${publicId}`;
+  const text = `${name ?? "مستخدم"} على تطبيق التاج — ID: ${publicId}`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: "بطاقة ملفي في التاج", text, url });
+      return;
+    }
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+    toast.success("تم نسخ بطاقة ملفك");
+  } catch {
+    /* المستخدم أغلق نافذة المشاركة */
+  }
+}
 import { cn } from "@/lib/utils";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
