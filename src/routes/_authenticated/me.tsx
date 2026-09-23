@@ -565,6 +565,24 @@ function MePage() {
           </span>
           <span className="text-sm font-bold">إحصائياتي</span>
         </Link>
+        <Link to="/market" className="surface-card flex items-center gap-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
+            <Award className="h-5 w-5 text-primary" />
+          </span>
+          <span className="text-sm font-bold">السوق والتحويلات</span>
+        </Link>
+        <Link to="/profile-plus" className="surface-card flex items-center gap-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
+            <Award className="h-5 w-5 text-primary" />
+          </span>
+          <span className="text-sm font-bold">تخصيص ملفي (ألبوم، اهتمامات، QR)</span>
+        </Link>
+        <Link to="/admin-tools" className="surface-card flex items-center gap-3 p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
+            <Award className="h-5 w-5 text-primary" />
+          </span>
+          <span className="text-sm font-bold">أدوات الإدارة</span>
+        </Link>
         <Link to="/achievements" className="surface-card flex items-center gap-3 p-4">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15">
             <Award className="h-5 w-5 text-primary" />
