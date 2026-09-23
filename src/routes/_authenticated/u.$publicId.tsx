@@ -6,10 +6,14 @@ import {
   ArrowRight,
   Ban,
   Crown,
+  DoorOpen,
   Flag,
   HeartHandshake,
+  Lock,
   MessageCircle,
   MoreVertical,
+  Radio,
+  Users,
   UserPlus,
   UserRoundCheck,
 } from "lucide-react";
@@ -80,6 +84,59 @@ function UserPage() {
   });
 
   const target = profile.data;
+
+  const currentRoom = useQuery({
+    queryKey: ["profile-current-room", target?.id],
+    enabled: Boolean(target?.id),
+    refetchInterval: 20_000,
+    queryFn: async () => {
+      if (!target?.id) return null;
+
+      const { data: memberships, error: membershipError } = await supabase
+        .from("room_members")
+        .select("room_id, joined_at")
+        .eq("user_id", target.id)
+        .order("joined_at", { ascending: false })
+        .limit(5);
+      if (membershipError) throw membershipError;
+
+      const roomIds = (memberships ?? []).map((membership) => membership.room_id);
+      if (roomIds.length === 0) return null;
+
+      const { data: rooms, error: roomsError } = await supabase
+        .from("rooms")
+        .select("id, name, room_type, member_count, is_active, is_disabled")
+        .in("id", roomIds)
+        .eq("is_active", true)
+        .eq("is_disabled", false);
+      if (roomsError) throw roomsError;
+
+      const roomById = new Map((rooms ?? []).map((room) => [room.id, room]));
+      return roomIds.map((roomId) => roomById.get(roomId)).find(Boolean) ?? null;
+    },
+  });
+  const refetchCurrentRoom = currentRoom.refetch;
+
+  useEffect(() => {
+    if (!target?.id) return;
+    const channel = supabase
+      .channel(`profile-room-${target.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "room_members",
+          filter: `user_id=eq.${target.id}`,
+        },
+        () => void refetchCurrentRoom(),
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [target?.id, refetchCurrentRoom]);
 
   useEffect(() => {
     if (!userId || !target?.id || target.id === userId) return;
@@ -219,6 +276,7 @@ function UserPage() {
   if (!target) {
     return <AppShell hideNav>لا يوجد مستخدم بهذا الرقم.</AppShell>;
   }
+  const activeRoom = currentRoom.data;
 
   return (
     <AppShell
@@ -308,6 +366,65 @@ function UserPage() {
         </div>
         {target.bio && <p className="mt-3 text-sm text-muted-foreground">{target.bio}</p>}
       </div>
+
+      <section className="mt-3 rounded-2xl border border-border bg-surface p-3">
+        {currentRoom.isLoading ? (
+          <div className="h-12 animate-pulse rounded-xl bg-surface-2" />
+        ) : currentRoom.isError ? (
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground">تعذر معرفة حالة الغرفة الآن</p>
+            <Button variant="ghost" size="sm" onClick={() => void currentRoom.refetch()}>
+              إعادة المحاولة
+            </Button>
+          </div>
+        ) : activeRoom ? (
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-success/15 text-success">
+              <Radio className="h-5 w-5" />
+              <span className="absolute end-0 top-0 h-2.5 w-2.5 animate-pulse rounded-full border-2 border-surface bg-success" />
+            </span>
+            <div className="min-w-0 flex-1 text-start">
+              <p className="text-[10px] font-bold text-success">موجود في غرفة الآن</p>
+              {activeRoom.room_type === "private" ? (
+                <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                  <Lock className="h-3.5 w-3.5" /> غرفة خاصة
+                </p>
+              ) : (
+                <>
+                  <p className="mt-0.5 truncate text-sm font-bold">{activeRoom.name}</p>
+                  <p className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <Users className="h-3 w-3" /> {activeRoom.member_count} داخل الغرفة
+                  </p>
+                </>
+              )}
+            </div>
+            {activeRoom.room_type === "public" && (
+              <Button
+                size="sm"
+                onClick={() =>
+                  void navigate({
+                    to: "/rooms/$roomId",
+                    params: { roomId: activeRoom.id },
+                  })
+                }
+                className="h-9 shrink-0 rounded-xl px-3 text-xs font-bold"
+              >
+                <DoorOpen className="h-4 w-4" /> دخول
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-2">
+              <Radio className="h-4 w-4" />
+            </span>
+            <div className="text-start">
+              <p className="text-xs font-semibold">ليس داخل غرفة الآن</p>
+              <p className="mt-0.5 text-[10px]">ستظهر الغرفة هنا عند دخوله</p>
+            </div>
+          </div>
+        )}
+      </section>
 
       {!isMe && (
         <>
