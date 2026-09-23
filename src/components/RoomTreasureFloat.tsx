@@ -63,6 +63,7 @@ export function RoomTreasureFloat({ roomId, onOpen }: { roomId: string; onOpen: 
       <span className="rounded-full bg-black/55 px-1.5 text-[9px] font-bold text-amber-200">
         {target > 0 ? `${formatCompact(progress)}/${formatCompact(target)}` : "الكنز"}
       </span>
-    </button>
+      </button>
+    </>
   );
 }
