@@ -41,6 +41,54 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_transactions: {
+        Row: {
+          actor_id: string | null
+          agent_id: string
+          amount: number
+          balance_after: number
+          created_at: string
+          id: string
+          kind: string
+          target_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          agent_id: string
+          amount: number
+          balance_after: number
+          created_at?: string
+          id?: string
+          kind: string
+          target_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          agent_id?: string
+          amount?: number
+          balance_after?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_transactions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_transactions_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_settings: {
         Row: {
           key: string
@@ -1781,6 +1829,44 @@ export type Database = {
         }
         Relationships: []
       }
+      recharge_agents: {
+        Row: {
+          balance: number
+          created_at: string
+          is_active: boolean
+          total_recharged: number
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          is_active?: boolean
+          total_recharged?: number
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          is_active?: boolean
+          total_recharged?: number
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recharge_agents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referrals: {
         Row: {
           coins_invitee: number
@@ -3339,17 +3425,29 @@ export type Database = {
         Args: { _relationship_id: string }
         Returns: boolean
       }
+      admin_fund_agent: {
+        Args: { _agent_id: string; _amount: number }
+        Returns: number
+      }
       admin_has_section: {
         Args: { _section: string; _user_id: string }
         Returns: boolean
       }
       admin_sections_for: { Args: { _user_id: string }; Returns: string[] }
+      admin_set_agent: {
+        Args: { _active: boolean; _public_id: string; _whatsapp?: string }
+        Returns: string
+      }
       admin_set_profile_suspended: {
         Args: { _suspended: boolean; _user_id: string }
         Returns: boolean
       }
       admin_warn_user: {
         Args: { _reason: string; _user_id: string }
+        Returns: number
+      }
+      agent_recharge: {
+        Args: { _amount: number; _public_id: string }
         Returns: number
       }
       app_cup_leaderboard: {
