@@ -6,6 +6,8 @@ import { badgeArt } from "@/lib/badge-art";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/UserAvatar";
 import { VipName } from "@/components/VipName";
+import agentBadge from "@/assets/agent-badge.png";
+import agentFrame from "@/assets/agent-frame.png";
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "مالك التطبيق",
@@ -44,7 +46,7 @@ export function RolePanel({
     staleTime: 60_000,
     queryFn: async () => {
       const uid = userId ?? "";
-      const [roles, profile, family, badges, social] = await Promise.all([
+      const [roles, profile, family, badges, social, agent] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", uid),
         supabase
           .from("profiles")
@@ -64,6 +66,12 @@ export function RolePanel({
           .eq("user_id", uid)
           .limit(12),
         supabase.from("profile_gift_totals").select("total_value").eq("user_id", uid),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase as any)
+          .from("recharge_agents")
+          .select("is_active")
+          .eq("user_id", uid)
+          .maybeSingle(),
       ]);
       if (roles.error) throw roles.error;
       if (profile.error) throw profile.error;
@@ -76,6 +84,7 @@ export function RolePanel({
         roles: (roles.data ?? []).map((row) => String(row.role)),
         profile: profile.data,
         gifted,
+        isAgent: Boolean(agent.data?.is_active),
         familyRole: family.data?.role ? String(family.data.role) : null,
         familyName:
           (family.data as { families?: { name?: string } | null } | null)?.families?.name ?? null,
@@ -101,6 +110,7 @@ export function RolePanel({
     if (data.data?.roles.includes(role))
       titles.push({ label: ROLE_LABELS[role] ?? role, icon: "shield" });
   }
+  if (data.data?.isAgent) titles.push({ label: "وكيل شحن معتمد", icon: "shield" });
   if (isRoomOwner) titles.push({ label: "صاحب الغرفة", icon: "crown" });
   if (isRoomModerator) titles.push({ label: "مشرف الغرفة", icon: "shield" });
   if (data.data?.familyRole) {
@@ -130,7 +140,7 @@ export function RolePanel({
           name={p?.display_name ?? ""}
           size={78}
           vipLevel={vip}
-          frame={p?.frame_url ?? null}
+          frame={p?.frame_url ?? (data.data?.isAgent ? agentFrame : null)}
         />
       </div>
 
@@ -159,6 +169,16 @@ export function RolePanel({
         <span>المستوى {Number(p?.level ?? 0)}</span>
       </div>
 
+      {data.data?.isAgent && (
+        <img
+          src={agentBadge}
+          alt="شارة وكيل الشحن"
+          width={44}
+          height={44}
+          loading="lazy"
+          className="mx-auto mt-2 h-11 w-11"
+        />
+      )}
       <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
         <span className="flex items-center gap-1 rounded-full border border-primary/30 bg-background/70 px-2 py-0.5 text-[10px] font-bold">
           <Coins className="h-3 w-3 text-warning" />

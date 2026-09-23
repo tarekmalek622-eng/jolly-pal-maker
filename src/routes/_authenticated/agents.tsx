@@ -46,7 +46,10 @@ function AgentsPage() {
       if (error) throw error;
       const ids = (data ?? []).map((a: any) => a.user_id);
       const { data: profs } = ids.length
-        ? await supabase.from("profiles").select("id, public_id, display_name, avatar_url").in("id", ids)
+        ? await supabase
+            .from("profiles")
+            .select("id, public_id, display_name, avatar_url")
+            .in("id", ids)
         : { data: [] as any[] };
       const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
       return (data ?? []).map((a: any) => ({ ...a, profile: map.get(a.user_id) }));
@@ -134,7 +137,13 @@ function AgentsPage() {
         </div>
 
         <div className="surface-card flex items-center gap-3 p-4">
-          <img src={agentBadge} alt="شارة وكيل الشحن" width={64} height={64} className="h-16 w-16" />
+          <img
+            src={agentBadge}
+            alt="شارة وكيل الشحن"
+            width={64}
+            height={64}
+            className="h-16 w-16"
+          />
           <p className="text-xs leading-6 text-muted-foreground">
             تواصل مع أي وكيل معتمد لشحن الكوينز. الوكيل يشحن حسابك مباشرة من رصيده، وتُضاف لك نقاط
             الشحن تلقائياً.
@@ -151,7 +160,11 @@ function AgentsPage() {
                 <Coins className="h-4 w-4" /> {fmt(me.balance)}
               </span>
             </div>
-            <Input placeholder="ID المستخدم" value={target} onChange={(e) => setTarget(e.target.value)} />
+            <Input
+              placeholder="ID المستخدم"
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+            />
             <Input
               placeholder="عدد الكوينز"
               inputMode="numeric"
@@ -165,10 +178,15 @@ function AgentsPage() {
             >
               <Zap className="h-4 w-4" /> شحن الآن
             </Button>
-            <p className="text-[11px] text-muted-foreground">إجمالي ما شحنته: {fmt(me.total_recharged)}</p>
+            <p className="text-[11px] text-muted-foreground">
+              إجمالي ما شحنته: {fmt(me.total_recharged)}
+            </p>
             <div className="max-h-60 space-y-1 overflow-y-auto">
               {(history.data ?? []).map((t: any) => (
-                <div key={t.id} className="flex justify-between rounded-xl bg-foreground/5 px-3 py-2 text-[11px]">
+                <div
+                  key={t.id}
+                  className="flex justify-between rounded-xl bg-foreground/5 px-3 py-2 text-[11px]"
+                >
                   <span>{t.kind === "fund" ? "تمويل من الإدارة" : "شحن مستخدم"}</span>
                   <span className={t.kind === "fund" ? "text-success" : "text-warning"}>
                     {t.kind === "fund" ? "+" : "-"}
@@ -186,8 +204,16 @@ function AgentsPage() {
         {isAdmin.data && (
           <div className="surface-card space-y-2 p-4">
             <p className="text-sm font-black">تعيين وكيل جديد</p>
-            <Input placeholder="ID المستخدم" value={newId} onChange={(e) => setNewId(e.target.value)} />
-            <Input placeholder="واتساب (اختياري)" value={newWa} onChange={(e) => setNewWa(e.target.value)} />
+            <Input
+              placeholder="ID المستخدم"
+              value={newId}
+              onChange={(e) => setNewId(e.target.value)}
+            />
+            <Input
+              placeholder="واتساب (اختياري)"
+              value={newWa}
+              onChange={(e) => setNewWa(e.target.value)}
+            />
             <Button
               className="w-full"
               disabled={!newId || setAgent.isPending}
@@ -200,9 +226,13 @@ function AgentsPage() {
 
         <div className="space-y-2">
           {agents.isLoading && <div className="h-20 animate-pulse rounded-2xl bg-foreground/10" />}
-          {agents.isError && <p className="text-center text-sm text-destructive">تعذر تحميل الوكلاء</p>}
+          {agents.isError && (
+            <p className="text-center text-sm text-destructive">تعذر تحميل الوكلاء</p>
+          )}
           {!agents.isLoading && visible.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">لا يوجد وكلاء شحن حالياً</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              لا يوجد وكلاء شحن حالياً
+            </p>
           )}
           {visible.map((a: any) => (
             <div key={a.user_id} className="surface-card flex items-center gap-3 p-3">
@@ -214,8 +244,16 @@ function AgentsPage() {
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1">
-                  <span className="truncate text-sm font-black">{a.profile?.display_name ?? "وكيل"}</span>
-                  <img src={agentBadge} alt="" width={18} height={18} className="h-[18px] w-[18px]" />
+                  <span className="truncate text-sm font-black">
+                    {a.profile?.display_name ?? "وكيل"}
+                  </span>
+                  <img
+                    src={agentBadge}
+                    alt=""
+                    width={18}
+                    height={18}
+                    className="h-[18px] w-[18px]"
+                  />
                 </div>
                 <p className="text-[11px] text-muted-foreground">ID: {a.profile?.public_id}</p>
                 {isAdmin.data && (
@@ -249,7 +287,9 @@ function AgentsPage() {
                     <button
                       className="rounded-full bg-warning/20 px-2 py-1 text-[10px] font-bold text-warning"
                       onClick={() => {
-                        const v = Number(window.prompt("كم كوينز تضيف لرصيد الوكيل؟ (سالب للخصم)") ?? 0);
+                        const v = Number(
+                          window.prompt("كم كوينز تضيف لرصيد الوكيل؟ (سالب للخصم)") ?? 0,
+                        );
                         if (v) fund.mutate({ agent: a.user_id, amount: v });
                       }}
                     >
