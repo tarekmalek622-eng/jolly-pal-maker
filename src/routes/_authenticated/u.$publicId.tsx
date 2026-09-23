@@ -17,6 +17,7 @@ import {
   UserPlus,
   UserRoundCheck,
 } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
 import {
   RELATION_LABELS,
   RELATION_STYLES,
@@ -74,7 +75,7 @@ function UserPage() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id, public_id, display_name, avatar_url, frame_url, bio, country, city, level, xp, vip_level, is_cvip, is_online",
+          "id, public_id, display_name, avatar_url, frame_url, bio, country, city, level, xp, vip_level, is_cvip, is_online, is_verified",
         )
         .eq("public_id", publicId)
         .maybeSingle();
@@ -347,7 +348,15 @@ function UserPage() {
             online={target.is_online}
           />
         </div>
-        <p className="mt-3 text-lg font-bold">{target.display_name}</p>
+        <p className="mt-3 flex items-center justify-center gap-1 text-lg font-bold">
+          {target.display_name}
+          {(target as { is_verified?: boolean }).is_verified && (
+            <BadgeCheck
+              className="h-5 w-5 fill-primary text-primary-foreground"
+              aria-label="حساب موثّق"
+            />
+          )}
+        </p>
         <p className="text-[11px] text-muted-foreground">ID: {target.public_id}</p>
         <div className="mt-2 flex flex-wrap justify-center gap-1.5">
           <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px]">

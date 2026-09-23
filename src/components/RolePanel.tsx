@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Coins, Crown, Heart, Shield, Users } from "lucide-react";
+import { BadgeCheck, Coins, Crown, Heart, Shield, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { badgeArt } from "@/lib/badge-art";
 import { cn } from "@/lib/utils";
@@ -51,7 +51,7 @@ export function RolePanel({
         supabase
           .from("profiles")
           .select(
-            "public_id, display_name, avatar_url, frame_url, country, gender, vip_level, cvip_level, level",
+            "public_id, display_name, avatar_url, frame_url, country, gender, vip_level, cvip_level, level, is_verified",
           )
           .eq("id", uid)
           .maybeSingle(),
@@ -159,6 +159,12 @@ export function RolePanel({
           vipLevel={vip}
           className="text-base font-black"
         />
+        {(p as { is_verified?: boolean } | null | undefined)?.is_verified && (
+          <BadgeCheck
+            className="h-4 w-4 fill-primary text-primary-foreground"
+            aria-label="حساب موثّق"
+          />
+        )}
       </div>
 
       <div className="mt-1.5 flex items-center justify-center gap-2 text-[11px] font-bold text-muted-foreground">

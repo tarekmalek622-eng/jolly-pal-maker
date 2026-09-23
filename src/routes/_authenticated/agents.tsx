@@ -114,6 +114,14 @@ function AgentsPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+  const verify = useMutation({
+    mutationFn: async (x: { id: string; v: boolean }) => {
+      const { error } = await db.rpc("admin_set_verified", { _public_id: x.id, _verified: x.v });
+      if (error) throw error;
+    },
+    onSuccess: () => toast.success("تم تحديث التوثيق"),
+    onError: (e: Error) => toast.error(e.message),
+  });
   const fund = useMutation({
     mutationFn: async (v: { agent: string; amount: number }) => {
       const { error } = await db.rpc("admin_fund_agent", { _agent_id: v.agent, _amount: v.amount });
@@ -221,6 +229,22 @@ function AgentsPage() {
             >
               تعيين كوكيل شحن
             </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="secondary"
+                disabled={!newId}
+                onClick={() => verify.mutate({ id: newId.trim(), v: true })}
+              >
+                توثيق الحساب
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!newId}
+                onClick={() => verify.mutate({ id: newId.trim(), v: false })}
+              >
+                إلغاء التوثيق
+              </Button>
+            </div>
           </div>
         )}
 

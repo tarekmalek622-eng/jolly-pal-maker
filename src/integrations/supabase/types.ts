@@ -1722,6 +1722,7 @@ export type Database = {
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
+          is_verified: boolean
           last_seen: string
           level: number
           mic_decoration_url: string | null
@@ -1752,6 +1753,7 @@ export type Database = {
           is_cvip?: boolean
           is_online?: boolean
           is_suspended?: boolean
+          is_verified?: boolean
           last_seen?: string
           level?: number
           mic_decoration_url?: string | null
@@ -1782,6 +1784,7 @@ export type Database = {
           is_cvip?: boolean
           is_online?: boolean
           is_suspended?: boolean
+          is_verified?: boolean
           last_seen?: string
           level?: number
           mic_decoration_url?: string | null
@@ -3442,6 +3445,10 @@ export type Database = {
         Args: { _suspended: boolean; _user_id: string }
         Returns: boolean
       }
+      admin_set_verified: {
+        Args: { _public_id: string; _verified: boolean }
+        Returns: string
+      }
       admin_warn_user: {
         Args: { _reason: string; _user_id: string }
         Returns: number
@@ -3610,6 +3617,7 @@ export type Database = {
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
+          is_verified: boolean
           last_seen: string
           level: number
           mic_decoration_url: string | null
@@ -3697,6 +3705,7 @@ export type Database = {
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
+          is_verified: boolean
           last_seen: string
           level: number
           mic_decoration_url: string | null
@@ -3765,6 +3774,7 @@ export type Database = {
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
+          is_verified: boolean
           last_seen: string
           level: number
           mic_decoration_url: string | null
@@ -3821,6 +3831,7 @@ export type Database = {
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
+          is_verified: boolean
           last_seen: string
           level: number
           mic_decoration_url: string | null
@@ -4125,6 +4136,7 @@ export type Database = {
           is_cvip: boolean
           is_online: boolean
           is_suspended: boolean
+          is_verified: boolean
           last_seen: string
           level: number
           mic_decoration_url: string | null
