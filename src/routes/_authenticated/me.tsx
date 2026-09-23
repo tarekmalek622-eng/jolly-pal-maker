@@ -16,6 +16,7 @@ import {
   LogOut,
   Pencil,
   Search,
+  Share2,
   Shield,
   Sparkles,
   Users,
