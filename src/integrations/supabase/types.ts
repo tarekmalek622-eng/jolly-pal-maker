@@ -717,6 +717,36 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_checkins: {
+        Row: {
+          created_at: string
+          id: string
+          last_day: string
+          streak: number
+          total_days: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_day: string
+          streak?: number
+          total_days?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_day?: string
+          streak?: number
+          total_days?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       direct_messages: {
         Row: {
           audio_duration_ms: number | null
@@ -1045,6 +1075,39 @@ export type Database = {
           payout?: number
           result?: Json
           status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gift_box_opens: {
+        Row: {
+          cost: number
+          created_at: string
+          id: string
+          rarity: string
+          reward: number
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cost: number
+          created_at?: string
+          id?: string
+          rarity: string
+          reward: number
+          tier: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          id?: string
+          rarity?: string
+          reward?: number
+          tier?: string
           updated_at?: string
           user_id?: string
         }
@@ -3217,6 +3280,7 @@ export type Database = {
       cvip_level_for: { Args: { _points: number }; Returns: number }
       cvip_settings: { Args: never; Returns: Json }
       cvip_state: { Args: never; Returns: Json }
+      daily_checkin: { Args: never; Returns: Json }
       domino_cancel: {
         Args: { _game_id: string; _uid: string }
         Returns: undefined
@@ -3321,6 +3385,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      family_war_leaderboard: {
+        Args: { _limit?: number }
+        Returns: {
+          family_id: string
+          logo_url: string
+          name: string
+          points: number
+        }[]
+      }
       gen_family_code: { Args: never; Returns: string }
       gen_public_id: { Args: never; Returns: string }
       gen_room_code: { Args: never; Returns: string }
@@ -3382,6 +3455,7 @@ export type Database = {
         Returns: number
       }
       mic_protection_for: { Args: { _user_id: string }; Returns: number }
+      open_gift_box: { Args: { _tier: string }; Returns: Json }
       open_lucky_bag: { Args: { _bag_id: string }; Returns: number }
       owner_dashboard: { Args: never; Returns: Json }
       purchase_cvip: {
