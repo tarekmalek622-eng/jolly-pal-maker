@@ -276,7 +276,8 @@ function RoomPage() {
       const { data, error } = await supabase
         .from("mic_requests")
         .select("id, user_id, created_at")
-        .eq("room_id", roomId);
+        .eq("room_id", roomId)
+        .order("created_at", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
