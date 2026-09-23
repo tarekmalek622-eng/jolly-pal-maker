@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell, EmptyState, PageHeader } from "@/components/AppShell";
 import { FamilyCrest } from "@/components/FamilyCrest";
+import { FamilyChat } from "@/components/FamilyChat";
 import { UserAvatar } from "@/components/UserAvatar";
 import { FAMILY_ROLE_LABEL, familyStyle } from "@/lib/family-art";
 import { formatCoins } from "@/lib/format";
@@ -448,6 +449,7 @@ function FamilyPage() {
             </Link>
           ))}
         </div>
+        {s.viewer && userId && <FamilyChat familyId={familyId} userId={userId} />}
       </div>
     </AppShell>
   );

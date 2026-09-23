@@ -119,7 +119,7 @@ function AdminTools() {
     <AppShell
       header={
         <header className="sticky top-0 z-30 flex items-center gap-3 bg-background/85 px-4 py-4 backdrop-blur-xl">
-          <Link to="/admin" className="p-1">
+          <Link to="/me" className="p-1">
             <ArrowRight className="h-5 w-5" />
           </Link>
           <p className="flex-1 text-sm font-bold">أدوات الإدارة</p>

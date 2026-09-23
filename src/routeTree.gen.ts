@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdminToolsRouteImport } from './routes/_authenticated/admin-tools'
 import { Route as AuthenticatedBoxesRouteImport } from './routes/_authenticated/boxes'
 import { Route as AuthenticatedCrownRouteImport } from './routes/_authenticated/crown'
 import { Route as AuthenticatedCupRouteImport } from './routes/_authenticated/cup'
@@ -26,6 +27,7 @@ import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedMyStatsRouteImport } from './routes/_authenticated/my-stats'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedOwnerStatsRouteImport } from './routes/_authenticated/owner-stats'
+import { Route as AuthenticatedProfilePlusRouteImport } from './routes/_authenticated/profile-plus'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedStoreRouteImport } from './routes/_authenticated/store'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
@@ -58,6 +60,11 @@ const AuthenticatedAchievementsRoute =
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminToolsRoute = AuthenticatedAdminToolsRouteImport.update({
+  id: '/admin-tools',
+  path: '/admin-tools',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedBoxesRoute = AuthenticatedBoxesRouteImport.update({
@@ -126,6 +133,12 @@ const AuthenticatedOwnerStatsRoute = AuthenticatedOwnerStatsRouteImport.update({
   path: '/owner-stats',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfilePlusRoute =
+  AuthenticatedProfilePlusRouteImport.update({
+    id: '/profile-plus',
+    path: '/profile-plus',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -202,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/admin-tools': typeof AuthenticatedAdminToolsRoute
   '/boxes': typeof AuthenticatedBoxesRoute
   '/crown': typeof AuthenticatedCrownRoute
   '/cup': typeof AuthenticatedCupRoute
@@ -215,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/my-stats': typeof AuthenticatedMyStatsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/owner-stats': typeof AuthenticatedOwnerStatsRoute
+  '/profile-plus': typeof AuthenticatedProfilePlusRoute
   '/search': typeof AuthenticatedSearchRoute
   '/store': typeof AuthenticatedStoreRoute
   '/support': typeof AuthenticatedSupportRoute
@@ -233,6 +248,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/admin-tools': typeof AuthenticatedAdminToolsRoute
   '/boxes': typeof AuthenticatedBoxesRoute
   '/crown': typeof AuthenticatedCrownRoute
   '/cup': typeof AuthenticatedCupRoute
@@ -246,6 +262,7 @@ export interface FileRoutesByTo {
   '/my-stats': typeof AuthenticatedMyStatsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/owner-stats': typeof AuthenticatedOwnerStatsRoute
+  '/profile-plus': typeof AuthenticatedProfilePlusRoute
   '/search': typeof AuthenticatedSearchRoute
   '/store': typeof AuthenticatedStoreRoute
   '/support': typeof AuthenticatedSupportRoute
@@ -266,6 +283,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin-tools': typeof AuthenticatedAdminToolsRoute
   '/_authenticated/boxes': typeof AuthenticatedBoxesRoute
   '/_authenticated/crown': typeof AuthenticatedCrownRoute
   '/_authenticated/cup': typeof AuthenticatedCupRoute
@@ -279,6 +297,7 @@ export interface FileRoutesById {
   '/_authenticated/my-stats': typeof AuthenticatedMyStatsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/owner-stats': typeof AuthenticatedOwnerStatsRoute
+  '/_authenticated/profile-plus': typeof AuthenticatedProfilePlusRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/store': typeof AuthenticatedStoreRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
@@ -299,6 +318,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/admin'
+    | '/admin-tools'
     | '/boxes'
     | '/crown'
     | '/cup'
@@ -312,6 +332,7 @@ export interface FileRouteTypes {
     | '/my-stats'
     | '/notifications'
     | '/owner-stats'
+    | '/profile-plus'
     | '/search'
     | '/store'
     | '/support'
@@ -330,6 +351,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/admin'
+    | '/admin-tools'
     | '/boxes'
     | '/crown'
     | '/cup'
@@ -343,6 +365,7 @@ export interface FileRouteTypes {
     | '/my-stats'
     | '/notifications'
     | '/owner-stats'
+    | '/profile-plus'
     | '/search'
     | '/store'
     | '/support'
@@ -362,6 +385,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/_authenticated/achievements'
     | '/_authenticated/admin'
+    | '/_authenticated/admin-tools'
     | '/_authenticated/boxes'
     | '/_authenticated/crown'
     | '/_authenticated/cup'
@@ -375,6 +399,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-stats'
     | '/_authenticated/notifications'
     | '/_authenticated/owner-stats'
+    | '/_authenticated/profile-plus'
     | '/_authenticated/search'
     | '/_authenticated/store'
     | '/_authenticated/support'
@@ -423,6 +448,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-tools': {
+      id: '/_authenticated/admin-tools'
+      path: '/admin-tools'
+      fullPath: '/admin-tools'
+      preLoaderRoute: typeof AuthenticatedAdminToolsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/boxes': {
@@ -514,6 +546,13 @@ declare module '@tanstack/react-router' {
       path: '/owner-stats'
       fullPath: '/owner-stats'
       preLoaderRoute: typeof AuthenticatedOwnerStatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile-plus': {
+      id: '/_authenticated/profile-plus'
+      path: '/profile-plus'
+      fullPath: '/profile-plus'
+      preLoaderRoute: typeof AuthenticatedProfilePlusRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/search': {
@@ -613,6 +652,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAchievementsRoute: typeof AuthenticatedAchievementsRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminToolsRoute: typeof AuthenticatedAdminToolsRoute
   AuthenticatedBoxesRoute: typeof AuthenticatedBoxesRoute
   AuthenticatedCrownRoute: typeof AuthenticatedCrownRoute
   AuthenticatedCupRoute: typeof AuthenticatedCupRoute
@@ -626,6 +666,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyStatsRoute: typeof AuthenticatedMyStatsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOwnerStatsRoute: typeof AuthenticatedOwnerStatsRoute
+  AuthenticatedProfilePlusRoute: typeof AuthenticatedProfilePlusRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedStoreRoute: typeof AuthenticatedStoreRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
@@ -644,6 +685,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAchievementsRoute: AuthenticatedAchievementsRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminToolsRoute: AuthenticatedAdminToolsRoute,
   AuthenticatedBoxesRoute: AuthenticatedBoxesRoute,
   AuthenticatedCrownRoute: AuthenticatedCrownRoute,
   AuthenticatedCupRoute: AuthenticatedCupRoute,
@@ -657,6 +699,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyStatsRoute: AuthenticatedMyStatsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOwnerStatsRoute: AuthenticatedOwnerStatsRoute,
+  AuthenticatedProfilePlusRoute: AuthenticatedProfilePlusRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedStoreRoute: AuthenticatedStoreRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
