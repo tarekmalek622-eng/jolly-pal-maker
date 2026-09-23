@@ -78,12 +78,14 @@ function RoomsPage() {
           title="الغرف"
           subtitle="اختر غرفة وادخل على المايك"
           action={
-            <Button
-              onClick={() => setOpen(true)}
-              className="h-10 rounded-2xl gradient-gold text-xs font-bold text-primary-foreground"
-            >
-              <Plus className="me-1 h-4 w-4" /> غرفة جديدة
-            </Button>
+            (myRooms.data?.length ?? 0) === 0 ? (
+              <Button
+                onClick={() => setOpen(true)}
+                className="h-10 rounded-2xl gradient-gold text-xs font-bold text-primary-foreground"
+              >
+                <Plus className="me-1 h-4 w-4" /> غرفة جديدة
+              </Button>
+            ) : undefined
           }
         />
       }
