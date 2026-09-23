@@ -8,6 +8,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/UserAvatar";
+import { DailyCheckin } from "@/components/DailyCheckin";
 import { useSupabaseSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
