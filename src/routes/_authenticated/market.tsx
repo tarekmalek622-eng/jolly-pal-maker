@@ -302,9 +302,9 @@ function TopGiftToday() {
       since.setHours(0, 0, 0, 0);
       const { data, error } = await db
         .from("gift_transactions")
-        .select("id, total_cost, quantity, created_at, gifts(name, image_url), sender:sender_id(display_name), receiver:receiver_id(display_name)")
+        .select("id, total_price, quantity, created_at, gifts(name, image_url), sender:sender_id(display_name), receiver:receiver_id(display_name)")
         .gte("created_at", since.toISOString())
-        .order("total_cost", { ascending: false })
+        .order("total_price", { ascending: false })
         .limit(10);
       if (error) throw new Error(error.message);
       return (data ?? []) as any[];
@@ -330,7 +330,7 @@ function TopGiftToday() {
               {g.gifts?.name} ×{g.quantity}
             </p>
           </div>
-          <span className="text-xs font-black text-primary">{formatCoins(g.total_cost)}</span>
+          <span className="text-xs font-black text-primary">{formatCoins(g.total_price)}</span>
         </div>
       ))}
     </div>
