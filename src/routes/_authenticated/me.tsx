@@ -307,6 +307,15 @@ function MePage() {
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={() => void shareProfile(p?.display_name, p?.public_id)}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface-2 py-2.5 text-xs font-bold"
+        >
+          <Share2 className="h-4 w-4" />
+          مشاركة بطاقة ملفي
+        </button>
+
         <div className="mt-4">
           <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
             <div className="h-full gradient-gold" style={{ width: `${progress.percent}%` }} />
