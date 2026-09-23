@@ -209,6 +209,7 @@ function HomePage() {
         <div className="space-y-7">
           <HomeBanners />
           <TrendStrip />
+          <AchievementOfDay userId={userId} />
 
           <section>
             <SectionTitle icon={Flame} title="الغرف" />
