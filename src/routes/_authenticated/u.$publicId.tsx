@@ -18,6 +18,7 @@ import {
   UserRoundCheck,
 } from "lucide-react";
 import { BadgeCheck } from "lucide-react";
+import { resolveMediaUrl } from "@/lib/media";
 import {
   RELATION_LABELS,
   RELATION_STYLES,
