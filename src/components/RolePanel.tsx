@@ -160,7 +160,10 @@ export function RolePanel({
           className="text-base font-black"
         />
         {(p as { is_verified?: boolean } | null | undefined)?.is_verified && (
-          <BadgeCheck className="h-4 w-4 fill-primary text-primary-foreground" aria-label="حساب موثّق" />
+          <BadgeCheck
+            className="h-4 w-4 fill-primary text-primary-foreground"
+            aria-label="حساب موثّق"
+          />
         )}
       </div>
 

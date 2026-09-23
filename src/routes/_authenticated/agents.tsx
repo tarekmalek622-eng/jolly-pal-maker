@@ -230,10 +230,18 @@ function AgentsPage() {
               تعيين كوكيل شحن
             </Button>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="secondary" disabled={!newId} onClick={() => verify.mutate({ id: newId.trim(), v: true })}>
+              <Button
+                variant="secondary"
+                disabled={!newId}
+                onClick={() => verify.mutate({ id: newId.trim(), v: true })}
+              >
                 توثيق الحساب
               </Button>
-              <Button variant="outline" disabled={!newId} onClick={() => verify.mutate({ id: newId.trim(), v: false })}>
+              <Button
+                variant="outline"
+                disabled={!newId}
+                onClick={() => verify.mutate({ id: newId.trim(), v: false })}
+              >
                 إلغاء التوثيق
               </Button>
             </div>
