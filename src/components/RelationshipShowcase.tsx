@@ -126,8 +126,13 @@ export function RelationshipShowcase({ userId, own = false }: { userId: string; 
                       {row.status === "pending"
                         ? "بانتظار الموافقة"
                         : (relationDurationLabel(row.started_at) ?? "نشطة")}
-                    </p>
-                    {row.status === "accepted" && info && (
+                     </p>
+                    {row.status === "accepted" && monthsSince(row.started_at) >= 1 && (
+                      <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-background/30 px-2 py-0.5 text-[9px] font-black">
+                        🎂 ذكرى {monthsSince(row.started_at)} شهر
+                      </p>
+                    )}
+                     {row.status === "accepted" && info && (
                       <div className="mt-1">
                         <div
                           className={cn(
