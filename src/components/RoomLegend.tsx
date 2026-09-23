@@ -50,7 +50,7 @@ export function RoomLegend({ roomId }: { roomId: string }) {
           value: entry[1],
         };
       };
-      return { gifter: build(top[0]), receiver: build(top[1]) };
+      return { gifter: build(top[0] ?? null), receiver: build(top[1] ?? null) };
     },
   });
 
