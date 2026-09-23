@@ -51,7 +51,10 @@ export function FamilyChat({ familyId, userId }: { familyId: string; userId: str
     setSending(true);
     const { error } = await db.from("family_messages").insert({ family_id: familyId, user_id: userId, body });
     setSending(false);
-    if (error) return toast.error("تعذر الإرسال");
+    if (error) {
+      toast.error("تعذر الإرسال");
+      return;
+    }
     setText("");
     void refetch();
   };

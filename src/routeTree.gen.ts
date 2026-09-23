@@ -21,6 +21,7 @@ import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedGiftLogRouteImport } from './routes/_authenticated/gift-log'
 import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedMarketRouteImport } from './routes/_authenticated/market'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedMyStatsRouteImport } from './routes/_authenticated/my-stats'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -97,6 +98,11 @@ const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMarketRoute = AuthenticatedMarketRouteImport.update({
+  id: '/market',
+  path: '/market',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/gift-log': typeof AuthenticatedGiftLogRoute
   '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/market': typeof AuthenticatedMarketRoute
   '/me': typeof AuthenticatedMeRoute
   '/my-stats': typeof AuthenticatedMyStatsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/gift-log': typeof AuthenticatedGiftLogRoute
   '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/market': typeof AuthenticatedMarketRoute
   '/me': typeof AuthenticatedMeRoute
   '/my-stats': typeof AuthenticatedMyStatsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -266,6 +274,7 @@ export interface FileRoutesById {
   '/_authenticated/gift-log': typeof AuthenticatedGiftLogRoute
   '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/market': typeof AuthenticatedMarketRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
   '/_authenticated/my-stats': typeof AuthenticatedMyStatsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -298,6 +307,7 @@ export interface FileRouteTypes {
     | '/gift-log'
     | '/help'
     | '/home'
+    | '/market'
     | '/me'
     | '/my-stats'
     | '/notifications'
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/gift-log'
     | '/help'
     | '/home'
+    | '/market'
     | '/me'
     | '/my-stats'
     | '/notifications'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/_authenticated/gift-log'
     | '/_authenticated/help'
     | '/_authenticated/home'
+    | '/_authenticated/market'
     | '/_authenticated/me'
     | '/_authenticated/my-stats'
     | '/_authenticated/notifications'
@@ -467,6 +479,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/market': {
+      id: '/_authenticated/market'
+      path: '/market'
+      fullPath: '/market'
+      preLoaderRoute: typeof AuthenticatedMarketRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/me': {
@@ -602,6 +621,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGiftLogRoute: typeof AuthenticatedGiftLogRoute
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedMarketRoute: typeof AuthenticatedMarketRoute
   AuthenticatedMeRoute: typeof AuthenticatedMeRoute
   AuthenticatedMyStatsRoute: typeof AuthenticatedMyStatsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -632,6 +652,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGiftLogRoute: AuthenticatedGiftLogRoute,
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedMarketRoute: AuthenticatedMarketRoute,
   AuthenticatedMeRoute: AuthenticatedMeRoute,
   AuthenticatedMyStatsRoute: AuthenticatedMyStatsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
