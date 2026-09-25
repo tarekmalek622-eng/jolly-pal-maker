@@ -3436,6 +3436,17 @@ export type Database = {
         Args: { _section: string; _user_id: string }
         Returns: boolean
       }
+      admin_registration_data: {
+        Args: { _search?: string }
+        Returns: {
+          display_name: string
+          last_sign_in_at: string
+          phone: string
+          public_id: string
+          registered_at: string
+          user_id: string
+        }[]
+      }
       admin_sections_for: { Args: { _user_id: string }; Returns: string[] }
       admin_set_agent: {
         Args: { _active: boolean; _public_id: string; _whatsapp?: string }
