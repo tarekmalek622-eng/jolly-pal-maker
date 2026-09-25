@@ -18,7 +18,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useSupabaseSession } from "@/hooks/use-supabase-session";
+import { useSupabaseSession } from "@/hooks/use-session";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
