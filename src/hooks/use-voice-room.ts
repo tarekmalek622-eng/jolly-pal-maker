@@ -204,7 +204,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
           if (!cancelled && result.backupToken && result.backupUrl) {
             try {
               logEvent("provider_switch", result.backupLabel ?? "livekit-backup", "تحويل تلقائي للمزود الاحتياطي");
-              if (await tryLiveKit(result.backupUrl, result.backupToken, result.backupLabel)) return;
+              if (await tryLiveKit(result.backupUrl, result.backupToken, result.backupLabel ?? undefined)) return;
               return;
             } catch {
               /* نكمل للمزود الاحتياطي Agora */
