@@ -180,7 +180,7 @@ export const logVoiceEvent = createServerFn({ method: "POST" })
       for (const admin of admins ?? []) {
         await supabase.from("notifications").insert({
           user_id: admin.user_id,
-          type: "voice_alert",
+          kind: "voice_alert",
           title: "تنبيه صوت",
           body: `فشل مزود الصوت (${data.provider ?? "غير معروف"}) — تم التحويل تلقائيًا للمزود التالي`,
         });
