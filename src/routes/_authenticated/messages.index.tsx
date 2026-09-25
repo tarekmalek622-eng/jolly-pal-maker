@@ -37,8 +37,15 @@ function MessagesPage() {
   const { userId } = useSupabaseSession();
   const fetchCrownUnread = useServerFn(getCrownUnread);
   const crownUnread = useQuery({
-    queryKey: ["crown-unread"],
-    queryFn: () => fetchCrownUnread(),
+    queryKey: ["crown-unread", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      try {
+        return await fetchCrownUnread();
+      } catch {
+        return { unread: 0 };
+      }
+    },
     staleTime: 30_000,
   });
   const notifUnread = useQuery({
