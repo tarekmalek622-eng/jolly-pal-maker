@@ -50,6 +50,7 @@ import { useVoiceRoomContext } from "@/components/VoiceRoomProvider";
 import { BadgeStrip } from "@/components/BadgeStrip";
 import {
   closeWheelRound,
+  enterRoom,
   getMyRoomBadgePermissions,
   removeRoomParticipant,
   updateOwnedRoomDetails,
@@ -169,7 +170,7 @@ function RoomPage() {
       const { data, error } = await supabase
         .from("rooms")
         .select(
-          "id, room_code, name, image_url, background_url, theme, theme_style, owner_id, is_active, is_disabled, chat_locked",
+          "id, room_code, name, image_url, background_url, theme, theme_style, owner_id, is_active, is_disabled, chat_locked, room_type",
         )
         .eq("id", roomId)
         .maybeSingle();
