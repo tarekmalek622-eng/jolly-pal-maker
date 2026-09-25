@@ -18,6 +18,7 @@ import {
   Megaphone,
   PartyPopper,
   Phone,
+  Radio,
   ScrollText,
   Trash2,
   ShoppingBag,
@@ -116,6 +117,7 @@ const TABS = [
   { key: "words", label: "الكلمات المحظورة", icon: Ban },
   { key: "logs", label: "السجل", icon: ScrollText },
   { key: "registration", label: "بيانات التسجيل", icon: Phone },
+  { key: "voice", label: "سجل الصوت", icon: Radio },
 ] as const;
 
 function AdminPage() {
