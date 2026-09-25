@@ -239,13 +239,22 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
           client.on("volume-indicator", (vols) => {
             setSpeakingIds(vols.filter((v) => v.level > 5).map((v) => String(v.uid)));
           });
+          client.on("network-quality", (stats) => {
+            const q = stats.uplinkNetworkQuality;
+            if (q <= 2) setQuality("excellent");
+            else if (q <= 4) setQuality("good");
+            else setQuality("poor");
+          });
+          logEvent("provider_switch", "agora", "تحويل تلقائي لمزود الصوت الاحتياطي");
           await client.join(ag.appId, ag.channel, ag.token, null);
           if (cancelled) {
             void client.leave();
             return;
           }
           providerRef.current = "agora";
+          setActiveProvider("agora");
           setStatus("connected");
+          beginSession();
           return;
         }
       } catch {
