@@ -309,7 +309,7 @@ function RegistrationTab() {
     queryKey: ["admin-registration", search],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("admin_registration_data", {
-        _search: search.trim() || undefined,
+        ...(search.trim() ? { _search: search.trim() } : {}),
       });
       if (error) throw error;
       return data ?? [];
