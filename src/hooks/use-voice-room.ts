@@ -6,12 +6,22 @@ import type {
   Room as LiveKitRoom,
 } from "livekit-client";
 import type { IAgoraRTCClient, IMicrophoneAudioTrack, IRemoteAudioTrack } from "agora-rtc-sdk-ng";
-import { getAgoraVoiceToken, getVoiceToken } from "@/lib/voice.functions";
+import {
+  endVoiceSession,
+  getAgoraVoiceToken,
+  getVoiceToken,
+  logVoiceEvent,
+  startVoiceSession,
+} from "@/lib/voice.functions";
 
 export type VoiceStatus =
   "idle" | "connecting" | "connected" | "reconnecting" | "error" | "unconfigured";
 
+export type VoiceQuality = "excellent" | "good" | "poor" | "unknown";
+
 type VoiceProvider = "livekit" | "agora" | null;
+
+const MAX_AUTO_RETRIES = 5;
 
 const ARABIC_RE = /[\u0600-\u06FF]/;
 
