@@ -30,6 +30,7 @@ import { Route as AuthenticatedOwnerStatsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedProfilePlusRouteImport } from './routes/_authenticated/profile-plus'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedStoreRouteImport } from './routes/_authenticated/store'
+import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
@@ -149,6 +150,11 @@ const AuthenticatedStoreRoute = AuthenticatedStoreRouteImport.update({
   path: '/store',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSuperAdminRoute = AuthenticatedSuperAdminRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
   id: '/support',
   path: '/support',
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/profile-plus': typeof AuthenticatedProfilePlusRoute
   '/search': typeof AuthenticatedSearchRoute
   '/store': typeof AuthenticatedStoreRoute
+  '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/support': typeof AuthenticatedSupportRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/wallet': typeof AuthenticatedWalletRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/profile-plus': typeof AuthenticatedProfilePlusRoute
   '/search': typeof AuthenticatedSearchRoute
   '/store': typeof AuthenticatedStoreRoute
+  '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/support': typeof AuthenticatedSupportRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/wallet': typeof AuthenticatedWalletRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/_authenticated/profile-plus': typeof AuthenticatedProfilePlusRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/store': typeof AuthenticatedStoreRoute
+  '/_authenticated/super-admin': typeof AuthenticatedSuperAdminRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
@@ -335,6 +344,7 @@ export interface FileRouteTypes {
     | '/profile-plus'
     | '/search'
     | '/store'
+    | '/super-admin'
     | '/support'
     | '/tasks'
     | '/wallet'
@@ -368,6 +378,7 @@ export interface FileRouteTypes {
     | '/profile-plus'
     | '/search'
     | '/store'
+    | '/super-admin'
     | '/support'
     | '/tasks'
     | '/wallet'
@@ -402,6 +413,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile-plus'
     | '/_authenticated/search'
     | '/_authenticated/store'
+    | '/_authenticated/super-admin'
     | '/_authenticated/support'
     | '/_authenticated/tasks'
     | '/_authenticated/wallet'
@@ -569,6 +581,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStoreRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/super-admin': {
+      id: '/_authenticated/super-admin'
+      path: '/super-admin'
+      fullPath: '/super-admin'
+      preLoaderRoute: typeof AuthenticatedSuperAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/support': {
       id: '/_authenticated/support'
       path: '/support'
@@ -669,6 +688,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfilePlusRoute: typeof AuthenticatedProfilePlusRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedStoreRoute: typeof AuthenticatedStoreRoute
+  AuthenticatedSuperAdminRoute: typeof AuthenticatedSuperAdminRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
@@ -702,6 +722,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfilePlusRoute: AuthenticatedProfilePlusRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedStoreRoute: AuthenticatedStoreRoute,
+  AuthenticatedSuperAdminRoute: AuthenticatedSuperAdminRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
