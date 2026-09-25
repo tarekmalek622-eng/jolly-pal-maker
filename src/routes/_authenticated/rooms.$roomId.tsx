@@ -700,7 +700,13 @@ function RoomPage() {
               <span
                 className={cn(
                   "h-1.5 w-1.5 shrink-0 rounded-full",
-                  voice.status === "connected" ? "bg-success" : "bg-destructive",
+                  voice.status === "connected"
+                    ? "bg-success"
+                    : voice.status === "connecting" || voice.status === "reconnecting"
+                      ? "animate-pulse bg-accent"
+                      : voice.status === "error" || voice.status === "unconfigured"
+                        ? "bg-destructive"
+                        : "bg-muted-foreground/40",
                 )}
               />
               {voice.musicPlaying && (
