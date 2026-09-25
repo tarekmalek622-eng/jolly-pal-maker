@@ -154,6 +154,8 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
             else setQuality("unknown");
           })
           .on(lk.RoomEvent.ConnectionStateChanged, (state) => {
+            // تجاهل أحداث غرفة قديمة فشلت واتستبدلت بمزود احتياطي
+            if (roomRef.current !== room) return;
             if (state === lk.ConnectionState.Connected) {
               setStatus("connected");
               autoRetryCount.current = 0;
@@ -174,7 +176,11 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
               }
             }
           });
-        await room.connect(url, token, { autoSubscribe: true });
+        await room.connect(url, token, { autoSubscribe: true }).catch((e) => {
+          // الغرفة الفاشلة لازم تتقفل عشان أحداثها متأثرش على الحالة بعد التحويل
+          void room.disconnect();
+          throw e;
+        });
         if (cancelled) {
           void room.disconnect();
           return false;
