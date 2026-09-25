@@ -102,6 +102,7 @@ function AgentsPage() {
       setAmount("");
       qc.invalidateQueries({ queryKey: ["agents"] });
       qc.invalidateQueries({ queryKey: ["agent-tx"] });
+      qc.invalidateQueries({ queryKey: ["agent-my-balance"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
