@@ -58,28 +58,27 @@ export const getVoiceToken = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     // كل مجموعات مفاتيح LiveKit المتاحة — النظام يبدّل بينها تلقائيًا كل 9899 دقيقة
+    // ملاحظة: المجموعة القديمة (LIVEKIT_API_KEY بدون رقم) أُزيلت بطلب المالك — كانت ميتة وتسبب "تعذر الاتصال"
     const configs = [
-      {
-        key: process.env["LIVEKIT_API_KEY"],
-        secret: process.env["LIVEKIT_API_SECRET"],
-        url: process.env["LIVEKIT_URL"],
-      },
       {
         key: process.env["LIVEKIT_API_KEY_2"],
         secret: process.env["LIVEKIT_API_SECRET_2"],
         url: process.env["LIVEKIT_URL_2"],
+        label: "مزود 1",
       },
       {
         key: process.env["LIVEKIT_API_KEY_3"],
         secret: process.env["LIVEKIT_API_SECRET_3"],
         url: process.env["LIVEKIT_URL_3"],
+        label: "مزود 2",
       },
       {
         key: process.env["LIVEKIT_API_KEY_4"],
         secret: process.env["LIVEKIT_API_SECRET_4"],
         url: process.env["LIVEKIT_URL_4"],
+        label: "مزود 3",
       },
-    ].filter((c): c is { key: string; secret: string; url: string } =>
+    ].filter((c): c is { key: string; secret: string; url: string; label: string } =>
       Boolean(c.key && c.secret && c.url),
     );
 
