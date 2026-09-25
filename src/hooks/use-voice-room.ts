@@ -13,6 +13,17 @@ import { getVoiceToken } from "@/lib/voice.functions";
 export type VoiceStatus =
   "idle" | "connecting" | "connected" | "reconnecting" | "error" | "unconfigured";
 
+const ARABIC_RE = /[\u0600-\u06FF]/;
+
+/** يحوّل أخطاء الصوت التقنية (الإنجليزية) إلى رسالة عربية واضحة للمستخدم. */
+function friendlyVoiceError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e ?? "");
+  if (ARABIC_RE.test(msg)) return msg;
+  if (/not allowed|permission|denied|microphone|device/i.test(msg))
+    return "اسمح بالوصول إلى المايك من إعدادات المتصفح ثم أعد المحاولة";
+  return "تعذر الاتصال بالصوت — تحقق من الإنترنت ثم أعد المحاولة";
+}
+
 export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
   const roomRef = useRef<LiveKitRoom | null>(null);
   const audioElements = useRef<Map<string, HTMLAudioElement>>(new Map());
@@ -81,7 +92,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       } catch (e) {
         if (cancelled) return;
         setStatus("error");
-        setError(e instanceof Error ? e.message : "تعذر الاتصال بالصوت");
+        setError(friendlyVoiceError(e));
       }
     })();
 
@@ -109,21 +120,26 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
     if (!room) return;
     if (!canPublish) throw new Error("اصعد على المايك أولًا");
     const next = !micEnabled;
-    if (next) {
-      const token = await getVoiceToken({ data: { roomId: roomId!, canPublish: true } });
-      if (token.reason) throw new Error(token.reason);
-      if (token.configured && token.token) {
-        // refresh grants so publishing is allowed after taking a seat
-        try {
-          await room.disconnect();
-          await room.connect(token.url!, token.token, { autoSubscribe: true });
-        } catch {
-          /* keep existing connection */
+    try {
+      if (next) {
+        const token = await getVoiceToken({ data: { roomId: roomId!, canPublish: true } });
+        if (token.reason) throw new Error(token.reason);
+        if (token.configured && token.token) {
+          // refresh grants so publishing is allowed after taking a seat
+          try {
+            await room.disconnect();
+            await room.connect(token.url!, token.token, { autoSubscribe: true });
+          } catch {
+            /* keep existing connection */
+          }
         }
       }
+      await room.localParticipant.setMicrophoneEnabled(next);
+      setMicEnabled(next);
+    } catch (e) {
+      if (e instanceof Error && ARABIC_RE.test(e.message)) throw e;
+      throw new Error(friendlyVoiceError(e));
     }
-    await room.localParticipant.setMicrophoneEnabled(next);
-    setMicEnabled(next);
   }, [canPublish, micEnabled, roomId]);
 
   const toggleSpeaker = useCallback(() => {
