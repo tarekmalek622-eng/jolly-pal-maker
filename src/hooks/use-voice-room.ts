@@ -237,7 +237,14 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
             await room.disconnect();
             await room.connect(token.url!, token.token, { autoSubscribe: true });
           } catch {
-            /* keep existing connection */
+            // الخادم الأساسي فصل — نجرّب المفاتيح الاحتياطية
+            if (token.backupToken && token.backupUrl) {
+              try {
+                await room.connect(token.backupUrl, token.backupToken, { autoSubscribe: true });
+              } catch {
+                /* keep existing connection */
+              }
+            }
           }
         }
       }
