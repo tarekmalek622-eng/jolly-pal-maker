@@ -176,11 +176,17 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
               }
             }
           });
-        await room.connect(url, token, { autoSubscribe: true }).catch((e) => {
-          // الغرفة الفاشلة لازم تتقفل عشان أحداثها متأثرش على الحالة بعد التحويل
-          void room.disconnect();
-          throw e;
-        });
+        // مهلة 12 ثانية: لو الاتصال علّق (شبكة ضعيفة/مزود واقف) نتحوّل للاحتياطي بدل ما يفضل "جارٍ الاتصال"
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("انتهت مهلة الاتصال بالصوت")), 12_000),
+        );
+        await Promise.race([room.connect(url, token, { autoSubscribe: true }), timeout]).catch(
+          (e) => {
+            // الغرفة الفاشلة لازم تتقفل عشان أحداثها متأثرش على الحالة بعد التحويل
+            void room.disconnect();
+            throw e;
+          },
+        );
         if (cancelled) {
           void room.disconnect();
           return false;
