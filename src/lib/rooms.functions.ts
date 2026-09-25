@@ -113,6 +113,22 @@ export const removeRoomParticipant = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const enterRoom = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ roomId: z.string().uuid(), password: z.string().trim().max(30).optional() })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("enter_room", {
+      _room_id: data.roomId,
+      _password: data.password ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const closeWheelRound = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ roomId: z.string().uuid() }).parse(input))
@@ -124,8 +140,8 @@ export const closeWheelRound = createServerFn({ method: "POST" })
       .eq("id", data.roomId)
       .maybeSingle();
     if (room.error || !room.data) throw new Error("الغرفة غير موجودة");
-    if (room.data.owner_id !== context.userId && !allowed)
-      throw new Error("لا تملك صلاحية إغلاق الجولة");
+    // الجولة مشتركة بين كل الغرف — الإغلاق لحاملي صلاحية wheel_close فقط، ملكية غرفة لا تكفي
+    if (!allowed) throw new Error("لا تملك صلاحية إغلاق الجولة");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const round = await supabaseAdmin
       .from("wheel_rounds")
