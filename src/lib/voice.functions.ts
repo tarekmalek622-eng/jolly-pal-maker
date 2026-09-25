@@ -112,23 +112,20 @@ export const getVoiceToken = createServerFn({ method: "POST" })
         .sign(secret);
     };
 
-    const token = await signLiveKitToken(apiKey, apiSecret);
+    const token = await signLiveKitToken(active.key, active.secret);
 
-    // مفاتيح احتياطية: لو السيرفر الأساسي فصل يتجرّب التاني تلقائيًا
-    const apiKey2 = process.env["LIVEKIT_API_KEY_2"];
-    const apiSecret2 = process.env["LIVEKIT_API_SECRET_2"];
-    const wsUrl2 = process.env["LIVEKIT_URL_2"];
+    // المجموعة الاحتياطية: لو النشطة فصلت يتجرّب التانية تلقائيًا
     let backupToken: string | null = null;
     let backupUrl: string | null = null;
-    if (apiKey2 && apiSecret2 && wsUrl2) {
-      backupToken = await signLiveKitToken(apiKey2, apiSecret2);
-      backupUrl = wsUrl2;
+    if (backup) {
+      backupToken = await signLiveKitToken(backup.key, backup.secret);
+      backupUrl = backup.url;
     }
 
     return {
       configured: true as const,
       token,
-      url: wsUrl,
+      url: active.url,
       canPublish,
       reason: null,
       backupToken,
