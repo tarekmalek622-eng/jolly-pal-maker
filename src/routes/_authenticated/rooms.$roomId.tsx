@@ -26,6 +26,7 @@ import {
   Volume2,
   VolumeX,
   X,
+  Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
@@ -709,6 +710,22 @@ function RoomPage() {
                         : "bg-muted-foreground/40",
                 )}
               />
+              {voice.status === "connected" && voice.quality !== "unknown" && (
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full border border-border/40 bg-background/55 px-1.5 py-0.5 text-[9px] font-bold backdrop-blur-xl",
+                    voice.quality === "excellent" && "text-success",
+                    voice.quality === "good" && "text-accent",
+                    voice.quality === "poor" && "text-destructive",
+                  )}
+                >
+                  {voice.quality === "excellent"
+                    ? "صوت ممتاز"
+                    : voice.quality === "good"
+                      ? "صوت جيد"
+                      : "صوت ضعيف"}
+                </span>
+              )}
               {voice.musicPlaying && (
                 <span className="flex items-center gap-1 rounded-full border border-border/40 bg-background/55 px-2 py-0.5 text-[9px] font-bold backdrop-blur-xl">
                   <Music className="h-3 w-3" />
@@ -1024,6 +1041,18 @@ function RoomPage() {
             ) : (
               <VolumeX className="h-4.5 w-4.5" />
             )}
+          </RoundControl>
+          <RoundControl
+            label={voice.dataSaver ? "توفير بيانات" : "جودة كاملة"}
+            active={voice.dataSaver}
+            onClick={() => {
+              voice.setDataSaver(!voice.dataSaver);
+              toast.success(
+                voice.dataSaver ? "تم إيقاف توفير البيانات" : "وضع توفير البيانات مفعّل — صوت أخف للنت الضعيف",
+              );
+            }}
+          >
+            <Zap className="h-4.5 w-4.5" />
           </RoundControl>
           {!mySeat && (
             <RoundControl label="طلب مايك" onClick={() => requestMic.mutate()}>

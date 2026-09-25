@@ -58,28 +58,27 @@ export const getVoiceToken = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     // كل مجموعات مفاتيح LiveKit المتاحة — النظام يبدّل بينها تلقائيًا كل 9899 دقيقة
+    // ملاحظة: المجموعة القديمة (LIVEKIT_API_KEY بدون رقم) أُزيلت بطلب المالك — كانت ميتة وتسبب "تعذر الاتصال"
     const configs = [
-      {
-        key: process.env["LIVEKIT_API_KEY"],
-        secret: process.env["LIVEKIT_API_SECRET"],
-        url: process.env["LIVEKIT_URL"],
-      },
       {
         key: process.env["LIVEKIT_API_KEY_2"],
         secret: process.env["LIVEKIT_API_SECRET_2"],
         url: process.env["LIVEKIT_URL_2"],
+        label: "مزود 1",
       },
       {
         key: process.env["LIVEKIT_API_KEY_3"],
         secret: process.env["LIVEKIT_API_SECRET_3"],
         url: process.env["LIVEKIT_URL_3"],
+        label: "مزود 2",
       },
       {
         key: process.env["LIVEKIT_API_KEY_4"],
         secret: process.env["LIVEKIT_API_SECRET_4"],
         url: process.env["LIVEKIT_URL_4"],
+        label: "مزود 3",
       },
-    ].filter((c): c is { key: string; secret: string; url: string } =>
+    ].filter((c): c is { key: string; secret: string; url: string; label: string } =>
       Boolean(c.key && c.secret && c.url),
     );
 
@@ -92,6 +91,8 @@ export const getVoiceToken = createServerFn({ method: "POST" })
     const activeIdx = Math.floor(Date.now() / ROTATE_MS) % configs.length;
     const active = configs[activeIdx] ?? configs[0]!;
     const backup = configs.length > 1 ? (configs[(activeIdx + 1) % configs.length] ?? null) : null;
+    const providerLabel = active.label;
+    const backupLabel = backup?.label ?? null;
 
     const { supabase, userId } = context;
 
@@ -140,7 +141,87 @@ export const getVoiceToken = createServerFn({ method: "POST" })
       reason: null,
       backupToken,
       backupUrl,
+      providerLabel,
+      backupLabel,
     };
+  });
+
+/**
+ * يسجّل حدث صوتي (تبديل مزود / فشل / إعادة اتصال) في سجل الصوت.
+ * لو الحدث فشل مزود، يبعت تنبيه تلقائي للمالك (super admin) في الإشعارات.
+ */
+export const logVoiceEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { roomId?: string; event: string; provider?: string; detail?: string }) => {
+    if (!data?.event || typeof data.event !== "string") throw new Error("event required");
+    return {
+      roomId: typeof data.roomId === "string" ? data.roomId : null,
+      event: data.event.slice(0, 60),
+      provider: typeof data.provider === "string" ? data.provider.slice(0, 40) : null,
+      detail: typeof data.detail === "string" ? data.detail.slice(0, 200) : null,
+    };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await supabase.from("voice_events").insert({
+      user_id: userId,
+      room_id: data.roomId,
+      event: data.event,
+      provider: data.provider,
+      detail: data.detail,
+    });
+
+    // تنبيه المالك عند فشل مزود صوت
+    if (data.event === "provider_failed") {
+      const { data: admins } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "super_admin");
+      for (const admin of admins ?? []) {
+        await supabase.from("notifications").insert({
+          user_id: admin.user_id,
+          kind: "voice_alert",
+          title: "تنبيه صوت",
+          body: `فشل مزود الصوت (${data.provider ?? "غير معروف"}) — تم التحويل تلقائيًا للمزود التالي`,
+        });
+      }
+    }
+    return { ok: true as const };
+  });
+
+/** يبدأ جلسة صوت (لحساب ساعات الصوت الأسبوعية). */
+export const startVoiceSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { roomId: string }) => {
+    if (!data?.roomId) throw new Error("roomId required");
+    return { roomId: data.roomId };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: row, error } = await supabase
+      .from("voice_sessions")
+      .insert({ user_id: userId, room_id: data.roomId })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { sessionId: row.id as string };
+  });
+
+/** ينهي جلسة صوت ويحسب مدتها بالثواني. */
+export const endVoiceSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { sessionId: string; seconds: number }) => {
+    if (!data?.sessionId) throw new Error("sessionId required");
+    return { sessionId: data.sessionId, seconds: Math.max(0, Math.floor(data.seconds ?? 0)) };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await supabase
+      .from("voice_sessions")
+      .update({ left_at: new Date().toISOString(), seconds: data.seconds })
+      .eq("id", data.sessionId)
+      .eq("user_id", userId);
+    return { ok: true as const };
   });
 
 /**

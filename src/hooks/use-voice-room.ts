@@ -6,12 +6,22 @@ import type {
   Room as LiveKitRoom,
 } from "livekit-client";
 import type { IAgoraRTCClient, IMicrophoneAudioTrack, IRemoteAudioTrack } from "agora-rtc-sdk-ng";
-import { getAgoraVoiceToken, getVoiceToken } from "@/lib/voice.functions";
+import {
+  endVoiceSession,
+  getAgoraVoiceToken,
+  getVoiceToken,
+  logVoiceEvent,
+  startVoiceSession,
+} from "@/lib/voice.functions";
 
 export type VoiceStatus =
   "idle" | "connecting" | "connected" | "reconnecting" | "error" | "unconfigured";
 
+export type VoiceQuality = "excellent" | "good" | "poor" | "unknown";
+
 type VoiceProvider = "livekit" | "agora" | null;
+
+const MAX_AUTO_RETRIES = 5;
 
 const ARABIC_RE = /[\u0600-\u06FF]/;
 
@@ -44,11 +54,66 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
   const [retryKey, setRetryKey] = useState(0);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [musicName, setMusicName] = useState<string | null>(null);
+  const [quality, setQuality] = useState<VoiceQuality>("unknown");
+  const [activeProvider, setActiveProvider] = useState<string | null>(null);
+  const [dataSaver, setDataSaverState] = useState(
+    () => typeof window !== "undefined" && window.localStorage.getItem("sawtak-data-saver") === "on",
+  );
   const musicElRef = useRef<HTMLAudioElement | null>(null);
   const stopMusicRef = useRef<(() => void) | null>(null);
+  const autoRetryCount = useRef(0);
+  const autoRetryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const sessionStartRef = useRef<number>(0);
+  const dataSaverRef = useRef(dataSaver);
+  dataSaverRef.current = dataSaver;
 
   /** Re-run the connection attempt after a failure. */
-  const retry = useCallback(() => setRetryKey((k) => k + 1), []);
+  const retry = useCallback(() => {
+    autoRetryCount.current = 0;
+    setRetryKey((k) => k + 1);
+  }, []);
+
+  /** وضع توفير البيانات: جودة صوت أقل للإنترنت الضعيف. */
+  const setDataSaver = useCallback((on: boolean) => {
+    setDataSaverState(on);
+    if (typeof window !== "undefined")
+      window.localStorage.setItem("sawtak-data-saver", on ? "on" : "off");
+  }, []);
+
+  /** يسجّل حدث صوتي في السجل (بدون تعطيل التجربة عند الفشل). */
+  const logEvent = useCallback(
+    (event: string, provider?: string | null, detail?: string) => {
+      void logVoiceEvent({
+        data: {
+          event,
+          ...(roomId ? { roomId } : {}),
+          ...(provider ? { provider } : {}),
+          ...(detail ? { detail } : {}),
+        },
+      }).catch(() => {});
+    },
+    [roomId],
+  );
+
+  /** يبدأ تتبع جلسة الصوت (لحساب الساعات الأسبوعية). */
+  const beginSession = useCallback(() => {
+    if (!roomId || sessionIdRef.current) return;
+    sessionStartRef.current = Date.now();
+    void startVoiceSession({ data: { roomId } })
+      .then((r) => {
+        sessionIdRef.current = r.sessionId;
+      })
+      .catch(() => {});
+  }, [roomId]);
+
+  const endSession = useCallback(() => {
+    const id = sessionIdRef.current;
+    sessionIdRef.current = null;
+    if (!id) return;
+    const seconds = Math.round((Date.now() - sessionStartRef.current) / 1000);
+    void endVoiceSession({ data: { sessionId: id, seconds } }).catch(() => {});
+  }, []);
 
   const attach = useCallback((track: RemoteTrack, publication: RemoteTrackPublication) => {
     if (track.kind !== "audio") return;
@@ -69,7 +134,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       let livekitReason: string | null = null;
 
       // يحاول الاتصال بخادم LiveKit معين (أساسي أو احتياطي)
-      const tryLiveKit = async (url: string, token: string) => {
+      const tryLiveKit = async (url: string, token: string, label?: string) => {
         const lk = await import("livekit-client");
         const room = new lk.Room({ adaptiveStream: true, dynacast: true });
         roomRef.current = room;
@@ -82,18 +147,54 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
           .on(lk.RoomEvent.ActiveSpeakersChanged, (speakers) => {
             setSpeakingIds(speakers.map((s) => s.identity));
           })
+          .on(lk.RoomEvent.ConnectionQualityChanged, (q) => {
+            if (q === lk.ConnectionQuality.Excellent) setQuality("excellent");
+            else if (q === lk.ConnectionQuality.Good) setQuality("good");
+            else if (q === lk.ConnectionQuality.Poor) setQuality("poor");
+            else setQuality("unknown");
+          })
           .on(lk.RoomEvent.ConnectionStateChanged, (state) => {
-            if (state === lk.ConnectionState.Connected) setStatus("connected");
-            else if (state === lk.ConnectionState.Reconnecting) setStatus("reconnecting");
-            else if (state === lk.ConnectionState.Disconnected) setStatus("idle");
+            // تجاهل أحداث غرفة قديمة فشلت واتستبدلت بمزود احتياطي
+            if (roomRef.current !== room) return;
+            if (state === lk.ConnectionState.Connected) {
+              setStatus("connected");
+              autoRetryCount.current = 0;
+            } else if (state === lk.ConnectionState.Reconnecting) {
+              setStatus("reconnecting");
+            } else if (state === lk.ConnectionState.Disconnected) {
+              // فصل غير متوقع — إعادة اتصال تلقائية حتى 5 مرات
+              if (!cancelled && autoRetryCount.current < MAX_AUTO_RETRIES) {
+                autoRetryCount.current += 1;
+                setStatus("reconnecting");
+                logEvent("auto_reconnect", providerRef.current ?? undefined, `محاولة ${autoRetryCount.current}`);
+                autoRetryTimer.current = setTimeout(() => {
+                  if (!cancelled) setRetryKey((k) => k + 1);
+                }, 3000);
+              } else if (!cancelled) {
+                setStatus("error");
+                setError("انقطع الاتصال بالصوت — اضغط إعادة المحاولة");
+              }
+            }
           });
-        await room.connect(url, token, { autoSubscribe: true });
+        // مهلة 12 ثانية: لو الاتصال علّق (شبكة ضعيفة/مزود واقف) نتحوّل للاحتياطي بدل ما يفضل "جارٍ الاتصال"
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("انتهت مهلة الاتصال بالصوت")), 12_000),
+        );
+        await Promise.race([room.connect(url, token, { autoSubscribe: true }), timeout]).catch(
+          (e) => {
+            // الغرفة الفاشلة لازم تتقفل عشان أحداثها متأثرش على الحالة بعد التحويل
+            void room.disconnect();
+            throw e;
+          },
+        );
         if (cancelled) {
           void room.disconnect();
           return false;
         }
         providerRef.current = "livekit";
+        setActiveProvider(label ?? "livekit");
         setStatus("connected");
+        beginSession();
         return true;
       };
 
@@ -104,20 +205,23 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
         if (result.configured && result.token && result.url) {
           // أ) الخادم الأساسي
           try {
-            if (await tryLiveKit(result.url, result.token)) return;
+            if (await tryLiveKit(result.url, result.token, result.providerLabel)) return;
             return;
           } catch (e) {
             livekitReason = friendlyVoiceError(e);
             roomRef.current = null;
+            logEvent("provider_failed", result.providerLabel ?? "livekit", "فشل الاتصال بالمزود الأساسي");
           }
           // ب) الخادم الاحتياطي (مفاتيح LiveKit التانية) لو الأساسي فصل
           if (!cancelled && result.backupToken && result.backupUrl) {
             try {
-              if (await tryLiveKit(result.backupUrl, result.backupToken)) return;
+              logEvent("provider_switch", result.backupLabel ?? "livekit-backup", "تحويل تلقائي للمزود الاحتياطي");
+              if (await tryLiveKit(result.backupUrl, result.backupToken, result.backupLabel ?? undefined)) return;
               return;
             } catch {
               /* نكمل للمزود الاحتياطي Agora */
               roomRef.current = null;
+              logEvent("provider_failed", result.backupLabel ?? "livekit-backup", "فشل الاتصال بالمزود الاحتياطي");
             }
           }
         } else {
@@ -152,13 +256,22 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
           client.on("volume-indicator", (vols) => {
             setSpeakingIds(vols.filter((v) => v.level > 5).map((v) => String(v.uid)));
           });
+          client.on("network-quality", (stats) => {
+            const q = stats.uplinkNetworkQuality;
+            if (q <= 2) setQuality("excellent");
+            else if (q <= 4) setQuality("good");
+            else setQuality("poor");
+          });
+          logEvent("provider_switch", "agora", "تحويل تلقائي لمزود الصوت الاحتياطي");
           await client.join(ag.appId, ag.channel, ag.token, null);
           if (cancelled) {
             void client.leave();
             return;
           }
           providerRef.current = "agora";
+          setActiveProvider("agora");
           setStatus("connected");
+          beginSession();
           return;
         }
       } catch {
@@ -176,6 +289,8 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
 
     return () => {
       cancelled = true;
+      if (autoRetryTimer.current) clearTimeout(autoRetryTimer.current);
+      endSession();
       attachedAudio.forEach((el) => el.remove());
       attachedAudio.clear();
       const room = roomRef.current;
@@ -193,8 +308,10 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       }
       agoraRemoteAudio.current.clear();
       providerRef.current = null;
+      setActiveProvider(null);
+      setQuality("unknown");
     };
-  }, [roomId, canPublish, attach, retryKey]);
+  }, [roomId, canPublish, attach, retryKey, beginSession, endSession, logEvent]);
 
   // Refresh publish permission when the user's mic seat changes (LiveKit فقط).
   useEffect(() => {
@@ -214,7 +331,12 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
         const { client } = agoraRef.current;
         if (next) {
           const AgoraRTC = (await import("agora-rtc-sdk-ng")).default;
-          const track = await AgoraRTC.createMicrophoneAudioTrack();
+          // وضع توفير البيانات: جودة صوت أقل للإنترنت الضعيف
+          const track = await AgoraRTC.createMicrophoneAudioTrack(
+            dataSaverRef.current
+              ? { encoderConfig: "speech_low_quality" }
+              : { encoderConfig: "music_standard" },
+          );
           await client.publish(track);
           agoraRef.current.micTrack = track;
         } else if (agoraRef.current.micTrack) {
@@ -248,7 +370,15 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
           }
         }
       }
-      await room.localParticipant.setMicrophoneEnabled(next);
+      // وضع توفير البيانات: نشر المايك بجودة أقل للإنترنت الضعيف
+      if (next && dataSaverRef.current) {
+        const lk = await import("livekit-client");
+        await room.localParticipant.setMicrophoneEnabled(true, undefined, {
+          audioPreset: lk.AudioPresets.speech,
+        });
+      } else {
+        await room.localParticipant.setMicrophoneEnabled(next);
+      }
       setMicEnabled(next);
     } catch (e) {
       if (e instanceof Error && ARABIC_RE.test(e.message)) throw e;
@@ -351,6 +481,10 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
     micEnabled,
     speakerEnabled,
     speakingIds,
+    quality,
+    activeProvider,
+    dataSaver,
+    setDataSaver,
     toggleMic,
     toggleSpeaker,
     retry,

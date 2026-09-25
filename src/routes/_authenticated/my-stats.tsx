@@ -27,38 +27,62 @@ function MyStatsPage() {
     queryKey: ["my-stats", userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const [profile, wallet, sent, received, visits, friends] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("level, xp, vip_level, cvip_level")
-          .eq("id", userId!)
-          .maybeSingle(),
-        supabase
-          .from("coin_wallets")
-          .select("coins, recharge_points")
-          .eq("user_id", userId!)
-          .maybeSingle(),
-        supabase
-          .from("gift_transactions")
-          .select("total_price")
-          .eq("sender_id", userId!)
-          .limit(1000),
-        supabase
-          .from("gift_transactions")
-          .select("total_price")
-          .eq("receiver_id", userId!)
-          .limit(1000),
-        supabase
-          .from("profile_visits")
-          .select("id", { count: "exact", head: true })
-          .eq("profile_id", userId!),
-        supabase
-          .from("friends")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", userId!),
-      ]);
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const [profile, wallet, sent, received, visits, friends, weekSent, weekReceived, weekVoice] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("level, xp, vip_level, cvip_level")
+            .eq("id", userId!)
+            .maybeSingle(),
+          supabase
+            .from("coin_wallets")
+            .select("coins, recharge_points")
+            .eq("user_id", userId!)
+            .maybeSingle(),
+          supabase
+            .from("gift_transactions")
+            .select("total_price")
+            .eq("sender_id", userId!)
+            .limit(1000),
+          supabase
+            .from("gift_transactions")
+            .select("total_price")
+            .eq("receiver_id", userId!)
+            .limit(1000),
+          supabase
+            .from("profile_visits")
+            .select("id", { count: "exact", head: true })
+            .eq("profile_id", userId!),
+          supabase
+            .from("friends")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId!),
+          supabase
+            .from("gift_transactions")
+            .select("total_price")
+            .eq("sender_id", userId!)
+            .gte("created_at", weekAgo)
+            .limit(1000),
+          supabase
+            .from("gift_transactions")
+            .select("total_price")
+            .eq("receiver_id", userId!)
+            .gte("created_at", weekAgo)
+            .limit(1000),
+          supabase
+            .from("voice_sessions")
+            .select("seconds")
+            .eq("user_id", userId!)
+            .gte("joined_at", weekAgo)
+            .limit(1000),
+        ]);
       const sum = (rows: { total_price: number }[] | null) =>
         (rows ?? []).reduce((a, r) => a + Number(r.total_price ?? 0), 0);
+      const weekSeconds = (weekVoice.data ?? []).reduce(
+        (a, r) => a + Number((r as { seconds: number }).seconds ?? 0),
+        0,
+      );
       return {
         level: profile.data?.level ?? 1,
         xp: Number(profile.data?.xp ?? 0),
@@ -70,6 +94,9 @@ function MyStatsPage() {
         received: sum(received.data as { total_price: number }[] | null),
         visits: visits.count ?? 0,
         friends: friends.count ?? 0,
+        weekSent: sum(weekSent.data as { total_price: number }[] | null),
+        weekReceived: sum(weekReceived.data as { total_price: number }[] | null),
+        weekVoiceMinutes: Math.round(weekSeconds / 60),
       };
     },
   });
@@ -116,6 +143,33 @@ function MyStatsPage() {
             >
               إعادة المحاولة
             </button>
+          </div>
+        )}
+        {stats.data && (
+          <div className="mb-3">
+            <p className="mb-2 text-xs font-black text-muted-foreground">هذا الأسبوع</p>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="surface-card p-3 text-center">
+                <p className="text-[10px] text-muted-foreground">ساعات الصوت</p>
+                <p className="mt-1 text-sm font-black text-primary">
+                  {stats.data.weekVoiceMinutes >= 60
+                    ? `${Math.floor(stats.data.weekVoiceMinutes / 60)}س ${stats.data.weekVoiceMinutes % 60}د`
+                    : `${stats.data.weekVoiceMinutes} دقيقة`}
+                </p>
+              </div>
+              <div className="surface-card p-3 text-center">
+                <p className="text-[10px] text-muted-foreground">هدايا أرسلتها</p>
+                <p className="mt-1 text-sm font-black text-primary">
+                  {formatCompact(stats.data.weekSent)}
+                </p>
+              </div>
+              <div className="surface-card p-3 text-center">
+                <p className="text-[10px] text-muted-foreground">هدايا استلمتها</p>
+                <p className="mt-1 text-sm font-black text-primary">
+                  {formatCompact(stats.data.weekReceived)}
+                </p>
+              </div>
+            </div>
           </div>
         )}
         <div className="grid grid-cols-2 gap-2">
