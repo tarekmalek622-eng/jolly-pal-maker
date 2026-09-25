@@ -309,7 +309,7 @@ function RegistrationTab() {
     queryKey: ["admin-registration", search],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("admin_registration_data", {
-        _search: search.trim() || null,
+        _search: search.trim() || undefined,
       });
       if (error) throw error;
       return data ?? [];
@@ -347,10 +347,10 @@ function RegistrationTab() {
         </div>
       )}
       {data.isError && (
-        <EmptyState title="تعذر تحميل البيانات" description="حاول مرة أخرى بعد قليل" />
+        <EmptyState title="تعذر تحميل البيانات" hint="حاول مرة أخرى بعد قليل" />
       )}
       {data.data?.length === 0 && (
-        <EmptyState title="لا نتائج" description="جرّب اسمًا أو رقمًا مختلفًا" />
+        <EmptyState title="لا نتائج" hint="جرّب اسمًا أو رقمًا مختلفًا" />
       )}
       <div className="space-y-2">
         {data.data?.map((row) => (
