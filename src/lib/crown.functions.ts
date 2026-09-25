@@ -92,7 +92,7 @@ export const publishCrownMessage = createServerFn({ method: "POST" })
 
 /** عدد رسائل التاج الجديدة التي لم يفتحها المستخدم بعد — يرجع صفرًا بهدوء بلا جلسة. */
 export const getCrownUnread = createServerFn({ method: "GET" }).handler(async () => {
-  const authHeader = getRequestHeader("authorization");
+  const authHeader = getRequest().headers.get("authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!token) return { unread: 0 };
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
