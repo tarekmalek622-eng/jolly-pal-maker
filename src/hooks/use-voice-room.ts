@@ -83,9 +83,14 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
 
   /** يسجّل حدث صوتي في السجل (بدون تعطيل التجربة عند الفشل). */
   const logEvent = useCallback(
-    (event: string, provider?: string, detail?: string) => {
+    (event: string, provider?: string | null, detail?: string) => {
       void logVoiceEvent({
-        data: { roomId: roomId ?? undefined, event, provider, detail },
+        data: {
+          event,
+          ...(roomId ? { roomId } : {}),
+          ...(provider ? { provider } : {}),
+          ...(detail ? { detail } : {}),
+        },
       }).catch(() => {});
     },
     [roomId],
@@ -356,7 +361,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       // وضع توفير البيانات: نشر المايك بجودة أقل للإنترنت الضعيف
       if (next && dataSaverRef.current) {
         const lk = await import("livekit-client");
-        await room.localParticipant.setMicrophoneEnabled(true, {
+        await room.localParticipant.setMicrophoneEnabled(true, undefined, {
           audioPreset: lk.AudioPresets.speech,
         });
       } else {
