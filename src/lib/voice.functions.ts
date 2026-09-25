@@ -80,8 +80,8 @@ export const getVoiceToken = createServerFn({ method: "POST" })
     // التبديل الدوري: كل 9899 دقيقة ينتقل للمجموعة التالية
     const ROTATE_MS = 9899 * 60 * 1000;
     const activeIdx = Math.floor(Date.now() / ROTATE_MS) % configs.length;
-    const active = configs[activeIdx];
-    const backup = configs.length > 1 ? configs[(activeIdx + 1) % configs.length] : null;
+    const active = configs[activeIdx] ?? configs[0]!;
+    const backup = configs.length > 1 ? (configs[(activeIdx + 1) % configs.length] ?? null) : null;
 
     const { supabase, userId } = context;
 
