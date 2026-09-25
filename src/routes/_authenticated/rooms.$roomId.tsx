@@ -709,6 +709,22 @@ function RoomPage() {
                         : "bg-muted-foreground/40",
                 )}
               />
+              {voice.status === "connected" && voice.quality !== "unknown" && (
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full border border-border/40 bg-background/55 px-1.5 py-0.5 text-[9px] font-bold backdrop-blur-xl",
+                    voice.quality === "excellent" && "text-success",
+                    voice.quality === "good" && "text-accent",
+                    voice.quality === "poor" && "text-destructive",
+                  )}
+                >
+                  {voice.quality === "excellent"
+                    ? "صوت ممتاز"
+                    : voice.quality === "good"
+                      ? "صوت جيد"
+                      : "صوت ضعيف"}
+                </span>
+              )}
               {voice.musicPlaying && (
                 <span className="flex items-center gap-1 rounded-full border border-border/40 bg-background/55 px-2 py-0.5 text-[9px] font-bold backdrop-blur-xl">
                   <Music className="h-3 w-3" />
