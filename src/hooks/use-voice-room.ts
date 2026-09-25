@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ConnectionState,
+import type {
   LocalAudioTrack,
-  RoomEvent,
+  RemoteTrack,
+  RemoteTrackPublication,
   Room as LiveKitRoom,
-  type RemoteTrack,
-  type RemoteTrackPublication,
-  Track,
 } from "livekit-client";
-import { getVoiceToken } from "@/lib/voice.functions";
+import type { IAgoraRTCClient, IMicrophoneAudioTrack, IRemoteAudioTrack } from "agora-rtc-sdk-ng";
+import { getAgoraVoiceToken, getVoiceToken } from "@/lib/voice.functions";
 
 export type VoiceStatus =
   "idle" | "connecting" | "connected" | "reconnecting" | "error" | "unconfigured";
+
+type VoiceProvider = "livekit" | "agora" | null;
 
 const ARABIC_RE = /[\u0600-\u06FF]/;
 
@@ -24,8 +24,17 @@ function friendlyVoiceError(e: unknown): string {
   return "تعذر الاتصال بالصوت — تحقق من الإنترنت ثم أعد المحاولة";
 }
 
+/**
+ * اتصال الصوت داخل الغرفة.
+ * الأساسي LiveKit، ولو فشل أو مش متظبط يتحوّل تلقائيًا لمزود احتياطي (Agora)
+ * عشان الصوت يفضل شغال حتى لو خدمة وقعت.
+ * المكتبتان يُحمَّلان عند دخول الغرفة فقط (استيراد كسول) عشان باقي الصفحات تفتح بسرعة.
+ */
 export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
   const roomRef = useRef<LiveKitRoom | null>(null);
+  const agoraRef = useRef<{ client: IAgoraRTCClient; micTrack: IMicrophoneAudioTrack | null } | null>(null);
+  const agoraRemoteAudio = useRef<Map<string, IRemoteAudioTrack>>(new Map());
+  const providerRef = useRef<VoiceProvider>(null);
   const audioElements = useRef<Map<string, HTMLAudioElement>>(new Map());
   const [status, setStatus] = useState<VoiceStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +51,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
   const retry = useCallback(() => setRetryKey((k) => k + 1), []);
 
   const attach = useCallback((track: RemoteTrack, publication: RemoteTrackPublication) => {
-    if (track.kind !== Track.Kind.Audio) return;
+    if (track.kind !== "audio") return;
     const el = track.attach();
     el.autoplay = true;
     audioElements.current.set(publication.trackSid, el as HTMLAudioElement);
@@ -52,47 +61,93 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
   useEffect(() => {
     if (!roomId) return;
     let cancelled = false;
-    const room = new LiveKitRoom({ adaptiveStream: true, dynacast: true });
     const attachedAudio = audioElements.current;
-    roomRef.current = room;
-
-    room
-      .on(RoomEvent.TrackSubscribed, attach)
-      .on(RoomEvent.TrackUnsubscribed, (track, publication) => {
-        track.detach().forEach((el) => el.remove());
-        audioElements.current.delete(publication.trackSid);
-      })
-      .on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
-        setSpeakingIds(speakers.map((s) => s.identity));
-      })
-      .on(RoomEvent.ConnectionStateChanged, (state) => {
-        if (state === ConnectionState.Connected) setStatus("connected");
-        else if (state === ConnectionState.Reconnecting) setStatus("reconnecting");
-        else if (state === ConnectionState.Disconnected) setStatus("idle");
-      });
 
     void (async () => {
       setStatus("connecting");
       setError(null);
+      let livekitReason: string | null = null;
+
+      // 1) المزود الأساسي: LiveKit
       try {
         const result = await getVoiceToken({ data: { roomId, canPublish } });
         if (cancelled) return;
-        if (!result.configured || !result.token || !result.url) {
-          if (result.reason) {
-            setStatus("error");
-            setError(result.reason);
-          } else {
-            setStatus("unconfigured");
+        if (result.configured && result.token && result.url) {
+          const lk = await import("livekit-client");
+          const room = new lk.Room({ adaptiveStream: true, dynacast: true });
+          roomRef.current = room;
+          room
+            .on(lk.RoomEvent.TrackSubscribed, attach)
+            .on(lk.RoomEvent.TrackUnsubscribed, (track, publication) => {
+              track.detach().forEach((el) => el.remove());
+              attachedAudio.delete(publication.trackSid);
+            })
+            .on(lk.RoomEvent.ActiveSpeakersChanged, (speakers) => {
+              setSpeakingIds(speakers.map((s) => s.identity));
+            })
+            .on(lk.RoomEvent.ConnectionStateChanged, (state) => {
+              if (state === lk.ConnectionState.Connected) setStatus("connected");
+              else if (state === lk.ConnectionState.Reconnecting) setStatus("reconnecting");
+              else if (state === lk.ConnectionState.Disconnected) setStatus("idle");
+            });
+          await room.connect(result.url, result.token, { autoSubscribe: true });
+          if (cancelled) {
+            void room.disconnect();
+            return;
           }
+          providerRef.current = "livekit";
+          setStatus("connected");
           return;
         }
-        await room.connect(result.url, result.token, { autoSubscribe: true });
-        if (cancelled) return;
-        setStatus("connected");
+        livekitReason = result.reason ?? null;
       } catch (e) {
+        livekitReason = friendlyVoiceError(e);
+      }
+
+      // 2) المزود الاحتياطي: Agora — يشتغل تلقائيًا لو الأساسي فشل أو مش متظبط
+      try {
+        const ag = await getAgoraVoiceToken({ data: { roomId, canPublish } });
         if (cancelled) return;
+        if (ag.configured && ag.token && ag.appId) {
+          const AgoraRTC = (await import("agora-rtc-sdk-ng")).default;
+          const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+          agoraRef.current = { client, micTrack: null };
+          const remoteAudio = agoraRemoteAudio.current;
+          client.on("user-published", async (user, mediaType) => {
+            if (mediaType !== "audio") return;
+            await client.subscribe(user, mediaType);
+            if (user.audioTrack) {
+              remoteAudio.set(String(user.uid), user.audioTrack);
+              user.audioTrack.play();
+            }
+          });
+          client.on("user-unpublished", (user, mediaType) => {
+            if (mediaType === "audio") remoteAudio.delete(String(user.uid));
+          });
+          client.on("user-left", (user) => remoteAudio.delete(String(user.uid)));
+          client.enableAudioVolumeIndicator();
+          client.on("volume-indicator", (vols) => {
+            setSpeakingIds(vols.filter((v) => v.level > 5).map((v) => String(v.uid)));
+          });
+          await client.join(ag.appId, ag.channel, ag.token, null);
+          if (cancelled) {
+            void client.leave();
+            return;
+          }
+          providerRef.current = "agora";
+          setStatus("connected");
+          return;
+        }
+      } catch {
+        /* كلا المزودين فشل — نعرض سبب الأساسي */
+      }
+
+      if (cancelled) return;
+      if (livekitReason) {
         setStatus("error");
-        setError(friendlyVoiceError(e));
+        setError(livekitReason);
+      } else {
+        setStatus("unconfigured");
       }
     })();
 
@@ -100,15 +155,28 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       cancelled = true;
       attachedAudio.forEach((el) => el.remove());
       attachedAudio.clear();
-      void room.disconnect();
+      const room = roomRef.current;
       roomRef.current = null;
+      if (room) void room.disconnect();
+      const ag = agoraRef.current;
+      agoraRef.current = null;
+      if (ag) {
+        try {
+          ag.micTrack?.close();
+        } catch {
+          /* تجاهل */
+        }
+        void ag.client.leave();
+      }
+      agoraRemoteAudio.current.clear();
+      providerRef.current = null;
     };
   }, [roomId, canPublish, attach, retryKey]);
 
-  // Refresh publish permission when the user's mic seat changes.
+  // Refresh publish permission when the user's mic seat changes (LiveKit فقط).
   useEffect(() => {
     const room = roomRef.current;
-    if (!room || status !== "connected") return;
+    if (!room || status !== "connected" || providerRef.current !== "livekit") return;
     if (!canPublish && micEnabled) {
       void room.localParticipant.setMicrophoneEnabled(false);
       setMicEnabled(false);
@@ -116,11 +184,27 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
   }, [canPublish, micEnabled, status]);
 
   const toggleMic = useCallback(async () => {
-    const room = roomRef.current;
-    if (!room) return;
     if (!canPublish) throw new Error("اصعد على المايك أولًا");
     const next = !micEnabled;
     try {
+      if (providerRef.current === "agora" && agoraRef.current) {
+        const { client } = agoraRef.current;
+        if (next) {
+          const AgoraRTC = (await import("agora-rtc-sdk-ng")).default;
+          const track = await AgoraRTC.createMicrophoneAudioTrack();
+          await client.publish(track);
+          agoraRef.current.micTrack = track;
+        } else if (agoraRef.current.micTrack) {
+          await client.unpublish(agoraRef.current.micTrack);
+          agoraRef.current.micTrack.close();
+          agoraRef.current.micTrack = null;
+        }
+        setMicEnabled(next);
+        return;
+      }
+
+      const room = roomRef.current;
+      if (!room) return;
       if (next) {
         const token = await getVoiceToken({ data: { roomId: roomId!, canPublish: true } });
         if (token.reason) throw new Error(token.reason);
@@ -147,14 +231,16 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
     audioElements.current.forEach((el) => {
       el.muted = !next;
     });
+    agoraRemoteAudio.current.forEach((track) => {
+      track.setVolume(next ? 100 : 0);
+    });
     setSpeakerEnabled(next);
   }, [speakerEnabled]);
 
   /** تشغيل أغنية من ملفات الهاتف وبثّها لكل الحاضرين في الغرفة. */
   const playMusic = useCallback(
     async (file: File) => {
-      const room = roomRef.current;
-      if (!room || status !== "connected") throw new Error("الصوت غير متصل");
+      if (status !== "connected") throw new Error("الصوت غير متصل");
       if (!canPublish) throw new Error("اصعد على المايك أولًا");
 
       stopMusicRef.current?.();
@@ -171,12 +257,31 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
 
       const mediaTrack = dest.stream.getAudioTracks()[0];
       if (!mediaTrack) throw new Error("تعذر قراءة الملف الصوتي");
-      const track = new LocalAudioTrack(mediaTrack);
-      const publication = await room.localParticipant.publishTrack(
-        // livekit types + exactOptionalPropertyTypes لا يتوافقان مع LocalAudioTrack مباشرة
-        track as unknown as MediaStreamTrack,
-        { name: "room-music" },
-      );
+
+      let unpublish: () => Promise<void> = async () => {};
+      if (providerRef.current === "agora" && agoraRef.current) {
+        const AgoraRTC = (await import("agora-rtc-sdk-ng")).default;
+        const track = AgoraRTC.createCustomAudioTrack({ mediaStreamTrack: mediaTrack });
+        const client = agoraRef.current.client;
+        await client.publish(track);
+        unpublish = async () => {
+          await client.unpublish(track);
+          track.close();
+        };
+      } else {
+        const room = roomRef.current;
+        if (!room) throw new Error("الصوت غير متصل");
+        const lk = await import("livekit-client");
+        const track = new lk.LocalAudioTrack(mediaTrack);
+        const publication = await room.localParticipant.publishTrack(
+          // livekit types + exactOptionalPropertyTypes لا يتوافقان مع LocalAudioTrack مباشرة
+          track as unknown as MediaStreamTrack,
+          { name: "room-music" },
+        );
+        unpublish = async () => {
+          if (publication?.track) await room.localParticipant.unpublishTrack(publication.track);
+        };
+      }
 
       musicElRef.current = el;
       setMusicName(file.name.replace(/\.[^.]+$/, ""));
@@ -186,7 +291,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
         try {
           el.pause();
           URL.revokeObjectURL(el.src);
-          if (publication?.track) void room.localParticipant.unpublishTrack(publication.track);
+          void unpublish();
           void ctx.close();
         } catch {
           /* تجاهل */
