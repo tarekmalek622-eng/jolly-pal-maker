@@ -54,11 +54,61 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
   const [retryKey, setRetryKey] = useState(0);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [musicName, setMusicName] = useState<string | null>(null);
+  const [quality, setQuality] = useState<VoiceQuality>("unknown");
+  const [activeProvider, setActiveProvider] = useState<string | null>(null);
+  const [dataSaver, setDataSaverState] = useState(
+    () => typeof window !== "undefined" && window.localStorage.getItem("sawtak-data-saver") === "on",
+  );
   const musicElRef = useRef<HTMLAudioElement | null>(null);
   const stopMusicRef = useRef<(() => void) | null>(null);
+  const autoRetryCount = useRef(0);
+  const autoRetryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const sessionStartRef = useRef<number>(0);
+  const dataSaverRef = useRef(dataSaver);
+  dataSaverRef.current = dataSaver;
 
   /** Re-run the connection attempt after a failure. */
-  const retry = useCallback(() => setRetryKey((k) => k + 1), []);
+  const retry = useCallback(() => {
+    autoRetryCount.current = 0;
+    setRetryKey((k) => k + 1);
+  }, []);
+
+  /** وضع توفير البيانات: جودة صوت أقل للإنترنت الضعيف. */
+  const setDataSaver = useCallback((on: boolean) => {
+    setDataSaverState(on);
+    if (typeof window !== "undefined")
+      window.localStorage.setItem("sawtak-data-saver", on ? "on" : "off");
+  }, []);
+
+  /** يسجّل حدث صوتي في السجل (بدون تعطيل التجربة عند الفشل). */
+  const logEvent = useCallback(
+    (event: string, provider?: string, detail?: string) => {
+      void logVoiceEvent({
+        data: { roomId: roomId ?? undefined, event, provider, detail },
+      }).catch(() => {});
+    },
+    [roomId],
+  );
+
+  /** يبدأ تتبع جلسة الصوت (لحساب الساعات الأسبوعية). */
+  const beginSession = useCallback(() => {
+    if (!roomId || sessionIdRef.current) return;
+    sessionStartRef.current = Date.now();
+    void startVoiceSession({ data: { roomId } })
+      .then((r) => {
+        sessionIdRef.current = r.sessionId;
+      })
+      .catch(() => {});
+  }, [roomId]);
+
+  const endSession = useCallback(() => {
+    const id = sessionIdRef.current;
+    sessionIdRef.current = null;
+    if (!id) return;
+    const seconds = Math.round((Date.now() - sessionStartRef.current) / 1000);
+    void endVoiceSession({ data: { sessionId: id, seconds } }).catch(() => {});
+  }, []);
 
   const attach = useCallback((track: RemoteTrack, publication: RemoteTrackPublication) => {
     if (track.kind !== "audio") return;
