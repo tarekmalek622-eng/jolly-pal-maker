@@ -61,7 +61,7 @@ function HomePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, public_id, display_name, avatar_url, vip_level, is_online, level")
+        .select("id, public_id, display_name, avatar_url, vip_level, is_online, hide_online, level")
         .order("last_seen", { ascending: false })
         .limit(20);
       if (error) throw error;
@@ -78,7 +78,7 @@ function HomePage() {
       const [users, byRoom] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, public_id, display_name, avatar_url, vip_level, level, is_online")
+          .select("id, public_id, display_name, avatar_url, vip_level, level, is_online, hide_online")
           .or(`display_name.ilike.%${q}%,public_id.eq.${/^\d+$/.test(q) ? q : "0"}`)
           .limit(10),
         supabase
@@ -188,7 +188,7 @@ function HomePage() {
                     name={u.display_name}
                     size={44}
                     vipLevel={u.vip_level}
-                    online={u.is_online}
+                    online={u.is_online && !u.hide_online}
                   />
                   <div>
                     <p className="text-sm font-semibold">{u.display_name}</p>
@@ -278,7 +278,7 @@ function HomePage() {
                     name={u.display_name}
                     size={54}
                     vipLevel={u.vip_level}
-                    online={u.is_online}
+                    online={u.is_online && !u.hide_online}
                   />
                   <span className="w-full truncate text-center text-[11px] text-muted-foreground">
                     {u.display_name}
