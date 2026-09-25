@@ -314,7 +314,12 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
         const { client } = agoraRef.current;
         if (next) {
           const AgoraRTC = (await import("agora-rtc-sdk-ng")).default;
-          const track = await AgoraRTC.createMicrophoneAudioTrack();
+          // وضع توفير البيانات: جودة صوت أقل للإنترنت الضعيف
+          const track = await AgoraRTC.createMicrophoneAudioTrack(
+            dataSaverRef.current
+              ? { encoderConfig: "speech_low_quality" }
+              : { encoderConfig: "music_standard" },
+          );
           await client.publish(track);
           agoraRef.current.micTrack = track;
         } else if (agoraRef.current.micTrack) {
