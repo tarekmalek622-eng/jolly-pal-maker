@@ -1,4 +1,5 @@
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, getRequestHeader } from "@tanstack/react-start";
+import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -88,16 +89,24 @@ export const publishCrownMessage = createServerFn({ method: "POST" })
     return row as CrownMessage;
   });
 
-/** عدد رسائل التاج الجديدة التي لم يفتحها المستخدم بعد. */
-export const getCrownUnread = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sb = context.supabase as any;
+/** عدد رسائل التاج الجديدة التي لم يفتحها المستخدم بعد — يرجع صفرًا بهدوء بلا جلسة. */
+export const getCrownUnread = createServerFn({ method: "GET" }).handler(async () => {
+  const authHeader = getRequestHeader("authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!token) return { unread: 0 };
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb = createClient(process.env["SUPABASE_URL"]!, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  }) as any;
+  const { data: userData } = await sb.auth.getUser(token);
+  const userId = userData?.user?.id as string | undefined;
+  if (!userId) return { unread: 0 };
     const { data: read } = await sb
       .from("crown_reads")
       .select("last_seen_at")
-      .eq("user_id", context.userId)
+      .eq("user_id", userId)
       .maybeSingle();
     const since = read?.last_seen_at ?? "1970-01-01T00:00:00Z";
     const { count, error } = await sb
