@@ -129,7 +129,7 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       let livekitReason: string | null = null;
 
       // يحاول الاتصال بخادم LiveKit معين (أساسي أو احتياطي)
-      const tryLiveKit = async (url: string, token: string) => {
+      const tryLiveKit = async (url: string, token: string, label?: string) => {
         const lk = await import("livekit-client");
         const room = new lk.Room({ adaptiveStream: true, dynacast: true });
         roomRef.current = room;
@@ -142,10 +142,32 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
           .on(lk.RoomEvent.ActiveSpeakersChanged, (speakers) => {
             setSpeakingIds(speakers.map((s) => s.identity));
           })
+          .on(lk.RoomEvent.ConnectionQualityChanged, (q) => {
+            if (q === lk.ConnectionQuality.Excellent) setQuality("excellent");
+            else if (q === lk.ConnectionQuality.Good) setQuality("good");
+            else if (q === lk.ConnectionQuality.Poor) setQuality("poor");
+            else setQuality("unknown");
+          })
           .on(lk.RoomEvent.ConnectionStateChanged, (state) => {
-            if (state === lk.ConnectionState.Connected) setStatus("connected");
-            else if (state === lk.ConnectionState.Reconnecting) setStatus("reconnecting");
-            else if (state === lk.ConnectionState.Disconnected) setStatus("idle");
+            if (state === lk.ConnectionState.Connected) {
+              setStatus("connected");
+              autoRetryCount.current = 0;
+            } else if (state === lk.ConnectionState.Reconnecting) {
+              setStatus("reconnecting");
+            } else if (state === lk.ConnectionState.Disconnected) {
+              // فصل غير متوقع — إعادة اتصال تلقائية حتى 5 مرات
+              if (!cancelled && autoRetryCount.current < MAX_AUTO_RETRIES) {
+                autoRetryCount.current += 1;
+                setStatus("reconnecting");
+                logEvent("auto_reconnect", providerRef.current ?? undefined, `محاولة ${autoRetryCount.current}`);
+                autoRetryTimer.current = setTimeout(() => {
+                  if (!cancelled) setRetryKey((k) => k + 1);
+                }, 3000);
+              } else if (!cancelled) {
+                setStatus("error");
+                setError("انقطع الاتصال بالصوت — اضغط إعادة المحاولة");
+              }
+            }
           });
         await room.connect(url, token, { autoSubscribe: true });
         if (cancelled) {
@@ -153,7 +175,9 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
           return false;
         }
         providerRef.current = "livekit";
+        setActiveProvider(label ?? "livekit");
         setStatus("connected");
+        beginSession();
         return true;
       };
 
