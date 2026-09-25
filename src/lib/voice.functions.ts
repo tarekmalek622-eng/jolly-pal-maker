@@ -73,26 +73,49 @@ export const getVoiceToken = createServerFn({ method: "POST" })
     }
     const canPublish = access.canPublish;
 
-    const secret = new TextEncoder().encode(apiSecret);
-    const now = Math.floor(Date.now() / 1000);
-    const token = await new SignJWT({
-      video: {
-        room: data.roomId,
-        roomJoin: true,
-        canPublish,
-        canSubscribe: true,
-        canPublishData: true,
-      },
-    })
-      .setProtectedHeader({ alg: "HS256", typ: "JWT" })
-      .setIssuer(apiKey)
-      .setSubject(userId)
-      .setJti(`${userId}-${now}`)
-      .setIssuedAt(now)
-      .setExpirationTime(now + 60 * 60 * 6)
-      .sign(secret);
+    const signLiveKitToken = async (key: string, secretValue: string) => {
+      const secret = new TextEncoder().encode(secretValue);
+      const now = Math.floor(Date.now() / 1000);
+      return new SignJWT({
+        video: {
+          room: data.roomId,
+          roomJoin: true,
+          canPublish,
+          canSubscribe: true,
+          canPublishData: true,
+        },
+      })
+        .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+        .setIssuer(key)
+        .setSubject(userId)
+        .setJti(`${userId}-${now}`)
+        .setIssuedAt(now)
+        .setExpirationTime(now + 60 * 60 * 6)
+        .sign(secret);
+    };
 
-    return { configured: true as const, token, url: wsUrl, canPublish, reason: null };
+    const token = await signLiveKitToken(apiKey, apiSecret);
+
+    // مفاتيح احتياطية: لو السيرفر الأساسي فصل يتجرّب التاني تلقائيًا
+    const apiKey2 = process.env["LIVEKIT_API_KEY_2"];
+    const apiSecret2 = process.env["LIVEKIT_API_SECRET_2"];
+    const wsUrl2 = process.env["LIVEKIT_URL_2"];
+    let backupToken: string | null = null;
+    let backupUrl: string | null = null;
+    if (apiKey2 && apiSecret2 && wsUrl2) {
+      backupToken = await signLiveKitToken(apiKey2, apiSecret2);
+      backupUrl = wsUrl2;
+    }
+
+    return {
+      configured: true as const,
+      token,
+      url: wsUrl,
+      canPublish,
+      reason: null,
+      backupToken,
+      backupUrl,
+    };
   });
 
 /**

@@ -68,38 +68,61 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       setError(null);
       let livekitReason: string | null = null;
 
-      // 1) المزود الأساسي: LiveKit
+      // يحاول الاتصال بخادم LiveKit معين (أساسي أو احتياطي)
+      const tryLiveKit = async (url: string, token: string) => {
+        const lk = await import("livekit-client");
+        const room = new lk.Room({ adaptiveStream: true, dynacast: true });
+        roomRef.current = room;
+        room
+          .on(lk.RoomEvent.TrackSubscribed, attach)
+          .on(lk.RoomEvent.TrackUnsubscribed, (track, publication) => {
+            track.detach().forEach((el) => el.remove());
+            attachedAudio.delete(publication.trackSid);
+          })
+          .on(lk.RoomEvent.ActiveSpeakersChanged, (speakers) => {
+            setSpeakingIds(speakers.map((s) => s.identity));
+          })
+          .on(lk.RoomEvent.ConnectionStateChanged, (state) => {
+            if (state === lk.ConnectionState.Connected) setStatus("connected");
+            else if (state === lk.ConnectionState.Reconnecting) setStatus("reconnecting");
+            else if (state === lk.ConnectionState.Disconnected) setStatus("idle");
+          });
+        await room.connect(url, token, { autoSubscribe: true });
+        if (cancelled) {
+          void room.disconnect();
+          return false;
+        }
+        providerRef.current = "livekit";
+        setStatus("connected");
+        return true;
+      };
+
+      // 1) المزود الأساسي: LiveKit (ثم مفاتيحه الاحتياطية، ثم Agora)
       try {
         const result = await getVoiceToken({ data: { roomId, canPublish } });
         if (cancelled) return;
         if (result.configured && result.token && result.url) {
-          const lk = await import("livekit-client");
-          const room = new lk.Room({ adaptiveStream: true, dynacast: true });
-          roomRef.current = room;
-          room
-            .on(lk.RoomEvent.TrackSubscribed, attach)
-            .on(lk.RoomEvent.TrackUnsubscribed, (track, publication) => {
-              track.detach().forEach((el) => el.remove());
-              attachedAudio.delete(publication.trackSid);
-            })
-            .on(lk.RoomEvent.ActiveSpeakersChanged, (speakers) => {
-              setSpeakingIds(speakers.map((s) => s.identity));
-            })
-            .on(lk.RoomEvent.ConnectionStateChanged, (state) => {
-              if (state === lk.ConnectionState.Connected) setStatus("connected");
-              else if (state === lk.ConnectionState.Reconnecting) setStatus("reconnecting");
-              else if (state === lk.ConnectionState.Disconnected) setStatus("idle");
-            });
-          await room.connect(result.url, result.token, { autoSubscribe: true });
-          if (cancelled) {
-            void room.disconnect();
+          // أ) الخادم الأساسي
+          try {
+            if (await tryLiveKit(result.url, result.token)) return;
             return;
+          } catch (e) {
+            livekitReason = friendlyVoiceError(e);
+            roomRef.current = null;
           }
-          providerRef.current = "livekit";
-          setStatus("connected");
-          return;
+          // ب) الخادم الاحتياطي (مفاتيح LiveKit التانية) لو الأساسي فصل
+          if (!cancelled && result.backupToken && result.backupUrl) {
+            try {
+              if (await tryLiveKit(result.backupUrl, result.backupToken)) return;
+              return;
+            } catch {
+              /* نكمل للمزود الاحتياطي Agora */
+              roomRef.current = null;
+            }
+          }
+        } else {
+          livekitReason = result.reason ?? null;
         }
-        livekitReason = result.reason ?? null;
       } catch (e) {
         livekitReason = friendlyVoiceError(e);
       }
@@ -214,7 +237,14 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
             await room.disconnect();
             await room.connect(token.url!, token.token, { autoSubscribe: true });
           } catch {
-            /* keep existing connection */
+            // الخادم الأساسي فصل — نجرّب المفاتيح الاحتياطية
+            if (token.backupToken && token.backupUrl) {
+              try {
+                await room.connect(token.backupUrl, token.backupToken, { autoSubscribe: true });
+              } catch {
+                /* keep existing connection */
+              }
+            }
           }
         }
       }
