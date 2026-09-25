@@ -57,13 +57,31 @@ export const getVoiceToken = createServerFn({ method: "POST" })
     return { roomId: data.roomId, canPublish: Boolean(data.canPublish) };
   })
   .handler(async ({ data, context }) => {
-    const apiKey = process.env["LIVEKIT_API_KEY"];
-    const apiSecret = process.env["LIVEKIT_API_SECRET"];
-    const wsUrl = process.env["LIVEKIT_URL"];
+    // كل مجموعات مفاتيح LiveKit المتاحة — النظام يبدّل بينها تلقائيًا كل 9899 دقيقة
+    const configs = [
+      {
+        key: process.env["LIVEKIT_API_KEY"],
+        secret: process.env["LIVEKIT_API_SECRET"],
+        url: process.env["LIVEKIT_URL"],
+      },
+      {
+        key: process.env["LIVEKIT_API_KEY_2"],
+        secret: process.env["LIVEKIT_API_SECRET_2"],
+        url: process.env["LIVEKIT_URL_2"],
+      },
+    ].filter((c): c is { key: string; secret: string; url: string } =>
+      Boolean(c.key && c.secret && c.url),
+    );
 
-    if (!apiKey || !apiSecret || !wsUrl) {
+    if (configs.length === 0) {
       return { configured: false as const, token: null, url: null };
     }
+
+    // التبديل الدوري: كل 9899 دقيقة ينتقل للمجموعة التالية
+    const ROTATE_MS = 9899 * 60 * 1000;
+    const activeIdx = Math.floor(Date.now() / ROTATE_MS) % configs.length;
+    const active = configs[activeIdx];
+    const backup = configs.length > 1 ? configs[(activeIdx + 1) % configs.length] : null;
 
     const { supabase, userId } = context;
 
