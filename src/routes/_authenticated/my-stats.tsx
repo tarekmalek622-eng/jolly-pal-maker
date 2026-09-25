@@ -145,6 +145,33 @@ function MyStatsPage() {
             </button>
           </div>
         )}
+        {stats.data && (
+          <div className="mb-3">
+            <p className="mb-2 text-xs font-black text-muted-foreground">هذا الأسبوع</p>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="surface-card p-3 text-center">
+                <p className="text-[10px] text-muted-foreground">ساعات الصوت</p>
+                <p className="mt-1 text-sm font-black text-primary">
+                  {stats.data.weekVoiceMinutes >= 60
+                    ? `${Math.floor(stats.data.weekVoiceMinutes / 60)}س ${stats.data.weekVoiceMinutes % 60}د`
+                    : `${stats.data.weekVoiceMinutes} دقيقة`}
+                </p>
+              </div>
+              <div className="surface-card p-3 text-center">
+                <p className="text-[10px] text-muted-foreground">هدايا أرسلتها</p>
+                <p className="mt-1 text-sm font-black text-primary">
+                  {formatCompact(stats.data.weekSent)}
+                </p>
+              </div>
+              <div className="surface-card p-3 text-center">
+                <p className="text-[10px] text-muted-foreground">هدايا استلمتها</p>
+                <p className="mt-1 text-sm font-black text-primary">
+                  {formatCompact(stats.data.weekReceived)}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-2">
           {items.map((i) => (
             <div key={i.label} className="surface-card p-4">
