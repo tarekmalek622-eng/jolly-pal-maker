@@ -20,8 +20,15 @@ export function BottomNav() {
   const { userId } = useSupabaseSession();
   const fetchUnread = useServerFn(getCrownUnread);
   const unread = useQuery({
-    queryKey: ["crown-unread"],
-    queryFn: () => fetchUnread(),
+    queryKey: ["crown-unread", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      try {
+        return await fetchUnread();
+      } catch {
+        return { unread: 0 };
+      }
+    },
     staleTime: 30_000,
     refetchInterval: 60_000,
   });
