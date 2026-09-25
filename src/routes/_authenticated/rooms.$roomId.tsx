@@ -50,6 +50,7 @@ import { useVoiceRoomContext } from "@/components/VoiceRoomProvider";
 import { BadgeStrip } from "@/components/BadgeStrip";
 import {
   closeWheelRound,
+  enterRoom as enterRoomSecure,
   getMyRoomBadgePermissions,
   removeRoomParticipant,
   updateOwnedRoomDetails,
@@ -169,7 +170,7 @@ function RoomPage() {
       const { data, error } = await supabase
         .from("rooms")
         .select(
-          "id, room_code, name, image_url, background_url, theme, theme_style, owner_id, is_active, is_disabled, chat_locked",
+          "id, room_code, name, image_url, background_url, theme, theme_style, owner_id, is_active, is_disabled, chat_locked, room_type",
         )
         .eq("id", roomId)
         .maybeSingle();
@@ -177,6 +178,41 @@ function RoomPage() {
       return data;
     },
   });
+
+  const [roomPassword, setRoomPassword] = useState("");
+  const [entering, setEntering] = useState(false);
+  // الدخول عبر السيرفر: الغرف الخاصة تتطلب كلمة السر قبل تسجيل العضوية أو قراءة الرسائل
+  const entry = useQuery({
+    queryKey: ["room-entry", roomId, userId],
+    enabled: Boolean(userId && room.data && room.data.is_active && !room.data.is_disabled),
+    retry: false,
+    queryFn: async () => {
+      try {
+        await enterRoomSecure({ data: { roomId } });
+        return { ok: true as const };
+      } catch (error) {
+        return {
+          ok: false as const,
+          message: error instanceof Error ? error.message : "تعذر الدخول إلى الغرفة",
+        };
+      }
+    },
+  });
+  const entryReady = Boolean(entry.data?.ok);
+  const entryBlocked = Boolean(entry.data && !entry.data.ok);
+
+  const submitRoomPassword = async () => {
+    if (entering) return;
+    setEntering(true);
+    try {
+      await enterRoomSecure({ data: { roomId, password: roomPassword.trim() } });
+      await entry.refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "كلمة السر غير صحيحة");
+    } finally {
+      setEntering(false);
+    }
+  };
 
   const mics = useQuery({
     queryKey: ["room-mics", roomId],
@@ -247,6 +283,7 @@ function RoomPage() {
 
   const messages = useQuery({
     queryKey: ["room-messages", roomId],
+    enabled: entryReady,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("room_messages")
@@ -307,15 +344,9 @@ function RoomPage() {
     enterRoom({ id: roomId, name: room.data.name, imageUrl: room.data.image_url }, canPublish);
   }, [activeRoom?.id, canPublish, enterRoom, exitRoom, roomId, room.data]);
 
-  // join / leave membership
+  // العضوية تُسجَّل عبر دالة الدخول على السيرفر (enterRoom) — هنا ننظّف عند المغادرة فقط
   useEffect(() => {
     if (!userId) return;
-    void supabase
-      .from("room_members")
-      .upsert(
-        { room_id: roomId, user_id: userId, joined_at: new Date().toISOString() },
-        { onConflict: "room_id,user_id" },
-      );
     return () => {
       if (minimizedRef.current) return; // الغرفة مصغّرة — نُبقي العضوية والمايك
       void supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", userId);
@@ -610,9 +641,42 @@ function RoomPage() {
     public_id: p.public_id,
   }));
 
-  if (room.isLoading) return <AppShell hideNav>جارٍ تحميل الغرفة...</AppShell>;
+  if (room.isLoading || (entry.isLoading && !entryBlocked))
+    return <AppShell hideNav>جارٍ تحميل الغرفة...</AppShell>;
   if (!room.data || room.data.is_disabled || !room.data.is_active)
     return <AppShell hideNav>الغرفة غير متاحة.</AppShell>;
+
+  if (entryBlocked) {
+    return (
+      <AppShell hideNav>
+        <div className="mx-auto flex min-h-[70vh] max-w-sm flex-col items-center justify-center gap-4 px-6 text-center">
+          <span className="grid h-16 w-16 place-items-center rounded-full bg-surface-2 text-2xl">🔒</span>
+          <h2 className="text-lg font-bold">غرفة خاصة</h2>
+          <p className="text-sm text-muted-foreground">
+            {entry.data?.message ?? "هذه الغرفة محمية بكلمة سر"}
+          </p>
+          <Input
+            type="password"
+            value={roomPassword}
+            onChange={(event) => setRoomPassword(event.target.value)}
+            placeholder="كلمة سر الغرفة"
+            className="h-11 rounded-xl text-center"
+            onKeyDown={(event) => {
+              if (event.key === "Enter") void submitRoomPassword();
+            }}
+          />
+          <Button
+            className="h-11 w-full rounded-xl"
+            disabled={entering || roomPassword.trim().length < 4}
+            onClick={() => void submitRoomPassword()}
+          >
+            {entering ? "جارٍ الدخول..." : "دخول الغرفة"}
+          </Button>
+        </div>
+      </AppShell>
+    );
+  }
+
 
   return (
     <AppShell

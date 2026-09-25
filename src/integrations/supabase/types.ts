@@ -3665,6 +3665,10 @@ export type Database = {
       domino_tile_a: { Args: { t: number }; Returns: number }
       domino_tile_b: { Args: { t: number }; Returns: number }
       end_relationship: { Args: { _relationship_id: string }; Returns: boolean }
+      enter_room: {
+        Args: { _password?: string; _room_id: string }
+        Returns: boolean
+      }
       equip_item: {
         Args: { _equip: boolean; _user_item_id: string }
         Returns: {
