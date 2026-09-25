@@ -3521,6 +3521,7 @@ export type Database = {
         Args: { _reason: string; _user_id: string }
         Returns: number
       }
+      agent_my_balance: { Args: { _agent_id?: string }; Returns: number }
       agent_recharge: {
         Args: { _amount: number; _public_id: string }
         Returns: number
