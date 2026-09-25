@@ -125,15 +125,21 @@ export const getAgoraVoiceToken = createServerFn({ method: "POST" })
       };
     }
 
+    // agora-token مكتبة CommonJS — استيراد ديناميكي داخل المعالج لتفادي مشاكل التحويل
+    const mod = (await import("agora-token")) as unknown as
+      | { RtcTokenBuilder: typeof import("agora-token").RtcTokenBuilder; RtcRole: typeof import("agora-token").RtcRole }
+      | { default: { RtcTokenBuilder: typeof import("agora-token").RtcTokenBuilder; RtcRole: typeof import("agora-token").RtcRole } };
+    const agora = "RtcTokenBuilder" in mod ? mod : mod.default;
+
     const now = Math.floor(Date.now() / 1000);
     const expireAt = now + 60 * 60 * 6;
     // uid = 0 يعني أن Agora تعيّن رقمًا تلقائيًا عند الانضمام
-    const token = RtcTokenBuilder.buildTokenWithUid(
+    const token = agora.RtcTokenBuilder.buildTokenWithUid(
       appId,
       appCertificate,
       data.roomId,
       0,
-      RtcRole.PUBLISHER,
+      agora.RtcRole.PUBLISHER,
       expireAt,
       expireAt,
     );
