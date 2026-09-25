@@ -91,6 +91,8 @@ export const getVoiceToken = createServerFn({ method: "POST" })
     const activeIdx = Math.floor(Date.now() / ROTATE_MS) % configs.length;
     const active = configs[activeIdx] ?? configs[0]!;
     const backup = configs.length > 1 ? (configs[(activeIdx + 1) % configs.length] ?? null) : null;
+    const providerLabel = active.label;
+    const backupLabel = backup?.label ?? null;
 
     const { supabase, userId } = context;
 
