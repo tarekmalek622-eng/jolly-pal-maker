@@ -145,31 +145,6 @@ function UserPage() {
   });
   const refetchCurrentRoom = currentRoom.refetch;
 
-  const saTitle = useQuery({
-    queryKey: ["sa-title", target?.id],
-    enabled: Boolean(target?.id),
-    staleTime: 60_000,
-    queryFn: async () => {
-      const now = new Date().toISOString();
-      const { data: winner } = await supabase
-        .from("sa_winners")
-        .select("rank, three_digit_id")
-        .eq("user_id", target!.id)
-        .eq("active", true)
-        .gt("ends_at", now)
-        .maybeSingle();
-      if (winner) return { kind: "winner" as const, rank: winner.rank, code: winner.three_digit_id };
-      const { data: assistant } = await supabase
-        .from("sa_assistants")
-        .select("three_digit_id, sa_winners!inner(active, ends_at)")
-        .eq("user_id", target!.id)
-        .eq("sa_winners.active", true)
-        .gt("sa_winners.ends_at", now)
-        .maybeSingle();
-      if (assistant) return { kind: "assistant" as const, code: assistant.three_digit_id };
-      return null;
-    },
-  });
 
   useEffect(() => {
     if (!target?.id) return;
@@ -441,16 +416,6 @@ function UserPage() {
           {target.country && (
             <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px]">
               {target.country}
-            </span>
-          )}
-          {saTitle.data?.kind === "winner" && (
-            <span className="flex items-center gap-1 rounded-full border border-amber-500/50 bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-300">
-              👑 سوبر أدمن #{saTitle.data.rank} • {saTitle.data.code}
-            </span>
-          )}
-          {saTitle.data?.kind === "assistant" && (
-            <span className="flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-300">
-              🛡️ مساعد سوبر أدمن • {saTitle.data.code}
             </span>
           )}
         </div>
