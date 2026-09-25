@@ -41,7 +41,7 @@ function AgentsPage() {
     queryFn: async () => {
       const { data, error } = await db
         .from("recharge_agents")
-        .select("user_id, balance, total_recharged, is_active, whatsapp")
+        .select("user_id, total_recharged, is_active, whatsapp")
         .order("total_recharged", { ascending: false });
       if (error) throw error;
       const ids = (data ?? []).map((a: any) => a.user_id);
@@ -58,6 +58,17 @@ function AgentsPage() {
 
   const me = agents.data?.find((a: any) => a.user_id === userId && a.is_active);
   const visible = (agents.data ?? []).filter((a: any) => a.is_active || isAdmin.data);
+
+  // رصيد الوكيل متاح لصاحبه فقط (وللأدمن) عبر دالة آمنة — عمود الرصيد مقفول عن الباقي
+  const myBalance = useQuery({
+    queryKey: ["agent-my-balance", userId],
+    enabled: Boolean(me || isAdmin.data),
+    queryFn: async () => {
+      const { data, error } = await db.rpc("agent_my_balance", {});
+      if (error) throw error;
+      return Number(data ?? 0);
+    },
+  });
 
   const history = useQuery({
     queryKey: ["agent-tx", userId],
@@ -165,7 +176,7 @@ function AgentsPage() {
                 <ShieldCheck className="h-4 w-4 text-primary" /> لوحة الوكيل
               </span>
               <span className="flex items-center gap-1 text-sm font-black text-warning">
-                <Coins className="h-4 w-4" /> {fmt(me.balance)}
+                <Coins className="h-4 w-4" /> {fmt(myBalance.data ?? 0)}
               </span>
             </div>
             <Input
@@ -280,9 +291,10 @@ function AgentsPage() {
                   />
                 </div>
                 <p className="text-[11px] text-muted-foreground">ID: {a.profile?.public_id}</p>
-                {isAdmin.data && (
+                {(isAdmin.data || a.user_id === userId) && (
                   <p className="text-[11px] text-warning">
-                    الرصيد {fmt(a.balance)} · {a.is_active ? "مفعّل" : "موقوف"}
+                    {a.user_id === userId ? `الرصيد ${fmt(myBalance.data ?? 0)} · ` : ""}
+                    {a.is_active ? "مفعّل" : "موقوف"}
                   </p>
                 )}
               </div>
