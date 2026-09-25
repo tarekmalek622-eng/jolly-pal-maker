@@ -57,13 +57,31 @@ export const getVoiceToken = createServerFn({ method: "POST" })
     return { roomId: data.roomId, canPublish: Boolean(data.canPublish) };
   })
   .handler(async ({ data, context }) => {
-    const apiKey = process.env["LIVEKIT_API_KEY"];
-    const apiSecret = process.env["LIVEKIT_API_SECRET"];
-    const wsUrl = process.env["LIVEKIT_URL"];
+    // كل مجموعات مفاتيح LiveKit المتاحة — النظام يبدّل بينها تلقائيًا كل 9899 دقيقة
+    const configs = [
+      {
+        key: process.env["LIVEKIT_API_KEY"],
+        secret: process.env["LIVEKIT_API_SECRET"],
+        url: process.env["LIVEKIT_URL"],
+      },
+      {
+        key: process.env["LIVEKIT_API_KEY_2"],
+        secret: process.env["LIVEKIT_API_SECRET_2"],
+        url: process.env["LIVEKIT_URL_2"],
+      },
+    ].filter((c): c is { key: string; secret: string; url: string } =>
+      Boolean(c.key && c.secret && c.url),
+    );
 
-    if (!apiKey || !apiSecret || !wsUrl) {
+    if (configs.length === 0) {
       return { configured: false as const, token: null, url: null };
     }
+
+    // التبديل الدوري: كل 9899 دقيقة ينتقل للمجموعة التالية
+    const ROTATE_MS = 9899 * 60 * 1000;
+    const activeIdx = Math.floor(Date.now() / ROTATE_MS) % configs.length;
+    const active = configs[activeIdx] ?? configs[0]!;
+    const backup = configs.length > 1 ? (configs[(activeIdx + 1) % configs.length] ?? null) : null;
 
     const { supabase, userId } = context;
 
@@ -94,23 +112,20 @@ export const getVoiceToken = createServerFn({ method: "POST" })
         .sign(secret);
     };
 
-    const token = await signLiveKitToken(apiKey, apiSecret);
+    const token = await signLiveKitToken(active.key, active.secret);
 
-    // مفاتيح احتياطية: لو السيرفر الأساسي فصل يتجرّب التاني تلقائيًا
-    const apiKey2 = process.env["LIVEKIT_API_KEY_2"];
-    const apiSecret2 = process.env["LIVEKIT_API_SECRET_2"];
-    const wsUrl2 = process.env["LIVEKIT_URL_2"];
+    // المجموعة الاحتياطية: لو النشطة فصلت يتجرّب التانية تلقائيًا
     let backupToken: string | null = null;
     let backupUrl: string | null = null;
-    if (apiKey2 && apiSecret2 && wsUrl2) {
-      backupToken = await signLiveKitToken(apiKey2, apiSecret2);
-      backupUrl = wsUrl2;
+    if (backup) {
+      backupToken = await signLiveKitToken(backup.key, backup.secret);
+      backupUrl = backup.url;
     }
 
     return {
       configured: true as const,
       token,
-      url: wsUrl,
+      url: active.url,
       canPublish,
       reason: null,
       backupToken,
