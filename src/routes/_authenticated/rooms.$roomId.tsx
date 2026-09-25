@@ -179,6 +179,41 @@ function RoomPage() {
     },
   });
 
+  const [roomPassword, setRoomPassword] = useState("");
+  const [entering, setEntering] = useState(false);
+  // الدخول عبر السيرفر: الغرف الخاصة تتطلب كلمة السر قبل تسجيل العضوية أو قراءة الرسائل
+  const entry = useQuery({
+    queryKey: ["room-entry", roomId, userId],
+    enabled: Boolean(userId && room.data && room.data.is_active && !room.data.is_disabled),
+    retry: false,
+    queryFn: async () => {
+      try {
+        await enterRoom({ data: { roomId } });
+        return { ok: true as const };
+      } catch (error) {
+        return {
+          ok: false as const,
+          message: error instanceof Error ? error.message : "تعذر الدخول إلى الغرفة",
+        };
+      }
+    },
+  });
+  const entryReady = Boolean(entry.data?.ok);
+  const entryBlocked = Boolean(entry.data && !entry.data.ok);
+
+  const submitRoomPassword = async () => {
+    if (entering) return;
+    setEntering(true);
+    try {
+      await enterRoom({ data: { roomId, password: roomPassword.trim() } });
+      await entry.refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "كلمة السر غير صحيحة");
+    } finally {
+      setEntering(false);
+    }
+  };
+
   const mics = useQuery({
     queryKey: ["room-mics", roomId],
     queryFn: async () => {
@@ -248,6 +283,7 @@ function RoomPage() {
 
   const messages = useQuery({
     queryKey: ["room-messages", roomId],
+    enabled: entryReady,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("room_messages")
