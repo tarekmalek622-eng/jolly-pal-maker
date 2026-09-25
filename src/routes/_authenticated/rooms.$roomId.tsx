@@ -646,6 +646,38 @@ function RoomPage() {
   if (!room.data || room.data.is_disabled || !room.data.is_active)
     return <AppShell hideNav>الغرفة غير متاحة.</AppShell>;
 
+  if (entryBlocked) {
+    return (
+      <AppShell hideNav>
+        <div className="mx-auto flex min-h-[70vh] max-w-sm flex-col items-center justify-center gap-4 px-6 text-center">
+          <span className="grid h-16 w-16 place-items-center rounded-full bg-surface-2 text-2xl">🔒</span>
+          <h2 className="text-lg font-bold">غرفة خاصة</h2>
+          <p className="text-sm text-muted-foreground">
+            {entry.data?.message ?? "هذه الغرفة محمية بكلمة سر"}
+          </p>
+          <Input
+            type="password"
+            value={roomPassword}
+            onChange={(event) => setRoomPassword(event.target.value)}
+            placeholder="كلمة سر الغرفة"
+            className="h-11 rounded-xl text-center"
+            onKeyDown={(event) => {
+              if (event.key === "Enter") void submitRoomPassword();
+            }}
+          />
+          <Button
+            className="h-11 w-full rounded-xl"
+            disabled={entering || roomPassword.trim().length < 4}
+            onClick={() => void submitRoomPassword()}
+          >
+            {entering ? "جارٍ الدخول..." : "دخول الغرفة"}
+          </Button>
+        </div>
+      </AppShell>
+    );
+  }
+
+
   return (
     <AppShell
       hideNav
