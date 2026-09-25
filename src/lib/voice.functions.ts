@@ -1,8 +1,54 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { SignJWT } from "jose";
+import { RtcRole, RtcTokenBuilder } from "agora-token";
 
 type TokenInput = { roomId: string; canPublish: boolean };
+
+type VoiceContext = {
+  supabase: import("@/integrations/supabase/client").supabase extends infer T ? T : never;
+  userId: string;
+};
+
+/** تحقق مشترك: الغرفة متاحة + المستخدم مش محظور + صلاحية النشر من مقعد المايك. */
+async function checkVoiceAccess(
+  supabase: VoiceContext["supabase"],
+  userId: string,
+  roomId: string,
+  wantsPublish: boolean,
+) {
+  const { data: room, error: roomError } = await supabase
+    .from("rooms")
+    .select("id, is_active, is_disabled")
+    .eq("id", roomId)
+    .maybeSingle();
+  if (roomError) throw new Error(roomError.message);
+  if (!room || room.is_disabled || !room.is_active) {
+    return { ok: false as const, reason: "الغرفة غير متاحة", canPublish: false };
+  }
+
+  const { data: ban } = await supabase
+    .from("bans")
+    .select("id")
+    .eq("user_id", userId)
+    .or(`room_id.eq.${roomId},scope.eq.global`)
+    .limit(1);
+  if (ban && ban.length > 0) {
+    return { ok: false as const, reason: "أنت محظور من هذه الغرفة", canPublish: false };
+  }
+
+  let canPublish = false;
+  if (wantsPublish) {
+    const { data: seat } = await supabase
+      .from("room_mics")
+      .select("id, is_muted")
+      .eq("room_id", roomId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    canPublish = Boolean(seat && !seat.is_muted);
+  }
+  return { ok: true as const, reason: null, canPublish };
+}
 
 /**
  * Issues a short-lived LiveKit access token for a room the caller is a member of.
