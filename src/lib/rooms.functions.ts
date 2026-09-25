@@ -123,7 +123,7 @@ export const enterRoom = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.rpc("enter_room", {
       _room_id: data.roomId,
-      _password: data.password ?? null,
+      _password: data.password,
     });
     if (error) throw new Error(error.message);
     return { ok: true };

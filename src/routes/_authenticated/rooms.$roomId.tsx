@@ -50,7 +50,7 @@ import { useVoiceRoomContext } from "@/components/VoiceRoomProvider";
 import { BadgeStrip } from "@/components/BadgeStrip";
 import {
   closeWheelRound,
-  enterRoom,
+  enterRoom as enterRoomSecure,
   getMyRoomBadgePermissions,
   removeRoomParticipant,
   updateOwnedRoomDetails,
@@ -188,7 +188,7 @@ function RoomPage() {
     retry: false,
     queryFn: async () => {
       try {
-        await enterRoom({ data: { roomId } });
+        await enterRoomSecure({ data: { roomId } });
         return { ok: true as const };
       } catch (error) {
         return {
@@ -205,7 +205,7 @@ function RoomPage() {
     if (entering) return;
     setEntering(true);
     try {
-      await enterRoom({ data: { roomId, password: roomPassword.trim() } });
+      await enterRoomSecure({ data: { roomId, password: roomPassword.trim() } });
       await entry.refetch();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "كلمة السر غير صحيحة");
