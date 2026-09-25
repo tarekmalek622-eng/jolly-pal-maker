@@ -141,7 +141,87 @@ export const getVoiceToken = createServerFn({ method: "POST" })
       reason: null,
       backupToken,
       backupUrl,
+      providerLabel,
+      backupLabel,
     };
+  });
+
+/**
+ * يسجّل حدث صوتي (تبديل مزود / فشل / إعادة اتصال) في سجل الصوت.
+ * لو الحدث فشل مزود، يبعت تنبيه تلقائي للمالك (super admin) في الإشعارات.
+ */
+export const logVoiceEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { roomId?: string; event: string; provider?: string; detail?: string }) => {
+    if (!data?.event || typeof data.event !== "string") throw new Error("event required");
+    return {
+      roomId: typeof data.roomId === "string" ? data.roomId : null,
+      event: data.event.slice(0, 60),
+      provider: typeof data.provider === "string" ? data.provider.slice(0, 40) : null,
+      detail: typeof data.detail === "string" ? data.detail.slice(0, 200) : null,
+    };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await supabase.from("voice_events").insert({
+      user_id: userId,
+      room_id: data.roomId,
+      event: data.event,
+      provider: data.provider,
+      detail: data.detail,
+    });
+
+    // تنبيه المالك عند فشل مزود صوت
+    if (data.event === "provider_failed") {
+      const { data: admins } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "super_admin");
+      for (const admin of admins ?? []) {
+        await supabase.from("notifications").insert({
+          user_id: admin.user_id,
+          type: "voice_alert",
+          title: "تنبيه صوت",
+          body: `فشل مزود الصوت (${data.provider ?? "غير معروف"}) — تم التحويل تلقائيًا للمزود التالي`,
+        });
+      }
+    }
+    return { ok: true as const };
+  });
+
+/** يبدأ جلسة صوت (لحساب ساعات الصوت الأسبوعية). */
+export const startVoiceSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { roomId: string }) => {
+    if (!data?.roomId) throw new Error("roomId required");
+    return { roomId: data.roomId };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: row, error } = await supabase
+      .from("voice_sessions")
+      .insert({ user_id: userId, room_id: data.roomId })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { sessionId: row.id as string };
+  });
+
+/** ينهي جلسة صوت ويحسب مدتها بالثواني. */
+export const endVoiceSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { sessionId: string; seconds: number }) => {
+    if (!data?.sessionId) throw new Error("sessionId required");
+    return { sessionId: data.sessionId, seconds: Math.max(0, Math.floor(data.seconds ?? 0)) };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await supabase
+      .from("voice_sessions")
+      .update({ left_at: new Date().toISOString(), seconds: data.seconds })
+      .eq("id", data.sessionId)
+      .eq("user_id", userId);
+    return { ok: true as const };
   });
 
 /**
