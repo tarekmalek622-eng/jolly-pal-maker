@@ -1,8 +1,51 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { SignJWT } from "jose";
+import { RtcRole, RtcTokenBuilder } from "agora-token";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 type TokenInput = { roomId: string; canPublish: boolean };
+
+/** تحقق مشترك: الغرفة متاحة + المستخدم مش محظور + صلاحية النشر من مقعد المايك. */
+async function checkVoiceAccess(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  roomId: string,
+  wantsPublish: boolean,
+) {
+  const { data: room, error: roomError } = await supabase
+    .from("rooms")
+    .select("id, is_active, is_disabled")
+    .eq("id", roomId)
+    .maybeSingle();
+  if (roomError) throw new Error(roomError.message);
+  if (!room || room.is_disabled || !room.is_active) {
+    return { ok: false as const, reason: "الغرفة غير متاحة", canPublish: false };
+  }
+
+  const { data: ban } = await supabase
+    .from("bans")
+    .select("id")
+    .eq("user_id", userId)
+    .or(`room_id.eq.${roomId},scope.eq.global`)
+    .limit(1);
+  if (ban && ban.length > 0) {
+    return { ok: false as const, reason: "أنت محظور من هذه الغرفة", canPublish: false };
+  }
+
+  let canPublish = false;
+  if (wantsPublish) {
+    const { data: seat } = await supabase
+      .from("room_mics")
+      .select("id, is_muted")
+      .eq("room_id", roomId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    canPublish = Boolean(seat && !seat.is_muted);
+  }
+  return { ok: true as const, reason: null, canPublish };
+}
 
 /**
  * Issues a short-lived LiveKit access token for a room the caller is a member of.
@@ -25,41 +68,11 @@ export const getVoiceToken = createServerFn({ method: "POST" })
 
     const { supabase, userId } = context;
 
-    const { data: room, error: roomError } = await supabase
-      .from("rooms")
-      .select("id, is_active, is_disabled")
-      .eq("id", data.roomId)
-      .maybeSingle();
-    if (roomError) throw new Error(roomError.message);
-    if (!room || room.is_disabled || !room.is_active) {
-      return { configured: false as const, token: null, url: null, reason: "الغرفة غير متاحة" };
+    const access = await checkVoiceAccess(supabase, userId, data.roomId, data.canPublish);
+    if (!access.ok) {
+      return { configured: false as const, token: null, url: null, reason: access.reason };
     }
-
-    const { data: ban } = await supabase
-      .from("bans")
-      .select("id")
-      .eq("user_id", userId)
-      .or(`room_id.eq.${data.roomId},scope.eq.global`)
-      .limit(1);
-    if (ban && ban.length > 0) {
-      return {
-        configured: false as const,
-        token: null,
-        url: null,
-        reason: "أنت محظور من هذه الغرفة",
-      };
-    }
-
-    let canPublish = false;
-    if (data.canPublish) {
-      const { data: seat } = await supabase
-        .from("room_mics")
-        .select("id, is_muted")
-        .eq("room_id", data.roomId)
-        .eq("user_id", userId)
-        .maybeSingle();
-      canPublish = Boolean(seat && !seat.is_muted);
-    }
+    const canPublish = access.canPublish;
 
     const secret = new TextEncoder().encode(apiSecret);
     const now = Math.floor(Date.now() / 1000);
@@ -81,4 +94,57 @@ export const getVoiceToken = createServerFn({ method: "POST" })
       .sign(secret);
 
     return { configured: true as const, token, url: wsUrl, canPublish, reason: null };
+  });
+
+/**
+ * مزود الصوت الاحتياطي (Agora — الخطة المجانية): يُستخدم تلقائيًا عند فشل LiveKit.
+ * يحتاج متغيري البيئة AGORA_APP_ID و AGORA_APP_CERTIFICATE.
+ */
+export const getAgoraVoiceToken = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: TokenInput) => {
+    if (!data?.roomId || typeof data.roomId !== "string") throw new Error("roomId required");
+    return { roomId: data.roomId, canPublish: Boolean(data.canPublish) };
+  })
+  .handler(async ({ data, context }) => {
+    const appId = process.env["AGORA_APP_ID"];
+    const appCertificate = process.env["AGORA_APP_CERTIFICATE"];
+
+    if (!appId || !appCertificate) {
+      return { configured: false as const, token: null, appId: null, channel: null };
+    }
+
+    const { supabase, userId } = context;
+    const access = await checkVoiceAccess(supabase, userId, data.roomId, data.canPublish);
+    if (!access.ok) {
+      return {
+        configured: false as const,
+        token: null,
+        appId: null,
+        channel: null,
+        reason: access.reason,
+      };
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const expireAt = now + 60 * 60 * 6;
+    // uid = 0 يعني أن Agora تعيّن رقمًا تلقائيًا عند الانضمام
+    const token = RtcTokenBuilder.buildTokenWithUid(
+      appId,
+      appCertificate,
+      data.roomId,
+      0,
+      RtcRole.PUBLISHER,
+      expireAt,
+      expireAt,
+    );
+
+    return {
+      configured: true as const,
+      token,
+      appId,
+      channel: data.roomId,
+      canPublish: access.canPublish,
+      reason: null,
+    };
   });
