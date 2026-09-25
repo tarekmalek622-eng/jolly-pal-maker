@@ -344,15 +344,9 @@ function RoomPage() {
     enterRoom({ id: roomId, name: room.data.name, imageUrl: room.data.image_url }, canPublish);
   }, [activeRoom?.id, canPublish, enterRoom, exitRoom, roomId, room.data]);
 
-  // join / leave membership
+  // العضوية تُسجَّل عبر دالة الدخول على السيرفر (enterRoom) — هنا ننظّف عند المغادرة فقط
   useEffect(() => {
     if (!userId) return;
-    void supabase
-      .from("room_members")
-      .upsert(
-        { room_id: roomId, user_id: userId, joined_at: new Date().toISOString() },
-        { onConflict: "room_id,user_id" },
-      );
     return () => {
       if (minimizedRef.current) return; // الغرفة مصغّرة — نُبقي العضوية والمايك
       void supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", userId);
@@ -647,7 +641,8 @@ function RoomPage() {
     public_id: p.public_id,
   }));
 
-  if (room.isLoading) return <AppShell hideNav>جارٍ تحميل الغرفة...</AppShell>;
+  if (room.isLoading || (entry.isLoading && !entryBlocked))
+    return <AppShell hideNav>جارٍ تحميل الغرفة...</AppShell>;
   if (!room.data || room.data.is_disabled || !room.data.is_active)
     return <AppShell hideNav>الغرفة غير متاحة.</AppShell>;
 
