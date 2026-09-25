@@ -26,6 +26,7 @@ import {
   Volume2,
   VolumeX,
   X,
+  Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
@@ -1040,6 +1041,18 @@ function RoomPage() {
             ) : (
               <VolumeX className="h-4.5 w-4.5" />
             )}
+          </RoundControl>
+          <RoundControl
+            label={voice.dataSaver ? "توفير بيانات" : "جودة كاملة"}
+            active={voice.dataSaver}
+            onClick={() => {
+              voice.setDataSaver(!voice.dataSaver);
+              toast.success(
+                voice.dataSaver ? "تم إيقاف توفير البيانات" : "وضع توفير البيانات مفعّل — صوت أخف للنت الضعيف",
+              );
+            }}
+          >
+            <Zap className="h-4.5 w-4.5" />
           </RoundControl>
           {!mySeat && (
             <RoundControl label="طلب مايك" onClick={() => requestMic.mutate()}>
