@@ -69,6 +69,16 @@ export const getVoiceToken = createServerFn({ method: "POST" })
         secret: process.env["LIVEKIT_API_SECRET_2"],
         url: process.env["LIVEKIT_URL_2"],
       },
+      {
+        key: process.env["LIVEKIT_API_KEY_3"],
+        secret: process.env["LIVEKIT_API_SECRET_3"],
+        url: process.env["LIVEKIT_URL_3"],
+      },
+      {
+        key: process.env["LIVEKIT_API_KEY_4"],
+        secret: process.env["LIVEKIT_API_SECRET_4"],
+        url: process.env["LIVEKIT_URL_4"],
+      },
     ].filter((c): c is { key: string; secret: string; url: string } =>
       Boolean(c.key && c.secret && c.url),
     );
