@@ -3119,6 +3119,63 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_events: {
+        Row: {
+          created_at: string
+          detail: string | null
+          event: string
+          id: string
+          provider: string | null
+          room_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          event: string
+          id?: string
+          provider?: string | null
+          room_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          event?: string
+          id?: string
+          provider?: string | null
+          room_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      voice_sessions: {
+        Row: {
+          id: string
+          joined_at: string
+          left_at: string | null
+          room_id: string | null
+          seconds: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          room_id?: string | null
+          seconds?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          room_id?: string | null
+          seconds?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       weekly_rank_payouts: {
         Row: {
           category: string
