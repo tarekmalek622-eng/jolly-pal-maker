@@ -119,9 +119,18 @@ function SuperAdminEventPage() {
       if (!data) return null;
       const { data: assistants } = await supabase
         .from("sa_assistants")
-        .select("id, user_id, three_digit_id, profiles:user_id(display_name, public_id)")
+        .select("id, user_id, three_digit_id")
         .eq("winner_id", data.id);
-      return { ...data, assistants: assistants ?? [] };
+      const rows = assistants ?? [];
+      const ids = rows.map((a) => a.user_id);
+      const { data: names } = ids.length
+        ? await supabase.from("profiles").select("id, display_name, public_id").in("id", ids)
+        : { data: [] as { id: string; display_name: string; public_id: string }[] };
+      const nameById = new Map((names ?? []).map((p) => [p.id, p]));
+      return {
+        ...data,
+        assistants: rows.map((a) => ({ ...a, profile: nameById.get(a.user_id) ?? null })),
+      };
     },
   });
 
@@ -375,7 +384,7 @@ function SuperAdminEventPage() {
               <p className="text-xs font-bold">المساعدون ({myWinner.data.assistants.length}/{myWinner.data.assistants_count}):</p>
               {myWinner.data.assistants.map((a) => (
                 <p key={a.id} className="text-xs text-muted-foreground">
-                  • {(a.profiles as { display_name: string } | null)?.display_name} — كود {a.three_digit_id}
+                  • {a.profile?.display_name ?? a.user_id.slice(0, 8)} — كود {a.three_digit_id}
                 </p>
               ))}
             </div>
