@@ -22,6 +22,7 @@ export const ADMIN_SECTION_LABELS: Record<string, string> = {
   tasks: "المهام",
   support: "الدعم",
   stats: "الإحصائيات",
+  registration: "بيانات التسجيل",
 };
 
 export function adminSectionLabel(key: string) {

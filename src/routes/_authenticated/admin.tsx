@@ -17,6 +17,7 @@ import {
   Loader2,
   Megaphone,
   PartyPopper,
+  Phone,
   ScrollText,
   Trash2,
   ShoppingBag,
@@ -114,6 +115,7 @@ const TABS = [
   { key: "families", label: "العائلات", icon: Users },
   { key: "words", label: "الكلمات المحظورة", icon: Ban },
   { key: "logs", label: "السجل", icon: ScrollText },
+  { key: "registration", label: "بيانات التسجيل", icon: Phone },
 ] as const;
 
 function AdminPage() {
@@ -122,7 +124,19 @@ function AdminPage() {
   const sectionsQuery = useAdminSections(userId);
   const granted = sectionsQuery.data ?? [];
   const fullAccess = granted.includes("*");
-  const allowedTabs = fullAccess ? TABS.slice() : TABS.filter((t) => granted.includes(t.key));
+  const isSuper = useQuery({
+    queryKey: ["is-super-admin", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("is_super_admin", { _user_id: userId! });
+      if (error) throw error;
+      return data === true;
+    },
+  });
+  // قسم "بيانات التسجيل" يظهر لحساب المالك (A1) فقط
+  const allowedTabs = (fullAccess ? TABS.slice() : TABS.filter((t) => granted.includes(t.key))).filter(
+    (t) => t.key !== "registration" || isSuper.data === true,
+  );
   const hasAccess = allowedTabs.length > 0;
   const navigate = useNavigate();
   const { section } = Route.useSearch();
@@ -282,7 +296,87 @@ function AdminPage() {
       {tab === "roomSystems" && <AdminRoomSystemsTab />}
       {tab === "families" && <AdminFamiliesTab />}
       {tab === "logs" && <LogsTab />}
+      {tab === "registration" && isSuper.data === true && <RegistrationTab />}
     </AppShell>
+  );
+}
+
+/** بيانات التسجيل — للمالك فقط: رقم الهاتف وتاريخ التسجيل وآخر دخول. */
+function RegistrationTab() {
+  const [term, setTerm] = useState("");
+  const [search, setSearch] = useState("");
+  const data = useQuery({
+    queryKey: ["admin-registration", search],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_registration_data", {
+        _search: search.trim() || null,
+      });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const fmtDate = (v: string | null) =>
+    v ? new Date(v).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" }) : "—";
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <Input
+          value={term}
+          onChange={(e) => setTerm(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") setSearch(term);
+          }}
+          placeholder="ابحث بالاسم أو ID أو رقم الهاتف..."
+          className="h-11 flex-1 rounded-2xl border-border/50 bg-surface/70 text-sm"
+        />
+        <Button
+          onClick={() => setSearch(term)}
+          className="h-11 rounded-2xl gradient-gold px-5 text-primary-foreground"
+        >
+          بحث
+        </Button>
+      </div>
+      <p className="text-[10px] text-muted-foreground">
+        قسم خاص بحساب المالك فقط — يعرض بيانات التسجيل الفعلية لكل مستخدم.
+      </p>
+      {data.isLoading && (
+        <div className="flex justify-center py-10">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      )}
+      {data.isError && (
+        <EmptyState title="تعذر تحميل البيانات" description="حاول مرة أخرى بعد قليل" />
+      )}
+      {data.data?.length === 0 && (
+        <EmptyState title="لا نتائج" description="جرّب اسمًا أو رقمًا مختلفًا" />
+      )}
+      <div className="space-y-2">
+        {data.data?.map((row) => (
+          <div
+            key={row.user_id}
+            className="rounded-2xl border border-border bg-surface p-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="min-w-0 flex-1 truncate text-sm font-black">
+                {row.display_name || "بدون اسم"}
+              </p>
+              <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">
+                ID: {row.public_id ?? "—"}
+              </span>
+            </div>
+            <div className="mt-2 grid grid-cols-1 gap-1 text-[11px] text-muted-foreground">
+              <p>
+                رقم الهاتف: <span className="font-bold text-foreground" dir="ltr">{row.phone || "—"}</span>
+              </p>
+              <p>تاريخ التسجيل: {fmtDate(row.registered_at)}</p>
+              <p>آخر دخول: {fmtDate(row.last_sign_in_at)}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
