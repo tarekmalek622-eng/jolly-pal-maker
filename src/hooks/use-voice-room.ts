@@ -272,6 +272,8 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
 
     return () => {
       cancelled = true;
+      if (autoRetryTimer.current) clearTimeout(autoRetryTimer.current);
+      endSession();
       attachedAudio.forEach((el) => el.remove());
       attachedAudio.clear();
       const room = roomRef.current;
@@ -289,8 +291,10 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
       }
       agoraRemoteAudio.current.clear();
       providerRef.current = null;
+      setActiveProvider(null);
+      setQuality("unknown");
     };
-  }, [roomId, canPublish, attach, retryKey]);
+  }, [roomId, canPublish, attach, retryKey, beginSession, endSession, logEvent]);
 
   // Refresh publish permission when the user's mic seat changes (LiveKit فقط).
   useEffect(() => {
