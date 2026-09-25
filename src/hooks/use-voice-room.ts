@@ -353,7 +353,15 @@ export function useVoiceRoom(roomId: string | null, canPublish: boolean) {
           }
         }
       }
-      await room.localParticipant.setMicrophoneEnabled(next);
+      // وضع توفير البيانات: نشر المايك بجودة أقل للإنترنت الضعيف
+      if (next && dataSaverRef.current) {
+        const lk = await import("livekit-client");
+        await room.localParticipant.setMicrophoneEnabled(true, {
+          audioPreset: lk.AudioPresets.speech,
+        });
+      } else {
+        await room.localParticipant.setMicrophoneEnabled(next);
+      }
       setMicEnabled(next);
     } catch (e) {
       if (e instanceof Error && ARABIC_RE.test(e.message)) throw e;
