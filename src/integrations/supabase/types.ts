@@ -2609,6 +2609,137 @@ export type Database = {
         }
         Relationships: []
       }
+      sa_assistants: {
+        Row: {
+          created_at: string
+          id: string
+          salary: number
+          three_digit_id: string | null
+          user_id: string
+          winner_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          salary?: number
+          three_digit_id?: string | null
+          user_id: string
+          winner_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          salary?: number
+          three_digit_id?: string | null
+          user_id?: string
+          winner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sa_assistants_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "sa_winners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sa_event: {
+        Row: {
+          active: boolean
+          created_at: string
+          ends_at: string
+          id: string
+          rate: number
+          starts_at: string
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          ends_at: string
+          id?: string
+          rate?: number
+          starts_at: string
+          title: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          ends_at?: string
+          id?: string
+          rate?: number
+          starts_at?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      sa_votes: {
+        Row: {
+          created_at: string
+          from_user: string
+          id: string
+          to_user: string
+          votes: number
+        }
+        Insert: {
+          created_at?: string
+          from_user: string
+          id?: string
+          to_user: string
+          votes: number
+        }
+        Update: {
+          created_at?: string
+          from_user?: string
+          id?: string
+          to_user?: string
+          votes?: number
+        }
+        Relationships: []
+      }
+      sa_winners: {
+        Row: {
+          active: boolean
+          assistants_count: number
+          country: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          rank: number
+          salary: number
+          starts_at: string
+          three_digit_id: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          assistants_count?: number
+          country?: string | null
+          created_at?: string
+          ends_at: string
+          id?: string
+          rank: number
+          salary?: number
+          starts_at?: string
+          three_digit_id?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          assistants_count?: number
+          country?: string | null
+          created_at?: string
+          ends_at?: string
+          id?: string
+          rank?: number
+          salary?: number
+          starts_at?: string
+          three_digit_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       store_items: {
         Row: {
           art_key: string | null
@@ -4077,6 +4208,42 @@ export type Database = {
       room_treasure_settings: { Args: never; Returns: Json }
       room_treasure_state: { Args: { _room_id: string }; Returns: Json }
       room_week_start: { Args: never; Returns: string }
+      sa_add_assistant: {
+        Args: { _user_id: string; _winner_id: string }
+        Returns: string
+      }
+      sa_current_event: {
+        Args: never
+        Returns: {
+          active: boolean
+          created_at: string
+          ends_at: string
+          id: string
+          rate: number
+          starts_at: string
+          title: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sa_event"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      sa_gift_votes: { Args: { _to: string; _votes: number }; Returns: number }
+      sa_leaderboard: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          public_id: string
+          user_id: string
+          votes: number
+        }[]
+      }
+      sa_my_votes: { Args: never; Returns: Json }
+      sa_pay_salaries: { Args: never; Returns: number }
+      sa_settle_event: { Args: never; Returns: Json }
       send_direct_gift: {
         Args: { _gift_id: string; _quantity?: number; _receiver_id: string }
         Returns: {
