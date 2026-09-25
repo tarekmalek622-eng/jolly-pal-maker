@@ -45,7 +45,7 @@ function ChatPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, public_id, display_name, avatar_url, vip_level, is_online")
+        .select("id, public_id, display_name, avatar_url, vip_level, is_online, hide_online")
         .eq("id", otherId)
         .maybeSingle();
       if (error) throw error;
@@ -268,12 +268,12 @@ function ChatPage() {
             name={other.data?.display_name}
             size={40}
             vipLevel={other.data?.vip_level ?? 0}
-            online={other.data?.is_online}
+            online={other.data?.is_online && !other.data?.hide_online}
           />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold">{other.data?.display_name ?? "..."}</p>
             <p className="text-[10px] text-muted-foreground">
-              {other.data?.is_online ? "متصل الآن" : "غير متصل"}
+              {other.data?.is_online && !other.data?.hide_online ? "متصل الآن" : "غير متصل"}
             </p>
           </div>
           <Button

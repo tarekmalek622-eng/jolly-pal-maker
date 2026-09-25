@@ -86,7 +86,7 @@ function MessagesPage() {
 
       const { data: people } = await supabase
         .from("profiles")
-        .select("id, public_id, display_name, avatar_url, vip_level, is_online")
+        .select("id, public_id, display_name, avatar_url, vip_level, is_online, hide_online")
         .in("id", ids);
 
       return ids.map((id) => ({
@@ -184,7 +184,7 @@ function MessagesPage() {
                   name={other.display_name}
                   size={48}
                   vipLevel={other.vip_level}
-                  online={other.is_online}
+                  online={other.is_online && !other.hide_online}
                 />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{other.display_name}</p>

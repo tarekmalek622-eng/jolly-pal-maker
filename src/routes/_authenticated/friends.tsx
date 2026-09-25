@@ -44,6 +44,7 @@ type Profile = {
   avatar_url: string | null;
   vip_level: number;
   is_online: boolean;
+  hide_online: boolean | null;
 };
 
 function FriendsPage() {
@@ -73,7 +74,7 @@ function FriendsPage() {
       if (ids.size > 0) {
         const result = await supabase
           .from("profiles")
-          .select("id, public_id, display_name, avatar_url, vip_level, is_online")
+          .select("id, public_id, display_name, avatar_url, vip_level, is_online, hide_online")
           .in("id", [...ids]);
         if (result.error) throw result.error;
         profiles = (result.data ?? []) as Profile[];
@@ -121,7 +122,7 @@ function FriendsPage() {
       if (ids.length > 0) {
         const result = await supabase
           .from("profiles")
-          .select("id, public_id, display_name, avatar_url, vip_level, is_online")
+          .select("id, public_id, display_name, avatar_url, vip_level, is_online, hide_online")
           .in("id", ids);
         if (result.error) throw result.error;
         people = (result.data ?? []) as Profile[];
@@ -368,15 +369,15 @@ function PersonRow({ person, children }: { person: Profile; children: ReactNode 
           name={person.display_name}
           size={44}
           vipLevel={person.vip_level}
-          online={person.is_online}
+          online={person.is_online && !person.hide_online}
         />
       </Link>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{person.display_name}</p>
         <p
-          className={cn("text-[10px]", person.is_online ? "text-success" : "text-muted-foreground")}
+          className={cn("text-[10px]", person.is_online && !person.hide_online ? "text-success" : "text-muted-foreground")}
         >
-          {person.is_online ? "متصل الآن" : "غير متصل"}
+          {person.is_online && !person.hide_online ? "متصل الآن" : "غير متصل"}
         </p>
       </div>
       <div className="flex gap-1">{children}</div>
