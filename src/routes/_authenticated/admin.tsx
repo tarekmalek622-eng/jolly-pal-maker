@@ -299,7 +299,88 @@ function AdminPage() {
       {tab === "families" && <AdminFamiliesTab />}
       {tab === "logs" && <LogsTab />}
       {tab === "registration" && isSuper.data === true && <RegistrationTab />}
+      {tab === "voice" && <VoiceLogTab />}
     </AppShell>
+  );
+}
+
+/** سجل الصوت — تبديل المزودات والأعطال وإعادات الاتصال. */
+function VoiceLogTab() {
+  const data = useQuery({
+    queryKey: ["admin-voice-events"],
+    refetchInterval: 15_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("voice_events")
+        .select("id, user_id, room_id, event, provider, detail, created_at")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const names = useQuery({
+    queryKey: ["admin-voice-names", (data.data ?? []).map((e) => e.user_id).join(",")],
+    enabled: (data.data?.length ?? 0) > 0,
+    queryFn: async () => {
+      const ids = [...new Set((data.data ?? []).map((e) => e.user_id).filter(Boolean))] as string[];
+      const { data: rows, error } = await supabase
+        .from("profiles")
+        .select("id, display_name, public_id")
+        .in("id", ids);
+      if (error) throw error;
+      return new Map((rows ?? []).map((p) => [p.id, p]));
+    },
+  });
+
+  const eventLabel = (e: string) =>
+    e === "provider_failed"
+      ? "فشل مزود"
+      : e === "provider_switch"
+        ? "تبديل مزود"
+        : e === "auto_reconnect"
+          ? "إعادة اتصال تلقائية"
+          : e;
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] text-muted-foreground">
+        كل أحداث الصوت: تبديل المزودات التلقائي، الأعطال، وإعادات الاتصال — يتحدّث كل 15 ثانية.
+      </p>
+      {data.isLoading && (
+        <div className="flex justify-center py-10">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      )}
+      {data.isError && <EmptyState title="تعذر تحميل السجل" hint="حاول مرة أخرى بعد قليل" />}
+      {data.data?.length === 0 && (
+        <EmptyState title="لا أحداث بعد" hint="سيظهر هنا أي تبديل أو عطل في الصوت" />
+      )}
+      {data.data?.map((e) => {
+        const p = e.user_id ? names.data?.get(e.user_id) : null;
+        return (
+          <div key={e.id} className="rounded-2xl border border-border bg-surface p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-black">
+                {eventLabel(e.event)}
+                {e.provider ? <span className="text-muted-foreground"> — {e.provider}</span> : null}
+              </p>
+              <span className="shrink-0 text-[10px] text-muted-foreground">
+                {new Date(e.created_at).toLocaleString("ar-EG", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {p ? `${p.display_name} (${p.public_id})` : "مستخدم"}
+              {e.detail ? ` — ${e.detail}` : ""}
+            </p>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
